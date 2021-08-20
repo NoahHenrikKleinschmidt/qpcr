@@ -1,8 +1,8 @@
 import os
 import os.path
 import shutil
-from ops.os.auxiliaries import *
-from ops.os.control import *
+from qpcr.aux.os.auxiliaries import *
+from qpcr.aux.os.control import *
 
 
 
