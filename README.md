@@ -5,7 +5,8 @@ This project represents a python package that includes a number of functions use
 and is taylored to work with the Excel Spreadhseet exported from this device (or, more precisely, a csv copy of the same). User friendliness and quick and easy workflows were of primary concern while developing this package. I initially developed the package for data from my Bachelor Thesis and have expanded functionality hence.
 
 ## An Example: __qPCR Analysis__ can be so quick 'n easy :-)
-`import ops.biotools.qpcr.Analysis as qA
+```python
+import qpcr.Analysis as qA
 hnrnpl_nmd = "Example Data/HNRNPL_nmd.csv"
 hnrnpl_prot = "Example Data/HNRNPL_prot.csv"
 s28 = "Example Data/28S.csv"
@@ -15,7 +16,10 @@ result = qA.delta_deltaCt([s28, hnrnpl_nmd, hnrnpl_prot],
                         replicates=6, normaliser="28S",
                         anchor="first", group_names=groups)
 
-qA.preview_results(result)`
+qA.preview_results(result)
+```
+
+
 ![Figure_1](https://user-images.githubusercontent.com/89252165/130232298-256e2d1e-db07-429b-97c3-38bdaebc826d.png)
 
 
