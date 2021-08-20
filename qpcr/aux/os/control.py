@@ -1,9 +1,9 @@
 import os
 import os.path
 import shutil
-from ops.os.auxiliaries import *
-from ops.os.folders import *
-from ops.ops.ops import *
+from qpcr.aux.os.auxiliaries import *
+from qpcr.aux.os.folders import *
+from qpcr.aux.ops import *
 
 
 # Main Functions ==============================================
