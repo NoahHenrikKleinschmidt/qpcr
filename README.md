@@ -43,6 +43,7 @@ To perform analysis a set of functions are defined within the `qpcr` module whic
 `qpcr.Analysis.single_deltaCt` is designed to work with one single input data file where the first group of replicates represents the normaliser. 
 `qpcr.Analysis.single_deltaCt` expects the following parameters to work with: 
 
+
 | Parameter        | Explination                                                  | Example                                                      |
 | ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | data_file        | the source file                                              | "mydata.csv"                                                 |
@@ -59,7 +60,8 @@ To perform analysis a set of functions are defined within the `qpcr` module whic
 
 ##### Delta-Delta CT analysis: `qpcr.Analysis.delta_deltaCt`
 `qpcr.Analysis.delta_deltaCt` is designed to work with one input file for the data from the normaliser and a list of input files for each of the target genes to be analysed. 
-`qpcr.Analysis.delta_deltaCt` shares many parameters with `qpcr.Analysis.single_deltaCt` but requires a few additional ones. All parameters of `qpcr.Analysis.delta_deltaCt` are: 
+`qpcr.Analysis.delta_deltaCt` shares many parameters with `qpcr.Analysis.single_deltaCt` but requires a few additional ones. All parameters of `qpcr.Analysis.delta_deltaCt` are:
+
 
 | Parameter  | Explination                                                  | Example                                                      |
 | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
