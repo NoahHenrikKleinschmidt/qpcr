@@ -1,3 +1,3 @@
-import graphical
-import ops
-import os
+import aux.graphical
+import aux.ops
+import aux.os
