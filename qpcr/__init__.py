@@ -21,8 +21,8 @@ please, call:
 
 import statistics as stat 
 import pandas as pd
-import aux.ops as oo
-import aux.os.folder_control as fc
+import qpcr.aux.ops as oo
+import qpcr.aux.os.folder_control as fc
 
 def open_csv_file(filename, export='dict'):
     """
