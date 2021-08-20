@@ -2,8 +2,8 @@
 import os
 import os.path
 import shutil
-from  ops.os.control import *
-from  ops.os.folders import *
+from  qpcr.aux.os.control import *
+from  qpcr.aux.os.folders import *
 import sys
 
 def cfsc_core(source, dest, item):
