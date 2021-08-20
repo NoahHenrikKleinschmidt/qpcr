@@ -42,6 +42,7 @@ To perform analysis a set of functions are defined within the `qpcr` module whic
 ##### single Delta CT analysis: `qpcr.Analysis.single_deltaCt`
 `qpcr.Analysis.single_deltaCt` is designed to work with one single input data file where the first group of replicates represents the normaliser. 
 `qpcr.Analysis.single_deltaCt` expects the following parameters to work with: 
+
 | Parameter        | Explination                                                  | Example                                                      |
 | ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | data_file        | the source file                                              | "mydata.csv"                                                 |
@@ -59,6 +60,7 @@ To perform analysis a set of functions are defined within the `qpcr` module whic
 ##### Delta-Delta CT analysis: `qpcr.Analysis.delta_deltaCt`
 `qpcr.Analysis.delta_deltaCt` is designed to work with one input file for the data from the normaliser and a list of input files for each of the target genes to be analysed. 
 `qpcr.Analysis.delta_deltaCt` shares many parameters with `qpcr.Analysis.single_deltaCt` but requires a few additional ones. All parameters of `qpcr.Analysis.delta_deltaCt` are: 
+
 | Parameter  | Explination                                                  | Example                                                      |
 | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | data_files | the source files                                             | ["geneX.csv", "geneY.csv"]                                   |
@@ -76,6 +78,7 @@ To perform analysis a set of functions are defined within the `qpcr` module whic
 
 ##### Preview: `qpcr.Analysis.preview_results`
 `qpcr.Analysis.preview_results` takes in the results dictionary of either `qpcr.Analysis.single_deltaCt` or `qpcr.Analysis.delta_deltaCt` and generates a crude bar chart of the results for each analysed target gene.
+
 ![Figure_1](https://user-images.githubusercontent.com/89252165/130232298-256e2d1e-db07-429b-97c3-38bdaebc826d.png)
 
 ##### Normalise two conditions: `qpcr.Analysis.normalise_pairs`
@@ -121,12 +124,14 @@ It supports two modes: `"individual"` (default) where filename specifies the fil
 ## Ouput Data
 This package offers great versatility with regard to output formatting. Pre-taylored are two possible formats (although more can be costumised):
 ##### Default Format: individual replicate values for each assay
+
 | GeneX | GeneY | GeneZ |
 | ----- | ----- | ----- |
 | 4.56  | 10.23 | 7.56  |
 | 4.98  | 11.1  | 7.32  |
 | ...   | ...   | ...   |
 ##### Statistics Format: each assay is represented by Mean and StDev
+
 | Legend | Avg   | StDev |
 | ------ | ----- | ----- |
 | GeneX  | 4.78  | 0.32  |
