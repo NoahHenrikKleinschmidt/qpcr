@@ -1,3 +1,3 @@
-import aux.graphical
-import aux.ops
-import aux.os
+import qpcr.aux.graphical
+import qpcr.aux.ops
+import qpcr.aux.os
