@@ -133,6 +133,7 @@ This package offers great versatility with regard to output formatting. Pre-tayl
 | 4.56  | 10.23 | 7.56  |
 | 4.98  | 11.1  | 7.32  |
 | ...   | ...   | ...   |
+
 ##### Statistics Format: each assay is represented by Mean and StDev
 
 
@@ -141,4 +142,5 @@ This package offers great versatility with regard to output formatting. Pre-tayl
 | GeneX  | 4.78  | 0.32  |
 | GeneY  | 10.65 | 0.54  |
 | ...    | ...   | ...   |
+
 ##### Both of these can be transposed as well using `transpose=True` in  `qpcr.export_to_csv`
