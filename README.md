@@ -127,12 +127,14 @@ It supports two modes: `"individual"` (default) where filename specifies the fil
 This package offers great versatility with regard to output formatting. Pre-taylored are two possible formats (although more can be costumised):
 ##### Default Format: individual replicate values for each assay
 
+
 | GeneX | GeneY | GeneZ |
 | ----- | ----- | ----- |
 | 4.56  | 10.23 | 7.56  |
 | 4.98  | 11.1  | 7.32  |
 | ...   | ...   | ...   |
 ##### Statistics Format: each assay is represented by Mean and StDev
+
 
 | Legend | Avg   | StDev |
 | ------ | ----- | ----- |
