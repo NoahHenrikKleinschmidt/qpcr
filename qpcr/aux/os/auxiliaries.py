@@ -2,7 +2,7 @@
 import os
 import os.path
 import shutil
-from  control import *
+from  qpcr.aux.os.control import *
 import sys
 
 def cfsc_core(source, dest, item):
