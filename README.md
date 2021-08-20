@@ -117,3 +117,19 @@ In case you wish to also get a processed representation of your raw CT values yo
 ##### Loading Results: `qpcr.load_results`
 This function opens pre-computed results csv files. 
 It supports two modes: `"individual"` (default) where filename specifies the file to be opened. It returns a dictionary containing the grouped computed values (replciates, or avg, stdev) or `"pairs"`which allows users to load an entire set of samples and normalisers that were previously computed to then be used by `qpcr.Analysis.normalise_pairs`. It returns two separate dictionaries each containing the set of sample files it was given by kwargs parameters `samples` and `normalisers`. Optionally, names may be additionally assigned to samples and normalisers using `sample_names` and `norm_names` To facilitate working with replicate assays (i.e. same qPCR assay normalised against different normalisers separately), samples / normalisers support only partial naming and need no full filepath to function. Like this multiple analysis result with e.g. "HNRNPL NMD" in their name will all be loaded. 
+
+## Ouput Data
+This package offers great versatility with regard to output formatting.
+##### Default Format: individual replicate values for each assay
+| GeneX | GeneY | GeneZ |
+| ----- | ----- | ----- |
+| 4.56  | 10.23 | 7.56  |
+| 4.98  | 11.1  | 7.32  |
+| ...   | ...   | ...   |
+##### Statistics Format: each assay is represented by Mean and StDev
+| Legend | Avg   | StDev |
+| ------ | ----- | ----- |
+| GeneX  | 4.78  | 0.32  |
+| GeneY  | 10.65 | 0.54  |
+| ...    | ...   | ...   |
+##### Both of these can be transposed as well using `transpose=True` in  `qpcr.export_to_csv`
