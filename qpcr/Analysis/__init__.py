@@ -1,7 +1,9 @@
 from . import qpcr
 import matplotlib.pyplot as plt
 import statistics as stat 
-import ops.graphical.auxiliaries as gaux
+from . import aux
+
+gaux = aux.graphical.auxiliaries
 
 #now let us try to warp this all up into a more user friendly package
 def single_deltaCt(data_file, replicates, mode = 'replicate', transpose=True, export=True, group_names=None, stats = ['avg', 'stdv'], anchor = None, dCt_exp = True, exportname_addon=None):
