@@ -21,7 +21,7 @@ qA.preview_results(result)
 
 
 ![Figure_1](https://user-images.githubusercontent.com/89252165/130232298-256e2d1e-db07-429b-97c3-38bdaebc826d.png)
-> Do these figures not look like what you want? No problem, they're just instant previews, you will automatically be generating csv files with your results that you can import into Graphpad Prism or whatever your favourite graphing software happens to be ;-)
+> Do these figures not look like what you want? No problem, they're just instant previews, you can quickly generate csv files with your results that you can import into Graphpad Prism or whatever your favourite graphing software happens to be ;-)
 
 ### For a detailed introduction, check out the wiki page!
 
