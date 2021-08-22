@@ -294,7 +294,7 @@ def _make_grouped_plots_subplots(result, figsize, colormap):
 
     # generate a subplots figure
     rows, cols = gaux.adjust_layout(len(all_matches))
-    fig, ax = plt.subplots(rows, cols, figsize=figsize)
+    fig, ax = plt.subplots(nrows=rows, ncols=cols, figsize=figsize)
 
     # assemble coordinates for the subplot axes
     coordinates = []
