@@ -320,6 +320,7 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
         
         # assign coordinate of subplot ax
         cord = coordinates[cdx]
+        print(cord)
         _r, _c = cord[0], cord[1]
         try: # if the layout is 2-dimensional 
             ax[_r, _c].set(ylabel="$\Delta\Delta C_T$")
