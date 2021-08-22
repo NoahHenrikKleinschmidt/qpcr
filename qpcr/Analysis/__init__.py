@@ -295,16 +295,20 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
 
     # generate a subplots figure
     rows, cols = gaux.adjust_layout(len(all_matches))
+    coordinates = []
     if transpose == True:
         fig, ax = plt.subplots(cols, rows, figsize=figsize)
+        # assemble coordinates for the subplot axes
+        for r in range(cols): 
+            for c in range(rows):
+                coordinates.append([r, c])
     else:
         fig, ax = plt.subplots(rows, cols, figsize=figsize)
+        # assemble coordinates for the subplot axes
+        for r in range(rows): 
+            for c in range(cols):
+                coordinates.append([r, c])
 
-    # assemble coordinates for the subplot axes
-    coordinates = []
-    for r in range(rows): 
-        for c in range(cols):
-            coordinates.append([r, c])
     
     # fill each ax with a grouped bar plot
     cdx = 0    
