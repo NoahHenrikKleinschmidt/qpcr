@@ -170,7 +170,7 @@ def preview_results(results_dict, transpose=False):
     for r in range(0, row_count):
         for c in range(0, col_count):
             coordinates.append([r,c])
-    print('Creating a {}x{} Layout'.format(row_count, col_count))
+    #print('Creating a {}x{} Layout'.format(row_count, col_count))
 
     cdx = 0
     for k in list(results_dict.keys()):
@@ -189,8 +189,9 @@ def preview_results(results_dict, transpose=False):
 
         r = coordinates[cdx][0]
         c = coordinates[cdx][1]
-        print(r, c)
-        axs[r, c].bar(x=labels, height=values, yerr=yerrs, color='lightgray', linewidth=2)
+        #print(r, c)
+        axs[r, c].bar(x=labels, height=values, color='lightgray', edgecolor = "dimgrey", linewidth=1)
+        axs[r, c].errorbar(x = labels, y = values, yerr = yerrs, fmt = ".", markersize = 0, capsize = 3, ecolor="black", )
         axs[r, c].set(title=title)
         cdx +=1
 
