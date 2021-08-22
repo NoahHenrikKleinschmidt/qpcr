@@ -295,7 +295,7 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap, no_loners
 
     # if only one grouping is found just return the individuals plot
     if len(all_matches) == 1:
-        fig = _make_grouped_plots_individuals(result, figsize, colormap)
+        fig = _make_grouped_plots_individuals(result, figsize, colormap, no_loners)
         return fig[0]
 
     # generate a subplots figure
