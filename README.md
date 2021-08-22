@@ -18,8 +18,7 @@ result = qA.delta_deltaCt([s28, hnrnpl_nmd, hnrnpl_prot],
 
 qA.preview_results(result)
 ```
-
-![download-5](https://user-images.githubusercontent.com/89252165/130353837-671b615e-f172-4918-b97d-83a56744111f.png)
+![image](https://user-images.githubusercontent.com/89252165/130353861-98ca0083-383b-45e1-87e1-99f1ab99daf7.png)
 
 > Do these figures not look like what you want? No problem, they're just instant previews, you can quickly generate csv files with your results that you can import into Graphpad Prism or whatever your favourite graphing software happens to be ;-)
 
