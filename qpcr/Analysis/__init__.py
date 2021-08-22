@@ -2,6 +2,7 @@ import qpcr
 import matplotlib.pyplot as plt
 import statistics as stat 
 import qpcr.aux.graphical.auxiliaries as gaux
+import pandas as pd 
 
 #now let us try to warp this all up into a more user friendly package
 def single_deltaCt(data_file, replicates, mode = 'replicate', transpose=True, export=True, group_names=None, stats = ['avg', 'stdv'], anchor = None, dCt_exp = True, exportname_addon=None):
@@ -153,18 +154,22 @@ def normalise_pairs(samples:dict, normalisers:dict, pair_names=None, export=True
     return export_dict
 
 
-def preview_results(results_dict, transpose=False):
+def preview_results(results_dict, transpose=False, figsize = (8,8)):
+    """
+    This function plots the results of all Delta-Delta Ct analyses as individual bar charts into one figure.
+    It returns a matplotlib.pyplot.figure object.
+    """
     results_number = len(list(results_dict.keys()))
     rows, cols = gaux.adjust_layout(graph_number=results_number)
 
     if transpose == True:
         row_count = cols
         col_count = rows
-        fig, axs = plt.subplots(cols, rows, squeeze=False, sharex=True)
+        fig, axs = plt.subplots(cols, rows, squeeze=False, sharex=True, figsize=figsize)
     else:
         row_count = rows
         col_count = cols
-        fig, axs = plt.subplots(rows, cols, squeeze=False)
+        fig, axs = plt.subplots(rows, cols, squeeze=False, figsize=figsize)
     
     coordinates = []
     for r in range(0, row_count):
@@ -197,7 +202,42 @@ def preview_results(results_dict, transpose=False):
 
     fig.tight_layout()
     plt.show()
+    return fig
 
+def make_aggregate_plot(result, figsize=(9,5), colormap = "GnBu_r", title=""):
+    """
+    This function creates a grouped bar chart of all Delta-Delta Ct analyses into one figure. 
+    It returns a figure object.
+    """
+    result_df = _convert_to_stats(result)
+    r = pd.DataFrame() # dataframe for the Ct values
+    stv = pd.DataFrame() # dataframe for the StDevs
+
+    for k in result_df.keys():
+        tmp = pd.DataFrame(result_df[k])
+        del tmp["Legend"] # remove the "Legend" column
+        r[k] = tmp.iloc[0]
+        stv[k] = tmp.iloc[1]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set(ylabel="$\Delta\Delta C_T$", title=title)
+    r.plot.bar(yerr = stv, ax=ax, colormap = colormap,rot=0, edgecolor = "black", linewidth = 1)
+    plt.close()
+    return fig
+
+def _convert_to_stats(result):
+    try: 
+        keys = list(result.keys())
+        tmp = pd.DataFrame(result[keys[0]])
+        tmp["Legend"]
+        result_df = result
+    except:
+        conv_result = {}
+        for k in result:
+            tmp = qpcr.get_stats(result[k])
+            conv_result.update({k : tmp})
+        result_df = conv_result
+    return result_df
 
 def help():
     helpstring = """
