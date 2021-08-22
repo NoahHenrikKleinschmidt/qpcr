@@ -295,8 +295,9 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
 
     # if only one grouping is found just return the individuals plot
     if len(all_matches) == 1:
-        return _make_grouped_plots_individuals(result, figsize, colormap
-        )
+        fig = _make_grouped_plots_individuals(result, figsize, colormap)
+        return fig[0]
+        
     # generate a subplots figure
     rows, cols = gaux.adjust_layout(len(all_matches))
     coordinates = []
