@@ -242,7 +242,7 @@ def _convert_to_stats(result):
     return result_df
 
 
-def make_grouped_plots(result, subplots=True, figsize=(8,8), colormap = "GnBu", transpose=False):
+def make_grouped_plots(result, subplots=True, figsize=(8,8), colormap = "GnBu", transpose=False, no_loners=False):
     """
     This function generates grouped barplots for related samples such as "GeneX_ctrl" and "GeneX_treatment". 
     The function (rather the two _ functions) tries to assess which samples might belong together by reading their run_names (assay names). 
@@ -250,21 +250,21 @@ def make_grouped_plots(result, subplots=True, figsize=(8,8), colormap = "GnBu", 
     """
     if subplots == True:
         # fig will be only one figure
-        fig = _make_grouped_plots_subplots(result, transpose, figsize, colormap)
+        fig = _make_grouped_plots_subplots(result, transpose, figsize, colormap, no_loners)
     elif subplots == False:
         # fig will be a list of figures !
-        fig = _make_grouped_plots_individuals(result, figsize, colormap)
+        fig = _make_grouped_plots_individuals(result, figsize, colormap, no_loners)
     return fig
 
 
-def _make_grouped_plots_individuals(result, figsize, colormap):
+def _make_grouped_plots_individuals(result, figsize, colormap, no_loners):
     """
     This function creates a grouped bar graph for each sample grouping (stored in the list all_matches). 
     It will then generate a figure object for each grouping and store and return these as a list.
     """
     result_df = _convert_to_stats(result)
     # extract which samples might belong together
-    all_matches = find_matches(result_df)
+    all_matches = find_matches(result_df, no_loners)
 
     figs = []
     for m in all_matches:
@@ -285,19 +285,19 @@ def _make_grouped_plots_individuals(result, figsize, colormap):
     return figs
 
 
-def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
+def _make_grouped_plots_subplots(result, transpose, figsize, colormap, no_loners):
     """
     This function will generate a grouped bargraph for each sample grouping (stored in the list all_matches) and plot these as subplots into one single figure which is returned.
     """
     result_df = _convert_to_stats(result)
     # extract which samples might belong together
-    all_matches = find_matches(result_df)
+    all_matches = find_matches(result_df, no_loners)
 
     # if only one grouping is found just return the individuals plot
     if len(all_matches) == 1:
         fig = _make_grouped_plots_individuals(result, figsize, colormap)
         return fig[0]
-        
+
     # generate a subplots figure
     rows, cols = gaux.adjust_layout(len(all_matches))
     coordinates = []
@@ -346,7 +346,7 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
 
     return fig
 
-def find_matches(result_df):
+def find_matches(result_df, no_loners=False):
     """
     This function tries to estimate which samples (runs) belong together by estimating the similarity of their run_names.
     """
@@ -356,6 +356,8 @@ def find_matches(result_df):
         matches.sort()
         if matches not in all_matches: # store groups of related samples as list
             all_matches.append(matches)
+    if no_loners == True:
+        all_matches = [i for i in all_matches if len(i) > 1]
     return all_matches
 
 
