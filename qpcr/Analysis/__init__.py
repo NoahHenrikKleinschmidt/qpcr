@@ -315,6 +315,7 @@ def _make_grouped_plots_subplots(result, figsize, colormap):
             stv[k] = tmp.iloc[1] # store stdevs
         
         # assign coordinate of subplot ax
+        print(coordinates[cdx])
         _r, _c = coordinates[cdx]
 
         #ax.spines["right"].set_visible(False)
