@@ -324,11 +324,11 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
         try: # if the layout is 2-dimensional 
             ax[_r, _c].set(ylabel="$\Delta\Delta C_T$")
             r.plot.bar(yerr = stv, ax = ax[_r, _c], colormap=colormap,rot=0, edgecolor = "black", linewidth = 1)
-        except IndexError: # if the layout is 1-dimensional
+        except: # if the layout is 1-dimensional
             try: # depending on if it is transposed or not we need either _r or _c as coordinate 
                 ax[_c].set(ylabel="$\Delta\Delta C_T$")
                 r.plot.bar(yerr = stv, ax = ax[_c], colormap=colormap,rot=0, edgecolor = "black", linewidth = 1)
-            except IndexError:
+            except:
                 ax[_r].set(ylabel="$\Delta\Delta C_T$")
                 r.plot.bar(yerr = stv, ax = ax[_r], colormap=colormap,rot=0, edgecolor = "black", linewidth = 1)
         fig.tight_layout()
