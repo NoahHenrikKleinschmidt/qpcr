@@ -293,6 +293,10 @@ def _make_grouped_plots_subplots(result, transpose, figsize, colormap):
     # extract which samples might belong together
     all_matches = find_matches(result_df)
 
+    # if only one grouping is found just return the individuals plot
+    if len(all_matches) == 1:
+        return _make_grouped_plots_individuals(result, figsize, colormap
+        )
     # generate a subplots figure
     rows, cols = gaux.adjust_layout(len(all_matches))
     coordinates = []
