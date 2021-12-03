@@ -27,3 +27,31 @@ def ProgressBar(current, total, barLength = 20):
     print('Progress: [%s%s] %d %%' % (arrow, spaces, percent), end='\r')
     if percent == 100.0:
         print("")
+
+def from_kwargs(key, default, kwargs, rm = False):
+    """
+    This function will try to extract key from the kwargs, 
+    and if it fails it will return default
+    """
+    if isinstance(key, (list, tuple)):
+        for k in key: 
+            r = _from_kwargs(k, default, kwargs, rm = rm )
+            if r != default: 
+                return r
+    else: 
+        r = _from_kwargs(key, default, kwargs, rm = rm)
+    return r 
+
+def _from_kwargs(key, default, kwargs, rm = False):
+    """
+    This function will try to extract key from the kwargs, 
+    and if it fails it will return default
+    """
+    try: 
+        if rm == False: 
+            r = kwargs[key]
+        else: 
+            r = kwargs.pop(key)
+    except: 
+        r = default
+    return r 
