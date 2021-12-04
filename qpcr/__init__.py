@@ -1,9 +1,82 @@
+"""
+This module is designed to provide functions to analyse qPCR data. 
+It is designed for maximal user-friendliness and streamlined data-visualisation.
+"""
 import statistics as stat 
 import pandas as pd
-import qpcr.aux.ops as oo
-import qpcr.aux.os.folder_control as fc
+import qpcr.auxiliary as aux
+import glob, os
 
 
+# TODO: A class to read csv pqcr raw data
+# TODO: A class to perform delta delta ct 
+# TODO: A class to handle and store results
+# TODO: A class to visulalise results
+# TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
+
+RAW_COL_NAMES = ["Sample", "Ct"]
+
+class Reader:
+    """
+    This class reads qpcr raw data files in csv format. 
+    It requires that two columns are present, one for sample names, one for Ct values
+    it will load these into a pandas dataframe.
+    """
+    def __init__(self, filename:str) -> pd.DataFrame: 
+        self._src = filename
+        self._delimiter = ";" if self._is_csv2() else ","
+        self.read()
+
+    def get(self):
+        """
+        Returns the self._df dataframe
+        """
+        return self._df
+
+    def read(self):
+        """
+        Reads the data file
+        """
+        self._df = pd.read_csv(
+                                self._src, 
+                                sep = self._delimiter, 
+                                header = self._has_header(), 
+                                names = RAW_COL_NAMES
+                            )
+
+    def _is_csv2(self):
+        """
+        Tests if csv file is ; delimited (True) or common , (False)
+        """
+        with open(self._src, "r") as openfile: 
+            content = openfile.read()
+        if ";" in content: 
+            return True
+        return False
+
+    def _has_header(self):
+        """
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns False) no headers are presumed. 
+        """
+        with open(self._src, "r") as openfile: 
+            content = openfile.read().split("\n")[0]
+        try: 
+            second_col = content[1]
+            float(second_col)
+            return False
+        except TypeError:
+            return True
+
+
+if __name__ == "__main__":
+    a = Reader("Example Data/28S.csv")
+    print(a.get())
+
+    exit(0)
+
+    
 def open_csv_file(filename, export="dict"):
     """
     This function opens a given input csv file. To function properly, the file is required to have 
@@ -410,20 +483,14 @@ def load_results(filename, mode="individual", *args, **kwargs):
 def _load_individual_results(filename):
     contents = []
     with open(filename, "r") as openfile:
-        for i in openfile:
-            tmp = i
-            tmp = tmp.replace("\n", "")
-            contents.append(tmp)
+        contents = openfile.read().split("\n")
+
     contents = [i.split(",") for i in contents]
     conditions = [i[0] for i in contents]
     values = [i[1:] for i in contents]
     values = values[1:] #crop the first labelling
-    temp = [] #get the numeric values back
-    for i in values:
-        tmp = [float(j) for j in i]
-        temp.append(tmp)
-    values = temp
-
+    values = [[float(j) for j in i] for i in values] #get the numeric values back
+    
     #now pack everything back into a dict
     export_dict = {}
     idx = 0
@@ -446,7 +513,7 @@ def _check_loadpair_kwargs(filename, samples, **kwargs):
     return location, samples, normalisers, sample_names, norm_names
 
 def _load_pair_results(location, samples, normalisers, sample_names = None, norm_names = None):
-    if isinstance(location, list):
+    if isinstance(location, (tuple, list)) and len(location) == 2:
         sample_loc = location[0]
         norm_loc = location[1]
     else:
@@ -528,5 +595,5 @@ if __name__ == "__main__":
     grouped = group_samples(a, 3)
     # print(grouped)
 
-    loaded = load_results("Example Data/", mode = "pairs", normalisers = "Prot", samples = "NMD")
+    loaded = load_results("./Example Data/HNRNPL_nmd_DeltaDelta_Ct.csv")
     print(loaded)

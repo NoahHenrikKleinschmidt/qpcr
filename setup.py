@@ -5,7 +5,7 @@ long_description = "This project represents a python package that includes a num
 
 setuptools.setup(
     name="qpcr", 
-    version="0.1.6",
+    version="0.1.7",
     author="Noah H. Kleinschmidt",
     author_email="noah.kleinschmidt@students.unibe.ch",
     description="A module to perform analysis of qPCR data",
