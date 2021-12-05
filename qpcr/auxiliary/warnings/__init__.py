@@ -22,7 +22,8 @@ WARNINGS = {
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
 "Normaliser:empty_data" : "Sample {s} was not added because it did not contain any results data!", 
-"Normaliser:unknown_data" : "Sample {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!"
+"Normaliser:unknown_data" : "Sample {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
+"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 }
 
 class SoftWarning(Exception):
