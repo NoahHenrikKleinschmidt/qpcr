@@ -1,9 +1,107 @@
+"""
+This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
+This is designed for lightweight users that do not wish to employ specialised pipelines.
+"""
+
 import qpcr
 import matplotlib.pyplot as plt
-import statistics as stat 
-import qpcr.aux.graphical.auxiliaries as gaux
 import pandas as pd 
+import statistics as stats
+# import qpcr.auxiliary as aux
+# import qpcr.auxiliary.graphical.auxiliaries as gx
 import difflib
+
+
+class DeltaDeltaCt(qpcr.SampleReader):
+    """
+    Performs simple standardized DeltaDeltaCt analysis 
+    based on two lists of files, one for normalisers, one for Sample Assays...
+    """
+    def __init__(self):
+        super().__init__()
+        self._Normalisers = []
+        self._Assays = []
+        self._save_to = None
+
+    def add_normalisers(self, normalisers:list):
+        """
+        Links normalisers (filepaths)
+        """
+        self._Normalisers.extend(normalisers)
+    
+    def add_assays(self, samples:list):
+        """
+        Links sample assays (filepaths)
+        """
+        self._Assays.extend(samples)
+
+
+    def save_to(self, directory:str):
+        """
+        Set the location where to save result files
+        """
+        self._save_to = directory
+
+    def analyse(self) -> pd.DataFrame:
+        """
+        The automated standard DeltaDeltaCt pipeline. 
+        Returns a pandas dataframe and can save results to csv file 
+        (if save_to() location has been defined. )
+        """
+        try:
+            reader = qpcr.SampleReader()
+            reader.replicates(self.replicates())
+            if self.is_named():
+                reader.names(self._names)
+            
+            analyser = qpcr.Analyser()
+            normaliser = qpcr.Normaliser()
+
+            normalisers = []
+            samples = []
+
+            # analyse normalisers:
+            for normaliser in self._Normalisers:
+                norm = reader.read(normaliser)
+                norm = analyser.pipe(norm)
+                normalisers.append(norm)
+            normaliser.link(normalisers = normalisers)
+
+            # analyse sample assays
+            for sample in self._Assays:
+                _sample = reader.read(sample)
+                _sample = analyser.pipe(_sample)
+                samples.append(_sample)
+            normaliser.link(samples = samples)
+
+            normaliser.normalise()
+            results = normaliser.get()
+
+            if self._save_to is not None:
+                results.save(self._save_to)
+            
+            return results.get()
+
+        except Exception as e:
+            print(e)
+
+if __name__ == "__main__":
+
+    norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
+    sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    groupnames = ["wt-", "wt+", "ko-", "ko+"]
+
+    analysis = DeltaDeltaCt()
+    analysis.add_assays(sample_files)
+    analysis.add_normalisers(norm_files)
+    analysis.replicates(6)
+    analysis.names(groupnames)
+
+    result = analysis.analyse()
+    print(result)
+
+    exit(0)
+
 
 #now let us try to warp this all up into a more user friendly package
 def single_deltaCt(data_file, replicates, mode = 'replicate', transpose=True, export=True, group_names=None, stats = ['avg', 'stdv'], anchor = None, dCt_exp = True, exportname_addon=None):
