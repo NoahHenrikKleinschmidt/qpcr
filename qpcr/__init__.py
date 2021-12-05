@@ -465,6 +465,34 @@ class Results(aux._ID):
         self._stats_df = pd.DataFrame(self._stats_results)
         return self._stats_df.sort_values("sample")
 
+    def save(self, path, df = True, stats = True):
+        """
+        Saves a csv file for each specified type of results.
+        Path has to be a directory, if both df and stats are True.
+        """
+        if df and stats and not os.path.isdir(path):
+            aw.HardWarning("Results:save_need_dir")
+
+        print(self._df)
+
+        if df:
+            self._save_single(path, self._df, "_df")
+        if stats:
+            if self._stats_df is None:
+                self.stats()
+            self._save_single(path, self._stats_df, "_stats")
+
+    def _save_single(self, path, src, suffix=""):
+        """
+        Saves either self._df or self._stats_df to a csv file based on a path
+        (path can be either filename or directory)
+        """
+        if not os.path.isdir(path):
+            src.to_csv(path)
+        else:
+            src.to_csv(os.path.join(path, f"rel_{self.id()}{suffix}.csv"))
+        
+
     def _add_stats_names(self, samples):
         """
         Adds a group_name column to self._stats_result with appropriate
@@ -501,13 +529,12 @@ class Results(aux._ID):
         return stats
         
 
-    
 class Analyser(aux._ID):
     """
     This class performs Single Delta CT (normalisation within dataset) 
-    or Delta Delta CT (normalisation using second dataset)
+    Delta Delta CT (normalisation using second dataset), is handled by Normaliser()!
     """
-    def __init__(self, Samples:Samples = None) -> pd.DataFrame:
+    def __init__(self, Samples:Samples = None):
         super().__init__()
         self._Samples = Samples
         self._Results = Results()
@@ -554,6 +581,14 @@ class Analyser(aux._ID):
             elif dont_overwrite and not empty:
                 aw.SoftWarning("Analyser:not_newlinked")
 
+    def pipe(self, Samples:Samples, **kwargs) -> Results:
+        """
+        A quick one-step implementation of link + DeltaCt (silently overwrite any previous results)! 
+        Returns a Results instance. Pipe forwards any **kwargs to DeltaCt.
+        """
+        self.link(Samples, force=True, silent=True)
+        self.DeltaCt(**kwargs)
+        return self.get()
 
     def efficiency(self, e:float = None):
         """
@@ -808,6 +843,11 @@ class Normaliser(aux._ID):
             self._normaliser = combined  
             if len(self._Normalisers) > 1:
                 self._update_combined_id()
+            
+            # forward combined_id to self and _Results 
+            self.adopt_id(self._normaliser)
+            self._Results.adopt_id(self._normaliser)
+
         except: 
             pass
 
@@ -819,6 +859,7 @@ class Normaliser(aux._ID):
         ids = [N.id() for N in self._Normalisers]
         ids = "+".join(ids)
         self._normaliser.id(ids)
+        
 
     def _average(self, combined):
         """
@@ -830,8 +871,6 @@ class Normaliser(aux._ID):
         tmp_df = tmp.drop(["group"], axis = 1)
         tmp_df = tmp_df.mean(axis = 1)
         return list(tmp_df)
-
-
 
 
 if __name__ == "__main__":
@@ -854,19 +893,16 @@ if __name__ == "__main__":
         # reader.id(aux.fileID(file))
 
         # samples = Samples(reader)
-        # samples = SampleReader(file)
-        # samples.replicates(6)
-        # samples.group()
-        # samples.rename(groupnames)
-
+        
         sample = reader.read(file)
-        sample.ignore((0,1,3,4))
-        print(sample.get())
+        # sample.ignore((0,1,3,4))
 
-        analyser.link(sample, force=True, silent = False)
-        analyser.DeltaCt()
+        # analyser.link(sample, force=True, silent = False)
+        # analyser.DeltaCt()
+        # res = analyser.get()
 
-        res = analyser.get()
+        res = analyser.pipe(sample)
+        # print(res)
         analysers.append(res)
 
     normaliser = Normaliser()
@@ -876,7 +912,11 @@ if __name__ == "__main__":
     normaliser.normalise()
     
     result = normaliser.get()
+
     print(result.get())
+    
+    # result.save("..")
+    
     #result.add_names(samples)
 
     print(result.stats())

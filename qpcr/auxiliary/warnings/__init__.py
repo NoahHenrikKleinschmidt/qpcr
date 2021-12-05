@@ -18,15 +18,17 @@ WARNINGS = {
 "Results:cannot_link" : "Names could not be linked!\nIf names shall be added after results have been computed, use .add_names() instead! .link() is only allowed on empty Results!",
 "Results:cannot_add_names" : "Names could not be added! Dimensionality did not match...\nExpected length: {length}, but got {length_names}",
 "Results:cannot_add_column" : "The column you try to add to Results does not match the current dimensions! Have: {length}, got: {length_column}",
+"Results:save_need_dir" : "When saving both df and stats, a directory must be specified to store files in!",
 
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
 "Normaliser:empty_data" : "Sample {s} was not added because it did not contain any results data!", 
 "Normaliser:unknown_data" : "Sample {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
+
 }
 
-class SoftWarning(Exception):
+class SoftWarning:
     """
     Only prints out the warning string. 
     It takes the warning identifier alongside with any formatted input that the warning may display
@@ -36,7 +38,7 @@ class SoftWarning(Exception):
         self._message = self._message.format(**kwargs)
         print("Warning:", self._message, sep = "\n")
 
-class HardWarning(Exception):
+class HardWarning:
     """
     Raises an Exception with the warning string
     """
