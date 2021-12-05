@@ -92,10 +92,11 @@ class Samples(aux._ID):
     It adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
     Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default)
     """
-    def __init__(self, Reader:Reader) -> dict:
+    def __init__(self, Reader:Reader = None) -> dict:
         super().__init__()
         self._Reader = Reader
-        self.adopt_id(Reader)
+        if Reader is not None:
+            self.adopt_id(Reader)
         self._df = None
         self._replicates = None
         self._renamed = False
@@ -108,6 +109,7 @@ class Samples(aux._ID):
         Links a qpcr.Reader object to the samples
         """
         self._Reader = Reader
+        self.adopt_id(Reader)
 
     def names(self, as_set = True):
         """
@@ -135,6 +137,7 @@ class Samples(aux._ID):
         """
         Either sets or gets the replicates to be used for grouping the samples
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
+        This may either be an int (equal group sizes), a tuple (uneven group sizes)
         """
         if replicates is None:
             return self._replicates
@@ -179,6 +182,13 @@ class Samples(aux._ID):
         # update "group_name"
         self._df["group_name"] = new_names
         self._renamed = True
+
+    def ignore(self, entries:tuple):
+        """
+        Removed lines based on index from the dataframe.
+        This is useful when removing corrupted data entries.
+        """
+        self._df = self._df.drop(index = list(entries)).reset_index()
 
     def _rename_per_key(self, names):
         """
@@ -272,12 +282,47 @@ class SampleReader(Samples):
     This class reads in a sample file and handles the 
     stored raw data in a pandas dataframe
     """
-    def __init__(self, filename):
-        self._Reader = Reader(filename)
-        super().__init__(self._Reader)
-        self.id(fileID(filename))
-        self._id_reset()
+    def __init__(self):
+        super().__init__()
+        self._replicates = None
+        self._names = None
+        self._Reader = None
+        self._Samples = None
+
+    def replicates(self, replicates:(int or tuple)):
+        """
+        Set the replicates to group samples.
+        This can be either an int (all groups have same number of replicates)
+        or a tuple that specifies the number of replicates for every group separately.
+        """
+        self._replicates = replicates
+
+    def names(self, names:(list or dict)):
+        """
+        Set names for replicates groups. These may be either specified as a list (requires same length as number of groups, assignment per index), 
+        or as a dictionary (also requires new_name for every group), assignment per key. 
+        """
+        self._names = names
         
+    def read(self, filename):
+        """
+        Reads one raw datafile (csv) 
+        """
+        self._Reader = Reader(filename)
+        self._Reader.id(aux.fileID(filename))
+
+        self._Samples = Samples(self._Reader)
+        self._Samples.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Samples.replicates(self._replicates)
+            self._Samples.group()
+        
+        if self._names is not None:
+            self._Samples.rename(self._names)
+
+        return self._Samples
+
 
 class Results(aux._ID):
     """
@@ -542,7 +587,7 @@ class Analyser(aux._ID):
         if f in ["exponential", "linear"]:
             f = True if f == "exponential" else False
             self._deltaCt_function = _deltaCt_function(f)
-        elif type(f) == type(fileID):
+        elif type(f) == type(aux.fileID):
             self._deltaCt_function = f
         else:
             aw.HardWarning("Analyser:cannot_set_func", func = f)
@@ -664,7 +709,7 @@ class Normaliser(aux._ID):
         one list (iterable) of the same length as entries within the qpcr.Results dataframes.
         """
         # isinstance(f, function) didn't work...
-        if type(f) == type(fileID):
+        if type(f) == type(aux.fileID):
             self._prep_func = f
         elif f is None:
             return f
@@ -678,7 +723,7 @@ class Normaliser(aux._ID):
         a numeric value. 
         Be default s/n is used...
         """
-        if type(f) == type(fileID):
+        if type(f) == type(aux.fileID):
             self._norm_func = f
         elif f is None:
             return f
@@ -787,15 +832,7 @@ class Normaliser(aux._ID):
         return list(tmp_df)
 
 
-def fileID(filename):
-    """
-    returns the basename of a filename for use as id
-    """
-    basename = os.path.basename(filename)
-    basename = basename.split(".")[0]
-    if not isinstance(basename, str):
-        basename = ".".join(basename)
-    return basename
+
 
 if __name__ == "__main__":
     
@@ -804,22 +841,31 @@ if __name__ == "__main__":
 
     analysers = []
 
+    reader = SampleReader()
+    reader.replicates(6)
+    reader.names(groupnames)
+
     analyser = Analyser()
     analyser.anchor("first")
 
     for file in files: 
 
         # reader = Reader(file)
-        # reader.id(fileID(file))
+        # reader.id(aux.fileID(file))
 
         # samples = Samples(reader)
-        samples = SampleReader(file)
-        samples.replicates(6)
-        samples.group()
-        samples.rename(groupnames)
+        # samples = SampleReader(file)
+        # samples.replicates(6)
+        # samples.group()
+        # samples.rename(groupnames)
 
-        analyser.link(samples, force=True, silent = False)
-        analyser.DeltaCt(a = 1)
+        sample = reader.read(file)
+        sample.ignore((0,1,3,4))
+        print(sample.get())
+
+        analyser.link(sample, force=True, silent = False)
+        analyser.DeltaCt()
+
         res = analyser.get()
         analysers.append(res)
 

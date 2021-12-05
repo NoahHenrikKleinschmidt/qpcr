@@ -65,3 +65,14 @@ class _ID:
         Resets the memory if the id was already changed
         """
         self._id_was_set = False
+
+
+def fileID(filename):
+    """
+    returns the basename of a filename for use as id
+    """
+    basename = os.path.basename(filename)
+    basename = basename.split(".")[0]
+    if not isinstance(basename, str):
+        basename = ".".join(basename)
+    return basename
