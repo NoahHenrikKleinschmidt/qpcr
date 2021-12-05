@@ -86,11 +86,12 @@ class Reader(aux._ID):
         return None  # no headers
 
 
-class Samples(aux._ID):
+class Assay(aux._ID):
     """
-    This class groups a set of samples into groups of replicates as specified by the user.
+    This class places a set of samples into groups of replicates as specified by the user.
     It adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
-    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default)
+    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default). Note that if no renaming takes place, 
+    the "group_name" column will be dropped in the later steps of the pipeline. Only renamed "group_name" columns are passed on!
     """
     def __init__(self, Reader:Reader = None) -> dict:
         super().__init__()
@@ -106,7 +107,7 @@ class Samples(aux._ID):
 
     def link(self, Reader:Reader):
         """
-        Links a qpcr.Reader object to the samples
+        Links a qpcr.Reader object to the Assay
         """
         self._Reader = Reader
         self.adopt_id(Reader)
@@ -145,7 +146,7 @@ class Samples(aux._ID):
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
-                aw.HardWarning("Samples:reps_dont_cover", n_samples = self._Reader.n(), reps = replicates)
+                aw.HardWarning("Assay:reps_dont_cover", n_samples = self._Reader.n(), reps = replicates)
 
     def group(self):
         """
@@ -160,7 +161,7 @@ class Samples(aux._ID):
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
         else:
-            aw.HardWarning("Samples:no_reps_yet")
+            aw.HardWarning("Assay:no_reps_yet")
 
         df["group"], df["group_name"] = groups, group_names
         self._df = df
@@ -177,7 +178,7 @@ class Samples(aux._ID):
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            aw.HardWarning("Samples:no_groupname_assignment", names = names)
+            aw.HardWarning("Assay:no_groupname_assignment", names = names)
 
         # update "group_name"
         self._df["group_name"] = new_names
@@ -196,8 +197,9 @@ class Samples(aux._ID):
         to update groupnames, based on key (old name) : value (new name) indexing. 
         Before applying it checks if all groups are covered by new names
         """
-        current_names = len(aux.sorted_set(self._df["group_name"]))
-        all_groups_covered = len(names) == current_names
+        current_names = aux.sorted_set(self._df["group_name"])
+        print(current_names)
+        all_groups_covered = len(names) == len(current_names)
         if all_groups_covered:
             current_names = list(self._df["group_name"])
             new_names = "$".join(current_names)
@@ -206,7 +208,7 @@ class Samples(aux._ID):
             new_names = new_names.split("$")       
             return new_names
         else:
-            aw.HardWarning("Samples:groupnames_dont_colver", current_groups = current_names)
+            aw.HardWarning("Assay:groupnames_dont_colver", current_groups = current_names)
 
     def _rename_per_index(self, names):
         """
@@ -228,7 +230,7 @@ class Samples(aux._ID):
             new_names = new_names.split("$")
             return new_names
         else:
-            aw.HardWarning("Samples:groupnames_dont_colver", current_groups = current_names)
+            aw.HardWarning("Assay:groupnames_dont_colver", current_groups = current_names)
 
 
     def _make_unequal_groups(self):
@@ -277,7 +279,7 @@ class Samples(aux._ID):
             verdict = True if sum(replicates) == samples else False
         return verdict
 
-class SampleReader(Samples):
+class SampleReader(Assay):
     """
     This class reads in a sample file and handles the 
     stored raw data in a pandas dataframe
@@ -287,7 +289,7 @@ class SampleReader(Samples):
         self._replicates = None
         self._names = None
         self._Reader = None
-        self._Samples = None
+        self._Assay = None
 
     def replicates(self, replicates:(int or tuple)):
         """
@@ -311,17 +313,17 @@ class SampleReader(Samples):
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
 
-        self._Samples = Samples(self._Reader)
-        self._Samples.adopt_id(self._Reader)
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
 
         if self._replicates is not None:
-            self._Samples.replicates(self._replicates)
-            self._Samples.group()
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
         
         if self._names is not None:
-            self._Samples.rename(self._names)
+            self._Assay.rename(self._names)
 
-        return self._Samples
+        return self._Assay
 
 
 class Results(aux._ID):
@@ -332,16 +334,16 @@ class Results(aux._ID):
         super().__init__()
         self._results = {"group" : [], "dCt" : []}
         self._df = None
-        self._Samples = None
+        self._Assay = None
         self._stats_results = {"group" : [], "sample" : [], "mean" : [], "stdev" : [], "median" : []}
         self._stats_df = None
 
-    def link(self, Samples:Samples):
+    def link(self, Assay:Assay):
         """
-        Links an instance of Samples to be used for group_names
+        Links an instance of Assay to be used for group_names
         And adds a group_name column to the dataframe
         """
-        self._Samples = Samples
+        self._Assay = Assay
         if self.is_empty():
             self._results = {"group" : [], "group_name" : [], "dCt" : []}
         else:
@@ -355,10 +357,10 @@ class Results(aux._ID):
     
     def names(self, as_set = False):
         """
-        Returns the linked group_names (only works if Samples have been linked!)
+        Returns the linked group_names (only works if Assay have been linked!)
         """
-        if self._Samples is not None:
-            return self._Samples.names(as_set)
+        if self._Assay is not None:
+            return self._Assay.names(as_set)
         return None
 
     def get(self):
@@ -394,8 +396,8 @@ class Results(aux._ID):
         entries = len(dCt)
         self._results["group"].extend([group] * entries)
         self._results["dCt"].extend(dCt)
-        if self._Samples is not None:
-            names = self._Samples.names()
+        if self._Assay is not None:
+            names = self._Assay.names()
             self._results["group_name"].extend([names[group]] * entries)
         
         self._df = pd.DataFrame(self._results)
@@ -487,10 +489,8 @@ class Results(aux._ID):
         Saves either self._df or self._stats_df to a csv file based on a path
         (path can be either filename or directory)
         """
-        if not os.path.isdir(path):
-            src.to_csv(path)
-        else:
-            src.to_csv(os.path.join(path, f"rel_{self.id()}{suffix}.csv"))
+        filename = path if not os.path.isdir(path) else os.path.join(path, f"rel_{self.id()}{suffix}.csv")
+        src.to_csv(filename)
         
 
     def _add_stats_names(self, samples):
@@ -534,9 +534,9 @@ class Analyser(aux._ID):
     This class performs Single Delta CT (normalisation within dataset) 
     Delta Delta CT (normalisation using second dataset), is handled by Normaliser()!
     """
-    def __init__(self, Samples:Samples = None):
+    def __init__(self, Assay:Assay = None):
         super().__init__()
-        self._Samples = Samples
+        self._Assay = Assay
         self._Results = Results()
 
         # default settings
@@ -544,10 +544,10 @@ class Analyser(aux._ID):
         self._efficiency = 2
         self._deltaCt_function = self._deltaCt_function(exp = True)
 
-        if self._Samples is not None: 
-            self._Results.adopt_id(Samples)
-            if self._Samples.is_named(): # link Sample to add group_name if groups are named...
-                self._Results.link(self._Samples)
+        if self._Assay is not None: 
+            self._Results.adopt_id(Assay)
+            if self._Assay.is_named(): # link Sample to add group_name if groups are named...
+                self._Results.link(self._Assay)
     
     def get(self):
         """
@@ -558,21 +558,21 @@ class Analyser(aux._ID):
     def has_results(self):
         return not self._Results.is_empty()
 
-    def link(self, Samples:Samples, force = False, silent = False):
+    def link(self, Assay:Assay, force = False, silent = False):
         """
-        Links a qpcr.Samples object to the Analyser
+        Links a qpcr.Assay object to the Analyser
         Note: If there are any precomputed results, no new data will be linked, unless force=True is called. 
         The user is notified if results are present and how to proceed. 
         """
         empty = self._Results.is_empty()
         dont_overwrite = not empty and not force
         if not dont_overwrite:
-            self._Samples = Samples
-            self.adopt_id(self._Samples)
+            self._Assay = Assay
+            self.adopt_id(self._Assay)
             self._Results = Results()
-            self._Results.adopt_id(self._Samples)
-            if self._Samples.is_named():
-                self._Results.link(self._Samples)
+            self._Results.adopt_id(self._Assay)
+            if self._Assay.is_named():
+                self._Results.link(self._Assay)
             
         if not silent:
             # notify the user of changes to the Analyser data and results
@@ -581,12 +581,12 @@ class Analyser(aux._ID):
             elif dont_overwrite and not empty:
                 aw.SoftWarning("Analyser:not_newlinked")
 
-    def pipe(self, Samples:Samples, **kwargs) -> Results:
+    def pipe(self, Assay:Assay, **kwargs) -> Results:
         """
         A quick one-step implementation of link + DeltaCt (silently overwrite any previous results)! 
         Returns a Results instance. Pipe forwards any **kwargs to DeltaCt.
         """
-        self.link(Samples, force=True, silent=True)
+        self.link(Assay, force=True, silent=True)
         self.DeltaCt(**kwargs)
         return self.get()
 
@@ -650,8 +650,8 @@ class Analyser(aux._ID):
         Performs DeltaCt using a specified anchor
         """
         # get set of sample groups and dataset
-        groups = self._Samples.groups()
-        df = self._Samples.get()
+        groups = self._Assay.groups()
+        df = self._Assay.get()
         for group in groups: 
             group_subset = df.query(f"group == {group}").reset_index()
             delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
@@ -662,8 +662,8 @@ class Analyser(aux._ID):
         Performs DeltaCt using the first entry of each group as anchor
         """
         # get set of sample groups and dataset
-        groups = self._Samples.groups()
-        df = self._Samples.get()
+        groups = self._Assay.groups()
+        df = self._Assay.get()
         for group in groups: 
             group_subset = df.query(f"group == {group}").reset_index()
             anchor = group_subset["Ct"][0]
@@ -675,8 +675,8 @@ class Analyser(aux._ID):
         Performs DeltaCt using the very first entry of the dataset as anchor
         """
         # get set of sample groups and dataset
-        groups = self._Samples.groups()
-        df = self._Samples.get()
+        groups = self._Assay.groups()
+        df = self._Assay.get()
         anchor = df["Ct"][0]
         for group in groups:
             group_subset = df.query(f"group == {group}").reset_index()
@@ -718,7 +718,7 @@ class Normaliser(aux._ID):
     def __init__(self):
         super().__init__()
         self._Normalisers = []
-        self._Samples = []
+        self._Assay = []
         self._Results = Results()
         self._normaliser = None
         self._prep_func = self._average
@@ -773,25 +773,25 @@ class Normaliser(aux._ID):
         if self._normaliser is None: 
             self._preprocess_normalisers()
 
-        if self._Samples == [] or self._normaliser is None:
+        if self._Assay == [] or self._normaliser is None:
             raise Warning("Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!")
 
         # get normaliser dataframe
         normaliser = self._normaliser.get()
 
         # setup groups for _Results
-        self._Results.copy_groups(self._Samples[0])
+        self._Results.copy_groups(self._Assay[0])
 
         # combine normalised samples into unified dataframe
-        for S in self._Samples:
+        for S in self._Assay:
             S_df = S.get()
             column_name = f"{S.id()}_rel_{self._normaliser.id()}"
             normalised = [self._norm_func(s, n) for s,n in zip(S_df["dCt"], normaliser["dCt_combined"])]
             self._Results.add_column(normalised, column_name)
 
         # forward group_name column if present 
-        if self._Samples[0].is_named():
-            self._Results.add_names(self._Samples[0])
+        if self._Assay[0].is_named():
+            self._Results.add_names(self._Assay[0])
 
     def _divide_by_normaliser(self, s, n):
         """
@@ -807,9 +807,9 @@ class Normaliser(aux._ID):
         if samples is not None:
             for sample in samples: 
                 if isinstance(sample, Results):
-                    self._Samples.append(sample)
+                    self._Assay.append(sample)
                 elif isinstance(sample, Analyser) and sample.has_results():
-                    self._Samples.append(sample.get())
+                    self._Assay.append(sample.get())
                 elif isinstance(sample, Analyser) and not sample.has_results():
                     aw.SoftWarning("Normaliser:empty_data", s = sample)
                 else: 
@@ -881,7 +881,7 @@ if __name__ == "__main__":
     analysers = []
 
     reader = SampleReader()
-    reader.replicates(6)
+    reader.replicates(4)
     reader.names(groupnames)
 
     analyser = Analyser()
@@ -892,7 +892,7 @@ if __name__ == "__main__":
         # reader = Reader(file)
         # reader.id(aux.fileID(file))
 
-        # samples = Samples(reader)
+        # samples = Assay(reader)
         
         sample = reader.read(file)
         # sample.ignore((0,1,3,4))
@@ -925,8 +925,8 @@ if __name__ == "__main__":
     # x = Reader("Example Data/28S.csv")
     # a.id("28S")
     # x.id("also28S")
-    # b = Samples(a)
-    # y = Samples(x)
+    # b = Assay(a)
+    # y = Assay(x)
     # b.replicates(6)
     # y.replicates(6)
     # b.group()
@@ -1162,13 +1162,13 @@ def normalise(normaliser:dict, sample:dict, no_head=True):
     keys_n = normaliser.keys()
     keys_s = sample.keys()
     if keys_n != keys_s:
-        print("Normaliser and Samples do not share the same group names!")
+        print("Normaliser and Assay do not share the same group names!")
         return None
     for k in keys_s:
         normals = normaliser[k]
         samples = sample[k]
         if len(normals) != len(samples):
-            print("Normaliser and Samples do not have the same length!")
+            print("Normaliser and Assay do not have the same length!")
             return None
         
         temp = []
@@ -1229,7 +1229,7 @@ def combine_normalisers(normalisers:list):
 def rename_groups(sample_dict, new_names:list):
     """
     Sample names from the original csv file are not imported! 
-    Samples will be only named according to their groups. Group names can be set using this function. If no names are provided, "Group 1", "Group 2" etc. will be used by default.
+    Assay will be only named according to their groups. Group names can be set using this function. If no names are provided, "Group 1", "Group 2" etc. will be used by default.
     rename_groups can be used on any dict at any stage in the process. 
     """
     keys = sample_dict.keys()
