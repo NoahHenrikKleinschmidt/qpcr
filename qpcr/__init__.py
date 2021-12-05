@@ -4,38 +4,51 @@ It is designed for maximal user-friendliness and streamlined data-visualisation.
 """
 import statistics as stat 
 import pandas as pd
-import qpcr.auxiliary as aux
+import auxiliary as aux
+from auxiliary import warnings as aw
 import glob, os
+import copy
+import statistics as stats
 
-
-# TODO: A class to read csv pqcr raw data
-# TODO: A class to perform delta delta ct 
-# TODO: A class to handle and store results
-# TODO: A class to visulalise results
+# TODO: A class to read csv pqcr raw data << CHECK
+# TODO: A class to perform data preprocessing (like grouping replicates etc...) << CHECK
+#   - grouping replicates << CHECK
+#   - assigning group names (optional) << CHECK
+# TODO: A class to perform delta delta ct << CHECK
+# TODO: A class to handle and store results << CHECK
+# TODO: A class to visulalise results 
 # TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
 
 RAW_COL_NAMES = ["Sample", "Ct"]
 
-class Reader:
+
+class Reader(aux._ID):
     """
     This class reads qpcr raw data files in csv format. 
     It requires that two columns are present, one for sample names, one for Ct values
     it will load these into a pandas dataframe.
     """
     def __init__(self, filename:str) -> pd.DataFrame: 
+        super().__init__()
         self._src = filename
         self._delimiter = ";" if self._is_csv2() else ","
         self.read()
 
     def get(self):
         """
-        Returns the self._df dataframe
+        Returns the samples dataframe
         """
         return self._df
 
+    def n(self):
+        """
+        Returns the number of samples
+        """
+        return len(self._df["Sample"])
+
     def read(self):
         """
-        Reads the data file
+        Reads the given data file
         """
         self._df = pd.read_csv(
                                 self._src, 
@@ -44,6 +57,7 @@ class Reader:
                                 names = RAW_COL_NAMES
                             )
 
+    
     def _is_csv2(self):
         """
         Tests if csv file is ; delimited (True) or common , (False)
@@ -58,25 +72,801 @@ class Reader:
         """
         Checks if column headers are provided in the data file
         It does so by checking if the second element in the first row is numeric
-        if it is numeric (returns False) no headers are presumed. 
+        if it is numeric (returns None << False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
         """
         with open(self._src, "r") as openfile: 
             content = openfile.read().split("\n")[0]
+            content = content.split(self._delimiter)
         try: 
             second_col = content[1]
-            float(second_col)
-            return False
-        except TypeError:
-            return True
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
 
+
+class Samples(aux._ID):
+    """
+    This class groups a set of samples into groups of replicates as specified by the user.
+    It adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
+    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default)
+    """
+    def __init__(self, Reader:Reader) -> dict:
+        super().__init__()
+        self._Reader = Reader
+        self.adopt_id(Reader)
+        self._df = None
+        self._replicates = None
+        self._renamed = False
+
+    def get(self):
+        return self._df
+
+    def link(self, Reader:Reader):
+        """
+        Links a qpcr.Reader object to the samples
+        """
+        self._Reader = Reader
+
+    def names(self, as_set = True):
+        """
+        Returns a set of sample group names (maintaing group order)
+        or using as_set=False the full group_name column with replicate repeats.
+        """
+        if as_set:
+            return aux.sorted_set(list(self._df["group_name"]))
+        else: 
+            return list(self._df["group_name"])
+    
+    def is_named(self): # not used so far...
+        """
+        Returns True if .rename() was performed and custom group names are provided
+        """
+        return self._renamed
+
+    def groups(self):
+        """
+        Returns a set of sample groups (numeric)
+        """
+        return sorted(list(set(self._df["group"])))
+
+    def replicates(self, replicates : (int or tuple) = None):
+        """
+        Either sets or gets the replicates to be used for grouping the samples
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+        """
+        if replicates is None:
+            return self._replicates
+        else: 
+            if self._vet_replicates(replicates):
+                self._replicates = replicates
+            else: 
+                aw.HardWarning("Samples:reps_dont_cover", n_samples = self._Reader.n(), reps = replicates)
+
+    def group(self):
+        """
+        Groups the samples according to replicates specified
+        """
+        df = self._Reader.get()
+        
+        # generate group and group_names columns
+        if isinstance(self._replicates, int):
+            samples = self._Reader.n()
+            groups, group_names = self._make_equal_groups(samples)            
+        elif isinstance(self._replicates, tuple):
+            groups, group_names = self._make_unequal_groups()
+        else:
+            aw.HardWarning("Samples:no_reps_yet")
+
+        df["group"], df["group_name"] = groups, group_names
+        self._df = df
+
+    def rename(self, names:(list or dict)):
+        """
+        Replaces the generic Group0,... in the "group_name" column,
+        using a list (set) or dict specifying new group names. 
+        Group names only need to be specified once, and are applied to all replicate entries.
+        """
+        # get new group names based on list (index) or dict (key)
+        if isinstance(names, (list, tuple, set)):
+            new_names = self._rename_per_index(names)       
+        elif isinstance(names, dict):
+            new_names = self._rename_per_key(names)
+        else:
+            aw.HardWarning("Samples:no_groupname_assignment", names = names)
+
+        # update "group_name"
+        self._df["group_name"] = new_names
+        self._renamed = True
+
+    def _rename_per_key(self, names):
+        """
+        Generates new name list based on current names in "group_name" and uses string.replace()
+        to update groupnames, based on key (old name) : value (new name) indexing. 
+        Before applying it checks if all groups are covered by new names
+        """
+        current_names = len(aux.sorted_set(self._df["group_name"]))
+        all_groups_covered = len(names) == current_names
+        if all_groups_covered:
+            current_names = list(self._df["group_name"])
+            new_names = "$".join(current_names)
+            for old_name, new_name in names.items():
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split("$")       
+            return new_names
+        else:
+            aw.HardWarning("Samples:groupnames_dont_colver", current_groups = current_names)
+
+    def _rename_per_index(self, names):
+        """
+        Generates new name list based on current names in "group_names" and uses string.replace()
+        to update groupnames to new names based on index (using a the order 
+        of groups as is currently present in "group_name"). 
+        """
+        current_names = len(aux.sorted_set(self._df["group_name"]))
+        all_groups_covered = len(names) == current_names
+        if all_groups_covered:
+            current_names = list(self._df["group_name"])
+            names = list(names)
+            new_names = "$".join(current_names)
+
+            current_names_set = aux.sorted_set(current_names)
+
+            for old_name, new_name in zip(current_names_set, names):
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split("$")
+            return new_names
+        else:
+            aw.HardWarning("Samples:groupnames_dont_colver", current_groups = current_names)
+
+
+    def _make_unequal_groups(self):
+        """
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with a tuple for replicate group sizes)
+        """
+        groups = []
+        group_names = []
+        for rep, idx in zip(self._replicates, range(len(self._replicates))): 
+            groups.extend([idx] * rep)
+            group_names.extend([f"Group{idx}"] * rep)
+        return groups, group_names
+
+    def _make_equal_groups(self, samples):
+        """
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with an integer group size, 
+        assuming all groups have the same size)
+        """
+        groups = []
+        group_names = []
+        slices = range(int(samples / self._replicates))
+        for i in slices:
+            groups.extend([i] * self._replicates)
+            group_names.extend([f"Group{i}"] * self._replicates)
+        return groups, group_names
+
+    def _vet_replicates(self, replicates : (int or tuple)):
+        """
+        Checks if provided replicates will place all sample entries into a group
+        returns True if all samples are covered, False if not...
+        """
+        samples = self._Reader.n()
+
+        # for INT -> modulo will be 0 if all samples are covered
+        # for TUPLE -> sum(replicates) should cover all samples...
+
+        if isinstance(replicates, int):
+            verdict = True if samples % replicates == 0 else False
+        elif isinstance(replicates, tuple): 
+            verdict = True if sum(replicates) == samples else False
+        return verdict
+
+class SampleReader(Samples):
+    """
+    This class reads in a sample file and handles the 
+    stored raw data in a pandas dataframe
+    """
+    def __init__(self, filename):
+        self._Reader = Reader(filename)
+        super().__init__(self._Reader)
+        self.id(fileID(filename))
+        self._id_reset()
+        
+
+class Results(aux._ID):
+    """
+    This class handles a pandas dataframe for the results from qpcr.Analyser
+    """
+    def __init__(self):
+        super().__init__()
+        self._results = {"group" : [], "dCt" : []}
+        self._df = None
+        self._Samples = None
+        self._stats_results = {"group" : [], "sample" : [], "mean" : [], "stdev" : [], "median" : []}
+        self._stats_df = None
+
+    def link(self, Samples:Samples):
+        """
+        Links an instance of Samples to be used for group_names
+        And adds a group_name column to the dataframe
+        """
+        self._Samples = Samples
+        if self.is_empty():
+            self._results = {"group" : [], "group_name" : [], "dCt" : []}
+        else:
+            aw.SoftWarning("Results:cannot_link")
+    
+    def is_named(self):
+        """
+        Returns True if group_name column is present
+        """
+        return "group_name" in self._results.keys()
+    
+    def names(self, as_set = False):
+        """
+        Returns the linked group_names (only works if Samples have been linked!)
+        """
+        if self._Samples is not None:
+            return self._Samples.names(as_set)
+        return None
+
+    def get(self):
+        """
+        Returns the results dataframe
+        """
+        return self._df
+
+    def is_empty(self):
+        """
+        Checks if any results have been stored so far (True if not)
+        """
+        return self._df is None
+
+    def add_names(self, Sample):
+        """
+        Adds group_names to results dataframe using the group names
+        specified by a qpcr.Sample object.
+        """
+        names = Sample.names(as_set = False)
+        length = len(self._results["group"])
+        if len(names) == length:
+            self._results["group_name"] = names
+            self._df = pd.DataFrame(self._results)
+        else: 
+            aw.SoftWarning("Results:cannot_add_names", length = length, length_names = len(names))
+    
+    def add(self, dCt:tuple, group:int):
+        """
+        Adds a new set of deltaCt results for a given group. 
+        This is used during DeltaCt computation
+        """
+        entries = len(dCt)
+        self._results["group"].extend([group] * entries)
+        self._results["dCt"].extend(dCt)
+        if self._Samples is not None:
+            names = self._Samples.names()
+            self._results["group_name"].extend([names[group]] * entries)
+        
+        self._df = pd.DataFrame(self._results)
+
+    def add_column(self, column, name):
+        """
+        Adds an entire computed results column to the dataframe
+        """
+        length = len(self._results["group"])
+        if len(column) == length:
+            self._results[name] = column
+            self._df = pd.DataFrame(self._results)
+        else:
+            aw.HardWarning("Results:cannot_add_column", length = length, length_column = len(column))
+    
+    def copy_groups(self, Results):
+        """
+        Copies the groups from another Results instance dataframe, 
+        but drops the dCt column. This is used when doing normalisation of datasets,
+        where no individual dCt columns are necessary...
+        """
+        self._results["group"] = list(Results.get()["group"])
+        del self._results["dCt"]
+        self._df = pd.DataFrame(self._results)
+
+    def merge(self, *Results):
+        """
+        Merges any number of other Results Instances into this one
+        """
+        new_df = self._df
+        for R in Results: 
+            R_df = R.get()
+            # we merge the dataframes based on their groups, and add the instance id as identifier
+            new_df = pd.merge(new_df, R_df["dCt"], 
+                                right_index = True, left_index = True, 
+                                suffixes = [f"_{self.id()}", f"_{R.id()}"]
+                            )
+        self._df = new_df # update self._df and also self._results!
+        self._results = self._df.to_dict(orient="list")
+
+    def stats(self, recompute = False) -> pd.DataFrame:
+        """
+        Returns a new dataframe containing Mean, Median, and 
+        StDev of all replicate groups, for all samples.
+        """
+        # if stats_df is already present, return but sorted according to samples, not groups (nicer for user to inspect)
+        if self._stats_df is not None and not recompute:
+            return self._stats_df.sort_values("sample")
+        
+        # get groups and samples 
+        groups = aux.sorted_set(list(self._df["group"]))
+        samples = [c for c in self._df.columns if c not in ["group", "group_name"]]
+        
+        # compute stats for all samples per group
+        for group in groups:
+            group_subset = self._df.query(f"group == {group}")
+            
+            median = self._stat_var(group_subset, stats.median)
+            mean = self._stat_var(group_subset, stats.mean)
+            stdv = self._stat_var(group_subset, stats.stdev)
+            self._add_stats(samples, group, median, mean, stdv)
+            
+        # add group names if present
+        if self.is_named():
+            self._add_stats_names(samples)
+
+        self._stats_df = pd.DataFrame(self._stats_results)
+        return self._stats_df.sort_values("sample")
+
+    def _add_stats_names(self, samples):
+        """
+        Adds a group_name column to self._stats_result with appropriate
+        repetition of group_names for each sample...
+        """
+        self._stats_results["group_name"] = []
+        group_names = aux.sorted_set(list(self._df["group_name"]))
+        for group_name in group_names:
+            self._stats_results["group_name"].extend([group_name] * len(samples))
+
+    def _add_stats(self, samples, group, median, mean, stdv):
+        """
+        Adds new summary entries to self._stats_results
+        """
+        self._stats_results["group"].extend([group] * len(samples))
+        self._stats_results["sample"].extend(samples)
+        self._stats_results["median"].extend(median)
+        self._stats_results["mean"].extend(mean)
+        self._stats_results["stdev"].extend(stdv)
+
+
+    def _stat_var(self, group_subset, func):
+        """
+        Performs a function (like mean or stdv) over all rows
+        and returns the result as list with a float for each column in the df
+        any function can be passed as long as it works with an iterable
+        """
+        # ignore group and group_name columns
+        ignore = ["group", "group_name"]
+        all_cols = [g for g in group_subset.columns if g not in ignore]
+        tmp = group_subset[all_cols]
+        # compute stats based on func
+        stats = [func(tmp[col]) for col in tmp]
+        return stats
+        
+
+    
+class Analyser(aux._ID):
+    """
+    This class performs Single Delta CT (normalisation within dataset) 
+    or Delta Delta CT (normalisation using second dataset)
+    """
+    def __init__(self, Samples:Samples = None) -> pd.DataFrame:
+        super().__init__()
+        self._Samples = Samples
+        self._Results = Results()
+
+        # default settings
+        self._anchor = "first"
+        self._efficiency = 2
+        self._deltaCt_function = self._deltaCt_function(exp = True)
+
+        if self._Samples is not None: 
+            self._Results.adopt_id(Samples)
+            if self._Samples.is_named(): # link Sample to add group_name if groups are named...
+                self._Results.link(self._Samples)
+    
+    def get(self):
+        """
+        Returns the Results object that contains the results
+        """
+        return self._Results
+
+    def has_results(self):
+        return not self._Results.is_empty()
+
+    def link(self, Samples:Samples, force = False, silent = False):
+        """
+        Links a qpcr.Samples object to the Analyser
+        Note: If there are any precomputed results, no new data will be linked, unless force=True is called. 
+        The user is notified if results are present and how to proceed. 
+        """
+        empty = self._Results.is_empty()
+        dont_overwrite = not empty and not force
+        if not dont_overwrite:
+            self._Samples = Samples
+            self.adopt_id(self._Samples)
+            self._Results = Results()
+            self._Results.adopt_id(self._Samples)
+            if self._Samples.is_named():
+                self._Results.link(self._Samples)
+            
+        if not silent:
+            # notify the user of changes to the Analyser data and results
+            if not dont_overwrite and not empty:
+                aw.SoftWarning("Analyser:newlinked")
+            elif dont_overwrite and not empty:
+                aw.SoftWarning("Analyser:not_newlinked")
+
+
+    def efficiency(self, e:float = None):
+        """
+        Sets an efficiency factor for externally calculated qPCR amplification efficiency.
+        By default efficiency = 2 is assumed.
+        """
+        if isinstance(e, (int, float)):
+            self._efficiency = float(e)
+        elif e is None: 
+            return self._efficiency
+
+    def anchor(self, anchor):
+        """
+        Sets the anchor for DeltaCt
+        This can be either 
+        - "first" (default, very first dataset entry)
+        - "grouped" (first entry for each replicate group)
+        - a specified numeric value
+        """
+        self._anchor = anchor
+
+    def func(self, f:(str or function)):
+        """
+        Sets the function to be used for DeltaCt (optional)
+        Available inputs are 
+        "exponential" --> uses efficiency^(-(s-r)) # default efficiency = 2
+        "linear" --> uses s-r
+        any defined function that accepts an anchor (1st!) and sample (2nd!) 
+        numeric value each, alongside any kwargs (will be forwarded from .DeltaCt()...)
+        """
+        if f in ["exponential", "linear"]:
+            f = True if f == "exponential" else False
+            self._deltaCt_function = _deltaCt_function(f)
+        elif type(f) == type(fileID):
+            self._deltaCt_function = f
+        else:
+            aw.HardWarning("Analyser:cannot_set_func", func = f)
+
+    def DeltaCt(self, **kwargs):
+        """
+        Calculates DeltaCt for all groups within the samples.
+        As anchor for normalisation either three options may be specified
+        first   -  the very first row in the dataset
+        grouped -  the first replicate within each group
+        specified_value (some external numeric value that will be used directly).
+        Any additional arguments that a custom deltaCt function will require may be passed
+        via the kwargs.
+        """
+        if self._anchor == "first":
+            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+        elif self._anchor == "grouped":
+            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+        else: 
+            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+
+
+    def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
+        """
+        Performs DeltaCt using a specified anchor
+        """
+        # get set of sample groups and dataset
+        groups = self._Samples.groups()
+        df = self._Samples.get()
+        for group in groups: 
+            group_subset = df.query(f"group == {group}").reset_index()
+            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
+            self._Results.add(delta_cts, group)
+
+    def _DeltaCt_grouped_anchored(self, deltaCt_function, **kwargs):
+        """
+        Performs DeltaCt using the first entry of each group as anchor
+        """
+        # get set of sample groups and dataset
+        groups = self._Samples.groups()
+        df = self._Samples.get()
+        for group in groups: 
+            group_subset = df.query(f"group == {group}").reset_index()
+            anchor = group_subset["Ct"][0]
+            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
+            self._Results.add(delta_cts, group)
+
+    def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
+        """
+        Performs DeltaCt using the very first entry of the dataset as anchor
+        """
+        # get set of sample groups and dataset
+        groups = self._Samples.groups()
+        df = self._Samples.get()
+        anchor = df["Ct"][0]
+        for group in groups:
+            group_subset = df.query(f"group == {group}").reset_index()
+            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
+            self._Results.add(delta_cts, group)
+        return anchor
+
+    def _exp_DCt(self, ref, sample, **kwargs):
+        """
+        Calculates deltaCt exponentially
+        """
+        factor = sample-ref 
+        return self._efficiency **(-factor)
+
+    def _simple_DCt(self, ref, sample, **kwargs):
+        """
+        Calculates deltaCt linearly
+        """
+        return sample-ref
+
+    def _deltaCt_function(self, exp):
+        """
+        Returns the function to be used for DeltaCt based on 
+        whether or not exponential shall be used.
+        """
+        if exp == True:
+            dCt = self._exp_DCt
+        else:
+            dCt = self._simple_DCt
+        return dCt
+
+
+class Normaliser(aux._ID):
+    """
+    This class handles normalisation of two (or more) datasets against, 
+    using one as normaliser.
+    This requires that all have been Analysed in the same way before!
+    """
+    def __init__(self):
+        super().__init__()
+        self._Normalisers = []
+        self._Samples = []
+        self._Results = Results()
+        self._normaliser = None
+        self._prep_func = self._average
+        self._norm_func = self._divide_by_normaliser
+
+    def get(self):
+        """
+        Returns the normalised dataframe
+        """
+        return self._Results
+    
+    def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
+        """
+        Links either normalisers or any number of samples
+        """
+        self._link_normaliser(normalisers)
+        self._link_samples(samples)
+    
+    def prep_func(self, f = None):
+        """
+        Sets any defined function for combined normaliser preprocessing...
+        The function may accept one list of qpcr.Results instances, and must return 
+        one list (iterable) of the same length as entries within the qpcr.Results dataframes.
+        """
+        # isinstance(f, function) didn't work...
+        if type(f) == type(fileID):
+            self._prep_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning("Normaliser:cannot_set_prep_func", func = f)
+
+    def norm_func(self, f = None):
+        """
+        Sets any defined function to perform normalisation of samples against normalisers.
+        The function may accept one numeric entry for a sample and a normaliser, and must return 
+        a numeric value. 
+        Be default s/n is used...
+        """
+        if type(f) == type(fileID):
+            self._norm_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning("Normaliser:cannot_set_norm_func", func = f)
+
+    def normalise(self):
+        """
+        Normalises all linked samples against the normaliser set. 
+        Stores the results in a new Results 
+        """
+        if self._normaliser is None: 
+            self._preprocess_normalisers()
+
+        if self._Samples == [] or self._normaliser is None:
+            raise Warning("Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!")
+
+        # get normaliser dataframe
+        normaliser = self._normaliser.get()
+
+        # setup groups for _Results
+        self._Results.copy_groups(self._Samples[0])
+
+        # combine normalised samples into unified dataframe
+        for S in self._Samples:
+            S_df = S.get()
+            column_name = f"{S.id()}_rel_{self._normaliser.id()}"
+            normalised = [self._norm_func(s, n) for s,n in zip(S_df["dCt"], normaliser["dCt_combined"])]
+            self._Results.add_column(normalised, column_name)
+
+        # forward group_name column if present 
+        if self._Samples[0].is_named():
+            self._Results.add_names(self._Samples[0])
+
+    def _divide_by_normaliser(self, s, n):
+        """
+        Performs normalisation of sample s against normaliser n
+        (default _norm_func)
+        """
+        return s / n
+
+    def _link_samples(self, samples):
+        """
+        Links any provided samples and checks their datatype in the process...
+        """
+        if samples is not None:
+            for sample in samples: 
+                if isinstance(sample, Results):
+                    self._Samples.append(sample)
+                elif isinstance(sample, Analyser) and sample.has_results():
+                    self._Samples.append(sample.get())
+                elif isinstance(sample, Analyser) and not sample.has_results():
+                    aw.SoftWarning("Normaliser:empty_data", s = sample)
+                else: 
+                    aw.SoftWarning("Normaliser:unknown_data", s = sample)
+                
+    def _link_normaliser(self, normalisers):
+        """
+        Checks if normaliser is provided and has proper datatype to be added...
+        """
+        if normalisers is not None:
+            for normaliser in normalisers:
+                if isinstance(normaliser, Results):
+                    self._Normalisers.append(normaliser)
+                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                    self._Normalisers.append(normaliser.get())
+                else: 
+                    aw.SoftWarning("Normaliser:norm_unknown_data", s = normaliser)
+
+    def _preprocess_normalisers(self):
+        """
+        Averages the provided normalisers row-wise for all normalisers into a 
+        single combined normaliser, that will be stored as a Results instance.
+        """
+        try: 
+            combined = Results() # setup new dataframe for combined normalisers, intialise with first id
+            combined.adopt_id(self._Normalisers[0])
+            combined.copy_groups(self._Normalisers[0])
+            combined.merge(*self._Normalisers)
+            tmp_df = self._prep_func(combined)
+            combined.add_column(tmp_df, "dCt_combined")
+            self._normaliser = combined  
+            if len(self._Normalisers) > 1:
+                self._update_combined_id()
+        except: 
+            pass
+
+    def _update_combined_id(self):
+        """
+        Generates a new id based on all normaliser ids,
+        joining them as a+b+c,...
+        """
+        ids = [N.id() for N in self._Normalisers]
+        ids = "+".join(ids)
+        self._normaliser.id(ids)
+
+    def _average(self, combined):
+        """
+        Averages row-wise all Normaliser entries and 
+        generates a list of their per-row means
+        (default preprocess_normalisers function)
+        """
+        tmp = combined.get()
+        tmp_df = tmp.drop(["group"], axis = 1)
+        tmp_df = tmp_df.mean(axis = 1)
+        return list(tmp_df)
+
+
+def fileID(filename):
+    """
+    returns the basename of a filename for use as id
+    """
+    basename = os.path.basename(filename)
+    basename = basename.split(".")[0]
+    if not isinstance(basename, str):
+        basename = ".".join(basename)
+    return basename
 
 if __name__ == "__main__":
-    a = Reader("Example Data/28S.csv")
-    print(a.get())
+    
+    files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    groupnames = ["wt-", "wt+", "ko-", "ko+"]
+
+    analysers = []
+
+    analyser = Analyser()
+    analyser.anchor("first")
+
+    for file in files: 
+
+        # reader = Reader(file)
+        # reader.id(fileID(file))
+
+        # samples = Samples(reader)
+        samples = SampleReader(file)
+        samples.replicates(6)
+        samples.group()
+        samples.rename(groupnames)
+
+        analyser.link(samples, force=True, silent = False)
+        analyser.DeltaCt(a = 1)
+        res = analyser.get()
+        analysers.append(res)
+
+    normaliser = Normaliser()
+    normaliser.link(normalisers = analysers[:2])
+    normaliser.link(samples = analysers[2:])
+
+    normaliser.normalise()
+    
+    result = normaliser.get()
+    print(result.get())
+    #result.add_names(samples)
+
+    print(result.stats())
+
+    # a = Reader("Example Data/28S.csv")
+    # x = Reader("Example Data/28S.csv")
+    # a.id("28S")
+    # x.id("also28S")
+    # b = Samples(a)
+    # y = Samples(x)
+    # b.replicates(6)
+    # y.replicates(6)
+    # b.group()
+    # y.group()
+    # b.rename(["wt-", "wt+", "ko-", "ko+"])
+    # y.rename(["wt-", "wt+", "ko-", "ko+"])
+
+    # c = Analyser(b)
+    # z = Analyser(y)
+    # c.DeltaCt(anchor = "first")
+    # z.DeltaCt(anchor = "first")
+    # d = c.get()
+    # g = z.get()
+
+    # print(d.id())
+
+    # e = Normaliser()
+    # e.link(normaliser = d)
+    # e.link(g, c)
+    # e.normalise()
+    # r = e.get()
+    # print(r.get())
 
     exit(0)
 
-    
+
 def open_csv_file(filename, export="dict"):
     """
     This function opens a given input csv file. To function properly, the file is required to have 
@@ -220,10 +1010,7 @@ def Delta_Ct(grouped_dict, exp=True, anchor="first"):
     """
     keys = list(grouped_dict.keys())
     new_dict = {}
-    if exp == True:
-        dCt = _exp_DCt
-    else:
-        dCt = _simple_DCt
+    dCt = _deltaCt_function(exp)
         
     if anchor is None:
         _grouped_anchored(grouped_dict, keys, new_dict, dCt)
@@ -232,6 +1019,17 @@ def Delta_Ct(grouped_dict, exp=True, anchor="first"):
     else:
         _specified_anchored(grouped_dict, anchor, keys, new_dict, dCt)
     return new_dict
+
+def _deltaCt_function(exp):
+    """
+    Returns the function to be used for DeltaCt based on 
+    whether or not exponential shall be used.
+    """
+    if exp == True:
+        dCt = _exp_DCt
+    else:
+        dCt = _simple_DCt
+    return dCt
 
 # functions to calculate delta ct based on the anchor specified 
 
