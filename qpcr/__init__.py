@@ -14,7 +14,7 @@ import os
 #   - assigning group names (optional) << CHECK
 # TODO: A class to perform delta delta ct << CHECK
 # TODO: A class to handle and store results << CHECK
-# TODO: A class to visulalise results 
+# TODO: A class to visulalise results << CHECK (PreviewResults!)
 # TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
 
 RAW_COL_NAMES = ["Sample", "Ct"]
