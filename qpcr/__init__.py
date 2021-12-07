@@ -537,7 +537,7 @@ class Analyser(aux._ID):
         # default settings
         self._anchor = "first"
         self._efficiency = 2
-        self._deltaCt_function = self._deltaCt_function(exp = True)
+        self._deltaCt_function = self._get_deltaCt_function(exp = True)
 
         if self._Assay is not None: 
             self._Results.adopt_id(Assay)
@@ -616,7 +616,7 @@ class Analyser(aux._ID):
         """
         if f in ["exponential", "linear"]:
             f = True if f == "exponential" else False
-            self._deltaCt_function = _deltaCt_function(f)
+            self._deltaCt_function = self._get_deltaCt_function(f)
         elif type(f) == type(aux.fileID):
             self._deltaCt_function = f
         else:
@@ -692,7 +692,7 @@ class Analyser(aux._ID):
         """
         return sample-ref
 
-    def _deltaCt_function(self, exp):
+    def _get_deltaCt_function(self, exp):
         """
         Returns the function to be used for DeltaCt based on 
         whether or not exponential shall be used.
