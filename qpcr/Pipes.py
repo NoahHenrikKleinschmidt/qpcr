@@ -230,7 +230,7 @@ if __name__ == "__main__":
     analysis.add_normalisers(norm_files)
     analysis.replicates(6)
     analysis.names(groupnames)
-    analysis.save_to("qpcr/data")
+    analysis.save_to("Example Results (pipelines)")
 
     preview = Plotters.PreviewResults(mode = "static")
     preview.params(

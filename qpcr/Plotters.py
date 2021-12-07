@@ -15,20 +15,74 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import numpy as np 
 
-class Chart:
+
+# setup some default settings for charts
+
+_default_static_PreviewResults = dict(
+                                        color = "Lightgray",
+                                        rot = 0,
+                                        legend = False, 
+                                        title = "Preview of Results"
+                                    )
+
+_default_interactive_PreviewResults = dict(
+                                            template = "plotly",
+                                            title = "Preview of Results"
+                                        )
+
+
+# Concent: 
+# Plotter: 
+#       We define a superclass Plotter that will handle linking to data, 
+#       linking to default parameters, and setting up default parameters.
+#       It also provides a generic plot() method that will call on a FigureClass specific _plot() method...
+#       Wether or not to use static or interactive plots is also handled by this class...
+#
+# FigureClass:
+#       A parent class for each type of figure. It contains two potential _plot() 
+#       methods, one for interactive one for static plotting... Which one to use is decided based on the plotting mode...
+#       Each FigureClass has therefore to link default parameters, then init Plotter (superclass), 
+#       and define their own _static_plot() and _interactive_plot() methods! Any additionally required methods can be written as well...
+
+
+class Plotter:
     """
-    Setup charts to be either interactive (produced with plotly) or static (matplotlib).
-    mode = "interactive" or "static" can be set.
+    A superclass that handles Data Linking and Parameter setup for FigureClasses
     """
     def __init__(self, mode = "interactive"):
-        self._MODE = mode if mode is not None else "interactive"
-        self._data = None
+        self._default_params = None
         self._PARAMS = {}
+        self._Results = None
+        self._data = None
         self._id = type(self).__name__
+        self._MODE = mode
+        self._set_plot()
+
+    def link(self, Results:(qpcr.Results or pd.DataFrame)):
+        """
+        Link a Results object or pandas DataFrame of the same architecture
+        as one handled by a Results object. 
+        Note, that this will replace any previously linked data!
+        """
+        if isinstance(Results, qpcr.Results):
+            self._Results = Results
+            self._data = self._Results.stats()
+        elif isinstance(Results, pd.DataFrame):
+            self._Results = None
+            self._data = Results
+        else:
+            wa.HardWarning("Plotter:unknown_data")
+
+    def plot(self, **kwargs):
+        """
+        Generate Figure
+        """
+        total_kwargs = self.update_params(kwargs)
+        self._plot(**total_kwargs)
 
     def id(self, id:str = None):
         """
-        Set a unique Id, by default simply the Classname will be used...
+        Set a unique Id, by default the Classname will be used.
         """
         if id is not None:
             self._id = id
@@ -37,38 +91,99 @@ class Chart:
 
     def get(self):
         """
-        Returns the stats results dataframe
+        Returns the DataFrame used for plotting
         """
         return self._data
-    
-    def link(self, data:(qpcr.Results or pd.DataFrame) = None):
-        """
-        Link a qpcr.Results instance or a pd.DataFrame 
-        Note a pd.DataFrame has to have the same architecture 
-        as one obtained from qpcr.Results.stats()!
-        Can also return the linked dataframe
-        """
-        if isinstance(data, qpcr.Results):
-            self._data = data.stats()
-        elif isinstance(data, pd.DataFrame):
-            self._data = data
-        else:
-            wa.HardWarning("Chart:unknown_data", obj = data)
-        
-        self._setup_default_plot_cols()
 
     def params(self, **params):
         """
         Set default parameters for plotting (will be forwarded to **kwargs)
+        Returns default parameters if no new parameters are added.
         """
-        self._PARAMS = params
+        if params != {} and self._PARAMS == {}:
+            self._PARAMS = params
+        elif params != {}:
+            self.update_params(params, store = True)
+        return self._PARAMS
 
-    def update_params(self, kwargs):
+    def update_params(self, kwargs, supersede = True, store = False):
         """
-        Appends default parameters to kwargs
+        Appends pre-set parameters to kwargs. 
+        In case of key duplications: 
+        It will either replace old ones with new ones (supersede = True, default), 
+        or keep old ones (supersede = False)
         """
-        kwargs = dict(kwargs, **self._PARAMS)
+        if supersede:
+            kwargs = dict(self._PARAMS, **kwargs)
+        else:
+            kwargs = kwargs = dict(kwargs, **self._PARAMS)
+        
+        if store:
+            self._PARAMS = kwargs
+
         return kwargs
+
+    def _setup_default_params(self, static:dict, interactive:dict):
+        """
+        Setup and set default parameters for a FigureClass
+        """
+        self._static_default = static
+        self._interactive_default = interactive
+
+    def _set_plot(self):
+        """
+        Sets self._plot either interactive or static depending on MODe
+        """
+        self._plot  = self._static_plot if self._MODE == "static" else self._interactive_plot
+        prev_default = self._default_params
+        self._default_params = self._static_default if self._MODE == "static" else self._interactive_default
+
+        if self.params() == {} or self.params() == prev_default:
+            self.params(**self._default_params)
+        else:
+            self.update_params(self._default_params, store = True, supersede = False)
+
+    def _static_plot(self, **kwargs):
+        """
+        The plot function that will handle static plotting (will be redefined for each FigureClass)
+        """
+        print("The plot function that will handle static plotting...")
+
+    def _interactive_plot(self, **kwargs):
+        """
+        The plot function that will handle interactive plotting (will be redefined for each FigureClass)
+        """
+        print("The plot function that will handle interactive plotting...")
+
+    def _prep_properties(self):
+        """
+        Setup ncols, nrows, subplot titles (headers), x, y, and sterr, columns for figure...
+        """
+        self._setup_default_plot_cols()
+        kwargs = self.params()
+        data = self.get()
+
+        # setup reference column and figure subplots
+        ref_col = aux.from_kwargs("key", "assay", kwargs, rm=True)
+        ncols, nrows = aux.from_kwargs("subplots", 
+                                        gx.make_layout(data, ref_col), 
+                                        kwargs, rm=True
+                                       )
+
+        # transposing currently not supported...
+        # if aux.from_kwargs("transpose", False, kwargs, rm = True):
+        #     ncols, nrows = nrows, ncols
+
+        headers = aux.from_kwargs("headers", aux.sorted_set(data[ref_col]), kwargs, rm = True)
+
+        x = aux.from_kwargs("x", self._default_x, kwargs, rm = True)
+        y = aux.from_kwargs("y", self._default_y, kwargs, rm = True)
+        sterr = aux.from_kwargs("sterr", self._default_sterr, kwargs, rm = True)
+        
+        # the query to be used if group or group_name is ref_col
+        query = "{ref_col} == '{q}'" if isinstance(headers[0], str) else "{ref_col} == {q}"
+
+        return ref_col,ncols,nrows, headers, x, y, sterr, query
 
     def _setup_default_plot_cols(self):
         """
@@ -86,155 +201,35 @@ class Chart:
         self._default_y = "mean"
         self._default_sterr = "stdev"
 
-    
-
-class PreviewResults(Chart):
+class PreviewResults(Plotter):
     """
-    Generates a bar chart for each Assay separately, and produces a subplots figure.
+    Generate a Preview of all results from all Assays in subplots.
     """
-    def __init__(self, mode:str = None):
+    def __init__(self, mode:str):
+        self._setup_default_params(
+                                    static = _default_static_PreviewResults, 
+                                    interactive = _default_interactive_PreviewResults
+                                )
+        # __init__ is going to require default_params to be already set!
         super().__init__(mode)
-        if self._MODE == "interactive":
-            self._CORE = _plotly_PreviewResults
-        else:
-            self._CORE = _matplotlib_PreviewResults
-    
 
-    def plot(self, **kwargs):
+    def _static_plot(self, **kwargs):
         """
-        Plots the data into figure
+        The static Preview Results Figure
         """
         kwargs = self.update_params(kwargs)
-        plotter = self._CORE(self)
-        fig = plotter._plot(**kwargs)
-        return fig 
+        data = self.get()
 
-
-    def _prep_properties(self, kwargs):
-        """
-        Setup ncols, nrows, heading titles, x, y, and sterr, columns for figure...
-        """
-        # setup reference column and figure subplots
-        ref_col = aux.from_kwargs("key", "assay", kwargs, rm=True)
-        ncols, nrows = aux.from_kwargs("subplots", 
-                                        gx.make_layout(self._data, ref_col), 
-                                        kwargs, rm=True
-                                       )
-
-        if aux.from_kwargs("transpose", False, kwargs):
-            ncols, nrows = nrows, ncols
-
-        headings = aux.sorted_set(self._data[ref_col])
-        x = aux.from_kwargs("x", self._MASTER._default_x, kwargs, rm = True)
-        y = aux.from_kwargs("y", self._MASTER._default_y, kwargs, rm = True)
-        sterr = aux.from_kwargs("sterr", self._MASTER._default_sterr, kwargs, rm = True)
-        
-        # the query to be used if group or group_name is ref_col
-        query = "{ref_col} == '{q}'" if isinstance(headings[0], str) else "{ref_col} == {q}"
-
-        return ref_col,ncols,nrows,headings, x, y, sterr, query
-    
-
-
-class _plotly_PreviewResults(PreviewResults):
-    """
-    Interactive PreviewChart
-    """
-    def __init__(self, master):
-        self._MASTER = master
-        self._data = self._MASTER.get()
-        
-
-    def _plot(self, **kwargs):
-        """
-        Generates a PreviewResults Figure
-        """
-        try: 
-            # setup figure framework variables that have to be removed from 
-            # kwargs before passing them to df.plot()
-            ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)
-
-            headers = aux.from_kwargs("headers", headings, kwargs, rm = True)
-
-            
-
-            speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(rows = nrows, cols = ncols, specs = speclist, subplot_titles = headers)
-
-            # fig.print_grid()
-
-            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
-            # Coords.transpose(not aux.from_kwargs("transpose", False, kwargs, rm = True))
-
-
-            idx = 0
-            for assay in headings:
-                
-                row, col = Coords.get()
-                
-                tmp_df = self._data.query(query.format(ref_col = ref_col, q = assay))
-                # print("cooreds: ", row, col)
-                # now plot a new bar chart 
-                fig.add_trace(
-
-                    go.Bar(
-                        name = assay,
-                        y = tmp_df[y], x = tmp_df[x], 
-                        error_y=dict(type='data', array = tmp_df[sterr]),
-                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs), 
-                    ), 
-                    row, col
-                )
-                Coords.increment()
-
-                idx += 1
-
-            fig.update_layout(
-                        title = aux.from_kwargs("title", "Results Preview", kwargs), 
-                        height = aux.from_kwargs("height", None, kwargs), 
-                        width = aux.from_kwargs("width", None, kwargs),
-                        margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
-                        autosize = True, 
-                        template = aux.from_kwargs("template", "plotly_white", kwargs),
-                        legend = {"title" : aux.from_kwargs("legend_title", ref_col, kwargs),
-                        },
-                    )
-
-            if aux.from_kwargs("show", True, kwargs):
-                fig.show()
-
-            print("<<< Interactive Check >>>")
-            return fig 
-        except Exception as e: 
-            raise e 
-
-
-class _matplotlib_PreviewResults(PreviewResults):
-    """
-    Static PreviewChart
-    """
-    def __init__(self, master:Chart):
-        self._MASTER = master
-        self._data = self._MASTER.get()
-
-    def _plot(self, **kwargs):
-        """
-        Generates a PreviewResults Figure
-        """
-        # setup figure framework variables that have to be removed from 
-        # kwargs before passing them to df.plot()
-        ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)
+        ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties()
 
         headers = aux.from_kwargs("headers", None, kwargs, rm = True)
         label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
         start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        color = aux.from_kwargs("color", "Lightgray", kwargs, rm = True)
         show = aux.from_kwargs("show", True, kwargs, rm = True)
 
         figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
-
 
         # setup Coords
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
@@ -242,7 +237,8 @@ class _matplotlib_PreviewResults(PreviewResults):
         idx = 0
         for assay in headings: 
             try: 
-                tmp_df = self._data.query(query.format(ref_col = ref_col, q = assay))
+                tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
+                
                 # now plot a new bar chart 
                 subplot = Coords.subplot()
 
@@ -252,9 +248,6 @@ class _matplotlib_PreviewResults(PreviewResults):
 
                                 edgecolor = aux.from_kwargs("edgecolor", "black", kwargs),
                                 linewidth = aux.from_kwargs("borderwidth", 0.3, kwargs, rm = True),
-                                color = color,
-                                rot = aux.from_kwargs("rot", 0, kwargs, rm=True),
-                                legend = False,
                                 **kwargs
                             )
 
@@ -293,7 +286,7 @@ class _matplotlib_PreviewResults(PreviewResults):
         if show:
             plt.show()
 
-        print("<<< Static Check >>>")
+        # print("<<< Static Check >>>")
 
         return fig 
 
@@ -309,6 +302,66 @@ class _matplotlib_PreviewResults(PreviewResults):
                     weight = "bold", fontsize = 12
                 )
 
+    def _interactive_plot(self, **kwargs):
+        """
+        The interactive Preview Results Figure
+        """
+
+        kwargs = self.update_params(kwargs)
+        data = self.get()
+
+        try: 
+            # setup figure framework variables that have to be removed from 
+            ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties()
+            headers = aux.from_kwargs("headers", headings, kwargs, rm = True)
+            show = aux.from_kwargs("show", True, kwargs, rm = True)
+
+            speclist = gx.make_speclist(nrows, ncols, "xy")
+            fig = make_subplots(rows = nrows, cols = ncols, specs = speclist, subplot_titles = headers)
+
+
+            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+
+            fig.update_layout(
+                        title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
+                        height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                        width = aux.from_kwargs("width", None, kwargs, rm = True),
+                        margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                        autosize = True, 
+                        template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
+                        legend = {"title" : aux.from_kwargs("legend_title", ref_col, kwargs, rm = True),
+                        },
+                    )
+
+            idx = 0
+            for assay in headings:
+                row, col = Coords.get()
+                tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
+                # now plot a new bar chart 
+                fig.add_trace(
+
+                    go.Bar(
+                        name = assay,
+                        y = tmp_df[y], x = tmp_df[x], 
+                        error_y=dict(type='data', array = tmp_df[sterr]),
+                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs), 
+                        **kwargs
+                    ), 
+
+                    row, col
+                )
+                Coords.increment()
+
+                idx += 1
+
+            if show:
+                fig.show()
+
+            # print("<<< Interactive Check >>>")
+            return fig 
+        except Exception as e: 
+            raise e 
+
 if __name__ == '__main__':
 
     files = ["Example Data/28S.csv", "Example Data/28S_again.csv", "Example Data/actin.csv",
@@ -318,8 +371,15 @@ if __name__ == '__main__':
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
     # now generate figure
-    a = PreviewResults("static")
-    b = PreviewResults()
+    a = PreviewResults(mode = "static")
+    b = PreviewResults(mode = "interactive")
+
+    a.params(
+          frame = True, labeltype = "a", show = True
+    )
+    b.params(
+        show = True, template = "plotly"  
+    )
 
     # predefined pipeline use
     pipe = Pipes.Basic()
@@ -328,12 +388,6 @@ if __name__ == '__main__':
     pipe.replicates(6)
     pipe.names(groupnames)
 
-    a.params(
-          frame = False, labeltype = "A", show = True
-    )
-    b.params(
-        show = True      
-    )
 
     print()
     print("==== Multiple (ALL) Samples ====")
@@ -341,7 +395,7 @@ if __name__ == '__main__':
     result = pipe.get(kind = "obj")
     try:
         a.link(result)
-        a.plot()
+        a.plot(color = "green")
     except: 
         print("Static Failed!")
 
@@ -357,13 +411,13 @@ if __name__ == '__main__':
     result = pipe.get(kind = "obj")
     try:
         a.link(result)
-        a.plot()
+        a.plot(show = True)
     except: 
         print("Static Failed!")
 
     try:
         b.link(result)
-        b.plot()
+        b.plot(template = "plotly")
     except: print("Interactive Failed!")
 
     print()
@@ -399,8 +453,8 @@ if __name__ == '__main__':
     except: print("Interactive Failed!")
 
     print()
-    print("==== Multiple (2) Samples ====")
-    pipe.link(files[:2])
+    print("==== Multiple (3) Samples ====")
+    pipe.link(files[:3])
     pipe.run()
     result = pipe.get(kind = "obj")
     try:
@@ -432,8 +486,4 @@ if __name__ == '__main__':
         b.link(result)
         b.plot()
     except: print("Interactive Failed!")
-
-
-
-
-
+    exit(0)
