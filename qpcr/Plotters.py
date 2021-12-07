@@ -148,12 +148,14 @@ class Plotter:
         The plot function that will handle static plotting (will be redefined for each FigureClass)
         """
         print("The plot function that will handle static plotting...")
+        print("Surprised to see this?, \nPerhaps your desired plotting methods are not named properly. Make sure to name your method _static_plot()!")
 
     def _interactive_plot(self, **kwargs):
         """
         The plot function that will handle interactive plotting (will be redefined for each FigureClass)
         """
         print("The plot function that will handle interactive plotting...")
+        print("Surprised to see this?, \nPerhaps your desired plotting methods are not named properly. Make sure to name your method _interactive_plot()!")
 
     def _prep_properties(self):
         """
@@ -344,7 +346,7 @@ class PreviewResults(Plotter):
                         name = assay,
                         y = tmp_df[y], x = tmp_df[x], 
                         error_y=dict(type='data', array = tmp_df[sterr]),
-                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs), 
+                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
                         **kwargs
                     ), 
 
@@ -367,7 +369,7 @@ if __name__ == '__main__':
     files = ["Example Data/28S.csv", "Example Data/28S_again.csv", "Example Data/actin.csv",
     "Example Data/actin2.csv",
     "Example Data/actin3.csv",
-     "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
     # now generate figure
