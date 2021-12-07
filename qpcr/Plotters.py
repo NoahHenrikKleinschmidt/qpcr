@@ -372,7 +372,7 @@ if __name__ == '__main__':
     "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
-    # now generate figure
+    # setup figures
     a = PreviewResults(mode = "static")
     b = PreviewResults(mode = "interactive")
 
