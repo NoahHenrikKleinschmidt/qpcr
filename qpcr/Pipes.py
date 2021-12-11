@@ -10,6 +10,7 @@ import statistics as stats
 import auxiliary.warnings as wa
 import auxiliary as aux
 import Plotters
+import Filters
 import re
 import os 
 import difflib
@@ -168,12 +169,13 @@ class Basic(Pipeline):
 
 class BasicPlus(Basic):
     """
-    The same as the Basic Pipeline, but has the option to integrate Plotters.
+    The same as the Basic Pipeline, but has the option to integrate Plotters and Filters.
     """
     def __init__(self):
         super().__init__()
         self._Plotters = []
         self._Figures = []
+        self._Filters = []
     
     def add_plotters(self, *Plotters:object):
         """
@@ -181,6 +183,12 @@ class BasicPlus(Basic):
         """
         self._Plotters.extend(Plotters)
     
+    def add_filters(self, *Filters:object):
+        """
+        Adds already specified qpcr.Filter instances to the Pipeline.
+        """
+        self._Filters.extend(Filters)
+
     def Figures(self):
         """
         Returns a list of all Figures generated
@@ -193,10 +201,51 @@ class BasicPlus(Basic):
         Also produces applies and Plotters to produce figures...
         """
 
-        super()._run()
+        reader = qpcr.SampleReader()
+        reader.replicates(self._replicates)
+        if self._names is not None:
+            reader.names(self._names)
         
+        analyser = qpcr.Analyser()
+        normaliser = qpcr.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for _normaliser in self._Normalisers:
+            norm = reader.read(_normaliser)
+
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            _sample = reader.read(sample)
+
+            for filter in self._Filters:
+                _sample = filter.pipe(_sample)
+
+            _sample = analyser.pipe(_sample)
+            samples.append(_sample)
+        normaliser.link(samples = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot
         for plotter in self._Plotters:
-            
             plotter.link(self._Results)
             fig = plotter.plot()
             self._Figures.append(fig)
@@ -204,20 +253,22 @@ class BasicPlus(Basic):
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
                 fig.savefig(
-                   filename, res = 500
+                filename, dpi = 500
                 )
 
     def _make_figure_filename(self, plotter):
         """
         Increments a filename with a numeric counter...
         """
-        filename = os.path.join(self._save_to, f"{plotter.id()}_1.png")
-        while os.path.exists(filename):
-            old_num  = re.search(f"_(\d).png", filename).group(1)
-            new_num = int(old_num) + 1
-            filename = filename.replace(f"_{old_num}", f"_{new_num}")
+        num = 1
+        while True:
+            filename = os.path.join(self._save_to, f"{plotter.id()}_{num}.png")
+            if not os.path.exists(filename):
+                break
+            num+=1
         return filename
-        
+    
+
 
 if __name__ == "__main__":
 
@@ -232,12 +283,16 @@ if __name__ == "__main__":
     analysis.names(groupnames)
     analysis.save_to("Example Results (pipelines)")
 
+    range_filter = Filters.RangeFilter()
+    range_filter.report("Example Results (pipelines)")
+    analysis.add_filters(range_filter)
+
     preview = Plotters.PreviewResults(mode = "static")
     preview.params(
         headers = ["NMD", "Prot"], 
-        frame = False, 
-        color = "green",
-        show = False
+        # frame = False, 
+        # color = "green",
+        show = True
     )
 
     analysis.add_plotters(preview)

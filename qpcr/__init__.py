@@ -7,6 +7,8 @@ import pandas as pd
 import auxiliary as aux
 from auxiliary import warnings as aw
 import os
+import numpy as np 
+
 
 # TODO: A class to read csv pqcr raw data << CHECK
 # TODO: A class to perform data preprocessing (like grouping replicates etc...) << CHECK
@@ -16,6 +18,16 @@ import os
 # TODO: A class to handle and store results << CHECK
 # TODO: A class to visulalise results << CHECK (PreviewResults!)
 # TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
+
+# IMPORTANT UPDATE:
+# TODO: Alright, the thing is, for filtering we require exact information about the indices of each replicate. Because if we remove one or several, then 
+# we have to have an index by which we can merge results and retain information about the groups of replicates. 
+# However, with the current setting we generate new indices whenever we create a results dictionary and convert it to a dataframe. Hence, we need to work with
+# dataframes from the start (probably easiest but requires re-inventing the Results class (probabbly)) or passing on an independent index column that is also added into the results dictionaries 
+# (probably less work but will be tricky not to mess up everything else as we need to browse through all linkages between the classes). Hence next thing to do is: 
+# Reinvent Results so it always works with dictionaries. That also means the add() method must now work directly with dataframes instead of incrementally adding stuff...
+# Essentially, our Results dataframes must now be directly model after the Samples dataframe... (actually that makes the whole thing simpler to implement...)
+
 
 RAW_COL_NAMES = ["Sample", "Ct"]
 
@@ -54,8 +66,8 @@ class Reader(aux._ID):
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
+        # self._df["_index"] = list(self._df.index)
 
-    
     def _is_csv2(self):
         """
         Tests if csv file is ; delimited (True) or common , (False)
@@ -118,7 +130,7 @@ class Assay(aux._ID):
         if as_set:
             return aux.sorted_set(list(self._df["group_name"]))
         else: 
-            return list(self._df["group_name"])
+            return self._df["group_name"]
     
     def is_named(self): # not used so far...
         """
@@ -187,7 +199,11 @@ class Assay(aux._ID):
         Removed lines based on index from the dataframe.
         This is useful when removing corrupted data entries.
         """
-        self._df = self._df.drop(index = list(entries)).reset_index()
+        self._df = self._df.drop(index = list(entries))
+        print("DROPPED SOME INDICES IN", self.id())
+        print(self._df)
+        # self._df = self._df.reset_index()
+        # self._df = self._df.drop(columns = ["index"])
 
     def _rename_per_key(self, names):
         """
@@ -327,11 +343,11 @@ class Results(aux._ID):
     """
     def __init__(self):
         super().__init__()
-        self._results = {"group" : [], "dCt" : []}
         self._df = None
         self._Assay = None
         self._stats_results = {"group" : [], "assay" : [], "mean" : [], "stdev" : [], "median" : []}
         self._stats_df = None
+
 
     def link(self, Assay:Assay):
         """
@@ -340,7 +356,8 @@ class Results(aux._ID):
         """
         self._Assay = Assay
         if self.is_empty():
-            self._results = {"group" : [], "group_name" : [], "dCt" : []}
+            self._df = self._Assay.get()
+            self._drop_setup_cols()
         else:
             aw.SoftWarning("Results:cannot_link")
     
@@ -348,7 +365,7 @@ class Results(aux._ID):
         """
         Returns True if group_name column is present
         """
-        return "group_name" in self._results.keys()
+        return "group_name" in self._df.columns
     
     def names(self, as_set = False):
         """
@@ -376,48 +393,16 @@ class Results(aux._ID):
         specified by a qpcr.Sample object.
         """
         names = Sample.names(as_set = False)
-        length = len(self._results["group"])
-        if len(names) == length:
-            self._results["group_name"] = names
-            self._df = pd.DataFrame(self._results)
-        else: 
-            aw.SoftWarning("Results:cannot_add_names", length = length, length_names = len(names))
+        self._df = self._df.join(names)
     
-    def add(self, dCt:tuple, group:int):
+
+    def add(self, column:pd.Series):
         """
-        Adds a new set of deltaCt results for a given group. 
-        This is used during DeltaCt computation
+        Adds a new column of either DeltaCt 
+        data or normalised DeltaCt data to self._df
         """
-        entries = len(dCt)
-        self._results["group"].extend([group] * entries)
-        self._results["dCt"].extend(dCt)
-        if self._Assay is not None:
-            names = self._Assay.names()
-            self._results["group_name"].extend([names[group]] * entries)
+        self._df = self._df.join(column)
         
-        self._df = pd.DataFrame(self._results)
-
-    def add_column(self, column, name):
-        """
-        Adds an entire computed results column to the dataframe
-        """
-        length = len(self._results["group"])
-        if len(column) == length:
-            self._results[name] = column
-            self._df = pd.DataFrame(self._results)
-        else:
-            aw.HardWarning("Results:cannot_add_column", length = length, length_column = len(column))
-    
-    def copy_groups(self, Results):
-        """
-        Copies the groups from another Results instance dataframe, 
-        but drops the dCt column. This is used when doing normalisation of datasets,
-        where no individual dCt columns are necessary...
-        """
-        self._results["group"] = list(Results.get()["group"])
-        del self._results["dCt"]
-        self._df = pd.DataFrame(self._results)
-
     def merge(self, *Results):
         """
         Merges any number of other Results Instances into this one
@@ -430,8 +415,16 @@ class Results(aux._ID):
                                 right_index = True, left_index = True, 
                                 suffixes = [f"_{self.id()}", f"_{R.id()}"]
                             )
-        self._df = new_df # update self._df and also self._results!
-        self._results = self._df.to_dict(orient="list")
+        self._df = new_df
+
+    def drop_cols(self, *cols):
+        """
+        Drops all specified columns from the dataframes
+        this is used for normaliser preprocessing...
+        """
+        _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+        self._df = self._df.drop(columns = _to_drop)
+        
 
     def stats(self, recompute = False) -> pd.DataFrame:
         """
@@ -444,15 +437,15 @@ class Results(aux._ID):
         
         # get groups and samples 
         groups = aux.sorted_set(list(self._df["group"]))
-        samples = [c for c in self._df.columns if c not in ["group", "group_name"]]
-        
+        samples = [c for c in self._df.columns if c not in ["Sample", "group", "group_name"]]
+     
         # compute stats for all samples per group
         for group in groups:
             group_subset = self._df.query(f"group == {group}")
             
-            median = self._stat_var(group_subset, stats.median)
-            mean = self._stat_var(group_subset, stats.mean)
-            stdv = self._stat_var(group_subset, stats.stdev)
+            median = self._stat_var(group_subset, np.nanmedian)
+            mean = self._stat_var(group_subset, np.nanmean)
+            stdv = self._stat_var(group_subset, np.nanstd)
             self._add_stats(samples, group, median, mean, stdv)
             
         # add group names if present
@@ -470,8 +463,6 @@ class Results(aux._ID):
         if df and stats and not os.path.isdir(path):
             aw.HardWarning("Results:save_need_dir")
 
-        print(self._df)
-
         if df:
             self._save_single(path, self._df, "_df")
         if stats:
@@ -487,6 +478,12 @@ class Results(aux._ID):
         filename = path if not os.path.isdir(path) else os.path.join(path, f"rel_{self.id()}{suffix}.csv")
         src.to_csv(filename)
         
+    def _drop_setup_cols(self):
+        """
+        Removes unnnecessary columns from the Sample df during self._df setup with link()
+        """
+        self.drop_cols("Ct")
+
 
     def _add_stats_names(self, samples):
         """
@@ -509,18 +506,18 @@ class Results(aux._ID):
         self._stats_results["stdev"].extend(stdv)
 
 
-    def _stat_var(self, group_subset, func):
+    def _stat_var(self, group_subset, func, **kwargs):
         """
         Performs a function (like mean or stdv) over all rows
         and returns the result as list with a float for each column in the df
         any function can be passed as long as it works with an iterable
         """
         # ignore group and group_name columns
-        ignore = ["group", "group_name"]
+        ignore = ["Sample", "group", "group_name"]
         all_cols = [g for g in group_subset.columns if g not in ignore]
         tmp = group_subset[all_cols]
         # compute stats based on func
-        stats = [func(tmp[col]) for col in tmp]
+        stats = [func(tmp[col], **kwargs) for col in tmp]
         return stats
         
 
@@ -541,8 +538,7 @@ class Analyser(aux._ID):
 
         if self._Assay is not None: 
             self._Results.adopt_id(Assay)
-            if self._Assay.is_named(): # link Sample to add group_name if groups are named...
-                self._Results.link(self._Assay)
+            self._Results.link(self._Assay)
     
     def get(self):
         """
@@ -565,9 +561,8 @@ class Analyser(aux._ID):
             self._Assay = Assay
             self.adopt_id(self._Assay)
             self._Results = Results()
+            self._Results.link(self._Assay)
             self._Results.adopt_id(self._Assay)
-            if self._Assay.is_named():
-                self._Results.link(self._Assay)
             
         if not silent:
             # notify the user of changes to the Analyser data and results
@@ -644,13 +639,10 @@ class Analyser(aux._ID):
         """
         Performs DeltaCt using a specified anchor
         """
-        # get set of sample groups and dataset
-        groups = self._Assay.groups()
         df = self._Assay.get()
-        for group in groups: 
-            group_subset = df.query(f"group == {group}").reset_index()
-            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
-            self._Results.add(delta_cts, group)
+        df["dCt"] = df["Ct"].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df["dCt"])
+
 
     def _DeltaCt_grouped_anchored(self, deltaCt_function, **kwargs):
         """
@@ -659,34 +651,32 @@ class Analyser(aux._ID):
         # get set of sample groups and dataset
         groups = self._Assay.groups()
         df = self._Assay.get()
+
+        dCt = pd.Series()
         for group in groups: 
-            group_subset = df.query(f"group == {group}").reset_index()
+            group_subset = df.query(f"group == {group}")
             anchor = group_subset["Ct"][0]
-            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
-            self._Results.add(delta_cts, group)
+            delta_cts = group_subset["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
+            dCt.append(delta_cts)
+        self._Results.add(dCt)
 
     def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
         """
         Performs DeltaCt using the very first entry of the dataset as anchor
         """
-        # get set of sample groups and dataset
-        groups = self._Assay.groups()
         df = self._Assay.get()
         anchor = df["Ct"][0]
-        for group in groups:
-            group_subset = df.query(f"group == {group}").reset_index()
-            delta_cts = [deltaCt_function(anchor, i, **kwargs) for i in group_subset["Ct"]]
-            self._Results.add(delta_cts, group)
-        return anchor
+        df["dCt"] = df["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
+        self._Results.add(df["dCt"])
 
-    def _exp_DCt(self, ref, sample, **kwargs):
+    def _exp_DCt(self, sample, ref, **kwargs):
         """
         Calculates deltaCt exponentially
         """
         factor = sample-ref 
         return self._efficiency **(-factor)
 
-    def _simple_DCt(self, ref, sample, **kwargs):
+    def _simple_DCt(self, sample, ref, **kwargs):
         """
         Calculates deltaCt linearly
         """
@@ -769,30 +759,39 @@ class Normaliser(aux._ID):
             self._preprocess_normalisers()
 
         if self._Assay == [] or self._normaliser is None:
-            raise Warning("Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!")
+            aw.SoftWarning("Normaliser:no_data_yet")
 
         # get normaliser dataframe
         normaliser = self._normaliser.get()
 
         # setup groups for _Results
-        self._Results.copy_groups(self._Assay[0])
+        self._Results.link(self._Assay[0])
+        self._Results.drop_cols("dCt")
 
         # combine normalised samples into unified dataframe
         for S in self._Assay:
             S_df = S.get()
             column_name = f"{S.id()}_rel_{self._normaliser.id()}"
-            normalised = [self._norm_func(s, n) for s,n in zip(S_df["dCt"], normaliser["dCt_combined"])]
-            self._Results.add_column(normalised, column_name)
+            normalised = self._norm_func_wrapper(S_df, normaliser)
+            normalised = normalised.rename(column_name)
+            self._Results.add(normalised)
 
-        # forward group_name column if present 
-        if self._Assay[0].is_named():
-            self._Results.add_names(self._Assay[0])
+    def _norm_func_wrapper(self, sample_assay, normaliser):
+        """
+        The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
+        """
+        tmp_df = normaliser.join(sample_assay, lsuffix="_s")
+        tmp_df = sample_assay.join(normaliser)
+        results = self._norm_func(tmp_df[["dCt", "dCt_combined"]])
+        return results
 
-    def _divide_by_normaliser(self, s, n):
+    def _divide_by_normaliser(self, df):
         """
         Performs normalisation of sample s against normaliser n
+        s and n are specified as two pandas dataframe columns
         (default _norm_func)
         """
+        s, n = df["dCt"], df["dCt_combined"]
         return s / n
 
     def _link_samples(self, samples):
@@ -828,23 +827,23 @@ class Normaliser(aux._ID):
         Averages the provided normalisers row-wise for all normalisers into a 
         single combined normaliser, that will be stored as a Results instance.
         """
-        try: 
-            combined = Results() # setup new dataframe for combined normalisers, intialise with first id
-            combined.adopt_id(self._Normalisers[0])
-            combined.copy_groups(self._Normalisers[0])
-            combined.merge(*self._Normalisers)
-            tmp_df = self._prep_func(combined)
-            combined.add_column(tmp_df, "dCt_combined")
-            self._normaliser = combined  
-            if len(self._Normalisers) > 1:
-                self._update_combined_id()
-            
-            # forward combined_id to self and _Results 
-            self.adopt_id(self._normaliser)
-            self._Results.adopt_id(self._normaliser)
+        combined = Results() # setup new dataframe for combined normalisers, intialise with first id
+        combined.link(self._Normalisers[0])
+        combined.adopt_id(self._Normalisers[0])
+        combined.merge(*self._Normalisers[1:])
 
-        except: 
-            pass
+        tmp_df = self._prep_func(combined)
+        tmp_df = tmp_df.rename("dCt_combined")
+        combined.add(tmp_df)
+        combined.drop_cols("group", "group_name", "Sample")
+
+        self._normaliser = combined  
+        if len(self._Normalisers) > 1:
+            self._update_combined_id()
+        
+        # forward combined_id to self and _Results 
+        self.adopt_id(self._normaliser)
+        self._Results.adopt_id(self._normaliser)
 
     def _update_combined_id(self):
         """
@@ -859,13 +858,13 @@ class Normaliser(aux._ID):
     def _average(self, combined):
         """
         Averages row-wise all Normaliser entries and 
-        generates a list of their per-row means
+        generates a series of their per-row means
         (default preprocess_normalisers function)
         """
         tmp = combined.get()
-        tmp_df = tmp.drop(["group"], axis = 1)
+        tmp_df = tmp.drop(columns = ["group"]) # drop group as it is a numeric column and would otherwise skew the average
         tmp_df = tmp_df.mean(axis = 1)
-        return list(tmp_df)
+        return tmp_df
 
 
 if __name__ == "__main__":
@@ -900,6 +899,8 @@ if __name__ == "__main__":
         # print(res)
         analysers.append(res)
 
+    # for a in analysers: print(a.id(), "\n", a.get())
+
     normaliser = Normaliser()
     normaliser.link(normalisers = analysers[:2])
     normaliser.link(samples = analysers[2:])
@@ -910,9 +911,9 @@ if __name__ == "__main__":
 
     print(result.get())
     
-    # result.save("..")
+    # # result.save("..")
     
-    #result.add_names(samples)
+    # #result.add_names(samples)
 
     print(result.stats())
 

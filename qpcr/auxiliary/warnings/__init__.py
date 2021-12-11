@@ -25,11 +25,14 @@ WARNINGS = {
 "Normaliser:empty_data" : "Sample {s} was not added because it did not contain any results data!", 
 "Normaliser:unknown_data" : "Sample {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
+"Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
 "Plotter:unknown_data" : "Unknown data linkage!\nOnly qpcr.Results or pd.DataFrame objects are allowed!\nReceived: {obj}",
 "Plotter:already_compiled" : "Figure is laready compiled! Make sure to use force=True if you wish to re-compile the figure!",
 "Pipeline:no_reps" : "Pipeline requires at least one set of replicates!, Make sure to provide these using .replicates()!",
-"Pipeline:no_data" : "Pipeline requires at least one Normaliser and/or Sample Assay!, Make sure to provide these using .add_() or link_() functions!"
+"Pipeline:no_data" : "Pipeline requires at least one Normaliser and/or Sample Assay!, Make sure to provide these using .add_() or link_() functions!",
+
+"Filter:no_assay" : "Filtering requires a sample Assay! First link an Assay object before applying filter()"
 
 }
 

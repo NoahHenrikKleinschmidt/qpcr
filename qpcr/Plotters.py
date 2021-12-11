@@ -78,7 +78,8 @@ class Plotter:
         Generate Figure
         """
         total_kwargs = self.update_params(kwargs)
-        self._plot(**total_kwargs)
+        fig = self._plot(**total_kwargs)
+        return fig
 
     def id(self, id:str = None):
         """
@@ -176,7 +177,7 @@ class Plotter:
         # if aux.from_kwargs("transpose", False, kwargs, rm = True):
         #     ncols, nrows = nrows, ncols
 
-        headers = aux.from_kwargs("headers", aux.sorted_set(data[ref_col]), kwargs, rm = True)
+        headers = aux.sorted_set(data[ref_col])
 
         x = aux.from_kwargs("x", self._default_x, kwargs, rm = True)
         y = aux.from_kwargs("y", self._default_y, kwargs, rm = True)
@@ -235,12 +236,12 @@ class PreviewResults(Plotter):
 
         # setup Coords
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
-
         idx = 0
         for assay in headings: 
             try: 
-                tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
-                
+                q = query.format(ref_col = ref_col, q = assay)
+                tmp_df = data.query(q)
+
                 # now plot a new bar chart 
                 subplot = Coords.subplot()
 
@@ -279,7 +280,7 @@ class PreviewResults(Plotter):
                 Coords.increment()
                 idx += 1
             except Exception as e:
-                print(e) 
+                raise e 
                 break
         
         plt.tight_layout()
@@ -377,10 +378,10 @@ if __name__ == '__main__':
     b = PreviewResults(mode = "interactive")
 
     a.params(
-          frame = True, labeltype = "a", show = True
+          frame = True, labeltype = "a", show = False
     )
     b.params(
-        show = True, template = "plotly"  
+        show = False, template = "plotly"  
     )
 
     # predefined pipeline use
@@ -472,6 +473,26 @@ if __name__ == '__main__':
     except Exception as e: 
         print("Interactive Failed!")
         raise e
+
+    print()
+    print("==== Multiple (2) Samples ====")
+    pipe.link(files[:2])
+    pipe.run()
+    result = pipe.get(kind = "obj")
+    try:
+        a.link(result)
+        a.plot(show = True)
+    except Exception as e: 
+        print(e)
+        print("Static Failed!")
+
+    try:
+        b.link(result)
+        b.plot(show = True)
+    except Exception as e: 
+        print("Interactive Failed!")
+        raise e
+
 
     print()
     print("==== One (1) Sample ====")

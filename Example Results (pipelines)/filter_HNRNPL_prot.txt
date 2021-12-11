@@ -1,0 +1,15 @@
+Filtering Report
+Filter: RangeFilter
+Sample: HNRNPL_prot
+Found faulty Replicates: 0
+Found Indices: []
+
+Filter: RangeFilter
+Sample: HNRNPL_prot
+Found faulty Replicates: 0
+Found Indices: []
+
+Filter: RangeFilter
+Sample: HNRNPL_prot
+Found faulty Replicates: 0
+Found Indices: []

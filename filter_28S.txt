@@ -1,0 +1,4 @@
+Filtering Report
+Sample: 28S
+Found faulty Replicates: 0
+Found Indices: []
