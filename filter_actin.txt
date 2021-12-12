@@ -1,0 +1,12 @@
+Filtering Report
+
+Filter: 
+IQRFilter
+Sample: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'upper_max': '2', 'lower_max': '2'}

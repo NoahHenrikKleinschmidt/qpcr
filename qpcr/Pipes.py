@@ -290,7 +290,7 @@ if __name__ == "__main__":
     preview = Plotters.PreviewResults(mode = "static")
     preview.params(
         headers = ["NMD", "Prot"], 
-        # frame = False, 
+        frame = False, 
         # color = "green",
         show = True
     )
