@@ -85,16 +85,18 @@ class Pipeline(qpcr.SampleReader):
             self._stats_df = None
             self._Results = None
 
-    def add_normalisers(self, normalisers:list):
+    def add_normalisers(self, normalisers):
         """
         Adds normalisers (filepaths) (keeping any already present)
         """
+        normalisers = self._from_directory(normalisers)
         self._Normalisers.extend(normalisers)
     
-    def add_assays(self, samples:list):
+    def add_assays(self, samples):
         """
         Adds sample assays (filepaths) (keeping any already present)
         """
+        samples = self._from_directory(samples)
         self._Assays.extend(samples)
 
     def softlink(self, bool = None):
@@ -108,7 +110,19 @@ class Pipeline(qpcr.SampleReader):
         else:
             self._softlink = bool
 
-
+    def _from_directory(self, files):
+        """
+        Checks if a directory was provided for assays / normalisers and returns a list of all contained files if so.
+        Otherwise it just returns the list of files.
+        This is used for add_assays and add_normalisers
+        """
+        if isinstance(files, str):
+            if os.path.isdir(files):
+                norms = os.listdir(files)
+                norms = [os.path.join(files,n) for n in norms]
+                return norms
+        else:
+            return files
 
     def _run(self, **kwargs):
         """
@@ -276,22 +290,25 @@ if __name__ == "__main__":
     sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
+    norm_folder = "Example Data 2/normalisers"
+    sample_folder = "Example Data 2/samples"
+
     analysis = BasicPlus()
-    analysis.link(sample_files)
-    analysis.add_normalisers(norm_files)
+    analysis.link(sample_folder)
+    analysis.add_normalisers(norm_folder)
     analysis.replicates(6)
     analysis.names(groupnames)
-    analysis.save_to("Example Results (pipelines)")
+    analysis.save_to("Example Data 2")
 
     range_filter = Filters.RangeFilter()
-    range_filter.report("Example Results (pipelines)")
+    range_filter.report("Example Data 2")
     analysis.add_filters(range_filter)
 
     preview = Plotters.PreviewResults(mode = "static")
     preview.params(
         headers = ["NMD", "Prot"], 
         frame = False, 
-        # color = "green",
+        color = "green",
         show = True
     )
 
