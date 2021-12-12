@@ -1,4 +1,0 @@
-Filtering Report
-Sample: HNRNPL_prot
-Found faulty Replicates: 1
-Found Indices: [6]

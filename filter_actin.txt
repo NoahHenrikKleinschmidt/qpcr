@@ -1,4 +1,0 @@
-Filtering Report
-Sample: actin
-Found faulty Replicates: 0
-Found Indices: []

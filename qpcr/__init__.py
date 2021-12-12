@@ -2,7 +2,6 @@
 This module is designed to provide functions to analyse qPCR data. 
 It is designed for maximal user-friendliness and streamlined data-visualisation.
 """
-import statistics as stats 
 import pandas as pd
 import auxiliary as aux
 from auxiliary import warnings as aw
@@ -19,7 +18,7 @@ import numpy as np
 # TODO: A class to visulalise results << CHECK (PreviewResults!)
 # TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
 
-# IMPORTANT UPDATE:
+# IMPORTANT UPDATE: << CHECK
 # TODO: Alright, the thing is, for filtering we require exact information about the indices of each replicate. Because if we remove one or several, then 
 # we have to have an index by which we can merge results and retain information about the groups of replicates. 
 # However, with the current setting we generate new indices whenever we create a results dictionary and convert it to a dataframe. Hence, we need to work with
