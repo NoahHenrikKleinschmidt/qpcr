@@ -29,6 +29,8 @@ WARNINGS = {
 
 "Plotter:unknown_data" : "Unknown data linkage!\nOnly qpcr.Results or pd.DataFrame objects are allowed!\nReceived: {obj}",
 "Plotter:already_compiled" : "Figure is laready compiled! Make sure to use force=True if you wish to re-compile the figure!",
+"Plotter:no_fig_yet" : "No figure has been generated yet, nothing to save...",
+
 "Pipeline:no_reps" : "Pipeline requires at least one set of replicates!, Make sure to provide these using .replicates()!",
 "Pipeline:no_data" : "Pipeline requires at least one Normaliser and/or Sample Assay!, Make sure to provide these using .add_() or link_() functions!",
 

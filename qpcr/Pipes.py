@@ -286,39 +286,34 @@ class BasicPlus(Basic):
 
 if __name__ == "__main__":
 
-    norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
-    sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
-    groupnames = ["wt-", "wt+", "ko-", "ko+"]
+    # norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
+    # sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
 
     norm_folder = "Example Data 2/normalisers"
     sample_folder = "Example Data 2/samples"
 
+    groupnames = ["wt-", "wt+", "ko-", "ko+"]
+    
     analysis = BasicPlus()
-    analysis.link(sample_folder)
+    analysis.save_to("Example Data 2")
+    analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
     analysis.add_normalisers(norm_folder)
+    
     analysis.replicates(6)
     analysis.names(groupnames)
-    analysis.save_to("Example Data 2")
 
     range_filter = Filters.RangeFilter()
     range_filter.report("Example Data 2")
     analysis.add_filters(range_filter)
 
     preview = Plotters.PreviewResults(mode = "static")
-    preview.params(
-        headers = ["NMD", "Prot"], 
-        frame = False, 
-        color = "green",
-        show = True
-    )
-
     analysis.add_plotters(preview)
 
     # now that pipeline is ready, we can run!
     analysis.run()
 
     # now we can get results!
-    results = analysis.get()
+    results = analysis.get(kind="df")
     print(results)
     
 

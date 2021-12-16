@@ -9,12 +9,14 @@ Filters implemented include
 - IQRFilter (filter out any outliers by n x IQR)
 """
 
+from re import L
 import __init__ as qpcr
 import pandas as pd
 import numpy as np
 import auxiliary.warnings as aw
 import auxiliary as aux
 import os 
+import Plotters
 
 class Filter(aux._ID):
     """
@@ -25,7 +27,37 @@ class Filter(aux._ID):
         self._Assay = None
         self._report_loc = None
         self._id = type(self).__name__
+        self._boxplot_mode = "interactive"
+        self._BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._filter_stats = pd.DataFrame({
+                                            "assay" : [], "group" : [], 
+                                            "anchor" : [], "upper" : [], "lower" : []
+                                        })
     
+    def get_stats(self):
+        """
+        Returns the filtering statistics dataframe (a summary of filtering parameters used)
+        """
+        return self._filter_stats
+
+    def plotmode(self, mode = "interactive"):
+        """
+        Set graph mode if a summary Boxplot shall be made
+        Set to None to disable.
+        """
+        self._boxplot_mode = mode
+        self._BoxPlotter = Plotters.ReplicateBoxPlot(self._boxplot_mode)
+
+    def plot(self, **kwargs):
+        """
+        Generates a boxplot summary plot. 
+        Note: This is designed to be done AFTER all samples have passed the filter
+        """
+        fig = self._BoxPlotter.plot(**kwargs)
+        if self._report_loc is not None and self._boxplot_mode is not None: 
+            suffix = "html" if self._boxplot_mode == "interactive" else "jpg"
+            self._BoxPlotter.save(os.path.join(self._report_loc, f"IQR_filter_summary.{suffix}"))
+        return fig
 
     def link(self, Assay:qpcr.Assay):
         """
@@ -46,7 +78,8 @@ class Filter(aux._ID):
         Applies the filter and returns an updates Assay object
         """
         if self._Assay is not None:
-            return self._filter(**kwargs)
+            self._filter(**kwargs)
+            return self._Assay
         else: 
             aw.HardWarning("Filter:no_assay")
 
@@ -82,7 +115,7 @@ Filtering Report
 
 Filter: 
 {self._id}
-Sample: 
+Assay: 
 {self._Assay.id()}
 Found faulty Replicates: 
 {len(faulty_indices)}
@@ -106,6 +139,16 @@ Details:
         # exclude faulty entries
         if len(faulty_indices) > 0:
             self._Assay.ignore(faulty_indices)
+    
+    def _save_stats(self, assay, group, anchor, upper, lower):
+        """
+        Saves filtering stats for a given group to self._filter_stats
+        """
+        new_stats = pd.DataFrame({
+                                    "assay" : [assay], "group" : [group], 
+                                    "anchor" : [anchor], "upper" : [upper], "lower" : [lower]
+                                })
+        self._filter_stats = self._filter_stats.append(new_stats, ignore_index=True)
 
 class RangeFilter(Filter):
     """
@@ -157,7 +200,9 @@ class RangeFilter(Filter):
             upper, lower = self._set_bounds(anchor)
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
-        
+
+            self._save_stats(self._Assay.id(), group, anchor, upper, lower)
+
         self._filter_out(faulty_indices)
 
         if self._report_loc is not None: 
@@ -200,7 +245,17 @@ class IQRFilter(Filter):
         super().__init__()
         self._upper = 1.5
         self._lower = 1.5
-        
+
+    def pipe(self, Assay:qpcr.Assay, **kwargs):
+        """
+        A shortcut for link+filter
+        It returns directly the filtered Assay object
+        """
+        self.link(Assay)
+        self._BoxPlotter.link(Assay)
+        self.filter(**kwargs)
+        return self._Assay
+
     def set_lim(self, lim = None, upper = None, lower = None):
         """
         Sets the range limits for inclusion range.
@@ -222,14 +277,15 @@ class IQRFilter(Filter):
         faulty_indices = []
         for group in groups:
             tmp = df.query(f"group == {group}")
+
             anchor = np.nanmedian(tmp["Ct"])
-            print(tmp)
             first, third = np.nanquantile(tmp["Ct"], 0.26), np.nanquantile(tmp["Ct"], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
-            print(lower, first, anchor, third, upper)
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
+
+            self._save_stats(self._Assay.id(), group, anchor, upper, lower)        
         
         self._filter_out(faulty_indices)
 
@@ -266,20 +322,22 @@ if __name__ == "__main__":
     analyser = qpcr.Analyser()
     analyser.anchor("first")
 
-    range_filter = IQRFilter()
-    range_filter.report(".")
-    range_filter.set_lim(2)
+    iqr_filter = IQRFilter()
+    iqr_filter.report(".")
+    iqr_filter.set_lim(2)
 
     for file in files: 
         
         sample = reader.read(file)
         
         # here comes in the filter...
-        sample = range_filter.pipe(sample)
+        sample = iqr_filter.pipe(sample)
         # print(sample.get())
 
         res = analyser.pipe(sample)
         analysers.append(res)
+
+    iqr_filter.plot(show = False)
 
     normaliser = qpcr.Normaliser()
     normaliser.link(normalisers = analysers[:2])

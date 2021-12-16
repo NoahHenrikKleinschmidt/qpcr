@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+import plotly
 import plotly.express as px
 import numpy as np 
 
@@ -26,8 +27,18 @@ _default_static_PreviewResults = dict(
                                     )
 
 _default_interactive_PreviewResults = dict(
-                                            template = "plotly",
+                                            template = "plotly white",
                                             title = "Preview of Results"
+                                        )
+
+
+_default_static_ReplicateBoxPlot = dict(
+                                        title = "IQR Filter Report"
+                                    )
+
+_default_interactive_ReplicateBoxPlot = dict(
+                                            template = "plotly white",
+                                            title = "IQR Filter Report"
                                         )
 
 
@@ -49,13 +60,14 @@ class Plotter:
     """
     A superclass that handles Data Linking and Parameter setup for FigureClasses
     """
-    def __init__(self, mode = "interactive"):
+    def __init__(self, mode = None):
         self._default_params = None
         self._PARAMS = {}
         self._Results = None
         self._data = None
         self._id = type(self).__name__
-        self._MODE = mode
+        self._MODE = "interactive" if mode is None else mode
+        self._fig = None
         self._set_plot()
 
     def link(self, Results:(qpcr.Results or pd.DataFrame)):
@@ -79,6 +91,7 @@ class Plotter:
         """
         total_kwargs = self.update_params(kwargs)
         fig = self._plot(**total_kwargs)
+        self._fig = fig
         return fig
 
     def id(self, id:str = None):
@@ -123,6 +136,18 @@ class Plotter:
             self._PARAMS = kwargs
 
         return kwargs
+
+    def save(self, filename, **kwargs):
+        """
+        Saves the figure to a file
+        """
+        if self._fig is None:
+            wa.SoftWarning("Plotter:no_fig_yet")
+        else:
+            if self._MODE == "static":
+                self._fig.savefig(filename, **kwargs)
+            elif self._MODE == "interactive":
+                plotly.offline.plot(self._fig, filename=filename, **kwargs)
 
     def _setup_default_params(self, static:dict, interactive:dict):
         """
@@ -364,6 +389,97 @@ class PreviewResults(Plotter):
             return fig 
         except Exception as e: 
             raise e 
+
+
+class ReplicateBoxPlot(Plotter):
+    """
+    This class generates a boxplot figure summary for the input sample replicates.
+    This is embedded in the Filter class. Since this is designed to work with Assays and not with DeltaCt Results,
+    it redefines link to get() and not stats() the required tables...
+    """
+    def __init__(self, Filter = None, mode="interactive"):
+        self._setup_default_params(
+                                    static = _default_static_ReplicateBoxPlot, 
+                                    interactive = _default_interactive_ReplicateBoxPlot
+                                )
+        # __init__ is going to require default_params to be already set!
+        super().__init__(mode=mode)
+        self._data = None
+        self._Filter = Filter
+        self._filter_stats = None
+    
+    def filter(self, Filter):
+        """
+        Link a Filter instance for which a report figure shall be generated
+        """
+        self._Filter = Filter
+
+    def link(self, Assay:qpcr.Assay):
+        """
+        Link an Assay object to the BoxPlotter 
+        This will simply add the Ct column to the current overall data!
+        """
+        if isinstance(Assay, qpcr.Assay):
+            self._Results = Assay
+            data = self._Results.get()
+        else:
+            wa.HardWarning("Plotter:unknown_data")
+
+        # add itentifier column
+        data["assay"] = [self._Results.id() for i in range(len(data))]
+
+        if self._data is None: 
+            self._data = data
+        else:
+            self._data = pd.concat([self._data, data], ignore_index=True)
+        
+
+    def _interactive_plot(self, **kwargs):
+        """
+        Generates a interactive boxplot of replicates
+        """
+
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+
+        data = self._data
+
+        filter_stats = self._Filter.get_stats()
+
+        groups = aux.sorted_set(data["group"])
+        group_names = aux.sorted_set(data["group_name"])
+
+        fig = go.Figure()
+
+        for group, name in zip(groups, group_names):
+            tmp_df = data.query(f"group == {group}")
+            
+            # future TODO: 
+            # currently the inclusion-range is NOT yet represented.
+            # It appears as if boxplot cannot use precomputed mean-sd when x and y are specified... (hypothesis of mine)
+            # so we'd need an alternative way of plotting this stuff so we can include it...
+             
+            fig.add_trace(
+                            go.Box(
+                                x = tmp_df["assay"],
+                                y = tmp_df["Ct"],
+                                name = name,
+                                hoverinfo = "y+name",
+                                
+                            ),
+                        )
+            
+           
+        fig.update_layout(boxmode="group")
+
+        if show:
+            fig.show()
+
+        return fig 
+
+
+
+
+#TODO: finish writing plotting functions and embed into Filter...
 
 if __name__ == '__main__':
 

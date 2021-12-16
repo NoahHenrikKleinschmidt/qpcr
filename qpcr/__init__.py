@@ -99,8 +99,7 @@ class Assay(aux._ID):
     """
     This class places a set of samples into groups of replicates as specified by the user.
     It adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
-    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default). Note that if no renaming takes place, 
-    the "group_name" column will be dropped in the later steps of the pipeline. Only renamed "group_name" columns are passed on!
+    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
     """
     def __init__(self, Reader:Reader = None) -> dict:
         super().__init__()
@@ -199,11 +198,7 @@ class Assay(aux._ID):
         This is useful when removing corrupted data entries.
         """
         self._df = self._df.drop(index = list(entries))
-        print("DROPPED SOME INDICES IN", self.id())
-        print(self._df)
-        # self._df = self._df.reset_index()
-        # self._df = self._df.drop(columns = ["index"])
-
+        
     def _rename_per_key(self, names):
         """
         Generates new name list based on current names in "group_name" and uses string.replace()
@@ -436,7 +431,7 @@ class Results(aux._ID):
         
         # get groups and samples 
         groups = aux.sorted_set(list(self._df["group"]))
-        samples = [c for c in self._df.columns if c not in ["Sample", "group", "group_name"]]
+        samples = [c for c in self._df.columns if c not in ["Sample", "group", "group_name", "assay"]]
      
         # compute stats for all samples per group
         for group in groups:
@@ -512,11 +507,11 @@ class Results(aux._ID):
         any function can be passed as long as it works with an iterable
         """
         # ignore group and group_name columns
-        ignore = ["Sample", "group", "group_name"]
+        ignore = ["Sample", "group", "group_name", "assay"]
         all_cols = [g for g in group_subset.columns if g not in ignore]
         tmp = group_subset[all_cols]
         # compute stats based on func
-        stats = [func(tmp[col], **kwargs) for col in tmp]
+        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
         return stats
         
 
@@ -779,8 +774,8 @@ class Normaliser(aux._ID):
         """
         The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
         """
-        tmp_df = normaliser.join(sample_assay, lsuffix="_s")
-        tmp_df = sample_assay.join(normaliser)
+        # tmp_df = normaliser.join(sample_assay, lsuffix="_s")
+        tmp_df = sample_assay.join(normaliser, lsuffix = "_s")
         results = self._norm_func(tmp_df[["dCt", "dCt_combined"]])
         return results
 

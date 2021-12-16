@@ -10,3 +10,58 @@ Found Indices:
 []
 Details: 
 {'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+RangeFilter
+Sample: 
+28S
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+RangeFilter
+Sample: 
+28S
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+RangeFilter
+Sample: 
+28S
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+RangeFilter
+Sample: 
+28S
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+RangeFilter
+Sample: 
+28S
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
