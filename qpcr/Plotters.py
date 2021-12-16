@@ -15,7 +15,7 @@ from plotly.subplots import make_subplots
 import plotly
 import plotly.express as px
 import numpy as np 
-
+import seaborn as sns 
 
 # setup some default settings for charts
 
@@ -27,22 +27,25 @@ _default_static_PreviewResults = dict(
                                     )
 
 _default_interactive_PreviewResults = dict(
-                                            template = "plotly white",
+                                            template = "plotly_white",
                                             title = "Preview of Results"
                                         )
 
 
 _default_static_ReplicateBoxPlot = dict(
-                                        title = "IQR Filter Report"
+                                        title = "Summary of Replicates",
+                                        linewidth = 0.8,
+                                        frame = False,
+                                        palette = "Blues"
                                     )
 
 _default_interactive_ReplicateBoxPlot = dict(
-                                            template = "plotly white",
-                                            title = "IQR Filter Report"
+                                            template = "plotly_white",
+                                            title = "Summary of Replicates"
                                         )
 
 
-# Concent: 
+# Concept: 
 # Plotter: 
 #       We define a superclass Plotter that will handle linking to data, 
 #       linking to default parameters, and setting up default parameters.
@@ -145,7 +148,7 @@ class Plotter:
             wa.SoftWarning("Plotter:no_fig_yet")
         else:
             if self._MODE == "static":
-                self._fig.savefig(filename, **kwargs)
+                self._fig.savefig(filename, bbox_inches = 'tight', **kwargs)
             elif self._MODE == "interactive":
                 plotly.offline.plot(self._fig, filename=filename, **kwargs)
 
@@ -436,14 +439,17 @@ class ReplicateBoxPlot(Plotter):
 
     def _interactive_plot(self, **kwargs):
         """
-        Generates a interactive boxplot of replicates
+        Generates an interactive Boxplot summary of the input Ct values
         """
 
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        template = aux.from_kwargs("template", None, kwargs, rm=True)
+        title = aux.from_kwargs("title", None, kwargs, rm=True)
 
         data = self._data
-
-        filter_stats = self._Filter.get_stats()
+        
+        # currently unused (needs to be integrated in the future..., see TODO below)
+        # filter_stats = self._Filter.get_stats()
 
         groups = aux.sorted_set(data["group"])
         group_names = aux.sorted_set(data["group_name"])
@@ -464,12 +470,16 @@ class ReplicateBoxPlot(Plotter):
                                 y = tmp_df["Ct"],
                                 name = name,
                                 hoverinfo = "y+name",
-                                
+                                **kwargs,
                             ),
                         )
             
            
-        fig.update_layout(boxmode="group")
+        fig.update_layout(
+                            boxmode="group", 
+                            template = template, 
+                            title = title,
+                        )
 
         if show:
             fig.show()
@@ -477,6 +487,60 @@ class ReplicateBoxPlot(Plotter):
         return fig 
 
 
+    def _static_plot(self, **kwargs):
+        """
+        Generates a static Boxplot summary of the input Ct values
+        """
+
+        data = self._data
+        
+        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
+        title = aux.from_kwargs("title", None, kwargs, rm=True)
+        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
+        ncols, nrows = aux.from_kwargs("subplots", gx.make_layout(data, "assay"), kwargs, rm=True)
+
+        # future TODO: 
+        # currently the inclusion-range is NOT yet represented.
+        # It appears as if boxplot cannot use precomputed mean-sd when x and y are specified... (hypothesis of mine)
+        # so we'd need an alternative way of plotting this stuff so we can include it...
+            
+        # filter_stats = self._Filter.get_stats()
+
+        # sns.set_style("whitegrid")
+
+        fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
+        
+        # possibly nrows and ncols should be switched...
+        Coords = gx.AxesCoords(fig, axs, (ncols, nrows))
+        
+        for assay in aux.sorted_set(data["assay"]):
+            
+            ax = Coords.subplot()
+            tmp = data.query(f"assay == '{assay}'")
+
+            sns.boxplot(
+                        data=tmp, 
+                        x = "assay", y = "Ct", hue="group_name", 
+                        ax = ax, 
+                        **kwargs
+                    )
+
+            ax.legend(bbox_to_anchor=(1,1), loc = None)
+            ax.set(title=assay, xlabel = "", xticklabels = [],)
+            
+            if not show_spines:
+                sns.despine()
+
+            Coords.increment()
+
+        fig.suptitle(title)
+        plt.tight_layout()
+
+        if show:
+            fig.show()
+
+        return fig 
 
 
 #TODO: finish writing plotting functions and embed into Filter...

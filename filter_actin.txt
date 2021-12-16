@@ -1616,3 +1616,674 @@ Found Indices:
 []
 Details: 
 {'upper_max': '2', 'lower_max': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '0.4', 'lower_bound': '0.4'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+8
+Found Indices: 
+[0, 1, 6, 7, 16, 17, 22, 23]
+Details: 
+{'anchor': 'group median', 'upper_bound': '0.1', 'lower_bound': '0.1'}
+
+Filter: 
+RangeFilter
+Assay: 
+actin
+Found faulty Replicates: 
+1
+Found Indices: 
+[1]
+Details: 
+{'anchor': 'group median', 'upper_bound': '0.3', 'lower_bound': '0.3'}
+
+Filter: 
+IQRFilter
+Assay: 
+actin
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}

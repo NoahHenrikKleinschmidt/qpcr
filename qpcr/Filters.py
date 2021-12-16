@@ -28,7 +28,8 @@ class Filter(aux._ID):
         self._report_loc = None
         self._id = type(self).__name__
         self._boxplot_mode = "interactive"
-        self._BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._filter_stats = pd.DataFrame({
                                             "assay" : [], "group" : [], 
                                             "anchor" : [], "upper" : [], "lower" : []
@@ -46,24 +47,30 @@ class Filter(aux._ID):
         Set to None to disable.
         """
         self._boxplot_mode = mode
-        self._BoxPlotter = Plotters.ReplicateBoxPlot(self._boxplot_mode)
-
+        self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+    
     def plot(self, **kwargs):
         """
         Generates a boxplot summary plot. 
         Note: This is designed to be done AFTER all samples have passed the filter
         """
-        fig = self._BoxPlotter.plot(**kwargs)
-        if self._report_loc is not None and self._boxplot_mode is not None: 
-            suffix = "html" if self._boxplot_mode == "interactive" else "jpg"
-            self._BoxPlotter.save(os.path.join(self._report_loc, f"IQR_filter_summary.{suffix}"))
-        return fig
+        figs = []
+        filenames = [f"{self.id()}_before", f"{self.id()}_after"]
+        for plotter, filename in zip([self._before_BoxPlotter, self._after_BoxPlotter], filenames):
+            fig = plotter.plot(**kwargs)
+            figs.append(fig)
+            if self._report_loc is not None and self._boxplot_mode is not None: 
+                suffix = "html" if self._boxplot_mode == "interactive" else "jpg"
+                plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
+        return figs
 
     def link(self, Assay:qpcr.Assay):
         """
         Link a qpcr.Assay to be filtered
         """
         self._Assay = Assay
+        self._before_BoxPlotter.link(self._Assay)
 
     def pipe(self, Assay:qpcr.Assay, **kwargs):
         """
@@ -71,7 +78,8 @@ class Filter(aux._ID):
         It returns directly the filtered Assay object
         """
         self.link(Assay)
-        return self.filter(**kwargs)
+        self.filter(**kwargs)
+        return self._Assay    
 
     def filter(self, **kwargs):
         """
@@ -79,6 +87,7 @@ class Filter(aux._ID):
         """
         if self._Assay is not None:
             self._filter(**kwargs)
+            self._after_BoxPlotter.link(self._Assay)
             return self._Assay
         else: 
             aw.HardWarning("Filter:no_assay")
@@ -160,7 +169,6 @@ class RangeFilter(Filter):
         self._upper = 1
         self._lower = 1
         self._anchor = None
-        
 
     def set_lim(self, lim = None, upper = None, lower = None):
         """
@@ -252,7 +260,6 @@ class IQRFilter(Filter):
         It returns directly the filtered Assay object
         """
         self.link(Assay)
-        self._BoxPlotter.link(Assay)
         self.filter(**kwargs)
         return self._Assay
 
@@ -323,8 +330,9 @@ if __name__ == "__main__":
     analyser.anchor("first")
 
     iqr_filter = IQRFilter()
+    iqr_filter.plotmode("interactive")
     iqr_filter.report(".")
-    iqr_filter.set_lim(2)
+    # iqr_filter.set_lim(0.3)
 
     for file in files: 
         
@@ -337,7 +345,7 @@ if __name__ == "__main__":
         res = analyser.pipe(sample)
         analysers.append(res)
 
-    iqr_filter.plot(show = False)
+    iqr_filter.plot(show = True)
 
     normaliser = qpcr.Normaliser()
     normaliser.link(normalisers = analysers[:2])

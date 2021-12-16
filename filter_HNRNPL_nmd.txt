@@ -1616,3 +1616,663 @@ Found Indices:
 []
 Details: 
 {'upper_max': '2', 'lower_max': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '2', 'lower_bound': '2'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '0.4', 'lower_bound': '0.4'}
+
+Filter: 
+RangeFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+1
+Found Indices: 
+[10]
+Details: 
+{'anchor': 'group median', 'upper_bound': '0.3', 'lower_bound': '0.3'}
+
+Filter: 
+IQRFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
