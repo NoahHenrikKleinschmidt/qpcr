@@ -7,7 +7,7 @@ import auxiliary as aux
 from auxiliary import warnings as aw
 import os
 import numpy as np 
-
+from copy import deepcopy 
 
 # TODO: A class to read csv pqcr raw data << CHECK
 # TODO: A class to perform data preprocessing (like grouping replicates etc...) << CHECK
@@ -419,6 +419,12 @@ class Results(aux._ID):
         _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
         self._df = self._df.drop(columns = _to_drop)
         
+    def rename_cols(self, cols:dict):
+        """
+        Renames all columns according to key=value
+        """
+        self._df = self._df.rename(columns = cols)
+
 
     def stats(self, recompute = False) -> pd.DataFrame:
         """
@@ -703,10 +709,12 @@ class Normaliser(aux._ID):
         self._prep_func = self._average
         self._norm_func = self._divide_by_normaliser
 
-    def get(self):
+    def get(self, copy=False):
         """
         Returns the normalised dataframe
         """
+        if copy: 
+            return deepcopy(self._Results)
         return self._Results
     
     def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
@@ -774,8 +782,8 @@ class Normaliser(aux._ID):
         """
         The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
         """
-        # tmp_df = normaliser.join(sample_assay, lsuffix="_s")
-        tmp_df = sample_assay.join(normaliser, lsuffix = "_s")
+        tmp_df = normaliser.join(sample_assay, lsuffix="_s")
+        # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
         results = self._norm_func(tmp_df[["dCt", "dCt_combined"]])
         return results
 

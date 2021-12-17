@@ -258,7 +258,18 @@ class BasicPlus(Basic):
         if self._save_to is not None:
             results.save(self._save_to)
 
-        # plot
+        # plot replicate overview
+        if self._save_to is not None:
+            for filter in self._Filters:
+
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+                
+                figs = filter.plot()
+                self._Figures.extend(figs)
+
+        # plot results
         for plotter in self._Plotters:
             plotter.link(self._Results)
             fig = plotter.plot()
@@ -266,17 +277,16 @@ class BasicPlus(Basic):
 
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
-                fig.savefig(
-                filename, dpi = 500
-                )
+                plotter.save(filename)
 
     def _make_figure_filename(self, plotter):
         """
         Increments a filename with a numeric counter...
         """
         num = 1
+        suffix = plotter.suffix()
         while True:
-            filename = os.path.join(self._save_to, f"{plotter.id()}_{num}.png")
+            filename = os.path.join(self._save_to, f"{plotter.id()}_{num}.{suffix}")
             if not os.path.exists(filename):
                 break
             num+=1
@@ -302,11 +312,11 @@ if __name__ == "__main__":
     analysis.replicates(6)
     analysis.names(groupnames)
 
-    range_filter = Filters.RangeFilter()
-    range_filter.report("Example Data 2")
-    analysis.add_filters(range_filter)
+    iqr_filter = Filters.IQRFilter()
+    # iqr_filter.report("Example Data 2")
+    analysis.add_filters(iqr_filter)
 
-    preview = Plotters.PreviewResults(mode = "static")
+    preview = Plotters.PreviewResults(mode = "interactive")
     analysis.add_plotters(preview)
 
     # now that pipeline is ready, we can run!
@@ -315,6 +325,7 @@ if __name__ == "__main__":
     # now we can get results!
     results = analysis.get(kind="df")
     print(results)
+    
     
 
     exit(0)

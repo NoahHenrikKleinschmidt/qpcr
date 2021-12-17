@@ -152,6 +152,13 @@ class Plotter:
             elif self._MODE == "interactive":
                 plotly.offline.plot(self._fig, filename=filename, **kwargs)
 
+    def suffix(self):
+        """
+        Returns the appropriate file suffix for save (html or jpg)
+        """
+        suffix = "jpg" if self._MODE == "static" else "html"
+        return suffix
+
     def _setup_default_params(self, static:dict, interactive:dict):
         """
         Setup and set default parameters for a FigureClass

@@ -2287,3 +2287,564 @@ Found Indices:
 [3, 7]
 Details: 
 {'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+2
+Found Indices: 
+[3, 7]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}

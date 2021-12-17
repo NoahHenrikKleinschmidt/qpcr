@@ -61,7 +61,7 @@ class Filter(aux._ID):
             fig = plotter.plot(**kwargs)
             figs.append(fig)
             if self._report_loc is not None and self._boxplot_mode is not None: 
-                suffix = "html" if self._boxplot_mode == "interactive" else "jpg"
+                suffix = plotter.suffix()
                 plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
         return figs
 
@@ -92,12 +92,14 @@ class Filter(aux._ID):
         else: 
             aw.HardWarning("Filter:no_assay")
 
-    def report(self, filename):
+    def report(self, filename = None):
         """
         Stores a report of any replicates that were filtered out
         """
-        self._report_loc = filename
-
+        if filename is not None:
+            self._report_loc = filename
+        else: 
+            return self._report_loc
     def reset(self):
         """
         Resets the excluded indices
@@ -332,7 +334,7 @@ if __name__ == "__main__":
     iqr_filter = IQRFilter()
     iqr_filter.plotmode("interactive")
     iqr_filter.report(".")
-    # iqr_filter.set_lim(0.3)
+    iqr_filter.set_lim(1.6)
 
     for file in files: 
         
@@ -345,7 +347,7 @@ if __name__ == "__main__":
         res = analyser.pipe(sample)
         analysers.append(res)
 
-    iqr_filter.plot(show = True)
+    iqr_filter.plot(show = False)
 
     normaliser = qpcr.Normaliser()
     normaliser.link(normalisers = analysers[:2])
@@ -355,12 +357,58 @@ if __name__ == "__main__":
     
     result = normaliser.get()
 
+    print("first result...")
     print(result.get())
+    # print(result.stats())
     
+    # just for fun, let's try to normalise nmd against prot...
+
+    nmd = normaliser.get(copy=True)
+    prot = normaliser.get(copy=True)
+
+    nmd.drop_cols("HNRNPL_prot_rel_28S+actin", "assay")
+    nmd.rename_cols(
+        {"HNRNPL_nmd_rel_28S+actin" : "dCt"}
+        )
+    
+    nmd.id("nmd")
+
+    prot.drop_cols("HNRNPL_nmd_rel_28S+actin", "assay")
+    prot.rename_cols(
+        {"HNRNPL_prot_rel_28S+actin" : "dCt"}
+    
+        )
+
+    prot.id("prot")
+
+    # Alright: At the moment we cannot use a second_normaliser, 
+    # as it for whatever reason overwrites ALL Ct containing 
+    # columns with the last one??? >> happy bug hunting...
+
+    # UDPATE: It seems like nmd is used for normaliser instead of prot??
+    # 
+    # SOLUTION: Solution is: use copy.deepcopy() otherwise both nmd 
+    #           and prot are just referencing the same Results instance!
+
+    second_normaliser = qpcr.Normaliser()
+    second_normaliser.link(normalisers = [prot])
+    second_normaliser.link(samples = [nmd, prot])
+
+    second_normaliser.normalise()
+    
+    result = second_normaliser.get()
+
+    print("second result...")
+    print(result.get())
+
+    p = Plotters.PreviewResults(mode = "interactive")
+    p.link(result)
+    p.plot()
+    
+    #  
     # result.save("..")
     
     # result.add_names(samples)
 
-    print(result.stats())
 
     exit(0)
