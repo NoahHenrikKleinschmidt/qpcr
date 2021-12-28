@@ -2837,3 +2837,25 @@ Found Indices:
 []
 Details: 
 {'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+HNRNPL_nmd
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}

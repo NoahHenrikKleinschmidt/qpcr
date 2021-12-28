@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 
 def make_layout(df, ref_column:str):
     """
@@ -8,7 +8,6 @@ def make_layout(df, ref_column:str):
     ref_col = df[ref_column]
     ref_col = aux.sorted_set(ref_col)
     ref_length = ref_col.shape[0]
-    print("reflength =", ref_length)
     if ref_length % 2 == 0:
         nrows = 2
         if ref_length % 4 == 0 and ref_length > 4:

@@ -415,8 +415,12 @@ class Results(aux._ID):
         """
         Drops all specified columns from the dataframes
         this is used for normaliser preprocessing...
+        If no cols are specified any/all dCt columns are dropped...
         """
-        _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+        if cols == ():
+            _to_drop = [c for c in self._df.columns if c not in ["group", "group_name", "Sample", "assay"]]
+        else:
+            _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
         self._df = self._df.drop(columns = _to_drop)
         
     def rename_cols(self, cols:dict):
@@ -469,6 +473,38 @@ class Results(aux._ID):
             if self._stats_df is None:
                 self.stats()
             self._save_single(path, self._stats_df, "_stats")
+
+    def drop_rel(self):
+        """
+        Drops the X_rel_Y to just X
+        """
+        colnames = self._df.columns
+        to_change = {i : i.split("_rel_")[0] for i in colnames if "_rel_" in i }
+        self.rename_cols(to_change)
+
+    def split(self, reset_names = False, drop_rel = True):
+        """
+        Returns a list of Results() objects containing only a single dCt column each (retaining group columns etc.)
+        """
+        shared_columns = [i for i in self._df.columns if i in ["group", "group_name", "Sample", "assay"]]
+        dct_columns = [i for i in self._df.columns if i not in ["group", "group_name", "Sample", "assay"]]
+        
+        dfs = [self._df[shared_columns + [i]] for i in dct_columns]
+        objects = [Results() for i in dfs]
+
+        for o, df, dct_col in zip(objects, dfs, dct_columns): 
+            o._df = df
+            if reset_names:
+                o.rename_cols({dct_col : "dCt"})
+            if drop_rel: 
+                o.drop_rel()
+
+            o.id(dct_col)
+        
+        return objects
+
+        
+       
 
     def _save_single(self, path, src, suffix=""):
         """
@@ -752,7 +788,7 @@ class Normaliser(aux._ID):
         else: 
             aw.HardWarning("Normaliser:cannot_set_norm_func", func = f)
 
-    def normalise(self):
+    def normalise(self, **kwargs):
         """
         Normalises all linked samples against the normaliser set. 
         Stores the results in a new Results 
@@ -768,32 +804,50 @@ class Normaliser(aux._ID):
 
         # setup groups for _Results
         self._Results.link(self._Assay[0])
-        self._Results.drop_cols("dCt")
+        self._Results.drop_cols()
 
         # combine normalised samples into unified dataframe
         for S in self._Assay:
             S_df = S.get()
             column_name = f"{S.id()}_rel_{self._normaliser.id()}"
-            normalised = self._norm_func_wrapper(S_df, normaliser)
+            normalised = self._norm_func_wrapper(S_df, normaliser, **kwargs)
             normalised = normalised.rename(column_name)
             self._Results.add(normalised)
 
-    def _norm_func_wrapper(self, sample_assay, normaliser):
+    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col="dCt", norm_col="dCt_combined"):
         """
         The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
         """
+        # for double normalised we want the same columns as dct and norm...
+        dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
+
         tmp_df = normaliser.join(sample_assay, lsuffix="_s")
         # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
-        results = self._norm_func(tmp_df[["dCt", "dCt_combined"]])
+        results = self._norm_func(tmp_df[[dCt_col, norm_col]])
         return results
+
+    def _prep_columns(self, sample_assay, dCt_col, norm_col):
+        """
+        Returns the columns to use if named columns shall be used (named columns will be used for second-normalisation of entire runs)
+        """
+        if dCt_col == "named":
+            dCt_col = [i for i in sample_assay.columns if i not in ["group", "group_name", "Sample", "assay"]]
+            # assert len(dCt_col) == 1, f"length of dCt_col is: {len(dCt_col)}"
+            dCt_col = dCt_col[0]
+
+        if norm_col == "same": 
+            norm_col = dCt_col + "_s"
+        return dCt_col,norm_col
 
     def _divide_by_normaliser(self, df):
         """
         Performs normalisation of sample s against normaliser n
         s and n are specified as two pandas dataframe columns
+        Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
         (default _norm_func)
         """
-        s, n = df["dCt"], df["dCt_combined"]
+        dCt_col, norm_col = df.columns
+        s, n = df[dCt_col], df[norm_col]
         return s / n
 
     def _link_samples(self, samples):
@@ -911,12 +965,31 @@ if __name__ == "__main__":
     
     result = normaliser.get()
 
-    print(result.get())
+    splitted = result.split(reset_names = False)
+
+    i, j = splitted
+    i.rename_cols({"HNRNPL_nmd": "HNRNPL"})
+    j.rename_cols({"HNRNPL_prot": "HNRNPL"})
+
+    print(i, j)
+    print("-------")
+    print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
+    print("-----")
+    sn = Normaliser()
+
+    sn.link(
+        samples = [splitted[0]], 
+        normalisers = [splitted[1]],
+    )
     
+    sn.normalise(dCt_col = "named", norm_col = "same")
+
+    print(sn.get().stats())
+
     # # result.save("..")
     
     # #result.add_names(samples)
 
-    print(result.stats())
+    # print(result.stats())
 
     exit(0)

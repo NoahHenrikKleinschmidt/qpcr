@@ -2848,3 +2848,25 @@ Found Indices:
 [3]
 Details: 
 {'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
+
+Filter: 
+IQRFilter
+Assay: 
+28S
+Found faulty Replicates: 
+1
+Found Indices: 
+[3]
+Details: 
+{'upper_max': '1.6', 'lower_max': '1.6'}
