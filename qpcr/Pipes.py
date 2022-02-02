@@ -7,10 +7,10 @@ import __init__ as qpcr
 import matplotlib.pyplot as plt
 import pandas as pd 
 import statistics as stats
-import auxiliary.warnings as wa
-import auxiliary as aux
-import Plotters
-import Filters
+import qpcr.auxiliary.warnings as wa
+import qpcr.auxiliary as aux
+import qpcr.Plotters
+import qpcr.Filters
 import re
 import os 
 import difflib

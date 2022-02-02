@@ -16,10 +16,10 @@ from re import L
 import __init__ as qpcr
 import pandas as pd
 import numpy as np
-import auxiliary.warnings as aw
-import auxiliary as aux
+import qpcr.auxiliary.warnings as aw
+import qpcr.auxiliary as aux
 import os 
-import Plotters
+import qpcr.Plotters
 
 class Filter(aux._ID):
     """
