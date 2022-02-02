@@ -1,6 +1,5 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-from . import sorted_set
 
 def make_layout(df, ref_column:str):
     """

@@ -3,8 +3,8 @@ This module is designed for streamlined data visualisation of the qpcr generated
 It is designed to work directly with qpcr.Results() instances. 
 """
 
-import __init__ as qpcr
-import Pipes
+import qpcr.__init__ as qpcr
+import qpcr.Pipes
 import qpcr.auxiliary.graphical as gx
 import qpcr.auxiliary as aux 
 import qpcr.auxiliary.warnings as wa

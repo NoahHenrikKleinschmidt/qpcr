@@ -3,7 +3,7 @@ This module contains a set of common lightweight wrappers to perform simple and 
 This is designed for lightweight users that do not wish to employ specialised pipelines.
 """
 
-import __init__ as qpcr
+import qpcr.__init__ as qpcr
 import matplotlib.pyplot as plt
 import pandas as pd 
 import statistics as stats

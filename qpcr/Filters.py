@@ -13,7 +13,7 @@ IQRFilter
 """
 
 from re import L
-import __init__ as qpcr
+import qpcr.__init__ as qpcr
 import pandas as pd
 import numpy as np
 import qpcr.auxiliary.warnings as aw
