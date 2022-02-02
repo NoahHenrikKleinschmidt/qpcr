@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>qpcr.auxiliary.graphical API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>qpcr.auxiliary.graphical</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np 
+import matplotlib.pyplot as plt
+
+def make_layout(df, ref_column:str):
+    &#34;&#34;&#34;
+    Generates a tuple for col, rows for subplots 
+    based on the distinct sets of values within ref_column.
+    &#34;&#34;&#34;
+    ref_col = df[ref_column]
+    ref_col = list(set(ref_col))
+    ref_length = len(ref_col)
+
+    if ref_length == 1: 
+        return (1, 1)
+
+    if ref_length % 2 == 0:
+        nrows = 2
+        if ref_length % 4 == 0 and ref_length &gt; 4:
+            nrows = 4
+    elif ref_length % 6 == 0:
+            nrows = 6
+    else: 
+        nrows = 3
+
+    ncols = int(np.ceil(ref_length / nrows))
+    if ncols * nrows &gt;= ref_length:
+        return ncols, nrows
+    else:
+        ncols = ncols+1
+        return ncols, nrows
+
+
+def make_speclist(maxrows, maxcols, spectype):
+    &#34;&#34;&#34;
+    This function sets up the plotly speclist for subplots 
+    according to the number of plots and type of figure desired
+    &#34;&#34;&#34;
+    spec_list = []
+    for r in range(maxrows):
+        tmp = []
+        for c in range(maxcols):
+            tmp.append({&#39;type&#39;:spectype})
+        spec_list.append(tmp)
+    return spec_list
+
+
+class AxesCoords:
+    &#34;&#34;&#34;
+    This class handles the coordinates for an Axes instance generated by subplots. 
+    &#34;&#34;&#34;
+    def __init__(self, fig, axs, subplots:tuple):
+        self._fig = fig
+        self._axs = axs
+        self._ncols, self._nrows = subplots
+        self.col, self.row = None, None
+        self._get_plot_type()
+        self._init_row_and_col()
+        self._coords = None
+
+        # self._transpose = False
+        
+        self._first = self.col if self._type == &#34;plt&#34; else self.row
+        self._second = self.row if self._type == &#34;plt&#34; else self.col
+        self._limit_first = self._ncols if self._type == &#34;plt&#34; else self._nrows
+        self._limit_second = self._nrows if self._type == &#34;plt&#34; else self._ncols
+        
+        self._check_2D()
+
+        self._idx = 0
+
+        self._2D_setup_ranges()
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns the current subplot coordinates
+        &#34;&#34;&#34;
+        if self._is2D:
+            coords = self._coords[self._idx]
+        else:
+            coords =  self._coords[self._idx][0]
+        return coords
+
+    def increment(self):
+        &#34;&#34;&#34;
+        Switches to next subplot coordinates
+        &#34;&#34;&#34;
+        self._idx += 1
+
+    # def transpose(self, t:bool):
+    #     &#34;&#34;&#34;
+    #     Switch col and row dimensions and reference attributes
+    #     &#34;&#34;&#34;    
+    #     if t != self._transpose:
+    #         self._transpose = t
+    #         self._first = self.col if self._first == self.row else self.row
+    #         self._second = self.col if self._second == self.row else self.row
+
+    #         self._limit_first = self._ncols if self._limit_first == self._nrows else self._nrows
+    #         self._limit_second = self._nrows if self._limit_second == self._ncols else self._ncols
+    #         self._2D_setup_ranges()
+
+    def subplot(self):
+        &#34;&#34;&#34;
+        Returns the current subplot to be plotted (only for matplotlib figures)
+        &#34;&#34;&#34;
+        coord = self.get()
+        current_subplot = self._axs[coord]
+        return current_subplot
+
+    def _2D_setup_ranges(self):
+        &#34;&#34;&#34;
+        Setup the possible coordinates for 2D grid
+        &#34;&#34;&#34;
+        coords = []
+        first_range = range(self._base, self._limit_first+self._base)
+        second_range = range(self._base, self._limit_second+self._base)
+
+        for first in first_range:
+            for second in second_range:
+                coords.append((first, second))
+        self._coords = coords
+
+    def _check_2D(self):
+        &#34;&#34;&#34;
+        Checks if 2D coords will be required or not...
+        &#34;&#34;&#34;
+        if self._type == &#34;plotly&#34;: 
+            self._is2D = True
+        else:
+            self._is2D = True if self._limit_second &gt; 1 else False
+        
+    def _get_plot_type(self):
+        &#34;&#34;&#34;
+        Sets if plotly or matplotlib figure are present, 
+        and also checks if axs contain only one single subplot, 
+        and makes it subscriptable if so...
+        &#34;&#34;&#34;
+        fig, axs = plt.subplots()
+        if type(self._fig) == type(fig):
+            self._type = &#34;plt&#34;
+        else:
+            self._type = &#34;plotly&#34;
+        
+        if type(self._axs) == type(axs):
+            self._axs = [self._axs]
+        plt.close()
+
+    def _setup_ranges(self):
+        &#34;&#34;&#34;
+        Setup ranges of possible values
+        &#34;&#34;&#34;
+        self._first_range = range(self._base, self._limit_first + self._base)
+        self._second_range = range(self._base, self._limit_second + self._base)
+
+    def _init_row_and_col(self):
+        &#34;&#34;&#34;
+        Will set col and row to 1 if plotly figure is used, 
+        otherwise 0 in case of matplotlib
+        &#34;&#34;&#34;
+        if self._type == &#34;plt&#34;:
+            self._base = 0
+        else: 
+            self._base = 1
+        self.col, self.row = (self._base, self._base)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="qpcr.auxiliary.graphical.make_layout"><code class="name flex">
+<span>def <span class="ident">make_layout</span></span>(<span>df, ref_column: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates a tuple for col, rows for subplots
+based on the distinct sets of values within ref_column.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_layout(df, ref_column:str):
+    &#34;&#34;&#34;
+    Generates a tuple for col, rows for subplots 
+    based on the distinct sets of values within ref_column.
+    &#34;&#34;&#34;
+    ref_col = df[ref_column]
+    ref_col = list(set(ref_col))
+    ref_length = len(ref_col)
+
+    if ref_length == 1: 
+        return (1, 1)
+
+    if ref_length % 2 == 0:
+        nrows = 2
+        if ref_length % 4 == 0 and ref_length &gt; 4:
+            nrows = 4
+    elif ref_length % 6 == 0:
+            nrows = 6
+    else: 
+        nrows = 3
+
+    ncols = int(np.ceil(ref_length / nrows))
+    if ncols * nrows &gt;= ref_length:
+        return ncols, nrows
+    else:
+        ncols = ncols+1
+        return ncols, nrows</code></pre>
+</details>
+</dd>
+<dt id="qpcr.auxiliary.graphical.make_speclist"><code class="name flex">
+<span>def <span class="ident">make_speclist</span></span>(<span>maxrows, maxcols, spectype)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This function sets up the plotly speclist for subplots
+according to the number of plots and type of figure desired</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_speclist(maxrows, maxcols, spectype):
+    &#34;&#34;&#34;
+    This function sets up the plotly speclist for subplots 
+    according to the number of plots and type of figure desired
+    &#34;&#34;&#34;
+    spec_list = []
+    for r in range(maxrows):
+        tmp = []
+        for c in range(maxcols):
+            tmp.append({&#39;type&#39;:spectype})
+        spec_list.append(tmp)
+    return spec_list</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="qpcr.auxiliary.graphical.AxesCoords"><code class="flex name class">
+<span>class <span class="ident">AxesCoords</span></span>
+<span>(</span><span>fig, axs, subplots: tuple)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class handles the coordinates for an Axes instance generated by subplots.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AxesCoords:
+    &#34;&#34;&#34;
+    This class handles the coordinates for an Axes instance generated by subplots. 
+    &#34;&#34;&#34;
+    def __init__(self, fig, axs, subplots:tuple):
+        self._fig = fig
+        self._axs = axs
+        self._ncols, self._nrows = subplots
+        self.col, self.row = None, None
+        self._get_plot_type()
+        self._init_row_and_col()
+        self._coords = None
+
+        # self._transpose = False
+        
+        self._first = self.col if self._type == &#34;plt&#34; else self.row
+        self._second = self.row if self._type == &#34;plt&#34; else self.col
+        self._limit_first = self._ncols if self._type == &#34;plt&#34; else self._nrows
+        self._limit_second = self._nrows if self._type == &#34;plt&#34; else self._ncols
+        
+        self._check_2D()
+
+        self._idx = 0
+
+        self._2D_setup_ranges()
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns the current subplot coordinates
+        &#34;&#34;&#34;
+        if self._is2D:
+            coords = self._coords[self._idx]
+        else:
+            coords =  self._coords[self._idx][0]
+        return coords
+
+    def increment(self):
+        &#34;&#34;&#34;
+        Switches to next subplot coordinates
+        &#34;&#34;&#34;
+        self._idx += 1
+
+    # def transpose(self, t:bool):
+    #     &#34;&#34;&#34;
+    #     Switch col and row dimensions and reference attributes
+    #     &#34;&#34;&#34;    
+    #     if t != self._transpose:
+    #         self._transpose = t
+    #         self._first = self.col if self._first == self.row else self.row
+    #         self._second = self.col if self._second == self.row else self.row
+
+    #         self._limit_first = self._ncols if self._limit_first == self._nrows else self._nrows
+    #         self._limit_second = self._nrows if self._limit_second == self._ncols else self._ncols
+    #         self._2D_setup_ranges()
+
+    def subplot(self):
+        &#34;&#34;&#34;
+        Returns the current subplot to be plotted (only for matplotlib figures)
+        &#34;&#34;&#34;
+        coord = self.get()
+        current_subplot = self._axs[coord]
+        return current_subplot
+
+    def _2D_setup_ranges(self):
+        &#34;&#34;&#34;
+        Setup the possible coordinates for 2D grid
+        &#34;&#34;&#34;
+        coords = []
+        first_range = range(self._base, self._limit_first+self._base)
+        second_range = range(self._base, self._limit_second+self._base)
+
+        for first in first_range:
+            for second in second_range:
+                coords.append((first, second))
+        self._coords = coords
+
+    def _check_2D(self):
+        &#34;&#34;&#34;
+        Checks if 2D coords will be required or not...
+        &#34;&#34;&#34;
+        if self._type == &#34;plotly&#34;: 
+            self._is2D = True
+        else:
+            self._is2D = True if self._limit_second &gt; 1 else False
+        
+    def _get_plot_type(self):
+        &#34;&#34;&#34;
+        Sets if plotly or matplotlib figure are present, 
+        and also checks if axs contain only one single subplot, 
+        and makes it subscriptable if so...
+        &#34;&#34;&#34;
+        fig, axs = plt.subplots()
+        if type(self._fig) == type(fig):
+            self._type = &#34;plt&#34;
+        else:
+            self._type = &#34;plotly&#34;
+        
+        if type(self._axs) == type(axs):
+            self._axs = [self._axs]
+        plt.close()
+
+    def _setup_ranges(self):
+        &#34;&#34;&#34;
+        Setup ranges of possible values
+        &#34;&#34;&#34;
+        self._first_range = range(self._base, self._limit_first + self._base)
+        self._second_range = range(self._base, self._limit_second + self._base)
+
+    def _init_row_and_col(self):
+        &#34;&#34;&#34;
+        Will set col and row to 1 if plotly figure is used, 
+        otherwise 0 in case of matplotlib
+        &#34;&#34;&#34;
+        if self._type == &#34;plt&#34;:
+            self._base = 0
+        else: 
+            self._base = 1
+        self.col, self.row = (self._base, self._base)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.auxiliary.graphical.AxesCoords.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the current subplot coordinates</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    &#34;&#34;&#34;
+    Returns the current subplot coordinates
+    &#34;&#34;&#34;
+    if self._is2D:
+        coords = self._coords[self._idx]
+    else:
+        coords =  self._coords[self._idx][0]
+    return coords</code></pre>
+</details>
+</dd>
+<dt id="qpcr.auxiliary.graphical.AxesCoords.increment"><code class="name flex">
+<span>def <span class="ident">increment</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Switches to next subplot coordinates</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def increment(self):
+    &#34;&#34;&#34;
+    Switches to next subplot coordinates
+    &#34;&#34;&#34;
+    self._idx += 1</code></pre>
+</details>
+</dd>
+<dt id="qpcr.auxiliary.graphical.AxesCoords.subplot"><code class="name flex">
+<span>def <span class="ident">subplot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the current subplot to be plotted (only for matplotlib figures)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subplot(self):
+    &#34;&#34;&#34;
+    Returns the current subplot to be plotted (only for matplotlib figures)
+    &#34;&#34;&#34;
+    coord = self.get()
+    current_subplot = self._axs[coord]
+    return current_subplot</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="qpcr.auxiliary" href="index.html">qpcr.auxiliary</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="qpcr.auxiliary.graphical.make_layout" href="#qpcr.auxiliary.graphical.make_layout">make_layout</a></code></li>
+<li><code><a title="qpcr.auxiliary.graphical.make_speclist" href="#qpcr.auxiliary.graphical.make_speclist">make_speclist</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="qpcr.auxiliary.graphical.AxesCoords" href="#qpcr.auxiliary.graphical.AxesCoords">AxesCoords</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.auxiliary.graphical.AxesCoords.get" href="#qpcr.auxiliary.graphical.AxesCoords.get">get</a></code></li>
+<li><code><a title="qpcr.auxiliary.graphical.AxesCoords.increment" href="#qpcr.auxiliary.graphical.AxesCoords.increment">increment</a></code></li>
+<li><code><a title="qpcr.auxiliary.graphical.AxesCoords.subplot" href="#qpcr.auxiliary.graphical.AxesCoords.subplot">subplot</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
