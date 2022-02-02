@@ -1,0 +1,12 @@
+Filtering Report
+
+Filter: 
+RangeFilter
+Assay: 
+SRSF11_prot
+Found faulty Replicates: 
+0
+Found Indices: 
+[]
+Details: 
+{'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
