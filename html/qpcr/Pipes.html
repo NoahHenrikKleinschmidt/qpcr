@@ -38,10 +38,10 @@ import qpcr.__init__ as qpcr
 import matplotlib.pyplot as plt
 import pandas as pd 
 import statistics as stats
-import qpcr.auxiliary.warnings as wa
-import qpcr.auxiliary as aux
-import qpcr.Plotters
-import qpcr.Filters
+import qpcr._auxiliary.warnings as wa
+import qpcr._auxiliary as aux
+import qpcr.Plotters as Plotters
+import qpcr.Filters as Filters
 import re
 import os 
 import difflib
@@ -51,7 +51,7 @@ class Pipeline(qpcr.SampleReader):
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
     that ensure that elementary required inputs are provided.
-    
+
     Note
     ----
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
@@ -97,6 +97,9 @@ class Pipeline(qpcr.SampleReader):
             A directory to save the results to.
         &#34;&#34;&#34;
         self._save_to = directory
+        # if the directory does not yet exist, we make it
+        if not os.path.exists(self._save_to):
+            os.mkdir(self._save_to)
 
     def get(self, kind=&#34;stats&#34;):
         &#34;&#34;&#34;
@@ -289,7 +292,7 @@ class BasicPlus(Basic):
         Parameters
         ----------
         *Filters
-            Any number of qpcr.Filters.Filter objects.
+            Any number of `qpcr.Filters.Filter` objects.
         &#34;&#34;&#34;
         self._Filters.extend(Filters)
 
@@ -389,68 +392,68 @@ class BasicPlus(Basic):
 
 if __name__ == &#34;__main__&#34;:
 
-    # norm_files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;]
-    # sample_files = [&#34;Example Data/HNRNPL_nmd.csv&#34;, &#34;Example Data/HNRNPL_prot.csv&#34;]
+    norm_files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;]
+    sample_files = [&#34;Example Data/HNRNPL_nmd.csv&#34;, &#34;Example Data/HNRNPL_prot.csv&#34;]
 
-    # norm_folder = &#34;Example Data 2/normalisers&#34;
-    # sample_folder = &#34;Example Data 2/samples&#34;
-
-    # groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
-    
-    # analysis = BasicPlus()
-    # analysis.save_to(&#34;Example Data 2&#34;)
-    # analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
-    # analysis.add_normalisers(norm_folder)
-    
-    # analysis.replicates(6)
-    # analysis.names(groupnames)
-
-    # iqr_filter = Filters.IQRFilter()
-    # # iqr_filter.report(&#34;Example Data 2&#34;)
-    # analysis.add_filters(iqr_filter)
-
-    # preview = Plotters.PreviewResults(mode = &#34;interactive&#34;)
-    # analysis.add_plotters(preview)
-
-    # # now that pipeline is ready, we can run!
-    # analysis.run()
-
-    # # now we can get results!
-    # results = analysis.get(kind=&#34;df&#34;)
-    # print(results)
-    
-    
-    norm_folder = &#34;Example Data 3/normalisers&#34;
-    exp_folder = &#34;Example Data 3/experimental/samples&#34;
-    ctr_folder = &#34;Example Data 3/experimental/samples&#34;
+    norm_folder = &#34;Example Data 2/normalisers&#34;
+    sample_folder = &#34;Example Data 2/samples&#34;
 
     groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
     
-    analysis = BasicPlus(index = &#34;Example Data 2/index.csv&#34;)
-    analysis.save_to(&#34;Example Data 3&#34;)
+    analysis = BasicPlus()
+    analysis.save_to(&#34;Example Data 2&#34;)
+    analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
+    analysis.add_normalisers(norm_folder)
     
-    print(analysis._index)
-    # analysis.set_experimental(assays = exp_folder, normalisers = norm_folder)
-    # analysis.set_control(assays = ctr_folder, normalisers = norm_folder)
+    analysis.replicates(6)
+    analysis.names(groupnames)
 
-    # analysis.replicates(6)
-    # analysis.names(groupnames)
+    iqr_filter = Filters.RangeFilter()
+    # iqr_filter.report(&#34;Example Data 2&#34;)
+    analysis.add_filters(iqr_filter)
 
-    # iqr_filter = Filters.IQRFilter()
+    preview = Plotters.PreviewResults(mode = &#34;interactive&#34;)
+    analysis.add_plotters(preview)
+
+    # now that pipeline is ready, we can run!
+    analysis.run()
+
+    # now we can get results!
+    results = analysis.get(kind=&#34;df&#34;)
+    print(results)
+    
+    
+    # norm_folder = &#34;Example Data 3/normalisers&#34;
+    # exp_folder = &#34;Example Data 3/experimental/samples&#34;
+    # ctr_folder = &#34;Example Data 3/experimental/samples&#34;
+
+    # groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
+    
+    # analysis = BasicPlus(index = &#34;Example Data 2/index.csv&#34;)
+    # analysis.save_to(&#34;Example Data &#34;)
+    
+    # print(analysis._index)
+    # # analysis.set_experimental(assays = exp_folder, normalisers = norm_folder)
+    # # analysis.set_control(assays = ctr_folder, normalisers = norm_folder)
+
+    # # analysis.replicates(6)
+    # # analysis.names(groupnames)
+
+    # iqr_filter = Filters.RangeFilter()
     # # iqr_filter.report(&#34;Example Data 2&#34;)
     # analysis.add_filters(iqr_filter)
 
-    # preview = Plotters.PreviewResults(mode = &#34;interactive&#34;)
-    # analysis.add_plotters(preview)
+    # # preview = Plotters.PreviewResults(mode = &#34;interactive&#34;)
+    # # analysis.add_plotters(preview)
 
-    # # now that pipeline is ready, we can run!
-    # analysis.run()
+    # # # now that pipeline is ready, we can run!
+    # # analysis.run()
 
-    # # now we can get results!
-    # results = analysis.get(kind=&#34;df&#34;)
-    # print(results)
+    # # # now we can get results!
+    # # results = analysis.get(kind=&#34;df&#34;)
+    # # print(results)
 
-    # exit(0)</code></pre>
+    # # exit(0)</code></pre>
 </details>
 </section>
 <section>
@@ -527,9 +530,9 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="qpcr.Pipes.Pipeline" href="#qpcr.Pipes.Pipeline">Pipeline</a></li>
-<li><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></li>
-<li><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></li>
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr.__init__.SampleReader</li>
+<li>qpcr.__init__.Assay</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -542,16 +545,8 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <li><code><a title="qpcr.Pipes.Pipeline.add_assays" href="#qpcr.Pipes.Pipeline.add_assays">add_assays</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.add_normalisers" href="#qpcr.Pipes.Pipeline.add_normalisers">add_normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.get" href="#qpcr.Pipes.Pipeline.get">get</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.group" href="index.html#qpcr.Assay.group">group</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.groups" href="index.html#qpcr.Assay.groups">groups</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.ignore" href="index.html#qpcr.Assay.ignore">ignore</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.is_named" href="index.html#qpcr.Assay.is_named">is_named</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.link" href="#qpcr.Pipes.Pipeline.link">link</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.names" href="index.html#qpcr.SampleReader.names">names</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.prune" href="#qpcr.Pipes.Pipeline.prune">prune</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.read" href="index.html#qpcr.SampleReader.read">read</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.rename" href="index.html#qpcr.Assay.rename">rename</a></code></li>
-<li><code><a title="qpcr.Pipes.Pipeline.replicates" href="index.html#qpcr.SampleReader.replicates">replicates</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.run" href="#qpcr.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.save_to" href="#qpcr.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipeline.softlink" href="#qpcr.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -596,7 +591,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
         Parameters
         ----------
         *Filters
-            Any number of qpcr.Filters.Filter objects.
+            Any number of `qpcr.Filters.Filter` objects.
         &#34;&#34;&#34;
         self._Filters.extend(Filters)
 
@@ -696,9 +691,9 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <ul class="hlist">
 <li><a title="qpcr.Pipes.Basic" href="#qpcr.Pipes.Basic">Basic</a></li>
 <li><a title="qpcr.Pipes.Pipeline" href="#qpcr.Pipes.Pipeline">Pipeline</a></li>
-<li><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></li>
-<li><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></li>
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr.__init__.SampleReader</li>
+<li>qpcr.__init__.Assay</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -733,7 +728,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>*Filters</code></strong></dt>
-<dd>Any number of qpcr.Filters.Filter objects.</dd>
+<dd>Any number of <code><a title="qpcr.Filters.Filter" href="Filters.html#qpcr.Filters.Filter">Filter</a></code> objects.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -746,7 +741,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
     Parameters
     ----------
     *Filters
-        Any number of qpcr.Filters.Filter objects.
+        Any number of `qpcr.Filters.Filter` objects.
     &#34;&#34;&#34;
     self._Filters.extend(Filters)</code></pre>
 </details>
@@ -785,16 +780,8 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <li><code><a title="qpcr.Pipes.Basic.add_assays" href="#qpcr.Pipes.Pipeline.add_assays">add_assays</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.add_normalisers" href="#qpcr.Pipes.Pipeline.add_normalisers">add_normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.get" href="#qpcr.Pipes.Pipeline.get">get</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.group" href="index.html#qpcr.Assay.group">group</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.groups" href="index.html#qpcr.Assay.groups">groups</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.ignore" href="index.html#qpcr.Assay.ignore">ignore</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.is_named" href="index.html#qpcr.Assay.is_named">is_named</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.link" href="#qpcr.Pipes.Pipeline.link">link</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.names" href="index.html#qpcr.SampleReader.names">names</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.prune" href="#qpcr.Pipes.Pipeline.prune">prune</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.read" href="index.html#qpcr.SampleReader.read">read</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.rename" href="index.html#qpcr.Assay.rename">rename</a></code></li>
-<li><code><a title="qpcr.Pipes.Basic.replicates" href="index.html#qpcr.SampleReader.replicates">replicates</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.run" href="#qpcr.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.save_to" href="#qpcr.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Basic.softlink" href="#qpcr.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -820,7 +807,7 @@ that ensure that elementary required inputs are provided.</p>
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
     that ensure that elementary required inputs are provided.
-    
+
     Note
     ----
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
@@ -866,6 +853,9 @@ that ensure that elementary required inputs are provided.</p>
             A directory to save the results to.
         &#34;&#34;&#34;
         self._save_to = directory
+        # if the directory does not yet exist, we make it
+        if not os.path.exists(self._save_to):
+            os.mkdir(self._save_to)
 
     def get(self, kind=&#34;stats&#34;):
         &#34;&#34;&#34;
@@ -981,9 +971,9 @@ that ensure that elementary required inputs are provided.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></li>
-<li><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></li>
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr.__init__.SampleReader</li>
+<li>qpcr.__init__.Assay</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1208,7 +1198,10 @@ as you require.</p>
     directory : str
         A directory to save the results to.
     &#34;&#34;&#34;
-    self._save_to = directory</code></pre>
+    self._save_to = directory
+    # if the directory does not yet exist, we make it
+    if not os.path.exists(self._save_to):
+        os.mkdir(self._save_to)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Pipes.Pipeline.softlink"><code class="name flex">
@@ -1245,21 +1238,6 @@ add new ones and keep old ones.</p>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></b></code>:
-<ul class="hlist">
-<li><code><a title="qpcr.SampleReader.group" href="index.html#qpcr.Assay.group">group</a></code></li>
-<li><code><a title="qpcr.SampleReader.groups" href="index.html#qpcr.Assay.groups">groups</a></code></li>
-<li><code><a title="qpcr.SampleReader.ignore" href="index.html#qpcr.Assay.ignore">ignore</a></code></li>
-<li><code><a title="qpcr.SampleReader.is_named" href="index.html#qpcr.Assay.is_named">is_named</a></code></li>
-<li><code><a title="qpcr.SampleReader.names" href="index.html#qpcr.SampleReader.names">names</a></code></li>
-<li><code><a title="qpcr.SampleReader.read" href="index.html#qpcr.SampleReader.read">read</a></code></li>
-<li><code><a title="qpcr.SampleReader.rename" href="index.html#qpcr.Assay.rename">rename</a></code></li>
-<li><code><a title="qpcr.SampleReader.replicates" href="index.html#qpcr.SampleReader.replicates">replicates</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>

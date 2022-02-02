@@ -36,9 +36,9 @@ It is designed to work directly with qpcr.Results() instances.
 
 import qpcr.__init__ as qpcr
 import qpcr.Pipes
-import qpcr.auxiliary.graphical as gx
-import qpcr.auxiliary as aux 
-import qpcr.auxiliary.warnings as wa
+import qpcr._auxiliary.graphical as gx
+import qpcr._auxiliary as aux 
+import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
@@ -119,14 +119,15 @@ class Plotter:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         &#34;&#34;&#34;
-        if isinstance(Results, qpcr.Results):
+
+        if type(Results).__name__ == type(qpcr.Results()).__name__:
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
             self._Results = None
             self._data = Results
         else:
-            wa.HardWarning(&#34;Plotter:unknown_data&#34;)
+            wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Results)
 
     def plot(self, **kwargs):
         &#34;&#34;&#34;
@@ -560,11 +561,14 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         &#34;&#34;&#34;
-        if isinstance(Assay, qpcr.Assay):
+        # somehow isinstance would not work...
+        # future TODO: check out why isinstance didn&#39;t work here...
+        example = qpcr.Assay()
+        if type(Assay).__name__ == type(example).__name__:
             self._Results = Assay
             data = self._Results.get()
         else:
-            wa.HardWarning(&#34;Plotter:unknown_data&#34;)
+            wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Assay)
 
         # add itentifier column
         data[&#34;assay&#34;] = [self._Results.id() for i in range(len(data))]
@@ -650,11 +654,15 @@ class ReplicateBoxPlot(Plotter):
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
         # possibly nrows and ncols should be switched...
-        Coords = gx.AxesCoords(fig, axs, (ncols, nrows))
+        Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
         
         for assay in aux.sorted_set(data[&#34;assay&#34;]):
             
-            ax = Coords.subplot()
+            try: 
+                ax = Coords.subplot()
+            except: 
+                print(&#34;We ran out of axes ... &#34;)
+                break
             tmp = data.query(f&#34;assay == &#39;{assay}&#39;&#34;)
 
             sns.boxplot(
@@ -887,14 +895,15 @@ Parameters</p>
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         &#34;&#34;&#34;
-        if isinstance(Results, qpcr.Results):
+
+        if type(Results).__name__ == type(qpcr.Results()).__name__:
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
             self._Results = None
             self._data = Results
         else:
-            wa.HardWarning(&#34;Plotter:unknown_data&#34;)
+            wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Results)
 
     def plot(self, **kwargs):
         &#34;&#34;&#34;
@@ -1208,14 +1217,15 @@ Note, that this will replace any previously linked data!</p>
     Results : qpcr.Results or pd.DataFrame
         A qpcr.Results Object or a pandas DataFrame of the same architecture.
     &#34;&#34;&#34;
-    if isinstance(Results, qpcr.Results):
+
+    if type(Results).__name__ == type(qpcr.Results()).__name__:
         self._Results = Results
         self._data = self._Results.stats()
     elif isinstance(Results, pd.DataFrame):
         self._Results = None
         self._data = Results
     else:
-        wa.HardWarning(&#34;Plotter:unknown_data&#34;)</code></pre>
+        wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Results)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Plotters.Plotter.params"><code class="name flex">
@@ -1695,11 +1705,14 @@ it redefines link to get() and not stats() the get required tables.</p>
         Assay : qpcr.Assay
             A qpcr.Assay object.
         &#34;&#34;&#34;
-        if isinstance(Assay, qpcr.Assay):
+        # somehow isinstance would not work...
+        # future TODO: check out why isinstance didn&#39;t work here...
+        example = qpcr.Assay()
+        if type(Assay).__name__ == type(example).__name__:
             self._Results = Assay
             data = self._Results.get()
         else:
-            wa.HardWarning(&#34;Plotter:unknown_data&#34;)
+            wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Assay)
 
         # add itentifier column
         data[&#34;assay&#34;] = [self._Results.id() for i in range(len(data))]
@@ -1785,11 +1798,15 @@ it redefines link to get() and not stats() the get required tables.</p>
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
         # possibly nrows and ncols should be switched...
-        Coords = gx.AxesCoords(fig, axs, (ncols, nrows))
+        Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
         
         for assay in aux.sorted_set(data[&#34;assay&#34;]):
             
-            ax = Coords.subplot()
+            try: 
+                ax = Coords.subplot()
+            except: 
+                print(&#34;We ran out of axes ... &#34;)
+                break
             tmp = data.query(f&#34;assay == &#39;{assay}&#39;&#34;)
 
             sns.boxplot(
@@ -1876,11 +1893,14 @@ This will simply add the Ct column to the current overall data!</p>
     Assay : qpcr.Assay
         A qpcr.Assay object.
     &#34;&#34;&#34;
-    if isinstance(Assay, qpcr.Assay):
+    # somehow isinstance would not work...
+    # future TODO: check out why isinstance didn&#39;t work here...
+    example = qpcr.Assay()
+    if type(Assay).__name__ == type(example).__name__:
         self._Results = Assay
         data = self._Results.get()
     else:
-        wa.HardWarning(&#34;Plotter:unknown_data&#34;)
+        wa.HardWarning(&#34;Plotter:unknown_data&#34;, obj = Assay)
 
     # add itentifier column
     data[&#34;assay&#34;] = [self._Results.id() for i in range(len(data))]

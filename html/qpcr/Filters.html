@@ -53,10 +53,10 @@ from re import L
 import qpcr.__init__ as qpcr
 import pandas as pd
 import numpy as np
-import qpcr.auxiliary.warnings as aw
-import qpcr.auxiliary as aux
+import qpcr._auxiliary.warnings as aw
+import qpcr._auxiliary as aux
 import os 
-import qpcr.Plotters
+import qpcr.Plotters as Plotters
 
 class Filter(aux._ID):
     &#34;&#34;&#34;
@@ -67,9 +67,13 @@ class Filter(aux._ID):
         self._Assay = None
         self._report_loc = None
         self._id = type(self).__name__
+        
         self._boxplot_mode = &#34;interactive&#34;
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._before_BoxPlotter.params(title = &#34;Pre-Filter Summary&#34;)
+        self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)
+
         self._filter_stats = pd.DataFrame({
                                             &#34;assay&#34; : [], &#34;group&#34; : [], 
                                             &#34;anchor&#34; : [], &#34;upper&#34; : [], &#34;lower&#34; : []
@@ -96,7 +100,9 @@ class Filter(aux._ID):
         self._boxplot_mode = mode
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-    
+        self._before_BoxPlotter.params(title = &#34;Pre-Filter Summary&#34;)
+        self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)
+
     def plot(self, **kwargs):
         &#34;&#34;&#34;
         Generates a boxplot summary plot. 
@@ -190,6 +196,11 @@ class Filter(aux._ID):
         &#34;&#34;&#34;
         if directory is not None:
             self._report_loc = directory
+
+            # if the directory does not yet exist, we make it
+            if not os.path.exists(self._report_loc):
+                os.mkdir(self._report_loc)
+
         else: 
             return self._report_loc
 
@@ -533,9 +544,13 @@ if __name__ == &#34;__main__&#34;:
         self._Assay = None
         self._report_loc = None
         self._id = type(self).__name__
+        
         self._boxplot_mode = &#34;interactive&#34;
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._before_BoxPlotter.params(title = &#34;Pre-Filter Summary&#34;)
+        self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)
+
         self._filter_stats = pd.DataFrame({
                                             &#34;assay&#34; : [], &#34;group&#34; : [], 
                                             &#34;anchor&#34; : [], &#34;upper&#34; : [], &#34;lower&#34; : []
@@ -562,7 +577,9 @@ if __name__ == &#34;__main__&#34;:
         self._boxplot_mode = mode
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-    
+        self._before_BoxPlotter.params(title = &#34;Pre-Filter Summary&#34;)
+        self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)
+
     def plot(self, **kwargs):
         &#34;&#34;&#34;
         Generates a boxplot summary plot. 
@@ -656,6 +673,11 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34;
         if directory is not None:
             self._report_loc = directory
+
+            # if the directory does not yet exist, we make it
+            if not os.path.exists(self._report_loc):
+                os.mkdir(self._report_loc)
+
         else: 
             return self._report_loc
 
@@ -742,7 +764,7 @@ Details:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -814,7 +836,7 @@ The filtering statistics dataframe (a summary of filtering parameters used)</p><
 </details>
 </dd>
 <dt id="qpcr.Filters.Filter.link"><code class="name flex">
-<span>def <span class="ident">link</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a>)</span>
+<span>def <span class="ident">link</span></span>(<span>self, Assay: qpcr.__init__.Assay)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Links a qpcr.Assay to be filtered</p>
@@ -840,7 +862,7 @@ The filtering statistics dataframe (a summary of filtering parameters used)</p><
 </details>
 </dd>
 <dt id="qpcr.Filters.Filter.pipe"><code class="name flex">
-<span>def <span class="ident">pipe</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a>, **kwargs)</span>
+<span>def <span class="ident">pipe</span></span>(<span>self, Assay: qpcr.__init__.Assay, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A shortcut for link+filter.
@@ -949,7 +971,9 @@ Note</p>
     &#34;&#34;&#34;
     self._boxplot_mode = mode
     self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-    self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)</code></pre>
+    self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+    self._before_BoxPlotter.params(title = &#34;Pre-Filter Summary&#34;)
+    self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Filters.Filter.report"><code class="name flex">
@@ -987,6 +1011,11 @@ Note</p>
     &#34;&#34;&#34;
     if directory is not None:
         self._report_loc = directory
+
+        # if the directory does not yet exist, we make it
+        if not os.path.exists(self._report_loc):
+            os.mkdir(self._report_loc)
+
     else: 
         return self._report_loc</code></pre>
 </details>
@@ -1110,7 +1139,7 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></li>
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1222,7 +1251,7 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></li>
-<li>qpcr.auxiliary._ID</li>
+<li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Methods</h3>
 <dl>
