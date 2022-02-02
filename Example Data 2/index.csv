@@ -1,7 +1,0 @@
-id,condition,normaliser,path
-HNRNPL,NMD,0,/Volumes/Blue/GIT/qpcr/Example Data 2/samples/HNRNPL_nmd.csv
-HNRNPL,PROT,0,/Volumes/Blue/GIT/qpcr/Example Data 2/samples/HNRNPL_prot.csv
-28S,NMD,1,/Volumes/Blue/GIT/qpcr/Example Data 2/normalisers/28S.csv
-28S,PROT,1,/Volumes/Blue/GIT/qpcr/Example Data 2/normalisers/28S.csv
-actin,NMD,1,/Volumes/Blue/GIT/qpcr/Example Data 2/normalisers/actin.csv
-actin,PROT,1,/Volumes/Blue/GIT/qpcr/Example Data 2/normalisers/actin.csv
