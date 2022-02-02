@@ -20,6 +20,10 @@ class Pipeline(qpcr.SampleReader):
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
     that ensure that elementary required inputs are provided.
+    
+    Note
+    ----
+    The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
     """
     def __init__(self):
         super().__init__()

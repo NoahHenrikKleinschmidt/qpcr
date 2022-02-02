@@ -332,7 +332,7 @@ class SampleReader(Assay):
     """
     Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
     stored raw data in a pandas dataframe. 
-    Its .read() method directly returns an Assay object that can be piped to Analyser. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
     Note
     ----
     This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
@@ -382,7 +382,7 @@ class SampleReader(Assay):
         Returns
         -------
         Assay : qpcr.Assay
-            A qpcr.Assay object containing the grouped and renamed data.
+            A `qpcr.Assay` object containing the grouped and renamed data.
         """
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
@@ -420,7 +420,7 @@ class Results(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A qpcr.Assay object whose group_name column will be copied.
+            A `qpcr.Assay` object whose group_name column will be copied.
         """
         self._Assay = Assay
         if self.is_empty():
@@ -448,7 +448,7 @@ class Results(aux._ID):
         Returns 
         -------
         names : list or None
-            The adopted `group_names` (only works if a qpcr.Assay have been linked using `adopt_names()`!)
+            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
         """
         if self._Assay is not None:
             return self._Assay.names(as_set)
@@ -715,8 +715,8 @@ class Analyser(aux._ID):
     Parameters
     ----------
     Assay : qpcr.Assay
-        A qpcr.Assay object (optional) to compute DeltaCT on. 
-        qpcr.Assay objects can be iteratively linked subsequently using `link()`.
+        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
     """
     def __init__(self, Assay:Assay = None):
         super().__init__()
@@ -737,7 +737,7 @@ class Analyser(aux._ID):
         Returns 
         -------
         Results
-            A qpcr.Results object that contains the deltaCT results
+            A `qpcr.Results` object that contains the deltaCT results
         """
         return self._Results
 
@@ -752,7 +752,7 @@ class Analyser(aux._ID):
 
     def link(self, Assay:Assay, force = False, silent = False):
         """
-        Links a qpcr.Assay object to the Analyser.
+        Links a `qpcr.Assay` object to the Analyser.
         Note
         ----
         If there are any precomputed results, no new data will be linked, unless force=True is called. 
@@ -761,14 +761,14 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A qpcr.Assay object containing data.
+            A `qpcr.Assay` object containing data.
         
         force : bool
-            Any already linked qpcr.Assay objects (and their data and results) will be overwritten
+            Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
             if `force = True` (default is `force = False`).
         
         silent : bool
-            Warnings about overwriding data will be suppressed if `silent = True` (default is `silent = False`).
+            Warnings about overwriting data will be suppressed if `silent = True` (default is `silent = False`).
             This is only relevant if `force = True`. 
         """
         empty = self._Results.is_empty()
@@ -790,7 +790,7 @@ class Analyser(aux._ID):
     def pipe(self, Assay:Assay, **kwargs) -> Results:
         """
         A quick one-step implementation of link + DeltaCt.
-        This is the suggested application of the qpcr.Analyser class!
+        This is the suggested application of the `qpcr.Analyser` class!
 
         Note
         ----
@@ -799,7 +799,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A qpcr.Assay object to be linked to the Analyser for DeltaCt computation.
+            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -807,7 +807,7 @@ class Analyser(aux._ID):
         Returns 
         -------
         results : qpcr.Results
-            A qpcr.Results object. 
+            A `qpcr.Results` object. 
         """
         self.link(Assay, force=True, silent=True)
         self.DeltaCt(**kwargs)
@@ -966,7 +966,7 @@ class Normaliser(aux._ID):
         Returns
         -------
         Results : qpcr.Results
-            A qpcr.Results object containing the normalised dataframe
+            A `qpcr.Results` object containing the normalised dataframe
         """
         if copy: 
             return deepcopy(self._Results)
@@ -974,15 +974,15 @@ class Normaliser(aux._ID):
     
     def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
         """
-        Links either normaliser- or sample-data-containing qpcr.Results objects coming from the same qpcr.Analyser.
+        Links either normaliser- or sample-data-containing `qpcr.Results` objects coming from the same `qpcr.Analyser`.
 
         Parameters
         ----------
         samples : list or tuple
-            A list of qpcr.Results objects coming from a qpcr.Analyser which shall be normalised against a normaliser.
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
         
         normalisers : list or tuple
-            A list of qpcr.Results objects coming from a qpcr.Analyser which shall be used as normalisers. These will be
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
             combining the normalisers can be specified using the `prep_func()` method.
         """
