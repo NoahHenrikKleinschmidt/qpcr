@@ -9,8 +9,8 @@ import pandas as pd
 import statistics as stats
 import qpcr.auxiliary.warnings as wa
 import qpcr.auxiliary as aux
-import qpcr.Plotters
-import qpcr.Filters
+import qpcr.Plotters as Plotters
+import qpcr.Filters as Filters
 import re
 import os 
 import difflib
@@ -20,7 +20,7 @@ class Pipeline(qpcr.SampleReader):
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
     that ensure that elementary required inputs are provided.
-    
+
     Note
     ----
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
@@ -258,7 +258,7 @@ class BasicPlus(Basic):
         Parameters
         ----------
         *Filters
-            Any number of qpcr.Filters.Filter objects.
+            Any number of `qpcr.Filters.Filter` objects.
         """
         self._Filters.extend(Filters)
 
@@ -358,65 +358,65 @@ class BasicPlus(Basic):
 
 if __name__ == "__main__":
 
-    # norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
-    # sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
+    sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
 
-    # norm_folder = "Example Data 2/normalisers"
-    # sample_folder = "Example Data 2/samples"
-
-    # groupnames = ["wt-", "wt+", "ko-", "ko+"]
-    
-    # analysis = BasicPlus()
-    # analysis.save_to("Example Data 2")
-    # analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
-    # analysis.add_normalisers(norm_folder)
-    
-    # analysis.replicates(6)
-    # analysis.names(groupnames)
-
-    # iqr_filter = Filters.IQRFilter()
-    # # iqr_filter.report("Example Data 2")
-    # analysis.add_filters(iqr_filter)
-
-    # preview = Plotters.PreviewResults(mode = "interactive")
-    # analysis.add_plotters(preview)
-
-    # # now that pipeline is ready, we can run!
-    # analysis.run()
-
-    # # now we can get results!
-    # results = analysis.get(kind="df")
-    # print(results)
-    
-    
-    norm_folder = "Example Data 3/normalisers"
-    exp_folder = "Example Data 3/experimental/samples"
-    ctr_folder = "Example Data 3/experimental/samples"
+    norm_folder = "Example Data 2/normalisers"
+    sample_folder = "Example Data 2/samples"
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
     
-    analysis = BasicPlus(index = "Example Data 2/index.csv")
-    analysis.save_to("Example Data 3")
+    analysis = BasicPlus()
+    analysis.save_to("Example Data 2")
+    analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
+    analysis.add_normalisers(norm_folder)
     
-    print(analysis._index)
-    # analysis.set_experimental(assays = exp_folder, normalisers = norm_folder)
-    # analysis.set_control(assays = ctr_folder, normalisers = norm_folder)
+    analysis.replicates(6)
+    analysis.names(groupnames)
 
-    # analysis.replicates(6)
-    # analysis.names(groupnames)
+    iqr_filter = Filters.RangeFilter()
+    # iqr_filter.report("Example Data 2")
+    analysis.add_filters(iqr_filter)
 
-    # iqr_filter = Filters.IQRFilter()
+    preview = Plotters.PreviewResults(mode = "interactive")
+    analysis.add_plotters(preview)
+
+    # now that pipeline is ready, we can run!
+    analysis.run()
+
+    # now we can get results!
+    results = analysis.get(kind="df")
+    print(results)
+    
+    
+    # norm_folder = "Example Data 3/normalisers"
+    # exp_folder = "Example Data 3/experimental/samples"
+    # ctr_folder = "Example Data 3/experimental/samples"
+
+    # groupnames = ["wt-", "wt+", "ko-", "ko+"]
+    
+    # analysis = BasicPlus(index = "Example Data 2/index.csv")
+    # analysis.save_to("Example Data ")
+    
+    # print(analysis._index)
+    # # analysis.set_experimental(assays = exp_folder, normalisers = norm_folder)
+    # # analysis.set_control(assays = ctr_folder, normalisers = norm_folder)
+
+    # # analysis.replicates(6)
+    # # analysis.names(groupnames)
+
+    # iqr_filter = Filters.RangeFilter()
     # # iqr_filter.report("Example Data 2")
     # analysis.add_filters(iqr_filter)
 
-    # preview = Plotters.PreviewResults(mode = "interactive")
-    # analysis.add_plotters(preview)
+    # # preview = Plotters.PreviewResults(mode = "interactive")
+    # # analysis.add_plotters(preview)
 
-    # # now that pipeline is ready, we can run!
-    # analysis.run()
+    # # # now that pipeline is ready, we can run!
+    # # analysis.run()
 
-    # # now we can get results!
-    # results = analysis.get(kind="df")
-    # print(results)
+    # # # now we can get results!
+    # # results = analysis.get(kind="df")
+    # # print(results)
 
-    # exit(0)
+    # # exit(0)

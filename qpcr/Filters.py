@@ -19,7 +19,7 @@ import numpy as np
 import qpcr.auxiliary.warnings as aw
 import qpcr.auxiliary as aux
 import os 
-import qpcr.Plotters
+import qpcr.Plotters as Plotters
 
 class Filter(aux._ID):
     """
@@ -30,9 +30,13 @@ class Filter(aux._ID):
         self._Assay = None
         self._report_loc = None
         self._id = type(self).__name__
+        
         self._boxplot_mode = "interactive"
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
+        self._before_BoxPlotter.params(title = "Pre-Filter Summary")
+        self._after_BoxPlotter.params(title = "Post-Filter Summary")
+
         self._filter_stats = pd.DataFrame({
                                             "assay" : [], "group" : [], 
                                             "anchor" : [], "upper" : [], "lower" : []
@@ -59,7 +63,9 @@ class Filter(aux._ID):
         self._boxplot_mode = mode
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-    
+        self._before_BoxPlotter.params(title = "Pre-Filter Summary")
+        self._after_BoxPlotter.params(title = "Post-Filter Summary")
+
     def plot(self, **kwargs):
         """
         Generates a boxplot summary plot. 
