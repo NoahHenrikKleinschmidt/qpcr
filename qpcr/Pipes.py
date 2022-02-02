@@ -35,10 +35,15 @@ class Pipeline(qpcr.SampleReader):
 
     def run(self, **kwargs):
         """
-        Will run the pipeline provided that at least minimal inputs have been provided.
-        This is a wrapper, the actual pipeline is defined in the function self._run(). 
-        To implement your own pipeline, make sure to define your own _run(), redefine run()
-        as you require...
+        Will run the pipeline provided that at least minimal inputs have been provided (i.e. Assays and Normalisers, as well as replicate specifics have been provided).
+        This is a wrapper, the actual functional core is defined in the method `self._run()`. 
+        To implement your own pipeline, make sure to define your own `_run()`, redefine `run()`
+        as you require.
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that will be passed to the actual `_run()` method.
         """
         if self._replicates is None:
             wa.HardWarning("Pipeline:no_reps")
@@ -50,13 +55,22 @@ class Pipeline(qpcr.SampleReader):
     def save_to(self, directory:str):
         """
         Set the location where to save result files
+
+        Parameters
+        ----------
+        directory : str
+            A directory to save the results to.
         """
         self._save_to = directory
 
     def get(self, kind="stats"):
         """
-        Returns a pandas dataframe either in replicate version kind="df"
-        or in stats version kind="stats" (default).
+        Returns
+        -------
+        data 
+            A pandas dataframe either in replicate version `kind="df"`
+            or in stats version `kind="stats"` (default). Alternatively,
+            a qpcr.Results object can be returned using `kind="obj"`.
         """
         if kind == "stats":
             return self._stats_df
@@ -65,10 +79,15 @@ class Pipeline(qpcr.SampleReader):
         elif kind == "obj":
             return self._Results
     
-    def link(self, samples:list):
+    def link(self, samples:(list or str)):
         """
         Links new sample assays to the pipline, either replacing old ones or keeping them, 
-        depending on self.softlink()
+        depending on `softlink()` settings.
+
+        Parameters
+        ----------
+        samples : list or str
+            A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         """
         if self._softlink:
             self.prune()
@@ -77,6 +96,17 @@ class Pipeline(qpcr.SampleReader):
     def prune(self, assays = True, results = True, normalisers = False):
         """
         Will clear assays, results, and/or normalisers
+
+        Parameters
+        ----------
+        assays : bool
+            Will clear any sample assays in the pipeline if True (default).
+        
+        results : bool
+            Will clear any computed results in the pipline if True (default).
+        
+        normalisers : bool
+            Will clear any normalisers in the pipline if True (default is False).
         """
         if assays: self._Assays = []
         if normalisers: self._Normalisers = []
@@ -88,6 +118,11 @@ class Pipeline(qpcr.SampleReader):
     def add_normalisers(self, normalisers):
         """
         Adds normalisers (filepaths) (keeping any already present)
+        
+        Parameters
+        ----------
+        normalisers : list or str
+            A `list` of filepaths to raw datafiles of normaliser assays, or a directory (`str`) where these are stored.
         """
         normalisers = self._from_directory(normalisers)
         self._Normalisers.extend(normalisers)
@@ -95,15 +130,25 @@ class Pipeline(qpcr.SampleReader):
     def add_assays(self, samples):
         """
         Adds sample assays (filepaths) (keeping any already present)
+
+        Parameters
+        ----------
+        samples : list or str
+            A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         """
         samples = self._from_directory(samples)
         self._Assays.extend(samples)
 
     def softlink(self, bool = None):
         """
-        If softlink = True, then .link_assays() will 
+        If `softlink = True`, then `link_assays()` will 
         prune any previous assays. Otherwise, it will 
         add new ones and keep old ones.
+
+        Parameters
+        ----------
+        bool
+            Set to False to disable `softlinking` (default is True).
         """
         if bool is None:
             return self._softlink
@@ -193,19 +238,32 @@ class BasicPlus(Basic):
     
     def add_plotters(self, *Plotters:object):
         """
-        Adds already specified qpcr.Plotter instances to the Pipeline.
+        Adds already specified qpcr.Plotter objects to the Pipeline.
+        
+        Parameters
+        ----------
+        *Plotters
+            Any number of qpcr.Plotters.Plotter objects.
         """
         self._Plotters.extend(Plotters)
     
     def add_filters(self, *Filters:object):
         """
         Adds already specified qpcr.Filter instances to the Pipeline.
+        
+        Parameters
+        ----------
+        *Filters
+            Any number of qpcr.Filters.Filter objects.
         """
         self._Filters.extend(Filters)
 
     def Figures(self):
         """
-        Returns a list of all Figures generated
+        Returns
+        -------
+        list
+            A list of all Figures generated by the pipeline's Plotters.
         """
         return self._Figures
 
