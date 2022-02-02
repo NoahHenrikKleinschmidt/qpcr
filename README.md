@@ -10,7 +10,7 @@ User friendliness and quick and easy workflows were of primary concern during de
 This is the second version of this module. Architecture and functionality have been fundamentally re-developed since the first version (which can still be accessed via the `legacy_V1` branch of this repository). The current Version 2 implements a series of data-processing classes that interact to form an analysis-pipeline from start to finish. 
 
 ### Getting started...
-A set of basic introductory tutorials is available as `jupyter notebooks` in the `Examples` directory in this repository. 
+A set of basic introductory tutorials is available as `jupyter notebooks` in the `Examples` directory in this repository. Documentation of the new version is available via [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html).
 
 
 #### Citation
