@@ -681,7 +681,7 @@ if __name__ == '__main__':
     )
 
     # predefined pipeline use
-    pipe = Pipes.Basic()
+    pipe = qpcr.Pipes.Basic()
     pipe.link(files)
     pipe.add_normalisers(files[:2])
     pipe.replicates(6)
