@@ -23,6 +23,7 @@ _default_static_PreviewResults = dict(
                                         color = "Lightgray",
                                         rot = 0,
                                         legend = False, 
+                                        frame = False,
                                         title = "Preview of Results"
                                     )
 
@@ -62,10 +63,15 @@ _default_interactive_ReplicateBoxPlot = dict(
 class Plotter:
     """
     A superclass that handles Data Linking and Parameter setup for FigureClasses
+    (not for End-User usage)
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
     """
     def __init__(self, mode = None):
         self._default_params = None
-        self._PARAMS = {}
+        self._PARAMS = {} #: _PARAMS will store the plotting parameter kwargs from both _default_params and any additional user specified parameters
         self._Results = None
         self._data = None
         self._id = type(self).__name__
@@ -75,9 +81,14 @@ class Plotter:
 
     def link(self, Results:(qpcr.Results or pd.DataFrame)):
         """
-        Link a Results object or pandas DataFrame of the same architecture
-        as one handled by a Results object. 
+        Links a Results object or pandas DataFrame of the same architecture
+        as one handled by a Results object to the Plotter. 
         Note, that this will replace any previously linked data!
+
+        Parameters
+        ----------
+        Results : qpcr.Results or pd.DataFrame
+            A qpcr.Results Object or a pandas DataFrame of the same architecture.
         """
         if isinstance(Results, qpcr.Results):
             self._Results = Results
@@ -91,6 +102,16 @@ class Plotter:
     def plot(self, **kwargs):
         """
         Generate Figure
+
+        Parameters
+        ----------
+        **kwargs
+            Any arbitrary keyword arguments to be passed to the plotting method
+        
+        Returns
+        -------
+        fig
+            A figure object, either from matplotlib or plotly
         """
         total_kwargs = self.update_params(kwargs)
         fig = self._plot(**total_kwargs)
@@ -100,6 +121,16 @@ class Plotter:
     def id(self, id:str = None):
         """
         Set a unique Id, by default the Classname will be used.
+
+        Parameters
+        ----------
+        id : str
+            A unique identifier for the Plotter object
+        
+        Returns
+        -------
+        id 
+            The Plotter Id (if no id keyword was entered)
         """
         if id is not None:
             self._id = id
@@ -109,6 +140,11 @@ class Plotter:
     def get(self):
         """
         Returns the DataFrame used for plotting
+
+        Returns
+        -------
+        data
+            A pandas DataFrame containing the data underlying the plot.
         """
         return self._data
 
@@ -116,6 +152,19 @@ class Plotter:
         """
         Set default parameters for plotting (will be forwarded to **kwargs)
         Returns default parameters if no new parameters are added.
+
+        Parameters
+        ----------
+        **params
+            Any arbitrary keyword arguments to be passed on to the pre-set plotting kwargs.
+            This will either set the default parameters (if none has been specified up to the function call)
+            or will update the parameters. In case of keyword duplications any OLD key : value pairs will be 
+            OVERWRITTEN by new ones. 
+        
+        Returns
+        -------
+        params : dict
+            A dictionary of the new pre-set plotting parameters
         """
         if params != {} and self._PARAMS == {}:
             self._PARAMS = params
@@ -126,9 +175,21 @@ class Plotter:
     def update_params(self, kwargs, supersede = True, store = False):
         """
         Appends pre-set parameters to kwargs. 
-        In case of key duplications: 
-        It will either replace old ones with new ones (supersede = True, default), 
-        or keep old ones (supersede = False)
+        
+        Parameters
+        ----------
+        kwargs : dict
+            A dictionary of arbitrary keywords for plotting 
+        supersede : bool 
+            In case of key duplications: Old values will be replaced with new ones (if supersede = True, default), 
+            or keep old ones (supersede = False).
+        store : bool
+            The newly set plotting parameter dictionary will be stored by the plotting object as new default (if store = True, default is False).
+        
+        Returns
+        -------
+        params : dict
+            A dictionary of updated plotting parameters
         """
         if supersede:
             kwargs = dict(self._PARAMS, **kwargs)
@@ -142,7 +203,16 @@ class Plotter:
 
     def save(self, filename, **kwargs):
         """
-        Saves the figure to a file
+        Saves the figure to a file. 
+        Figures are either saved using `plt.savefig` or `plotly.offline.plot`.
+
+        Parameters
+        ----------
+        filename : str 
+            A filename to save the figure to.
+        
+        **kwargs
+            Any arbitrary keyword arguments for the respective figure saving method. 
         """
         if self._fig is None:
             wa.SoftWarning("Plotter:no_fig_yet")
@@ -154,7 +224,10 @@ class Plotter:
 
     def suffix(self):
         """
-        Returns the appropriate file suffix for save (html or jpg)
+        Returns
+        ------- 
+        suffix : str
+            The appropriate file suffix for save (html for "interactive" or jpg for "static" figures)
         """
         suffix = "jpg" if self._MODE == "static" else "html"
         return suffix
@@ -242,6 +315,12 @@ class Plotter:
 class PreviewResults(Plotter):
     """
     Generate a Preview of all results from all Assays in subplots.
+
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
     """
     def __init__(self, mode:str):
         self._setup_default_params(
@@ -331,6 +410,7 @@ class PreviewResults(Plotter):
     def _add_subplot_label(self, idx, subplot, start_character):
         """
         Adds A B C ... to upper left corner of a subplot...
+        It will start labelling at any arbitrary start_character
         """
         subplot_label = chr(ord(start_character)+idx)
         subplot.annotate(
@@ -403,9 +483,20 @@ class PreviewResults(Plotter):
 
 class ReplicateBoxPlot(Plotter):
     """
-    This class generates a boxplot figure summary for the input sample replicates.
+    Generate a boxplot figure summary for the input sample replicates.
+    
+    Note
+    ----
     This is embedded in the Filter class. Since this is designed to work with Assays and not with DeltaCt Results,
-    it redefines link to get() and not stats() the required tables...
+    it redefines link to get() and not stats() the get required tables.
+
+    Parameters
+    ----------
+    Filter : qpcr.Filters.Filter
+        A qpcr.Filters.Filter object. The Filter can also be set using the `filter()` method.
+
+    mode : str
+        The plotting mode (either `"interactive"` or `"static"`).
     """
     def __init__(self, Filter = None, mode="interactive"):
         self._setup_default_params(
@@ -420,14 +511,25 @@ class ReplicateBoxPlot(Plotter):
     
     def filter(self, Filter):
         """
-        Link a Filter instance for which a report figure shall be generated
+        Links a Filter object for which a report figure shall be generated
+
+        Parameters
+        ----------
+        Filter : qpcr.Filters.Filter
+            A qpcr.Filters.Filter object.
+
         """
         self._Filter = Filter
 
     def link(self, Assay:qpcr.Assay):
         """
-        Link an Assay object to the BoxPlotter 
+        Links an Assay object to the BoxPlotter.
         This will simply add the Ct column to the current overall data!
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A qpcr.Assay object.
         """
         if isinstance(Assay, qpcr.Assay):
             self._Results = Assay
@@ -533,13 +635,16 @@ class ReplicateBoxPlot(Plotter):
                         **kwargs
                     )
 
-            ax.legend(bbox_to_anchor=(1,1), loc = None)
+            ax.legend(bbox_to_anchor=(1,1), loc = None).remove()
             ax.set(title=assay, xlabel = "", xticklabels = [],)
             
             if not show_spines:
                 sns.despine()
 
             Coords.increment()
+
+        # add one single legend to the last plot
+        ax.legend(bbox_to_anchor=(1,1), loc = None)
 
         fig.suptitle(title)
         plt.tight_layout()
@@ -549,8 +654,6 @@ class ReplicateBoxPlot(Plotter):
 
         return fig 
 
-
-#TODO: finish writing plotting functions and embed into Filter...
 
 if __name__ == '__main__':
 
@@ -601,7 +704,7 @@ if __name__ == '__main__':
     result = pipe.get(kind = "obj")
     try:
         a.link(result)
-        a.plot(show = True)
+        a.plot(show = False)
     except: 
         print("Static Failed!")
 
@@ -668,14 +771,14 @@ if __name__ == '__main__':
     result = pipe.get(kind = "obj")
     try:
         a.link(result)
-        a.plot(show = True)
+        a.plot(show = False)
     except Exception as e: 
         print(e)
         print("Static Failed!")
 
     try:
         b.link(result)
-        b.plot(show = True)
+        b.plot(show = False)
     except Exception as e: 
         print("Interactive Failed!")
         raise e

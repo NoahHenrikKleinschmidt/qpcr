@@ -20,7 +20,7 @@ import Plotters
 
 class Filter(aux._ID):
     """
-    The super filtering class that takes in a qpcr.Assay() object and updates its _df to a filtered version.
+    The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.
     """
     def __init__(self):
         super().__init__()
@@ -37,14 +37,21 @@ class Filter(aux._ID):
     
     def get_stats(self):
         """
-        Returns the filtering statistics dataframe (a summary of filtering parameters used)
+        Returns 
+        -------
+        stats : pd.DataFrame
+            The filtering statistics dataframe (a summary of filtering parameters used)
         """
         return self._filter_stats
 
     def plotmode(self, mode = "interactive"):
         """
         Set graph mode if a summary Boxplot shall be made
-        Set to None to disable.
+
+        Parameters
+        ----------
+        mode : str
+            Can be either "interactive" (plotly) or "static" (matplotlib), or None to disable plotting.
         """
         self._boxplot_mode = mode
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -53,7 +60,14 @@ class Filter(aux._ID):
     def plot(self, **kwargs):
         """
         Generates a boxplot summary plot. 
-        Note: This is designed to be done AFTER all samples have passed the filter
+        Note
+        ----
+        This is designed to be done AFTER all samples have passed the filter.
+
+        Parameters
+        ----------
+        **kwargs
+            Any keyword arguments that should be passed to the plotting method.
         """
         figs = []
         filenames = [f"{self.id()}_before", f"{self.id()}_after"]
@@ -67,15 +81,33 @@ class Filter(aux._ID):
 
     def link(self, Assay:qpcr.Assay):
         """
-        Link a qpcr.Assay to be filtered
+        Links a qpcr.Assay to be filtered
+        
+        Parameters
+        ----------
+            Assay : qpcr.Assay
+                A qpcr.Assay object to be filtered.
         """
         self._Assay = Assay
         self._before_BoxPlotter.link(self._Assay)
 
     def pipe(self, Assay:qpcr.Assay, **kwargs):
         """
-        A shortcut for link+filter
-        It returns directly the filtered Assay object
+        A shortcut for link+filter.
+        This is the suggested usage for Filters.
+        
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A qpcr.Assay object to be filtered.
+        **kwargs
+            Any keyword arguments that should be passed to the plotting method.
+        
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A qpcr.Assay object containing only entries that passed the filter.
+
         """
         self.link(Assay)
         self.filter(**kwargs)
@@ -83,7 +115,17 @@ class Filter(aux._ID):
 
     def filter(self, **kwargs):
         """
-        Applies the filter and returns an updates Assay object
+        Applies the filter 
+        
+        Parameters
+        ----------
+        **kwargs
+            Any keyword arguments that should be passed to the filtering method.
+        
+        Returns
+        -------
+        Assay : qpcr.Assay
+            An updated qpcr.Assay object containing only entries that passed the filter.
         """
         if self._Assay is not None:
             self._filter(**kwargs)
@@ -92,19 +134,50 @@ class Filter(aux._ID):
         else: 
             aw.HardWarning("Filter:no_assay")
 
-    def report(self, filename = None):
+    def report(self, directory = None):
         """
-        Stores a report of any replicates that were filtered out
+        Sets up a location to store a report of any replicates that were filtered out.
+
+        Parameters
+        ----------
+        directory : str
+            A directory where to store report text-files and summary boxplots.
+
+        Returns
+        -------
+        location : str
+            If no new directory is provided, it returns the current report location.
         """
-        if filename is not None:
-            self._report_loc = filename
+        if directory is not None:
+            self._report_loc = directory
         else: 
             return self._report_loc
+
     def reset(self):
         """
         Resets the excluded indices
         """
         self._faulty_indices = []
+
+    def set_lim(self, lim = None, upper = None, lower = None):
+        """
+        Sets the range limits for the inclusion range.
+        Limits can be either specified symmetrically using `lim` or asymmetrically, using `upper` and `lower`.
+        
+        Parameters
+        ----------
+        lim : float
+            Sets symmetric upper and lower bounds. 
+            Default settings are `lim = 1` setting both `upper` and `lower` to `1`.
+        upper : float
+            Sets the upper inclusion-range boundary.
+        lower : float
+            Sets the lower inclusion-range boundary.
+        """
+        if lim is not None: self._upper, self._lower = lim, lim
+        if upper is not None: self._upper = upper
+        if lower is not None: self._lower = lower
+
 
     def _filter(self, **kwargs):
         """
@@ -163,8 +236,8 @@ Details:
 
 class RangeFilter(Filter):
     """
-    This class filters out any replicate that lie outside a user-specified range.
-    Default are +- 1 or the replicate group median. 
+    Filters out any replicate that lie outside a user-specified range.
+    Default are `+/- 1` around the replicate-group median. 
     """
     def __init__(self):
         super().__init__()
@@ -172,25 +245,19 @@ class RangeFilter(Filter):
         self._lower = 1
         self._anchor = None
 
-    def set_lim(self, lim = None, upper = None, lower = None):
-        """
-        Sets the range limits for inclusion range.
-        lim will set symmetric upper and lower bounds, otherwise
-        upper and lower can be directly specified.
-        """
-        if lim is not None: self._upper, self._lower = lim, lim
-        if upper is not None: self._upper = upper
-        if lower is not None: self._lower = lower
-
+    
     def set_anchor(self, anchor):
         """
         Set the range anchor (center of inclusion range)
-        Supported types for anchor are:
-        - a numeric value (int or float)
-        - an iterable of same length as groups
-            - if a dict keys must be group indices (starting from 0)
-        - a function that works with a pandas dataframe as stored by qpcr.Assay objects
-            - function must return a single numeric value for anchor
+
+        Parameters
+        ----------
+        anchor 
+            Supported types for `anchor` are: a numeric value (`int or float`),
+            an `iterable` of same length as groups in the dataframe, 
+            a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+            which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
         """
         self._anchor = anchor
 
@@ -249,31 +316,12 @@ class RangeFilter(Filter):
 
 class IQRFilter(Filter):
     """
-    This class filters out outliers based on the classical n x IQR (with n = 1.5 by default) approach.
+    Filters out outliers based on the classical n x IQR (with n = 1.5 by default) approach.
     """
     def __init__(self):
         super().__init__()
         self._upper = 1.5
         self._lower = 1.5
-
-    def pipe(self, Assay:qpcr.Assay, **kwargs):
-        """
-        A shortcut for link+filter
-        It returns directly the filtered Assay object
-        """
-        self.link(Assay)
-        self.filter(**kwargs)
-        return self._Assay
-
-    def set_lim(self, lim = None, upper = None, lower = None):
-        """
-        Sets the range limits for inclusion range.
-        lim will set symmetric upper and lower bounds, otherwise
-        upper and lower can be directly specified.
-        """
-        if lim is not None: self._upper, self._lower = lim, lim
-        if upper is not None: self._upper = upper
-        if lower is not None: self._lower = lower
 
     def _filter(self):
         """
@@ -331,10 +379,10 @@ if __name__ == "__main__":
     analyser = qpcr.Analyser()
     analyser.anchor("first")
 
-    iqr_filter = IQRFilter()
-    iqr_filter.plotmode("interactive")
+    iqr_filter = RangeFilter()
+    iqr_filter.plotmode("static")
     iqr_filter.report(".")
-    iqr_filter.set_lim(1.6)
+    # iqr_filter.set_lim(1.6)
 
     for file in files: 
         
@@ -401,9 +449,13 @@ if __name__ == "__main__":
     print("second result...")
     print(result.get())
 
-    p = Plotters.PreviewResults(mode = "interactive")
-    p.link(result)
-    p.plot()
+    # p = Plotters.PreviewResults(mode = "interactive")
+    # p.link(result)
+    # p.plot()
+
+    p1 = Plotters.PreviewResults(mode = "static")
+    p1.link(result)
+    p1.plot()
     
     #  
     # result.save("..")
