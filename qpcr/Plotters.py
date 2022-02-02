@@ -88,14 +88,15 @@ class Plotter:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         """
-        if isinstance(Results, qpcr.Results):
+
+        if type(Results).__name__ == type(qpcr.Results()).__name__:
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
             self._Results = None
             self._data = Results
         else:
-            wa.HardWarning("Plotter:unknown_data")
+            wa.HardWarning("Plotter:unknown_data", obj = Results)
 
     def plot(self, **kwargs):
         """
@@ -529,11 +530,14 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         """
-        if isinstance(Assay, qpcr.Assay):
+        # somehow isinstance would not work...
+        # future TODO: check out why isinstance didn't work here...
+        example = qpcr.Assay()
+        if type(Assay).__name__ == type(example).__name__:
             self._Results = Assay
             data = self._Results.get()
         else:
-            wa.HardWarning("Plotter:unknown_data")
+            wa.HardWarning("Plotter:unknown_data", obj = Assay)
 
         # add itentifier column
         data["assay"] = [self._Results.id() for i in range(len(data))]
@@ -619,11 +623,15 @@ class ReplicateBoxPlot(Plotter):
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
         # possibly nrows and ncols should be switched...
-        Coords = gx.AxesCoords(fig, axs, (ncols, nrows))
+        Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
         
         for assay in aux.sorted_set(data["assay"]):
             
-            ax = Coords.subplot()
+            try: 
+                ax = Coords.subplot()
+            except: 
+                print("We ran out of axes ... ")
+                break
             tmp = data.query(f"assay == '{assay}'")
 
             sns.boxplot(
