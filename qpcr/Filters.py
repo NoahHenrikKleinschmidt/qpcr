@@ -2,11 +2,14 @@
 This submodule defines a number of filters that can be used to 
 remove faulty reads prior to deltact analysis. 
 
-Filters implemented include
-- RangeFilter (filter out all raw Ct values that do not comply to a user-specified range, default +-1)
-    - here the user will have the option of specifying an anchor (default = median of replicates)
+Filters implemented are currently
+---------------------------------
+RangeFilter 
+    Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
+    The user has the option of specifying another anchor and limits for the inclusion range.
 
-- IQRFilter (filter out any outliers by n x IQR)
+IQRFilter
+    Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
 """
 
 from re import L

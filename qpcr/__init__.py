@@ -10,27 +10,9 @@ import os
 import numpy as np 
 from copy import deepcopy 
 
-# TODO: A class to read csv pqcr raw data << CHECK
-# TODO: A class to perform data preprocessing (like grouping replicates etc...) << CHECK
-#   - grouping replicates << CHECK
-#   - assigning group names (optional) << CHECK
-# TODO: A class to perform delta delta ct << CHECK
-# TODO: A class to handle and store results << CHECK
-# TODO: A class to visulalise results << CHECK (PreviewResults!)
-# TODO: A compilation of common pipelines (like the qpcr.Analysis module from earlier)
 
-# IMPORTANT UPDATE: << CHECK
-# TODO: Alright, the thing is, for filtering we require exact information about the indices of each replicate. Because if we remove one or several, then 
-# we have to have an index by which we can merge results and retain information about the groups of replicates. 
-# However, with the current setting we generate new indices whenever we create a results dictionary and convert it to a dataframe. Hence, we need to work with
-# dataframes from the start (probably easiest but requires re-inventing the Results class (probabbly)) or passing on an independent index column that is also added into the results dictionaries 
-# (probably less work but will be tricky not to mess up everything else as we need to browse through all linkages between the classes). Hence next thing to do is: 
-# Reinvent Results so it always works with dictionaries (<- did I mean dataframes here??). That also means the add() method must now work directly with dataframes instead of incrementally adding stuff...
-# Essentially, our Results dataframes must now be directly model after the Samples dataframe... (actually that makes the whole thing simpler to implement...)
-
-
+# default column names for raw Ct data files
 RAW_COL_NAMES = ["Sample", "Ct"]
-
 
 class Reader(aux._ID):
     """

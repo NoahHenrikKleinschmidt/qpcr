@@ -13,8 +13,6 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import plotly
-import plotly.express as px
-import numpy as np 
 import seaborn as sns 
 
 # setup some default settings for charts
