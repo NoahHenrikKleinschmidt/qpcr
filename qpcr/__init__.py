@@ -4,8 +4,8 @@ It is designed for maximal user-friendliness and streamlined data-visualisation.
 """
 
 import pandas as pd
-import qpcr.auxiliary as aux
-from qpcr.auxiliary import warnings as aw
+import qpcr._auxiliary as aux
+from qpcr._auxiliary import warnings as aw
 import os
 import numpy as np 
 from copy import deepcopy 
