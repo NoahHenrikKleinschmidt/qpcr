@@ -5,9 +5,9 @@ It is designed to work directly with qpcr.Results() instances.
 
 import qpcr.__init__ as qpcr
 import qpcr.Pipes
-import qpcr.auxiliary.graphical as gx
-import qpcr.auxiliary as aux 
-import qpcr.auxiliary.warnings as wa
+import qpcr._auxiliary.graphical as gx
+import qpcr._auxiliary as aux 
+import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
