@@ -2,6 +2,7 @@
 This module is designed to provide functions to analyse qPCR data. 
 It is designed for maximal user-friendliness and streamlined data-visualisation.
 """
+
 import pandas as pd
 import auxiliary as aux
 from auxiliary import warnings as aw
@@ -24,7 +25,7 @@ from copy import deepcopy
 # However, with the current setting we generate new indices whenever we create a results dictionary and convert it to a dataframe. Hence, we need to work with
 # dataframes from the start (probably easiest but requires re-inventing the Results class (probabbly)) or passing on an independent index column that is also added into the results dictionaries 
 # (probably less work but will be tricky not to mess up everything else as we need to browse through all linkages between the classes). Hence next thing to do is: 
-# Reinvent Results so it always works with dictionaries. That also means the add() method must now work directly with dataframes instead of incrementally adding stuff...
+# Reinvent Results so it always works with dictionaries (<- did I mean dataframes here??). That also means the add() method must now work directly with dataframes instead of incrementally adding stuff...
 # Essentially, our Results dataframes must now be directly model after the Samples dataframe... (actually that makes the whole thing simpler to implement...)
 
 
@@ -33,9 +34,14 @@ RAW_COL_NAMES = ["Sample", "Ct"]
 
 class Reader(aux._ID):
     """
-    This class reads qpcr raw data files in csv format. 
-    It requires that two columns are present, one for sample names, one for Ct values
-    it will load these into a pandas dataframe.
+    Reads qpcr raw data files in csv format. 
+
+    Parameters
+    ----------
+    filename : str
+        A filename to a csv containing Ct values. 
+        The file has to have two named columns; one for sample names, one for Ct values. 
+        Both csv (, spearated) and csv2 (; separated) are accepted.
     """
     def __init__(self, filename:str) -> pd.DataFrame: 
         super().__init__()
@@ -45,13 +51,19 @@ class Reader(aux._ID):
 
     def get(self):
         """
-        Returns the samples dataframe
+        Returns
+        -------
+        data : pd.DataFrame
+            The samples dataframe.
         """
         return self._df
 
     def n(self):
         """
-        Returns the number of samples
+        Returns
+        -------
+        n : int
+            The number of samples in the dataframe.
         """
         return len(self._df["Sample"])
 
@@ -97,9 +109,16 @@ class Reader(aux._ID):
 
 class Assay(aux._ID):
     """
-    This class places a set of samples into groups of replicates as specified by the user.
-    It adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
+    Places a set of samples into groups of replicates as specified by the user.
+    Also adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
     Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
+
+    Parameters
+    ----------
+    Reader : qpcr.Reader
+        A qpcr.Reader object (optional). 
+        Reader objects can also be linked to the assay after setup iteratively.
+
     """
     def __init__(self, Reader:Reader = None) -> dict:
         super().__init__()
@@ -111,19 +130,41 @@ class Assay(aux._ID):
         self._renamed = False
 
     def get(self):
+        """
+        Returns
+        -------
+        data : pd.DataFrame
+            The stored dataframe
+        """
         return self._df
 
     def link(self, Reader:Reader):
         """
-        Links a qpcr.Reader object to the Assay
+        Links a qpcr.Reader object to the Assay.
+
+        Parameters
+        ----------
+        Reader : qpcr.Reader
+            A qpcr.Reader object.
         """
         self._Reader = Reader
         self.adopt_id(Reader)
 
     def names(self, as_set = True):
         """
-        Returns a set of sample group names (maintaing group order)
-        or using as_set=False the full group_name column with replicate repeats.
+        Returns a set of sample group names (maintaing group order).
+
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
+        Returns
+        -------
+        names : list or pd.Series
+            The given group names of all replicate groups.
         """
         if as_set:
             return aux.sorted_set(list(self._df["group_name"]))
@@ -132,13 +173,22 @@ class Assay(aux._ID):
     
     def is_named(self): # not used so far...
         """
-        Returns True if .rename() was performed and custom group names are provided
+        Returns 
+        -------
+        bool
+            `True` if .rename() was performed and custom group names are provided
+            else `False`.
         """
         return self._renamed
 
     def groups(self):
         """
-        Returns a set of sample groups (numeric)
+        Returns a set of sample groups (numeric).
+
+        Returns
+        -------
+        groups : list
+            The given numeric group identifiers of all replicate groups.
         """
         return sorted(list(set(self._df["group"])))
 
@@ -146,7 +196,12 @@ class Assay(aux._ID):
         """
         Either sets or gets the replicates to be used for grouping the samples
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
-        This may either be an int (equal group sizes), a tuple (uneven group sizes)
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
         """
         if replicates is None:
             return self._replicates
@@ -158,7 +213,7 @@ class Assay(aux._ID):
 
     def group(self):
         """
-        Groups the samples according to replicates specified
+        Groups the samples according to replicates specified.
         """
         df = self._Reader.get()
         
@@ -176,9 +231,13 @@ class Assay(aux._ID):
 
     def rename(self, names:(list or dict)):
         """
-        Replaces the generic Group0,... in the "group_name" column,
-        using a list (set) or dict specifying new group names. 
-        Group names only need to be specified once, and are applied to all replicate entries.
+        Replaces the generic Group0,... in the "group_name" column.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
         """
         # get new group names based on list (index) or dict (key)
         if isinstance(names, (list, tuple, set)):
@@ -194,8 +253,13 @@ class Assay(aux._ID):
 
     def ignore(self, entries:tuple):
         """
-        Removed lines based on index from the dataframe.
+        Remove lines based on index from the dataframe.
         This is useful when removing corrupted data entries.
+
+        Parameters
+        ----------
+        entries : tuple
+            Tuple of row indices from the dataframe to drop.
         """
         self._df = self._df.drop(index = list(entries))
         
@@ -284,10 +348,12 @@ class Assay(aux._ID):
 
 class SampleReader(Assay):
     """
-    This class sets up a Reader+Sample pipeline that reads 
-    in a sample file and handles the 
-    stored raw data in a pandas dataframe. Its .read() method directly
-    returns an Assay object that can be piped to Analyser. 
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its .read() method directly returns an Assay object that can be piped to Analyser. 
+    Note
+    ----
+    This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
     """
     def __init__(self):
         super().__init__()
@@ -299,21 +365,42 @@ class SampleReader(Assay):
     def replicates(self, replicates:(int or tuple)):
         """
         Set the replicates to group samples.
-        This can be either an int (all groups have same number of replicates)
-        or a tuple that specifies the number of replicates for every group separately.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
         """
         self._replicates = replicates
 
     def names(self, names:(list or dict)):
         """
-        Set names for replicates groups. These may be either specified as a list (requires same length as number of groups, assignment per index), 
-        or as a dictionary (also requires new_name for every group), assignment per key. 
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
         """
         self._names = names
         
     def read(self, filename):
         """
-        Reads one raw datafile (csv) 
+        Reads one raw datafile (csv format).
+
+        Parameters
+        ----------
+        filename : str
+            A filename to a csv containing Ct values. 
+            The file has to have two named columns; one for sample names, one for Ct values. 
+            Both csv (, spearated) and csv2 (; separated) are accepted.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A qpcr.Assay object containing the grouped and renamed data.
         """
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
@@ -333,7 +420,7 @@ class SampleReader(Assay):
 
 class Results(aux._ID):
     """
-    This class handles a pandas dataframe for the results from qpcr.Analyser
+    Handles a pandas dataframe for the results from qpcr.Analyser.
     """
     def __init__(self):
         super().__init__()
@@ -342,11 +429,16 @@ class Results(aux._ID):
         self._stats_results = {"group" : [], "assay" : [], "mean" : [], "stdev" : [], "median" : []}
         self._stats_df = None
 
-
-    def link(self, Assay:Assay):
+    def adopt_names(self, Assay:Assay):
         """
-        Links an instance of Assay to be used for group_names
-        And adds a group_name column to the dataframe
+        Links an instance of Assay to be used as reference for group_names
+        It copies the group_name column to the results storing dataframe.
+        This step can only be performed once!
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A qpcr.Assay object whose group_name column will be copied.
         """
         self._Assay = Assay
         if self.is_empty():
@@ -357,13 +449,24 @@ class Results(aux._ID):
     
     def is_named(self):
         """
-        Returns True if group_name column is present
+        Note
+        ----
+        This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
+        `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
+        
+        Returns 
+        -------
+        bool
+            `True` if `group_name` column is present in the Results dataframe, else `False`.
         """
         return "group_name" in self._df.columns
     
     def names(self, as_set = False):
         """
-        Returns the linked group_names (only works if Assay have been linked!)
+        Returns 
+        -------
+        names : list or None
+            The adopted `group_names` (only works if a qpcr.Assay have been linked using `adopt_names()`!)
         """
         if self._Assay is not None:
             return self._Assay.names(as_set)
@@ -371,24 +474,23 @@ class Results(aux._ID):
 
     def get(self):
         """
-        Returns the results dataframe
+        Returns 
+        -------
+        data : pd.DataFrame
+            The results dataframe
         """
         return self._df
 
     def is_empty(self):
         """
-        Checks if any results have been stored so far (True if not)
+        Checks if any results have been stored so far.
+
+        Returns
+        -------
+        bool
+            `True` if NO data is yet stored, else `False`.
         """
         return self._df is None
-
-    def add_names(self, Sample):
-        """
-        Adds group_names to results dataframe using the group names
-        specified by a qpcr.Sample object.
-        """
-        names = Sample.names(as_set = False)
-        self._df = self._df.join(names)
-    
 
 # ah for whatever funcking reason it tries to add the HNRNPL_rel28fuck twice
 # dunno why, sucks big time... 
@@ -396,15 +498,28 @@ class Results(aux._ID):
     def add(self, column:pd.Series):
         """
         Adds a new column of either DeltaCt 
-        data or normalised DeltaCt data to self._df
+        computed data or normalised DeltaCt data to the results dataframe.
+
+        Parameters
+        ----------
+        column : pd.Series
+            A named pandas Series or DataFrame that can be joined into the already
+            stored dataframe.
         """
-        print(self._df)
-        print(column)
+        # print(self._df)
+        # print(column)
         self._df = self._df.join(column)
         
     def merge(self, *Results):
         """
-        Merges any number of other Results Instances into this one
+        Merges any number of other qpcr.Results objects into this one.
+        The source id of the results is added as column-name suffix. 
+
+        Parameters
+        ----------
+        *Results
+            An arbitrary number of qpcr.Results objects.
+
         """
         new_df = self._df
         for R in Results: 
@@ -419,8 +534,14 @@ class Results(aux._ID):
     def drop_cols(self, *cols):
         """
         Drops all specified columns from the dataframes
-        this is used for normaliser preprocessing...
-        If no cols are specified any/all dCt columns are dropped...
+        this is used for normaliser pre-processing.
+
+        Parameters
+        ----------
+        *cols
+            Any column names (as `str`) to be dropped.
+            If no names are specified any/all `deltaCt` data-containing columns are dropped!
+            If this is the case then the only columns retained are: `"group", "group_name", "Sample", "assay"`.
         """
         if cols == ():
             _to_drop = [c for c in self._df.columns if c not in ["group", "group_name", "Sample", "assay"]]
@@ -430,15 +551,31 @@ class Results(aux._ID):
         
     def rename_cols(self, cols:dict):
         """
-        Renames all columns according to key=value
+        Renames all columns according to a dictionary as key -> value.
+
+        Parameters
+        ----------
+        cols : dict
+            A dictionary specifying old column names (keys) and new colums names (values).
         """
         self._df = self._df.rename(columns = cols)
 
 
     def stats(self, recompute = False) -> pd.DataFrame:
         """
-        Returns a new dataframe containing Mean, Median, and 
-        StDev of all replicate groups, for all samples.
+        Computes summary statistis about the replicate groups: 
+        `Mean`, `Median`, and `StDev` of all replicate groups, for all assays.
+        
+        Parameters
+        ----------
+        recompute : bool
+            Statistics will only be once unless recompute is set to `True`.
+
+        Returns
+        -------
+        stats_df : pd.DataFrame
+            A new dataframe containing the computed statistics for each replicate group.
+
         """
         # if stats_df is already present, return but sorted according to samples, not groups (nicer for user to inspect)
         if self._stats_df is not None and not recompute:
@@ -467,7 +604,21 @@ class Results(aux._ID):
     def save(self, path, df = True, stats = True):
         """
         Saves a csv file for each specified type of results.
-        Path has to be a directory, if both df and stats are True.
+
+        Parameters
+        ----------
+        path : str
+            Path has to be a filepath if only one type of results shall be saved (i.e. either `df` or `stats`), 
+            otherwise a path to the directory where both `df` and `stats` shall be saved.
+        
+        df : bool
+            Save the results dataframe containing all replicate values (the full results).
+            Default is `df = True`.
+        
+        stats : bool
+            Save the results dataframe containing summary statistics for all replicate groups.
+            Default is `stats = True`.
+        
         """
         if df and stats and not os.path.isdir(path):
             aw.HardWarning("Results:save_need_dir")
@@ -481,7 +632,7 @@ class Results(aux._ID):
 
     def drop_rel(self):
         """
-        Drops the X_rel_Y to just X
+        Crops the `X_rel_Y` column-names to just `X`.
         """
         colnames = self._df.columns
         to_change = {i : i.split("_rel_")[0] for i in colnames if "_rel_" in i }
@@ -489,7 +640,20 @@ class Results(aux._ID):
 
     def split(self, reset_names = False, drop_rel = True):
         """
-        Returns a list of Results() objects containing only a single dCt column each (retaining group columns etc.)
+        Splits the stored results dataframe into separate qpcr.Results objects containing only a signle deltaCt column each.
+
+        Parameters
+        ----------
+        reset_names : bool
+            Resets the deltaCt column-name from `"X_rel_Y"` to just `"dCt"`.
+
+        drop_rel : bool
+            Crops `"X_rel_Y"` deltaCt column-names to just `"X"`. 
+
+        Returns 
+        -------
+        objects : list
+            A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)
         """
         shared_columns = [i for i in self._df.columns if i in ["group", "group_name", "Sample", "assay"]]
         dct_columns = [i for i in self._df.columns if i not in ["group", "group_name", "Sample", "assay"]]
@@ -507,9 +671,6 @@ class Results(aux._ID):
             o.id(dct_col)
         
         return objects
-
-        
-       
 
     def _save_single(self, path, src, suffix=""):
         """
@@ -564,8 +725,16 @@ class Results(aux._ID):
 
 class Analyser(aux._ID):
     """
-    This class performs Single Delta CT (normalisation within dataset) 
-    Delta Delta CT (normalisation using second dataset), is handled by Normaliser()!
+    Performs Single Delta CT (first normalisation within dataset) 
+    Note
+    ----
+    Delta Delta CT (normalisation using second dataset), is handled by qpcr.Normaliser!
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A qpcr.Assay object (optional) to compute DeltaCT on. 
+        qpcr.Assay objects can be iteratively linked subsequently using `link()`.
     """
     def __init__(self, Assay:Assay = None):
         super().__init__()
@@ -579,22 +748,46 @@ class Analyser(aux._ID):
 
         if self._Assay is not None: 
             self._Results.adopt_id(Assay)
-            self._Results.link(self._Assay)
+            self._Results.adopt_names(self._Assay)
     
     def get(self):
         """
-        Returns the Results object that contains the results
+        Returns 
+        -------
+        Results
+            A qpcr.Results object that contains the deltaCT results
         """
         return self._Results
 
     def has_results(self):
+        """
+        Returns
+        -------
+        bool
+            `True` if any results were already computed, else `False`.
+        """
         return not self._Results.is_empty()
 
     def link(self, Assay:Assay, force = False, silent = False):
         """
-        Links a qpcr.Assay object to the Analyser
-        Note: If there are any precomputed results, no new data will be linked, unless force=True is called. 
-        The user is notified if results are present and how to proceed. 
+        Links a qpcr.Assay object to the Analyser.
+        Note
+        ----
+        If there are any precomputed results, no new data will be linked, unless force=True is called. 
+        The user is notified if results are already present and how to proceed. 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A qpcr.Assay object containing data.
+        
+        force : bool
+            Any already linked qpcr.Assay objects (and their data and results) will be overwritten
+            if `force = True` (default is `force = False`).
+        
+        silent : bool
+            Warnings about overwriding data will be suppressed if `silent = True` (default is `silent = False`).
+            This is only relevant if `force = True`. 
         """
         empty = self._Results.is_empty()
         dont_overwrite = not empty and not force
@@ -602,7 +795,7 @@ class Analyser(aux._ID):
             self._Assay = Assay
             self.adopt_id(self._Assay)
             self._Results = Results()
-            self._Results.link(self._Assay)
+            self._Results.adopt_names(self._Assay)
             self._Results.adopt_id(self._Assay)
             
         if not silent:
@@ -614,8 +807,25 @@ class Analyser(aux._ID):
 
     def pipe(self, Assay:Assay, **kwargs) -> Results:
         """
-        A quick one-step implementation of link + DeltaCt (silently overwrite any previous results)! 
-        Returns a Results instance. Pipe forwards any **kwargs to DeltaCt.
+        A quick one-step implementation of link + DeltaCt.
+        This is the suggested application of the qpcr.Analyser class!
+
+        Note
+        ----
+        This will silently overwrite any previous results! 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A qpcr.Assay object to be linked to the Analyser for DeltaCt computation.
+        
+        **kwargs
+            Any additional keyword arguments to be passed to the `DeltaCt()` method.
+
+        Returns 
+        -------
+        results : qpcr.Results
+            A qpcr.Results object. 
         """
         self.link(Assay, force=True, silent=True)
         self.DeltaCt(**kwargs)
@@ -624,7 +834,13 @@ class Analyser(aux._ID):
     def efficiency(self, e:float = None):
         """
         Sets an efficiency factor for externally calculated qPCR amplification efficiency.
-        By default efficiency = 2 is assumed.
+        By default `efficiency = 2` is assumed.
+
+        Parameters
+        ----------
+        e : float
+            An amplification efficiency factor. Default is `e = 2`.
+
         """
         if isinstance(e, (int, float)):
             self._efficiency = float(e)
@@ -633,22 +849,30 @@ class Analyser(aux._ID):
 
     def anchor(self, anchor):
         """
-        Sets the anchor for DeltaCt
-        This can be either 
-        - "first" (default, very first dataset entry)
-        - "grouped" (first entry for each replicate group)
-        - a specified numeric value
+        Sets the anchor for DeltaCt for internal normalisation.
+
+        Parameters
+        ----------
+        anchor : str or float
+            The internal anchor for normalisation.
+            This can be either `"first"` (default, the very first dataset entry),
+            `"grouped"` (first entry for each replicate group), or 
+            any specified numeric value (as `float`).
         """
         self._anchor = anchor
 
     def func(self, f:(str or function)):
         """
         Sets the function to be used for DeltaCt (optional)
-        Available inputs are 
-        "exponential" --> uses efficiency^(-(s-r)) # default efficiency = 2
-        "linear" --> uses s-r
-        any defined function that accepts an anchor (1st!) and sample (2nd!) 
-        numeric value each, alongside any kwargs (will be forwarded from .DeltaCt()...)
+
+        Parameters
+        ----------
+        f : str or function
+            The function to be used for DeltaCt computation. Pre-defined functions are 
+            either `"exponential"` (which uses  `efficiency^(-(s-r))`, default), or `"linear"` 
+            (uses uses `s-r`), where `s` is any sample entry in the dataframe and `r` is the anchor.
+            It is also possible to assign any defined function that accepts an anchor (1st!) and sample (2nd!) 
+            numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()...).
         """
         if f in ["exponential", "linear"]:
             f = True if f == "exponential" else False
@@ -660,13 +884,14 @@ class Analyser(aux._ID):
 
     def DeltaCt(self, **kwargs):
         """
-        Calculates DeltaCt for all groups within the samples.
-        As anchor for normalisation either three options may be specified
-        first   -  the very first row in the dataset
-        grouped -  the first replicate within each group
-        specified_value (some external numeric value that will be used directly).
-        Any additional arguments that a custom deltaCt function will require may be passed
-        via the kwargs.
+        Calculates DeltaCt for all groups within the dataframe.
+        Any specifics such as `anchor` or `func` must have already been 
+        set using the respective methods prior to calling `DeltaCt()`!
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that a custom DeltaCt function may require.
         """
         if self._anchor == "first":
             self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
@@ -737,9 +962,8 @@ class Analyser(aux._ID):
 
 class Normaliser(aux._ID):
     """
-    This class handles normalisation of two (or more) datasets against, 
-    using one as normaliser.
-    This requires that all have been Analysed in the same way before!
+    Handles the second normalisation normalisation of two (or more) datasets against one of them used as normaliser.
+    This requires that all have been analysed in the same way before!
     """
     def __init__(self):
         super().__init__()
@@ -752,7 +976,15 @@ class Normaliser(aux._ID):
 
     def get(self, copy=False):
         """
-        Returns the normalised dataframe
+        Parameters
+        ----------
+        copy : bool
+            Will return a deepcopy of the Results object if `copy = True` (default is `copy = False`).
+        
+        Returns
+        -------
+        Results : qpcr.Results
+            A qpcr.Results object containing the normalised dataframe
         """
         if copy: 
             return deepcopy(self._Results)
@@ -760,18 +992,33 @@ class Normaliser(aux._ID):
     
     def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
         """
-        Links either normalisers or any number of samples
+        Links either normaliser- or sample-data-containing qpcr.Results objects coming from the same qpcr.Analyser.
+
+        Parameters
+        ----------
+        samples : list or tuple
+            A list of qpcr.Results objects coming from a qpcr.Analyser which shall be normalised against a normaliser.
+        
+        normalisers : list or tuple
+            A list of qpcr.Results objects coming from a qpcr.Analyser which shall be used as normalisers. These will be
+            combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
+            combining the normalisers can be specified using the `prep_func()` method.
         """
         self._link_normaliser(normalisers)
         self._link_samples(samples)
     
     def prep_func(self, f = None):
         """
-        Sets any defined function for combined normaliser preprocessing...
-        The function may accept one list of qpcr.Results instances, and must return 
-        one list (iterable) of the same length as entries within the qpcr.Results dataframes.
+        Sets any defined function for combined normaliser pre-processing.
+        If no `f` is provided, it returns the current `prep_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one list of qpcr.Results objects, and must return 
+            one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
+            If the provided function does adhere to these criteria is NOT vetted by this method!
         """
-        # isinstance(f, function) didn't work...
         if type(f) == type(aux.fileID):
             self._prep_func = f
         elif f is None:
@@ -782,9 +1029,13 @@ class Normaliser(aux._ID):
     def norm_func(self, f = None):
         """
         Sets any defined function to perform normalisation of samples against normalisers.
-        The function may accept one numeric entry for a sample and a normaliser, and must return 
-        a numeric value. 
-        Be default s/n is used...
+        If no `f` is provided, it returns the current `norm_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one numeric entry for a sample and a normaliser, and must return 
+            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, and `n` is the corresponding deltaCt column from the combined normaliser.
         """
         if type(f) == type(aux.fileID):
             self._norm_func = f
@@ -795,8 +1046,12 @@ class Normaliser(aux._ID):
 
     def normalise(self, **kwargs):
         """
-        Normalises all linked samples against the normaliser set. 
-        Stores the results in a new Results 
+        Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that may be passed to a custom `norm_func`.
         """
         if self._normaliser is None: 
             self._preprocess_normalisers()
@@ -808,9 +1063,9 @@ class Normaliser(aux._ID):
         normaliser = self._normaliser.get()
 
         # setup groups for _Results
-        self._Results.link(self._Assay[0])
+        self._Results.adopt_names(self._Assay[0])
         self._Results.drop_cols()
-        print(self._Results.get())
+        # print(self._Results.get())
 
         # combine normalised samples into unified dataframe
         for S in self._Assay:
@@ -890,7 +1145,7 @@ class Normaliser(aux._ID):
         single combined normaliser, that will be stored as a Results instance.
         """
         combined = Results() # setup new dataframe for combined normalisers, intialise with first id
-        combined.link(self._Normalisers[0])
+        combined.adopt_names(self._Normalisers[0])
         combined.adopt_id(self._Normalisers[0])
         combined.merge(*self._Normalisers[1:])
 
@@ -971,16 +1226,18 @@ if __name__ == "__main__":
     
     result = normaliser.get()
 
+    print(result.get())
+
     splitted = result.split(reset_names = False)
 
     i, j = splitted
     i.rename_cols({"HNRNPL_nmd": "HNRNPL"})
     j.rename_cols({"HNRNPL_prot": "HNRNPL"})
 
-    print(i, j)
-    print("-------")
-    print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
-    print("-----")
+    # print(i, j)
+    # print("-------")
+    # print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
+    # print("-----")
     sn = Normaliser()
 
     sn.link(
@@ -990,6 +1247,7 @@ if __name__ == "__main__":
     
     sn.normalise(dCt_col = "named", norm_col = "same")
 
+    print(sn.get().get())
     print(sn.get().stats())
 
     # # result.save("..")
