@@ -306,7 +306,10 @@ class DoubleNorm(BasicPlus):
 
     NOTE: For this to work paired assays (such as experimental and ctrl) have 
           to have the same name (= id, which is by default the filename)!
+
+    NOTE: THIS PIPELINE IS KINDA FLAWED; ALTHOUGH THIS IS PROBABLY DUE TO A BUG WITHIN THE qpcr.Normaliser() !!! 
     """
+
     def __init__(self):
         super().__init__()
         self._experimental_assays = [] 
@@ -373,18 +376,16 @@ class DoubleNorm(BasicPlus):
         return self._exp_id, self._ctrl_id
 
 
-    def _run(self):
+    def run(self):
         """
         The automated standard DeltaDeltaCt pipeline. 
         Using default settings of qpcr.Analyser()
         """
-
         reader = qpcr.SampleReader()
         reader.replicates(self._replicates)
         if self._names is not None:
             reader.names(self._names)
         
-
         analyser = qpcr.Analyser()
         first_normaliser = qpcr.Normaliser()
         second_normaliser = qpcr.Normaliser()
@@ -398,15 +399,16 @@ class DoubleNorm(BasicPlus):
         # run experimentals
         experimental_results = self.__run(reader, analyser, first_normaliser, self._experimental_normalisers, self._experimental_assays)
         experimental_results.id(self.ids()[1])
-        experimental_results.drop_rel()
-
+        # experimental_results.drop_rel()
+        experimental_results = experimental_results.split()
+        print(experimental_results)
         # now normalise experimentals against control
         second_normaliser.link(
                                 samples = experimental_results, 
-                                normalisers = control_results
+                                normalisers = [control_results]
                             )
         
-        second_normaliser.normalise(norm_col = "same")
+        second_normaliser.normalise(dCt_col = "named", norm_col = "same")
 
         # alright, we next need to forward the information about dCt_col to the normaliser
         # but this needs to be done iteratively, meaning we have to allow each column to be used as dCt...
@@ -414,6 +416,8 @@ class DoubleNorm(BasicPlus):
         # We can extract all the experimental results into separate dataframes within the normalisers self._Assay list
         # like this we can have the one normaliser df with the corresponding columns and a number of Assays (experimental) that we can use for the iteration within normaliser.normalise()
         # for this we need to implement a split function for Results() that will return a list of Results instances with only one single dCt column...
+
+        results = second_normaliser.get()
 
         self._Results = results
         self._df = results.get()
@@ -477,39 +481,118 @@ class DoubleNorm(BasicPlus):
         return results
 
 
+class DoubleNorm2(BasicPlus):
+    """
+    This pipeline allows to normalise entire qpcr runs against each other. 
+    It adds a second normaliser to the BasicPlus pipeline. Assays will be analysed by default DeltaDeltaCt,
+    normalised run-internally against a normaliser (like Actin), 
+    and eventually normalised against their corresponding assay from a control run. 
+
+    NOTE: This pipeline works with an index table (csv) where filepaths alongside with an ID and corresponding experimental condition (such as CTRL, KD, whatever have to be specified...)
+    """
+    def __init__(self, index:str):
+        super().__init__()
+        self._index = self._read_index(index)
+        self._Assays = {}
+        self._Normalisers = {}
+
+    def _read_index(self, file):
+        """
+        Reads the index table
+        """
+        index = pd.read_csv(file)
+        all_good = all([i in index.columns for i in ["id", "condition", "normaliser", "path"]])
+        if not all_good:
+            wa.HardWarning("Pipeline:faulty_index")
+        index["normaliser"] = index["normaliser"].astype(bool)
+        
+        return index
+
+    def prune(self, results = True ):
+        """
+        Will clear results
+        """
+        if results: 
+            self._df = None
+            self._stats_df = None
+            self._Results = None
+
+    def _run(self):
+        """
+        Runs the pipeline
+        """
+        reader = qpcr.SampleReader()
+        reader.replicates(self._replicates)
+        if self._names is not None:
+            reader.names(self._names)
+        
+        analyser = qpcr.Analyser()
+        normaliser = qpcr.Normaliser()
+
+
+
 
 if __name__ == "__main__":
 
     # norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
     # sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
 
-    norm_folder = "Example Data 2/normalisers"
-    sample_folder = "Example Data 2/samples"
+    # norm_folder = "Example Data 2/normalisers"
+    # sample_folder = "Example Data 2/samples"
+
+    # groupnames = ["wt-", "wt+", "ko-", "ko+"]
+    
+    # analysis = BasicPlus()
+    # analysis.save_to("Example Data 2")
+    # analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
+    # analysis.add_normalisers(norm_folder)
+    
+    # analysis.replicates(6)
+    # analysis.names(groupnames)
+
+    # iqr_filter = Filters.IQRFilter()
+    # # iqr_filter.report("Example Data 2")
+    # analysis.add_filters(iqr_filter)
+
+    # preview = Plotters.PreviewResults(mode = "interactive")
+    # analysis.add_plotters(preview)
+
+    # # now that pipeline is ready, we can run!
+    # analysis.run()
+
+    # # now we can get results!
+    # results = analysis.get(kind="df")
+    # print(results)
+    
+    
+    norm_folder = "Example Data 3/normalisers"
+    exp_folder = "Example Data 3/experimental/samples"
+    ctr_folder = "Example Data 3/experimental/samples"
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
     
-    analysis = BasicPlus()
-    analysis.save_to("Example Data 2")
-    analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
-    analysis.add_normalisers(norm_folder)
+    analysis = DoubleNorm2(index = "Example Data 2/index.csv")
+    analysis.save_to("Example Data 3")
     
-    analysis.replicates(6)
-    analysis.names(groupnames)
+    print(analysis._index)
+    # analysis.set_experimental(assays = exp_folder, normalisers = norm_folder)
+    # analysis.set_control(assays = ctr_folder, normalisers = norm_folder)
 
-    iqr_filter = Filters.IQRFilter()
-    # iqr_filter.report("Example Data 2")
-    analysis.add_filters(iqr_filter)
+    # analysis.replicates(6)
+    # analysis.names(groupnames)
 
-    preview = Plotters.PreviewResults(mode = "interactive")
-    analysis.add_plotters(preview)
+    # iqr_filter = Filters.IQRFilter()
+    # # iqr_filter.report("Example Data 2")
+    # analysis.add_filters(iqr_filter)
 
-    # now that pipeline is ready, we can run!
-    analysis.run()
+    # preview = Plotters.PreviewResults(mode = "interactive")
+    # analysis.add_plotters(preview)
 
-    # now we can get results!
-    results = analysis.get(kind="df")
-    print(results)
-    
-    
+    # # now that pipeline is ready, we can run!
+    # analysis.run()
 
-    exit(0)
+    # # now we can get results!
+    # results = analysis.get(kind="df")
+    # print(results)
+
+    # exit(0)

@@ -390,11 +390,16 @@ class Results(aux._ID):
         self._df = self._df.join(names)
     
 
+# ah for whatever funcking reason it tries to add the HNRNPL_rel28fuck twice
+# dunno why, sucks big time... 
+
     def add(self, column:pd.Series):
         """
         Adds a new column of either DeltaCt 
         data or normalised DeltaCt data to self._df
         """
+        print(self._df)
+        print(column)
         self._df = self._df.join(column)
         
     def merge(self, *Results):
@@ -805,6 +810,7 @@ class Normaliser(aux._ID):
         # setup groups for _Results
         self._Results.link(self._Assay[0])
         self._Results.drop_cols()
+        print(self._Results.get())
 
         # combine normalised samples into unified dataframe
         for S in self._Assay:
