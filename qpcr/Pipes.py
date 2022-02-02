@@ -7,8 +7,8 @@ import qpcr.__init__ as qpcr
 import matplotlib.pyplot as plt
 import pandas as pd 
 import statistics as stats
-import qpcr.auxiliary.warnings as wa
-import qpcr.auxiliary as aux
+import qpcr._auxiliary.warnings as wa
+import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
 import re
@@ -66,6 +66,9 @@ class Pipeline(qpcr.SampleReader):
             A directory to save the results to.
         """
         self._save_to = directory
+        # if the directory does not yet exist, we make it
+        if not os.path.exists(self._save_to):
+            os.mkdir(self._save_to)
 
     def get(self, kind="stats"):
         """

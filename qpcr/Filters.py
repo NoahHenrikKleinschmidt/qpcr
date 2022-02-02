@@ -16,8 +16,8 @@ from re import L
 import qpcr.__init__ as qpcr
 import pandas as pd
 import numpy as np
-import qpcr.auxiliary.warnings as aw
-import qpcr.auxiliary as aux
+import qpcr._auxiliary.warnings as aw
+import qpcr._auxiliary as aux
 import os 
 import qpcr.Plotters as Plotters
 
@@ -159,6 +159,11 @@ class Filter(aux._ID):
         """
         if directory is not None:
             self._report_loc = directory
+
+            # if the directory does not yet exist, we make it
+            if not os.path.exists(self._report_loc):
+                os.mkdir(self._report_loc)
+
         else: 
             return self._report_loc
 
