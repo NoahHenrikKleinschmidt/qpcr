@@ -7,6 +7,11 @@ User-friendliness and quick and easy workflows were of primary concern during de
 
 The exported results are formatted to be readily imported into graphing software. However, this module also includes methods to readily generate both static and interactive figures for rapid data exploration. 
 
+### Installation
+```
+pip install qpcr
+```
+
 ### Example usage
 To facilitate data analysis, common workflows have been implemented in pre-defined `pipelines` that allow for quick data analysis with minimal user effort. An example analysis using the pre-defined `BasicPlus` pipeline:
 
