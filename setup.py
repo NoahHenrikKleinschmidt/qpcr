@@ -13,6 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/NoahHenrikKleinschmidt/qpcr.git",
     packages=setuptools.find_packages(),
+    package_dir={"": "qpcr"},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License ::  GPL-3.0 License",
