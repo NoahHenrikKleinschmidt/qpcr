@@ -2,6 +2,8 @@
 
 ### A python module to analyse qPCR data on single-datasets or high-throughput
 
+[![DOI](https://zenodo.org/badge/398244987.svg)](https://zenodo.org/badge/latestdoi/398244987)
+
 
 This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` files all the way to finished visualisations of the results. 
 
