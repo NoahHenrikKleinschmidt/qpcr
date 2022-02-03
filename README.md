@@ -1,5 +1,7 @@
-# qpcr
+# <img src="https://user-images.githubusercontent.com/89252165/152382559-0983a05a-af31-49e6-a06f-15b26359e3df.svg" width="30"> qpcr
+
 ### A python module to analyse qPCR data on single-datasets or high-throughput
+
 
 This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` files all the way to finished visualisations of the results. 
 
