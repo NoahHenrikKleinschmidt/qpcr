@@ -2,7 +2,7 @@ import setuptools
 
 with open("README.md", "r") as f:
     long_description = f.read()
-    
+
 setuptools.setup(
     name="qpcr", 
     version="0.2.1",
@@ -13,11 +13,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/NoahHenrikKleinschmidt/qpcr.git",
     packages=setuptools.find_packages(),
-    package_dir={"": "qpcr"},
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License ::  GPL-3.0 License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
     python_requires='>=3.6',
 )
