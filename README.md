@@ -62,7 +62,7 @@ pipeline.run()
 ![](https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/Example%20Results/PreviewResults_1.jpg)
 
 ### Getting started
-A set of basic introductory tutorials is available as `jupyter notebooks` in the `Examples` directory in this repository. For more information about the API, checkout the documentation at the [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html)
+A set of basic introductory tutorials is available as `jupyter notebooks` in the `Examples` directory in this repository. For more information about the API, checkout the documentation at the [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html).
 
 
 #### Citation
