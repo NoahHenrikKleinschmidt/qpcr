@@ -8,6 +8,7 @@ User-friendliness and quick and easy workflows were of primary concern during de
 The exported results are formatted to be readily imported into graphing software. However, this module also includes methods to readily generate both static and interactive figures for rapid data exploration. 
 
 ### Installation
+This module can directly be installed via `pip`.
 ```
 pip install qpcr
 ```
