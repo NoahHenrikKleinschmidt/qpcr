@@ -344,6 +344,8 @@ class PreviewResults(Plotter):
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
         show = aux.from_kwargs("show", True, kwargs, rm = True)
 
+        edgecolor = aux.from_kwargs("edgecolor", "black", kwargs, rm = True)
+        edgewidth = aux.from_kwargs("edgewidth", 0.3, kwargs, rm = True)
         figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
 
@@ -362,8 +364,8 @@ class PreviewResults(Plotter):
                                 x = x, y = y, 
                                 ax = subplot,
 
-                                edgecolor = aux.from_kwargs("edgecolor", "black", kwargs),
-                                linewidth = aux.from_kwargs("borderwidth", 0.3, kwargs, rm = True),
+                                edgecolor = edgecolor,
+                                linewidth = edgewidth,
                                 **kwargs
                             )
 
@@ -371,7 +373,7 @@ class PreviewResults(Plotter):
                                 x = tmp_df[x], y = tmp_df[y], 
                                 yerr = tmp_df[sterr], 
                                 fmt = ".", markersize = 0, capsize = 3, 
-                                ecolor = aux.from_kwargs("edgecolor", "black", kwargs),
+                                ecolor = aux.from_kwargs("ecolor", "black", kwargs),
                             )
 
                 subplot.set(
