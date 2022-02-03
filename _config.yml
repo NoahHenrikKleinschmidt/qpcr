@@ -1,1 +1,4 @@
 theme: jekyll-theme-cayman
+title: qpcr
+description: A python module to analyse qPCR data easily and efficiently.
+
