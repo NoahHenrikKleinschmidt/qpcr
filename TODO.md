@@ -30,6 +30,8 @@ New planned features for any future release are:
 ### 1. Integration of `Qlipper` functionality 
 - 1.5 while we're at it, we could also implement a new pipeline that starts from absorption data instead of Ct values (we name it `QlipperPipe`, or something like that...)
 
+- 1.6 support reading `rex` files directly by `Qlipper`. Should be easy enough locally, but might be difficult to do via streamlit... We'll need to figure out a way to get a FileIO from the UploadedFile ...
+
 ### 2. Merging Filter before-after figures together
 Currently before and after filtering figures are separate. It would be nice to have the before filtering figure (maybe with different color or with less opacity) be plotted and then to overlay the after-filtering on-top of that - all in the same figure...
 
