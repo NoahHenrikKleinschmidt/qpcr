@@ -16,9 +16,9 @@ to allow starting from absorption curves already instead of Ct values
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
-|    1.1   |      |             |       |
-|    1.2   |      |             |       |
-|    1.3   |      |             |       |
+|    1.1   |      |      x       |       |
+|    1.2   |   x   |             |       |
+|    1.3   |      |      x       |       |
 |    1.4   |      |             |       |
 
 
