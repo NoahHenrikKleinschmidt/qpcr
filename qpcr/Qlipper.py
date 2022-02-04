@@ -13,6 +13,10 @@ import scipy.stats as stats
 # TODO: interpolate best threshold value method << CHECK
 # TODO: make a Plotter figure class for Qlipper
 
+# NOTE: to make Qlipper compliant with the `UploadedFile` object type used by Streamlit
+#       we are currently setting default assumptions that the filetype is a default csv (comma separated)
+#       and that the files HAVE headers in for their columns.
+
 class Qlipper(aux._ID):
     """
     Reads a file of raw absorption values and generates a table of `Ct` values.
@@ -28,10 +32,28 @@ class Qlipper(aux._ID):
         self._src = filename
         self._raw = None # the raw data
         self._data = None # the processed and transformed data used for computation...
+        self._final = None # the df for the computed Ct values
         self._absmax, self._absmin = None, None # max and min absorption values
 
         if self._src is not None: 
             self.read(self._src)
+
+    def get(self, which = "final"):
+        """
+        Returns
+        -------
+        data : pd.DataFrame
+            A pandas dataframe containing either the raw absorption values (if `which = "raw"`),
+            pre-processed (i.e. upsampled) absorption values used for analysis and visualisation
+            (if `which = "prep"`), or the final Ct values (if `which = "final"`, default).
+        """
+        datas = {
+            "raw" : self._raw,
+            "prep" : self._data,
+            "final" : self._final,
+        }
+        data = datas[which]
+        return data
 
     def read(self, filename : str):
         """
@@ -118,6 +140,8 @@ class Qlipper(aux._ID):
             _new = pd.DataFrame(dict(sample = [col], Ct = [Ct]))
             new = pd.concat([new, _new], axis = 0)
         
+        # store final results
+        self._final = new
         return new
 
     def best_threshold(self, steps = 200, window_size = 0.1):
@@ -272,11 +296,14 @@ class Qlipper(aux._ID):
         """
         Tests if csv file is ; delimited (True) or common , (False)
         """
-        with open(filename, "r") as openfile: 
-            content = openfile.read()
-        if ";" in content: 
+        try: 
+            with open(filename, "r") as openfile: 
+                content = openfile.read()
+            if ";" in content: 
+                return True
+            return False
+        except: 
             return True
-        return False
     
     def _has_header(self, filename):
         """
@@ -286,16 +313,18 @@ class Qlipper(aux._ID):
         it returns 0 (as in first row has headers)...
         """
         _delimiter = ";" if self._is_csv2(filename) else ","
-
-        with open(filename, "r") as openfile: 
-            content = openfile.read().split("\n")[0]
-            content = content.split(_delimiter)
         try: 
-            second_col = content[1]
-            second_col = float(second_col)
-        except ValueError:
-            return 0 # Headers in row 0
-        return None  # no headers
+            with open(filename, "r") as openfile: 
+                content = openfile.read().split("\n")[0]
+                content = content.split(_delimiter)
+            try: 
+                second_col = content[1]
+                second_col = float(second_col)
+            except ValueError:
+                return 0 # Headers in row 0
+            return None  # no headers
+        except: 
+            return 0
 
 
 
