@@ -303,7 +303,7 @@ class Qlipper(aux._ID):
                 return True
             return False
         except: 
-            return True
+            return False
     
     def _has_header(self, filename):
         """
