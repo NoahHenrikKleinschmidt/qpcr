@@ -2,3 +2,5 @@ Example Data *
 Example Results *
 __pycache__
 __*
+dist
+*.egg*
