@@ -64,6 +64,7 @@ class Qlipper(aux._ID):
         filename : str
         A file path to a file containing absorption values.
         """
+
         _delimiter = ";" if self._is_csv2(filename) else ","
         _header = self._has_header(filename)
 
@@ -330,5 +331,6 @@ class Qlipper(aux._ID):
 
 if __name__ == "__main__":
     qlip = Qlipper("./rex_small.csv")
-    cts = qlip.getCt()
-    print(cts)
+    qlip.getCt()
+    cts1 = qlip.get()
+    print(cts1)
