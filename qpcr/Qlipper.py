@@ -5,7 +5,7 @@ is designed to generate `Ct` values from qPCR absorption curves.
 
 import pandas as pd
 import numpy as np 
-import _auxiliary.Qlipper as auxQ
+import qpcr._auxiliary.Qlipper as auxQ
 import qpcr._auxiliary as aux
 import scipy.stats as stats
 
