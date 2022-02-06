@@ -8,6 +8,8 @@ import numpy as np
 import qpcr._auxiliary.Qlipper as auxQ
 import qpcr._auxiliary as aux
 import scipy.stats as stats
+from copy import deepcopy
+
 
 # TODO: make a Qlipper class to handle things << CHECK
 # TODO: interpolate best threshold value method << CHECK
@@ -17,71 +19,24 @@ import scipy.stats as stats
 #       we are currently setting default assumptions that the filetype is a default csv (comma separated)
 #       and that the files HAVE headers in for their columns.
 
-class Qlipper(aux._ID):
+class _CORE(aux._ID):
     """
-    Reads a file of raw absorption values and generates a table of `Ct` values.
-    Currently supported input formats for absorption curves `csv` files of one named
-    column for each measured transcript, and cycles as rows. 
-
-    Parameters
-    ----------
-    filename : str
-        A file path to a file containing absorption values. (optional, as this can be linked later using `link()`)
+    The functional core class that handles the common methods of Qlipper classes.
     """
-    def __init__(self, filename : str = None):
-        self._src = filename
+    def __init__(self):
+        self._src = None # the data source (filepath, or streamlit UploadedFile) 
         self._raw = None # the raw data
         self._data = None # the processed and transformed data used for computation...
         self._final = None # the df for the computed Ct values
         self._absmax, self._absmin = None, None # max and min absorption values
 
-        if self._src is not None: 
-            self.read(self._src)
-
-    def get(self, which = "final"):
+    def getlim(self):
         """
-        Returns
-        -------
-        data : pd.DataFrame
-            A pandas dataframe containing either the raw absorption values (if `which = "raw"`),
-            pre-processed (i.e. upsampled) absorption values used for analysis and visualisation
-            (if `which = "prep"`), or the final Ct values (if `which = "final"`, default).
+        Returns the min and max absorption values from the data
         """
-        datas = {
-            "raw" : self._raw,
-            "prep" : self._data,
-            "final" : self._final,
-        }
-        data = datas[which]
-        return data
+        return self._absmin, self._absmax
 
-    def read(self, filename : str):
-        """
-        Reads a raw-data file.
-
-        Parameters
-        ----------
-        filename : str
-        A file path to a file containing absorption values.
-        """
-
-        _delimiter = ";" if self._is_csv2(filename) else ","
-        _header = self._has_header(filename)
-
-        # read raw data
-        self._raw = pd.read_csv(
-                                filename, 
-                                sep = _delimiter, 
-                                header = _header, 
-                            )
-        # get absorption max and min values
-        self._absmax, self._absmin = self._raw.max().max(), self._raw.min().min()
-
-        # and pre-process
-        self._data = self._upsample()
-
-
-    def getCt(self, threshold = "best", round = 4, use_nan = False, mean_range = 0):
+    def Ct(self, threshold = "best", round = 4, use_nan = False, mean_range = 0):
         """
         Infers Ct values based on upsampled data, using a specified threshold.
 
@@ -293,6 +248,69 @@ class Qlipper(aux._ID):
                 
         return new
 
+class Qlipper(_CORE):
+    """
+    Reads a file of raw absorption values and generates a table of `Ct` values.
+    Currently supported input formats for absorption curves `csv` files of one named
+    column for each measured transcript, and cycles as rows. 
+
+    Parameters
+    ----------
+    filename : str
+        A file path to a file containing absorption values. (optional, as this can be linked later using `link()`)
+    """
+    def __init__(self, filename : str = None):
+        self._src = filename
+        self._raw = None # the raw data
+        self._data = None # the processed and transformed data used for computation...
+        self._final = None # the df for the computed Ct values
+        self._absmax, self._absmin = None, None # max and min absorption values
+
+        if self._src is not None: 
+            self.read(self._src)
+
+    def get(self, which = "final"):
+        """
+        Returns
+        -------
+        data : pd.DataFrame
+            A pandas dataframe containing either the raw absorption values (if `which = "raw"`),
+            pre-processed (i.e. upsampled) absorption values used for analysis and visualisation
+            (if `which = "prep"`), or the final Ct values (if `which = "final"`, default).
+        """
+        datas = {
+            "raw" : self._raw,
+            "prep" : self._data,
+            "final" : self._final,
+        }
+        data = datas[which]
+        return data
+
+    def read(self, filename : str):
+        """
+        Reads a raw-data file.
+
+        Parameters
+        ----------
+        filename : str
+        A file path to a file containing absorption values.
+        """
+
+        _delimiter = ";" if self._is_csv2(filename) else ","
+        _header = self._has_header(filename)
+
+        # read raw data
+        self._raw = pd.read_csv(
+                                filename, 
+                                sep = _delimiter, 
+                                header = _header, 
+                            )
+        # get absorption max and min values
+        self._absmax, self._absmin = self._raw.max().max(), self._raw.min().min()
+
+        # and pre-process
+        self._data = self._upsample()
+
     def _is_csv2(self, filename):
         """
         Tests if csv file is ; delimited (True) or common , (False)
@@ -328,9 +346,94 @@ class Qlipper(aux._ID):
             return 0
 
 
+class _WebAppQlipper(_CORE):
+    """
+    The class to work within the Qlipper WebApp. It essentially is designed
+    to work with streamlit's `UploadedFiles` instead of actual filepaths...
+
+    Parameters
+    ----------
+    filename : str
+        A file path to a file containing absorption values. (optional, as this can be linked later using `read()`)
+    """
+    def __init__(self, file : str = None):
+        self._src = file
+        self._raw = None # the raw data
+        self._data = None # the processed and transformed data used for computation...
+        self._final = None # the df for the computed Ct values
+        self._absmax, self._absmin = None, None # max and min absorption values
+
+    def read(self, file : str):
+        """
+        Reads the UploadedFile
+        """
+        _delimiter = ";" if self._is_csv2(deepcopy(file)) else ","
+        _header = self._has_header(deepcopy(file))
+
+        # read raw data
+        self._raw = pd.read_csv(
+                                file, 
+                                sep = _delimiter, 
+                                header = _header, 
+                            )
+        # get absorption max and min values
+        self._absmax, self._absmin = self._raw.max().max(), self._raw.min().min()
+
+        # and pre-process
+        self._data = self._upsample()
+
+    def _is_csv2(self, file):
+        """
+        Tests if csv file is ; delimited (True) or common , (False)
+        """
+        try: 
+            content = file.read().decode()
+            if ";" in content: 
+                return True
+            return False
+        except: 
+            return False
+    
+    def _has_header(self, file):
+        """
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None << False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        """
+        _delimiter = ";" if self._is_csv2(file) else ","
+        try: 
+            content = file.read().decode()
+            content = content.split("\n")[0]
+            content = content.split(_delimiter)
+            try: 
+                second_col = content[1]
+                second_col = float(second_col)
+            except ValueError:
+                return 0 # Headers in row 0
+            return None  # no headers
+        except: 
+            return 0
+        
+    def get(self, which = "final"):
+        """
+        Returns
+        -------
+        data : pd.DataFrame
+            A pandas dataframe containing either the raw absorption values (if `which = "raw"`),
+            pre-processed (i.e. upsampled) absorption values used for analysis and visualisation
+            (if `which = "prep"`), or the final Ct values (if `which = "final"`, default).
+        """
+        datas = {
+            "raw" : self._raw,
+            "prep" : self._data,
+            "final" : self._final,
+        }
+        data = datas[which]
+        return data
 
 if __name__ == "__main__":
-    qlip = Qlipper("./rex_small.csv")
-    qlip.getCt()
+    qlip = Qlipper("../qpcr/qpcr/rex_small.csv")
+    qlip.Ct()
     cts1 = qlip.get()
     print(cts1)
