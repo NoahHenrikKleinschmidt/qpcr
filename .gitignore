@@ -4,3 +4,4 @@ __pycache__
 __*
 dist
 *.egg*
+*rex*
