@@ -9,7 +9,7 @@ from qpcr._auxiliary import warnings as aw
 import os
 import numpy as np 
 from copy import deepcopy 
-
+from io import StringIO
 
 # default column names for raw Ct data files
 RAW_COL_NAMES = ["Sample", "Ct"]
@@ -54,14 +54,7 @@ class _CORE_Reader(aux._ID):
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
-    
-    def _has_header(self):
-        """
-        This method would check if a header is present or not...
-        This method will be different for standard Reader and _Qupid_Reader...
-        """
-        # just assume per default that first row (0 index) is header... 
-        return 0
+
 class Reader(_CORE_Reader):
     """
     Reads qpcr raw data files in csv format. 
@@ -111,6 +104,11 @@ class _Qupid_Reader(_CORE_Reader):
     """
     This Reader class works with streamlit's UploadedFile class.
     
+    Note
+    -------
+    We have to use a little hack to make the UploadedFile readable.
+    We convert to a string and then back to a StringIO which we can then pass to pandas...
+    
     Parameters
     ----------
     file
@@ -118,8 +116,8 @@ class _Qupid_Reader(_CORE_Reader):
     """
     def __init__(self, file) -> pd.DataFrame: 
         super().__init__()
-        self._src = file
         self._content = file.read().decode()
+        self._src = StringIO(self._content)
         self._delimiter = ";" if self._is_csv2() else ","
         self.read()
 
