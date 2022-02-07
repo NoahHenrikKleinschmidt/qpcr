@@ -999,7 +999,8 @@ class Analyser(aux._ID):
             group_subset = df.query(f"group == {group}").reset_index(drop = True)
             anchor = group_subset["Ct"][0]
             delta_cts = group_subset["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
-            dCt.append(delta_cts)
+            dCt = dCt.append(delta_cts).reset_index(drop = True)
+        dCt.name = "dCt"
         self._Results.add(dCt)
 
     def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
