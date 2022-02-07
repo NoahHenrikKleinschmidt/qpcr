@@ -384,10 +384,16 @@ class _Qupid_BasicPlus(BasicPlus):
 
         # analyse normalisers:
         for _normaliser in self._Normalisers:
+            print(_normaliser)
+            print(type(_normaliser))
             norm = reader.read(_normaliser)
+            
+            print(norm.get())
 
             for filter in self._Filters:
                 norm = filter.pipe(norm)
+
+            print(norm.get())
 
             norm = analyser.pipe(norm)
             normalisers.append(norm)

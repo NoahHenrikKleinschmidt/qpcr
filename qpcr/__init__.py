@@ -102,7 +102,7 @@ class _Qupid_Reader(Reader):
         self._src = file
         self._content = file.read().decode()
         self._delimiter = ";" if self._is_csv2() else ","
-        super().__init__(file)
+        # super().__init__(file)
         self.read()
 
     def _is_csv2(self):
