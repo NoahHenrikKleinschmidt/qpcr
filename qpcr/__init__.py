@@ -14,22 +14,17 @@ from copy import deepcopy
 # default column names for raw Ct data files
 RAW_COL_NAMES = ["Sample", "Ct"]
 
-class Reader(aux._ID):
+class _CORE_Reader(aux._ID):
     """
-    Reads qpcr raw data files in csv format. 
-
-    Parameters
-    ----------
-    filename : str
-        A filename to a csv containing Ct values. 
-        The file has to have two named columns; one for sample names, one for Ct values. 
-        Both csv (, spearated) and csv2 (; separated) are accepted.
+    The class handling the core functions of the Reader class. 
+    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+    inherit from this. 
     """
-    def __init__(self, filename:str) -> pd.DataFrame: 
+    def __init__(self):
         super().__init__()
-        self._src = filename
-        self._delimiter = ";" if self._is_csv2() else ","
-        self.read()
+        self._src = None
+        self._delimiter = None
+        self._df = None
 
     def get(self):
         """
@@ -59,7 +54,30 @@ class Reader(aux._ID):
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
-        # self._df["_index"] = list(self._df.index)
+    
+    def _has_header(self):
+        """
+        This method would check if a header is present or not...
+        This method will be different for standard Reader and _Qupid_Reader...
+        """
+        # just assume per default that first row (0 index) is header... 
+        return 0
+class Reader(_CORE_Reader):
+    """
+    Reads qpcr raw data files in csv format. 
+
+    Parameters
+    ----------
+    filename : str
+        A filename to a csv containing Ct values. 
+        The file has to have two named columns; one for sample names, one for Ct values. 
+        Both csv (, spearated) and csv2 (; separated) are accepted.
+    """
+    def __init__(self, filename:str) -> pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        self._delimiter = ";" if self._is_csv2() else ","
+        self.read()
 
     def _is_csv2(self):
         """
@@ -89,7 +107,7 @@ class Reader(aux._ID):
         return None  # no headers
 
 
-class _Qupid_Reader(Reader):
+class _Qupid_Reader(_CORE_Reader):
     """
     This Reader class works with streamlit's UploadedFile class.
     
@@ -99,10 +117,10 @@ class _Qupid_Reader(Reader):
         A streamlit UploadedFile object
     """
     def __init__(self, file) -> pd.DataFrame: 
+        super().__init__()
         self._src = file
         self._content = file.read().decode()
         self._delimiter = ";" if self._is_csv2() else ","
-        # super().__init__(file)
         self.read()
 
     def _is_csv2(self):
