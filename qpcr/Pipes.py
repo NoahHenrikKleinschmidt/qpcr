@@ -356,84 +356,6 @@ class BasicPlus(Basic):
             num+=1
         return filename
 
-class _Qupid_BasicPlus(BasicPlus):
-    """
-    This is the implementation of the BasicPlus pipeline for the Qupid webapp.
-    It redefines the file-reading functions with methods compatible with the UploadedFile objects from streamlit.
-    """
-    def __init__(self):
-        super().__init__()
-
-    def _run(self):
-        """
-        The automated standard DeltaDeltaCt pipeline. 
-        Also produces applies and Plotters to produce figures...
-        """
-
-        reader = qpcr._Qupid_SampleReader()
-        reader.replicates(self._replicates)
-        if self._names is not None:
-            reader.names(self._names)
-        
-        analyser = qpcr.Analyser()
-        normaliser = qpcr.Normaliser()
-
-        normalisers = []
-        samples = []
-
-        # analyse normalisers:
-        for _normaliser in self._Normalisers:
-            
-            norm = reader.read(_normaliser)
-            
-            for filter in self._Filters:
-                norm = filter.pipe(norm)
-
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
-
-        # analyse sample assays
-        for sample in self._Assays:
-            _sample = reader.read(sample)
-
-            for filter in self._Filters:
-                _sample = filter.pipe(_sample)
-
-            _sample = analyser.pipe(_sample)
-            samples.append(_sample)
-        normaliser.link(samples = samples)
-
-        normaliser.normalise()
-        results = normaliser.get()
-
-        self._Results = results
-        self._df = results.get()
-        self._stats_df = results.stats()
-
-        if self._save_to is not None:
-            results.save(self._save_to)
-
-        # plot filtering report
-        for filter in self._Filters:
-            if self._save_to is not None or filter.report() is not None:
-                # add report location if none was specified...
-                if filter.report() is None: 
-                    filter.report(self._save_to)
-            
-            figs = filter.plot()
-            self._Figures.extend(figs)
-
-        # plot results
-        for plotter in self._Plotters:
-            plotter.link(self._Results)
-            fig = plotter.plot()
-            self._Figures.append(fig)
-
-            if self._save_to is not None:
-                filename = self._make_figure_filename(plotter)
-                plotter.save(filename)
-
 class Blueprint(BasicPlus):
     """
     Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
@@ -565,6 +487,28 @@ class Blueprint(BasicPlus):
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
                 plotter.save(filename)
+
+
+
+class _Qupid_Blueprint(Blueprint):
+    """
+    This is the implementation of the Plueprint pipeline for the Qupid webapp.
+    It redefines the file-reading functions with methods compatible with the UploadedFile objects from streamlit.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def _setup_cores(self):
+        """
+        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        """
+        if self.Reader() is None: 
+            self.Reader(qpcr._Qupid_SampleReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
 
 if __name__ == "__main__":
 
