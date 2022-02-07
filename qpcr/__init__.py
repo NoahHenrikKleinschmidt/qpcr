@@ -89,6 +89,46 @@ class Reader(aux._ID):
         return None  # no headers
 
 
+class _Qupid_Reader(Reader):
+    """
+    This Reader class works with streamlit's UploadedFile class.
+    
+    Parameters
+    ----------
+    file
+        A streamlit UploadedFile object
+    """
+    def __init__(self, file) -> pd.DataFrame: 
+        super().__init__()
+        self._src = file
+        self._content = self._src.read().decode()
+        self._delimiter = ";" if self._is_csv2() else ","
+        self.read()
+
+    def _is_csv2(self):
+        """
+        Tests if csv file is ; delimited (True) or common , (False)
+        """
+        if ";" in self._content: 
+            return True
+        return False
+
+    def _has_header(self):
+        """
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None << False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        """
+        content = self._content.split("\n")[0]
+        content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
+
 class Assay(aux._ID):
     """
     Places a set of samples into groups of replicates as specified by the user.
@@ -399,6 +439,47 @@ class SampleReader(Assay):
 
         return self._Assay
 
+class _Qupid_SampleReader(SampleReader):
+    """
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Note
+    ----
+    This is the Qupid applicable version of the SampleReader
+    """
+    def __init__(self):
+        super().__init__()
+        
+
+    def read(self, file):
+        """
+        Reads one raw datafile (csv format).
+
+        Parameters
+        ----------
+        file
+            An UploadedFile object from streamlit.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing the grouped and renamed data.
+        """
+        self._Reader = _Qupid_Reader(file)
+        self._Reader.id(aux.fileID(file))
+
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
+        
+        if self._names is not None:
+            self._Assay.rename(self._names)
+
+        return self._Assay
 
 class Results(aux._ID):
     """
@@ -473,9 +554,6 @@ class Results(aux._ID):
             `True` if NO data is yet stored, else `False`.
         """
         return self._df is None
-
-# ah for whatever funcking reason it tries to add the HNRNPL_rel28fuck twice
-# dunno why, sucks big time... 
 
     def add(self, column:pd.Series):
         """
