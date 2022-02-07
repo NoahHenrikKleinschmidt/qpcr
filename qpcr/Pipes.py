@@ -420,8 +420,11 @@ class _Qupid_BasicPlus(BasicPlus):
                 # add report location if none was specified...
                 if filter.report() is None: 
                     filter.report(self._save_to)
-
+            
+            print("plotting with filter: ", filter)
             figs = filter.plot()
+            print(figs)
+            
             self._Figures.extend(figs)
 
         # plot results
