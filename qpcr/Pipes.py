@@ -357,6 +357,13 @@ class BasicPlus(Basic):
             num+=1
         return filename
 
+class _Qupid_BasicPlus(BasicPlus):
+    """
+    This is the implementation of the BasicPlus pipeline for the Qupid webapp.
+    It redefines the file-reading functions with methods compatible with the UploadedFile objects from streamlit.
+    """
+    def __init__(self):
+        super().__init__()
 
 
 if __name__ == "__main__":

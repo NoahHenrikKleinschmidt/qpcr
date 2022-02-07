@@ -6,7 +6,7 @@
 
 ---
 
-> NOTE: This is the development branch for the next planned release `Version 2.2.0`. Checkout the `TODO.md` to see what's planned and what still needs to be done...
+> NOTE: This is the development branch for the next planned release `Version 2.1.1`. Checkout the `TODO.md` to see what's planned and what still needs to be done...
 
 ---
 
