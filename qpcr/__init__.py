@@ -99,10 +99,10 @@ class _Qupid_Reader(Reader):
         A streamlit UploadedFile object
     """
     def __init__(self, file) -> pd.DataFrame: 
-        super().__init__(file)
         self._src = file
-        self._content = self._src.read().decode()
+        self._content = file.read().decode()
         self._delimiter = ";" if self._is_csv2() else ","
+        super().__init__(file)
         self.read()
 
     def _is_csv2(self):
