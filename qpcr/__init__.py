@@ -996,7 +996,7 @@ class Analyser(aux._ID):
 
         dCt = pd.Series()
         for group in groups: 
-            group_subset = df.query(f"group == {group}")
+            group_subset = df.query(f"group == {group}").reset_index(drop = True)
             anchor = group_subset["Ct"][0]
             delta_cts = group_subset["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
             dCt.append(delta_cts)
