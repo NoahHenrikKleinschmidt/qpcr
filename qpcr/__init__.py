@@ -467,7 +467,7 @@ class _Qupid_SampleReader(SampleReader):
             A `qpcr.Assay` object containing the grouped and renamed data.
         """
         self._Reader = _Qupid_Reader(file)
-        self._Reader.id(aux.fileID(file))
+        self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
 
         self._Assay = Assay(self._Reader)
         self._Assay.adopt_id(self._Reader)
