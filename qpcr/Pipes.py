@@ -323,16 +323,15 @@ class BasicPlus(Basic):
         if self._save_to is not None:
             results.save(self._save_to)
 
-        # plot replicate overview
-        if self._save_to is not None:
-            for filter in self._Filters:
-
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
                 # add report location if none was specified...
                 if filter.report() is None: 
                     filter.report(self._save_to)
-                
-                figs = filter.plot()
-                self._Figures.extend(figs)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
 
         # plot results
         for plotter in self._Plotters:
@@ -415,16 +414,15 @@ class _Qupid_BasicPlus(BasicPlus):
         if self._save_to is not None:
             results.save(self._save_to)
 
-        # plot replicate overview
-        if self._save_to is not None:
-            for filter in self._Filters:
-
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
                 # add report location if none was specified...
                 if filter.report() is None: 
                     filter.report(self._save_to)
-                
-                figs = filter.plot()
-                self._Figures.extend(figs)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
 
         # plot results
         for plotter in self._Plotters:
