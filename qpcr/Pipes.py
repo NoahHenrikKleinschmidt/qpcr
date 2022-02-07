@@ -365,6 +365,76 @@ class _Qupid_BasicPlus(BasicPlus):
     def __init__(self):
         super().__init__()
 
+    def _run(self):
+        """
+        The automated standard DeltaDeltaCt pipeline. 
+        Also produces applies and Plotters to produce figures...
+        """
+
+        reader = qpcr._Qupid_SampleReader()
+        reader.replicates(self._replicates)
+        if self._names is not None:
+            reader.names(self._names)
+        
+        analyser = qpcr.Analyser()
+        normaliser = qpcr.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for _normaliser in self._Normalisers:
+            norm = reader.read(_normaliser)
+
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            _sample = reader.read(sample)
+
+            for filter in self._Filters:
+                _sample = filter.pipe(_sample)
+
+            _sample = analyser.pipe(_sample)
+            samples.append(_sample)
+        normaliser.link(samples = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot replicate overview
+        if self._save_to is not None:
+            for filter in self._Filters:
+
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+                
+                figs = filter.plot()
+                self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)
+
 
 if __name__ == "__main__":
 
