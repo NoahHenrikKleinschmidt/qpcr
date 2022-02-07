@@ -395,7 +395,7 @@ if __name__ == "__main__":
 
     iqr_filter = RangeFilter()
     iqr_filter.plotmode("static")
-    iqr_filter.report(".")
+    # iqr_filter.report(".")
     # iqr_filter.set_lim(1.6)
 
     for file in files: 

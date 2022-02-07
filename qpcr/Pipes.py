@@ -423,8 +423,8 @@ class _Qupid_BasicPlus(BasicPlus):
             
             print("plotting with filter: ", filter)
             figs = filter.plot()
-            print(figs)
-            
+            assert len(figs) > 1, "Plotting with Filter doesnt work..."
+
             self._Figures.extend(figs)
 
         # plot results
