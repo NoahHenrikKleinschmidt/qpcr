@@ -932,8 +932,11 @@ class Analyser(aux._ID):
         anchor : str or float
             The internal anchor for normalisation.
             This can be either `"first"` (default, the very first dataset entry),
-            `"grouped"` (first entry for each replicate group), or 
-            any specified numeric value (as `float`).
+            `"grouped"` (first entry for each replicate group), 
+            any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+            If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+            `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+            `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
         """
         self._anchor = anchor
 
@@ -973,8 +976,24 @@ class Analyser(aux._ID):
             self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
         elif self._anchor == "grouped":
             self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
-        else: 
+        elif isinstance(self._anchor, (float, int)): 
             self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        elif type(self._anchor) == type(aux.fileID):
+            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+
+    def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
+        """
+        Performs DeltaCt using a function as anchor
+        """
+        df = self._Assay.get()
+        # update a "data" argument into the kwargs for the anchor_function
+        if "data" not in kwargs.keys(): 
+            kwargs.update(dict(data = df))
+        anchor = anchor_function(**kwargs)
+
+        df["dCt"] = df["Ct"].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df["dCt"])
+
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
@@ -1273,7 +1292,15 @@ if __name__ == "__main__":
     reader.names(groupnames)
 
     analyser = Analyser()
-    analyser.anchor("first")
+
+    def myanchor(data):
+        """
+        computes a custom anchor
+        """
+        df = data.query("group == 0")["Ct"].reset_index(drop=True)
+        return df.mean()
+
+    analyser.anchor(myanchor)
 
     for file in files: 
 
@@ -1288,7 +1315,6 @@ if __name__ == "__main__":
         # analyser.link(sample, force=True, silent = False)
         # analyser.DeltaCt()
         # res = analyser.get()
-
         res = analyser.pipe(sample)
         # print(res)
         analysers.append(res)
