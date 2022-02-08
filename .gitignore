@@ -6,3 +6,4 @@ dist
 *.egg*
 *rex*
 build*
+html
