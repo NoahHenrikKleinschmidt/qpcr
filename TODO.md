@@ -82,3 +82,8 @@ Two new pipelines are supposed to join the current Basic ones: The `Blueprint` p
 
 ### 6. Estimation of qPCR efficiency
 There are some nice papers describing how they estimated qPCR amiplification efficiency based on linreg around the linear window (which we use currently just to get the optimal threshold through R^2). The slope of the optimal window should also be the corresponding efficiency. Let's test this out and add a method to replace the default `efficiency = 2` with a properly computed one. Let's try to get the slopes of our window ranges as well during the optimal threshold search, and check if we can truly use these. In the paper they keep using a log-scale to do things, so, maybe we'll have to do the same. Let's see...
+
+
+### 7. Multi-Assay Excel support
+We want to be able to read and split multi-assay containing excel files into individual csv files that adhere to the structure of input files for the `qpcr` module. We want to make 
+a stand-alone web-app for this as well... 
