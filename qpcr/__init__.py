@@ -58,7 +58,6 @@ class _CORE_Reader(aux._ID):
         specify `name_label` and `Ct_label` as additional arguments.
         """
         suffix = self._filesuffix()
-        print(suffix)
         if suffix == "csv":
             self._csv_read()
         elif suffix == "xlsx":
@@ -583,7 +582,9 @@ class SampleReader(Assay):
         if self._replicates is not None:
             self._Assay.replicates(self._replicates)
             self._Assay.group()
-        
+        else: 
+            aw.Hardwarning("SampleReader:no_reps_yet")
+
         if self._names is not None:
             self._Assay.rename(self._names)
 
@@ -625,7 +626,9 @@ class _Qupid_SampleReader(SampleReader):
         if self._replicates is not None:
             self._Assay.replicates(self._replicates)
             self._Assay.group()
-        
+        else: 
+            aw.Hardwarning("SampleReader:no_reps_yet")
+            
         if self._names is not None:
             self._Assay.rename(self._names)
 

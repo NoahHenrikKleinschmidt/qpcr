@@ -28,6 +28,8 @@ WARNINGS = {
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
+"SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
+
 "Plotter:unknown_data" : "Unknown data linkage!\nOnly qpcr.Results or pd.DataFrame objects are allowed!\nReceived: {obj}",
 "Plotter:already_compiled" : "Figure is laready compiled! Make sure to use force=True if you wish to re-compile the figure!",
 "Plotter:no_fig_yet" : "No figure has been generated yet, nothing to save...",
