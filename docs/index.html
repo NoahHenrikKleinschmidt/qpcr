@@ -31,9 +31,9 @@ Read on to learn what these terms mean and why they are important. </p>
 <h4 id="file-or-datafile">File (or "datafile")</h4>
 <p>A <code>file</code> is simply a datafile. For the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module this means either a <code>csv</code> or an <code>excel</code> file. Files are the at the very basis of our data pipeline.
 However, we do not strictly assume that these files correspond to qPCR assays per se. The default settings of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> processing classes are designed to work with
-datafiles that contain Ct values of <em>one single qPCR assay</em>. However, if your experimental setup looks differently, there are ways to adept <code><a title="qpcr" href="#qpcr">qpcr</a></code> to handle different setups.
+datafiles that contain Ct values of <em>one single qPCR assay</em>. However, if your experimental setup looks differently, there are ways to adapt <code><a title="qpcr" href="#qpcr">qpcr</a></code> to handle different setups.
 However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".</p>
-<h4 id="a-assay">A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></h4>
+<h4 id="an-assay">An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></h4>
 <p>The <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
 if this does not match your setup then this class will still handle the data of your datafiles.</p>
 <h4 id="replicates">Replicates</h4>
@@ -75,7 +75,7 @@ Of course, this means that the <code><a title="qpcr.Normaliser" href="#qpcr.Norm
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in <code><a title="qpcr" href="#qpcr">qpcr</a></code> terms that would be your <em>reference group</em>.
 By default it is assumed that your reference group is the <em>very first</em> group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the <code>anchor</code> is the dataset-internal reference value used for the first $\Delta Ct$.</p>
-<h3 id="assays-vs-normalisers">"assays" vs "normalisers"</h3>
+<h4 id="assays-vs-normalisers">"assays" vs "normalisers"</h4>
 <p>You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code>.
 For all intents and purposes, these terms simply refer to datasets stored as <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> or <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects (ultimately they refer to your datafiles).
 "Assays" are the short notation for assays-of-interest.
@@ -83,18 +83,18 @@ For all intents and purposes, these terms simply refer to datasets stored as <co
 You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode).
 In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays.
 In fact, the entries within the "assay" column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it'll be immediately clear).
-Please, do not confuse these with the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> classes (these are alyways referenced in singular never in plural and are technical terms while the others are conceptual terms)!</p>
+Please, do not confuse these with the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!</p>
 <p>The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.</p>
 <h4 id="results-my-final-results">"Results" = my final results?</h4>
 <p>Yes and no. Anything that is computed through any of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> classes is called a "result" of some kind.
-In practice as soon as you pass your data through a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> you generate some "results" which are actually stored in a separate class called <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> (that's not so important, though).
+In practice as soon as you pass your data through an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> you generate some "results" which are actually stored in a separate class called <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> (that's not so important, though).
 The <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> that comes out of your <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> will probably be what you would think of as your "final results", yes. The one from the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> will probably not be.</p>
 <h4 id="getting-your-data"><code>get</code>ting your data</h4>
-<p>Too many classes and objects? Well, no worries, the underlying data is stored as <code>pandas DataFrames</code>. To get your data from the clutches of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> processing classes you can alyways use the <code>get()</code> method.
+<p>Too many classes and objects? Well, no worries, the underlying data is stored as <code>pandas DataFrames</code>. To get your data from the clutches of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> processing classes you can always use the <code>get()</code> method.
 <code>get</code> is pretty universal in the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module, so whenever you want to extract your data, there's a <code>get()</code> method to help you. </p>
 <h4 id="link-vs-add-vs-pipe"><code>link</code> vs <code>add</code> vs <code>pipe</code></h4>
 <p>Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object or a single filepath as <code>string</code>)
-usually have a <code>link()</code> method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> would perform <code>DeltaCt()</code> for instance).
+usually have a <code>link()</code> method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> would perform <code>DeltaCt()</code> for instance).
 Some classes such as the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> have a wrapper that will call both their <code>link()</code> as well as their actual core-functional method together in one go. This wrapper is called <code>pipe()</code>.
 So for the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> you could either manually use <code>link()</code> and then <code>DeltaCt()</code>, or simply call <code>pipe()</code> which does both for you. It is noteworthy that <code>pipe</code> methods actually <em>return</em> whatever
 their output is, which is <em>not</em> normally the case otherwise (see below on how to get your data out of the classes).
@@ -119,10 +119,10 @@ Read on to learn what these terms mean and why they are important.
 #### File (or &#34;datafile&#34;)
 A `file` is simply a datafile. For the `qpcr` module this means either a `csv` or an `excel` file. Files are the at the very basis of our data pipeline. 
 However, we do not strictly assume that these files correspond to qPCR assays per se. The default settings of the `qpcr` processing classes are designed to work with 
-datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adept `qpcr` to handle different setups.
+datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
 However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a &#34;qPCR assay&#34;.
 
-#### A `qpcr.Assay`
+#### An `qpcr.Assay`
 The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
 if this does not match your setup then this class will still handle the data of your datafiles.
 
@@ -170,7 +170,7 @@ If your datafiles contain one assay each, and your groups of replicates are your
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it&#39;s not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 
-### &#34;assays&#34; vs &#34;normalisers&#34;
+#### &#34;assays&#34; vs &#34;normalisers&#34;
 You will likely encounter methods and/or arguments that speak of &#34;assays&#34; and &#34;normalisers&#34;, especially with the `qpcr.Normaliser`. 
 For all intents and purposes, these terms simply refer to datasets stored as `qpcr.Assay` or `qpcr.Results` objects (ultimately they refer to your datafiles). 
 &#34;Assays&#34; are the short notation for assays-of-interest. 
@@ -178,22 +178,22 @@ For all intents and purposes, these terms simply refer to datasets stored as `qp
 You will also find that the term &#34;assays&#34; is used within the final results dataframe (when using the summary-statistics mode). 
 In this setting &#34;assays&#34; refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
 In fact, the entries within the &#34;assay&#34; column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it&#39;ll be immediately clear).
-Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are alyways referenced in singular never in plural and are technical terms while the others are conceptual terms)!
+Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!
 
 The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.
 
 #### &#34;Results&#34; = my final results?
 Yes and no. Anything that is computed through any of the `qpcr` classes is called a &#34;result&#34; of some kind.
-In practice as soon as you pass your data through a `qpcr.Analyser` or `qpcr.Normaliser` you generate some &#34;results&#34; which are actually stored in a separate class called `qpcr.Results` (that&#39;s not so important, though).
+In practice as soon as you pass your data through an `qpcr.Analyser` or `qpcr.Normaliser` you generate some &#34;results&#34; which are actually stored in a separate class called `qpcr.Results` (that&#39;s not so important, though).
 The `qpcr.Results` that comes out of your `qpcr.Normaliser` will probably be what you would think of as your &#34;final results&#34;, yes. The one from the `qpcr.Analyser` will probably not be.
 
 #### `get`ting your data
-Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` processing classes you can alyways use the `get()` method. 
+Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` processing classes you can always use the `get()` method. 
 `get` is pretty universal in the `qpcr` module, so whenever you want to extract your data, there&#39;s a `get()` method to help you. 
 
 #### `link` vs `add` vs `pipe`
 Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single `qpcr.Assay` object or a single filepath as `string`)
-usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (a `qpcr.Analyser` would perform `DeltaCt()` for instance). 
+usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an `qpcr.Analyser` would perform `DeltaCt()` for instance). 
 Some classes such as the `qpcr.Analyser` have a wrapper that will call both their `link()` as well as their actual core-functional method together in one go. This wrapper is called `pipe()`. 
 So for the `qpcr.Analyser` you could either manually use `link()` and then `DeltaCt()`, or simply call `pipe()` which does both for you. It is noteworthy that `pipe` methods actually _return_ whatever
 their output is, which is *not* normally the case otherwise (see below on how to get your data out of the classes).
@@ -533,7 +533,7 @@ class SampleReader(Assay):
     &#34;&#34;&#34;
     Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
     stored raw data in a pandas dataframe. 
-    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Its `read()` method directly returns an `qpcr.Assay` object that can be piped to Analyser. 
     Note
     ----
     This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
@@ -583,7 +583,7 @@ class SampleReader(Assay):
         Returns
         -------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing the grouped and renamed data.
+            An `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
@@ -621,7 +621,7 @@ class Results(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object whose group_name column will be copied.
+            An `qpcr.Assay` object whose group_name column will be copied.
         &#34;&#34;&#34;
         self._Assay = Assay
         if self.is_empty():
@@ -649,7 +649,7 @@ class Results(aux._ID):
         Returns 
         -------
         names : list or None
-            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+            The adopted `group_names` (only works if an `qpcr.Assay` have been linked using `adopt_names()`!)
         &#34;&#34;&#34;
         if self._Assay is not None:
             return self._Assay.names(as_set)
@@ -916,7 +916,7 @@ class Analyser(aux._ID):
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        An `qpcr.Assay` object (optional) to compute DeltaCT on. 
         `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
     &#34;&#34;&#34;
     def __init__(self, Assay:Assay = None):
@@ -953,7 +953,7 @@ class Analyser(aux._ID):
 
     def link(self, Assay:Assay, force = False, silent = False):
         &#34;&#34;&#34;
-        Links a `qpcr.Assay` object to the Analyser.
+        Links an `qpcr.Assay` object to the Analyser.
         Note
         ----
         If there are any precomputed results, no new data will be linked, unless force=True is called. 
@@ -962,7 +962,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing data.
+            An `qpcr.Assay` object containing data.
         
         force : bool
             Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
@@ -1000,7 +1000,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+            An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -1180,10 +1180,10 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         samples : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be normalised against a normaliser.
         
         normalisers : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
             combining the normalisers can be specified using the `prep_func()` method.
         &#34;&#34;&#34;
@@ -1457,8 +1457,8 @@ This is designed for lightweight …</p></div>
 </dd>
 <dt><code class="name"><a title="qpcr.Plotters" href="Plotters.html">qpcr.Plotters</a></code></dt>
 <dd>
-<div class="desc"><p>This module is designed for streamlined data visualisation of the qpcr generated results
-It is designed to work directly with qpcr.Results() instances.</p></div>
+<div class="desc"><p>This module is designed for streamlined data visualisation of the <code><a title="qpcr" href="#qpcr">qpcr</a></code>-generated results
+It is designed to work directly with <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects.</p></div>
 </dd>
 </dl>
 </section>
@@ -1481,7 +1481,7 @@ Note</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object (optional) to compute DeltaCT on.
+<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object (optional) to compute DeltaCT on.
 <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects can be iteratively linked subsequently using <code>link()</code>.</dd>
 </dl></div>
 <details class="source">
@@ -1498,7 +1498,7 @@ Note</p>
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        An `qpcr.Assay` object (optional) to compute DeltaCT on. 
         `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
     &#34;&#34;&#34;
     def __init__(self, Assay:Assay = None):
@@ -1535,7 +1535,7 @@ Note</p>
 
     def link(self, Assay:Assay, force = False, silent = False):
         &#34;&#34;&#34;
-        Links a `qpcr.Assay` object to the Analyser.
+        Links an `qpcr.Assay` object to the Analyser.
         Note
         ----
         If there are any precomputed results, no new data will be linked, unless force=True is called. 
@@ -1544,7 +1544,7 @@ Note</p>
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing data.
+            An `qpcr.Assay` object containing data.
         
         force : bool
             Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
@@ -1582,7 +1582,7 @@ Note</p>
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+            An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -1918,7 +1918,7 @@ A <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> object t
 <span>def <span class="ident">link</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>, force=False, silent=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Links a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to the Analyser.
+<div class="desc"><p>Links an <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to the Analyser.
 Note</p>
 <hr>
 <p>If there are any precomputed results, no new data will be linked, unless force=True is called.
@@ -1926,7 +1926,7 @@ The user is notified if results are already present and how to proceed. </p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing data.</dd>
+<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing data.</dd>
 <dt><strong><code>force</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Any already linked <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects (and their data and results) will be overwritten
 if <code>force = True</code> (default is <code>force = False</code>).</dd>
@@ -1940,7 +1940,7 @@ This is only relevant if <code>force = True</code>.</dd>
 </summary>
 <pre><code class="python">def link(self, Assay:Assay, force = False, silent = False):
     &#34;&#34;&#34;
-    Links a `qpcr.Assay` object to the Analyser.
+    Links an `qpcr.Assay` object to the Analyser.
     Note
     ----
     If there are any precomputed results, no new data will be linked, unless force=True is called. 
@@ -1949,7 +1949,7 @@ This is only relevant if <code>force = True</code>.</dd>
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object containing data.
+        An `qpcr.Assay` object containing data.
     
     force : bool
         Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
@@ -1987,7 +1987,7 @@ This is the suggested application of the <code><a title="qpcr.Analyser" href="#q
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to be linked to the Analyser for DeltaCt computation.</dd>
+<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to be linked to the Analyser for DeltaCt computation.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>Any additional keyword arguments to be passed to the <code>DeltaCt()</code> method.</dd>
 </dl>
@@ -2010,7 +2010,7 @@ A <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> object.<
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+        An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
     
     **kwargs
         Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -2615,10 +2615,10 @@ This requires that all have been analysed in the same way before!</p></div>
         Parameters
         ----------
         samples : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be normalised against a normaliser.
         
         normalisers : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
             combining the normalisers can be specified using the `prep_func()` method.
         &#34;&#34;&#34;
@@ -2850,9 +2850,9 @@ This requires that all have been analysed in the same way before!</p></div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>samples</code></strong> :&ensp;<code>list</code> or <code>tuple</code></dt>
-<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be normalised against a normaliser.</dd>
+<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be normalised against a normaliser.</dd>
 <dt><strong><code>normalisers</code></strong> :&ensp;<code>list</code> or <code>tuple</code></dt>
-<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be used as normalisers. These will be
+<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be used as normalisers. These will be
 combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of
 combining the normalisers can be specified using the <code>prep_func()</code> method.</dd>
 </dl></div>
@@ -2867,10 +2867,10 @@ combining the normalisers can be specified using the <code>prep_func()</code> me
     Parameters
     ----------
     samples : list or tuple
-        A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+        A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be normalised against a normaliser.
     
     normalisers : list or tuple
-        A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+        A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be used as normalisers. These will be
         combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
         combining the normalisers can be specified using the `prep_func()` method.
     &#34;&#34;&#34;
@@ -3194,7 +3194,7 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object whose group_name column will be copied.
+            An `qpcr.Assay` object whose group_name column will be copied.
         &#34;&#34;&#34;
         self._Assay = Assay
         if self.is_empty():
@@ -3222,7 +3222,7 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
         Returns 
         -------
         names : list or None
-            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+            The adopted `group_names` (only works if an `qpcr.Assay` have been linked using `adopt_names()`!)
         &#34;&#34;&#34;
         if self._Assay is not None:
             return self._Assay.names(as_set)
@@ -3526,7 +3526,7 @@ This step can only be performed once!</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object whose group_name column will be copied.</dd>
+<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object whose group_name column will be copied.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -3541,7 +3541,7 @@ This step can only be performed once!</p>
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object whose group_name column will be copied.
+        An `qpcr.Assay` object whose group_name column will be copied.
     &#34;&#34;&#34;
     self._Assay = Assay
     if self.is_empty():
@@ -3724,7 +3724,7 @@ The source id of the results is added as column-name suffix. </p>
 <dd>
 <div class="desc"><h2 id="returns">Returns</h2>
 <p>names : list or None
-The adopted <code>group_names</code> (only works if a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> have been linked using <code>adopt_names()</code>!)</p></div>
+The adopted <code>group_names</code> (only works if an <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> have been linked using <code>adopt_names()</code>!)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3734,7 +3734,7 @@ The adopted <code>group_names</code> (only works if a <code><a title="qpcr.Assay
     Returns 
     -------
     names : list or None
-        The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+        The adopted `group_names` (only works if an `qpcr.Assay` have been linked using `adopt_names()`!)
     &#34;&#34;&#34;
     if self._Assay is not None:
         return self._Assay.names(as_set)
@@ -3941,7 +3941,7 @@ A list of qpcr.Results objects containing only a single dCt column each (retaini
 <dd>
 <div class="desc"><p>Sets up a Reader+Assay pipeline that reads in a sample file and handles the
 stored raw data in a pandas dataframe.
-Its <code>read()</code> method directly returns a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object that can be piped to Analyser.
+Its <code>read()</code> method directly returns an <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object that can be piped to Analyser.
 Note</p>
 <hr>
 <p>This is the suggested to read in data, instead of manually setting up Reader and Assay objects.</p></div>
@@ -3953,7 +3953,7 @@ Note</p>
     &#34;&#34;&#34;
     Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
     stored raw data in a pandas dataframe. 
-    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Its `read()` method directly returns an `qpcr.Assay` object that can be piped to Analyser. 
     Note
     ----
     This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
@@ -4003,7 +4003,7 @@ Note</p>
         Returns
         -------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing the grouped and renamed data.
+            An `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
@@ -4070,7 +4070,7 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing the grouped and renamed data.</dd>
+<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing the grouped and renamed data.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4090,7 +4090,7 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
     Returns
     -------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object containing the grouped and renamed data.
+        An `qpcr.Assay` object containing the grouped and renamed data.
     &#34;&#34;&#34;
     self._Reader = Reader(filename)
     self._Reader.id(aux.fileID(filename))
@@ -4164,18 +4164,16 @@ or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the se
 <ul>
 <li><a href="#terminology">Terminology</a><ul>
 <li><a href="#file-or-datafile">File (or "datafile")</a></li>
-<li><a href="#a-qpcrassay">A qpcr.Assay</a></li>
+<li><a href="#an-qpcrassay">An qpcr.Assay</a></li>
 <li><a href="#replicates">Replicates</a></li>
 <li><a href="#groups-of-replicates">Groups (of Replicates)</a></li>
 <li><a href="#sample">"Sample"</a></li>
 <li><a href="#delta-ct-vs-delta-delta-ct-vs-normalisation">Delta-Ct vs Delta-Delta-Ct vs normalisation ???</a></li>
 <li><a href="#the-anchor-and-the-reference-group">The anchor and the "reference group"</a></li>
-<li><a href="#assays-vs-normalisers">"assays" vs "normalisers"</a><ul>
+<li><a href="#assays-vs-normalisers">"assays" vs "normalisers"</a></li>
 <li><a href="#results-my-final-results">"Results" = my final results?</a></li>
 <li><a href="#getting-your-data">getting your data</a></li>
 <li><a href="#link-vs-add-vs-pipe">link vs add vs pipe</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

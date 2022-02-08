@@ -11,10 +11,10 @@ Read on to learn what these terms mean and why they are important.
 #### File (or "datafile")
 A `file` is simply a datafile. For the `qpcr` module this means either a `csv` or an `excel` file. Files are the at the very basis of our data pipeline. 
 However, we do not strictly assume that these files correspond to qPCR assays per se. The default settings of the `qpcr` processing classes are designed to work with 
-datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adept `qpcr` to handle different setups.
+datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
 However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
 
-#### A `qpcr.Assay`
+#### An `qpcr.Assay`
 The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
 if this does not match your setup then this class will still handle the data of your datafiles.
 
@@ -62,7 +62,7 @@ If your datafiles contain one assay each, and your groups of replicates are your
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 
-### "assays" vs "normalisers"
+#### "assays" vs "normalisers"
 You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the `qpcr.Normaliser`. 
 For all intents and purposes, these terms simply refer to datasets stored as `qpcr.Assay` or `qpcr.Results` objects (ultimately they refer to your datafiles). 
 "Assays" are the short notation for assays-of-interest. 
@@ -70,22 +70,22 @@ For all intents and purposes, these terms simply refer to datasets stored as `qp
 You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode). 
 In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
 In fact, the entries within the "assay" column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it'll be immediately clear).
-Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are alyways referenced in singular never in plural and are technical terms while the others are conceptual terms)!
+Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!
 
 The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.
 
 #### "Results" = my final results?
 Yes and no. Anything that is computed through any of the `qpcr` classes is called a "result" of some kind.
-In practice as soon as you pass your data through a `qpcr.Analyser` or `qpcr.Normaliser` you generate some "results" which are actually stored in a separate class called `qpcr.Results` (that's not so important, though).
+In practice as soon as you pass your data through an `qpcr.Analyser` or `qpcr.Normaliser` you generate some "results" which are actually stored in a separate class called `qpcr.Results` (that's not so important, though).
 The `qpcr.Results` that comes out of your `qpcr.Normaliser` will probably be what you would think of as your "final results", yes. The one from the `qpcr.Analyser` will probably not be.
 
 #### `get`ting your data
-Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` processing classes you can alyways use the `get()` method. 
+Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` processing classes you can always use the `get()` method. 
 `get` is pretty universal in the `qpcr` module, so whenever you want to extract your data, there's a `get()` method to help you. 
 
 #### `link` vs `add` vs `pipe`
 Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single `qpcr.Assay` object or a single filepath as `string`)
-usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (a `qpcr.Analyser` would perform `DeltaCt()` for instance). 
+usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an `qpcr.Analyser` would perform `DeltaCt()` for instance). 
 Some classes such as the `qpcr.Analyser` have a wrapper that will call both their `link()` as well as their actual core-functional method together in one go. This wrapper is called `pipe()`. 
 So for the `qpcr.Analyser` you could either manually use `link()` and then `DeltaCt()`, or simply call `pipe()` which does both for you. It is noteworthy that `pipe` methods actually _return_ whatever
 their output is, which is *not* normally the case otherwise (see below on how to get your data out of the classes).
@@ -425,7 +425,7 @@ class SampleReader(Assay):
     """
     Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
     stored raw data in a pandas dataframe. 
-    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Its `read()` method directly returns an `qpcr.Assay` object that can be piped to Analyser. 
     Note
     ----
     This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
@@ -475,7 +475,7 @@ class SampleReader(Assay):
         Returns
         -------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing the grouped and renamed data.
+            An `qpcr.Assay` object containing the grouped and renamed data.
         """
         self._Reader = Reader(filename)
         self._Reader.id(aux.fileID(filename))
@@ -513,7 +513,7 @@ class Results(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object whose group_name column will be copied.
+            An `qpcr.Assay` object whose group_name column will be copied.
         """
         self._Assay = Assay
         if self.is_empty():
@@ -541,7 +541,7 @@ class Results(aux._ID):
         Returns 
         -------
         names : list or None
-            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+            The adopted `group_names` (only works if an `qpcr.Assay` have been linked using `adopt_names()`!)
         """
         if self._Assay is not None:
             return self._Assay.names(as_set)
@@ -808,7 +808,7 @@ class Analyser(aux._ID):
     Parameters
     ----------
     Assay : qpcr.Assay
-        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        An `qpcr.Assay` object (optional) to compute DeltaCT on. 
         `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
     """
     def __init__(self, Assay:Assay = None):
@@ -845,7 +845,7 @@ class Analyser(aux._ID):
 
     def link(self, Assay:Assay, force = False, silent = False):
         """
-        Links a `qpcr.Assay` object to the Analyser.
+        Links an `qpcr.Assay` object to the Analyser.
         Note
         ----
         If there are any precomputed results, no new data will be linked, unless force=True is called. 
@@ -854,7 +854,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object containing data.
+            An `qpcr.Assay` object containing data.
         
         force : bool
             Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
@@ -892,7 +892,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+            An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -1072,10 +1072,10 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         samples : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be normalised against a normaliser.
         
         normalisers : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            A list of `qpcr.Results` objects coming from an `qpcr.Analyser` which shall be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
             combining the normalisers can be specified using the `prep_func()` method.
         """

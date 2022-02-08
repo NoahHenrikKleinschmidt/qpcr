@@ -1,6 +1,6 @@
 """
-This module is designed for streamlined data visualisation of the qpcr generated results
-It is designed to work directly with qpcr.Results() instances. 
+This module is designed for streamlined data visualisation of the `qpcr`-generated results
+It is designed to work directly with `qpcr.Results` objects. 
 """
 
 import qpcr.__init__ as qpcr
