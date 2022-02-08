@@ -73,6 +73,7 @@ Of course, this means that the <code><a title="qpcr.Normaliser" href="#qpcr.Norm
 <h4 id="the-anchor-and-the-reference-group">The <code>anchor</code> and the "reference group"</h4>
 <p>Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The <code>anchor</code> is simply the intra-dataset reference used by the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> to perform its first $\Delta Ct$.
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in <code><a title="qpcr" href="#qpcr">qpcr</a></code> terms that would be your <em>reference group</em>.
+Usually your <code>anchor</code> is part of or generated from the Ct values of your <em>reference group</em> (like their mean for instance).
 By default it is assumed that your reference group is the <em>very first</em> group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the <code>anchor</code> is the dataset-internal reference value used for the first $\Delta Ct$.</p>
 <h4 id="assays-vs-normalisers">"assays" vs "normalisers"</h4>
@@ -167,6 +168,7 @@ Of course, this means that the `qpcr.Normaliser` will need to have knowledge abo
 #### The `anchor` and the &#34;reference group&#34;
 Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some &#34;wildtype&#34;, &#34;untreated&#34;, or &#34;control&#34; sample, right? Well, in `qpcr` terms that would be your _reference group_.
+Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their mean for instance).
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it&#39;s not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 

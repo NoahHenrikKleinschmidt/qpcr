@@ -59,6 +59,7 @@ Of course, this means that the `qpcr.Normaliser` will need to have knowledge abo
 #### The `anchor` and the "reference group"
 Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in `qpcr` terms that would be your _reference group_.
+Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their mean for instance).
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 
