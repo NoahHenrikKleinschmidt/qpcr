@@ -41,6 +41,19 @@ We add a method to the SampleReader which will adopt Replicate Group names based
 | ----- | ---- | ----------- | ----- |
 |    4.1   |    x  |            |       |
 
+
+### 5. Support Excel Files
+Now users can upload an excel file containing the replicates and their ct values.
+The qpcr.Reader will parse the excel sheet to find the replciates and their ct values and generate a pandas dataframe from them
+
+- 5.1 Support Excel File Reading
+- 5.2 Enable Excel Files for Qupid
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    5.1   |    x  |            |       |
+|    5.2   |    x (I think?)  |            |       |
+
 # New features of *some future* release
 
 New planned features for any future release are:
