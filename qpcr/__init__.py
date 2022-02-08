@@ -250,10 +250,19 @@ class _Qupid_Reader(_CORE_Reader):
     """
     def __init__(self, file) -> pd.DataFrame: 
         super().__init__()
+        self._filename = file.name
         self._content = file.read().decode()
         self._src = StringIO(self._content)
-        self._delimiter = ";" if self._is_csv2() else ","
+        if self._filesuffix() == "csv":
+            self._delimiter = ";" if self._is_csv2() else ","
         self.read()
+
+    def _filesuffix(self):
+        """
+        Returns the file-suffix of the provided file
+        """
+        suffix = self._filename.split(".")[-1]
+        return suffix
 
     def _is_csv2(self):
         """
