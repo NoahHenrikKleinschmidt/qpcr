@@ -177,15 +177,10 @@ class _CORE_Reader(aux._ID):
                                 names = RAW_COL_NAMES
                             )
         except: 
-            data = pd.read_csv(
-                                self._src,
-                                sep = self._delimiter,
-                            )
-            data = data.to_numpy()
-            df = self._parse_read(data, **kwargs)
+            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
         self._df = df
-        
+
     def _filesuffix(self):
         """
         Returns the file-suffix of the provided file
