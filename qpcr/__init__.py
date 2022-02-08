@@ -63,22 +63,22 @@ class _CORE_Reader(aux._ID):
         elif suffix == "xlsx":
             self._excel_read(**kwargs)
 
-
-    def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
+    def _parse_read(self, data, name_label = "Name", Ct_label = "Ct", **kwargs):
         """
-        Reads the given data file if it's an excel file
+        Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
+        This is the funtional core of the _excel_read() method, but also works as a backup read method
+        in case a csv converted input file is provided that does not conform to the default two-column structure
+        requirements. 
 
         Parameters
         ----------
+        data : np.ndarray
+            A numpy array of the raw data file.
         name_label : str
             The header above the replicate sample ids.
         Ct_label : str
             The header above the replicates' Ct values.
         """
-        # read data and convert to numpy array
-        data = pd.read_excel(self._src)
-        data = data.to_numpy()
-
         # locate name_label and Ct_label
         names_loc = np.argwhere(data == name_label)
         cts_loc = np.argwhere(data == Ct_label)
@@ -97,7 +97,27 @@ class _CORE_Reader(aux._ID):
                                     Ct = ct_values
                                 )
                         )
+        return df
+
+    def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
+        """
+        Reads the given data file if it's an excel file
+
+        Parameters
+        ----------
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates' Ct values.
+        """
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src)
+        data = data.to_numpy()
+
+        # parse file and get data
+        df = self._parse_read(data, name_label, Ct_label)
         self._df = df
+        
 
     def _get_values_from_range(self, data, indices):
         """
@@ -144,17 +164,28 @@ class _CORE_Reader(aux._ID):
         return names_loc, cts_loc
             
         
-    def _csv_read(self):
+    def _csv_read(self, **kwargs):
         """
         Reads the given data file if it's a csv file
         """
-        self._df = pd.read_csv(
+        df = None
+        try: 
+            df = pd.read_csv(
                                 self._src, 
                                 sep = self._delimiter, 
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
+        except: 
+            data = pd.read_csv(
+                                self._src,
+                                sep = self._delimiter,
+                            )
+            data = data.to_numpy()
+            df = self._parse_read(data, **kwargs)
 
+        self._df = df
+        
     def _filesuffix(self):
         """
         Returns the file-suffix of the provided file
