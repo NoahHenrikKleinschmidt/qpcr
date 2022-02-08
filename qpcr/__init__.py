@@ -44,9 +44,110 @@ class _CORE_Reader(aux._ID):
         """
         return len(self._df["Sample"])
 
-    def read(self):
+
+    def read(self, **kwargs):
         """
-        Reads the given data file
+        Reads the given data file.
+
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file. Note, this assumes by default
+        that the replicates are headed by the label `"Name"` and the corresponding Ct values
+        are headed by the label `"Ct"`. Both labels have to be on the same row. 
+
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
+        """
+        suffix = self._filesuffix()
+        print(suffix)
+        if suffix == "csv":
+            self._csv_read()
+        elif suffix == "xlsx":
+            self._excel_read(**kwargs)
+
+
+    def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
+        """
+        Reads the given data file if it's an excel file
+
+        Parameters
+        ----------
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates' Ct values.
+        """
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src)
+        data = data.to_numpy()
+
+        # locate name_label and Ct_label
+        names_loc = np.argwhere(data == name_label)
+        cts_loc = np.argwhere(data == Ct_label)
+
+        # check if locations match, if not, get the one where both share the same row
+        names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
+
+        # get the values from the excel sheet array
+        sample_ids = self._get_values_from_range(data, names_loc)
+        ct_values = self._get_values_from_range(data, cts_loc)
+
+        # assemble the dataframe
+        df = pd.DataFrame(
+                            dict(
+                                    Sample = sample_ids, 
+                                    Ct = ct_values
+                                )
+                        )
+        self._df = df
+
+    def _get_values_from_range(self, data, indices):
+        """
+        Gets values from an excel spreadhseet as numpy ndarray starting from the indices
+        provided until the cells are filled with np.nan
+        """
+        row, col = indices
+        idx = 0
+        value = 0
+        while True:
+            idx += 1
+            try: value = data[row + idx, col]
+            except: break
+            if value == np.nan: 
+                break
+        
+        values = data[  # we start at row+1 to exclude the header
+                        slice(row+1, row + idx), 
+                        col
+                    ]
+        return values
+
+    def _adjust_loc_shapes(self, names_loc, cts_loc):
+        """
+        Adjusts the location indices of the start of sample ids and ct values,
+        in case the headers were identified multiple times in the spreadsheet.
+
+        It returns the location indices for both names (ids) and ct values that are 
+        on the same row.
+        """
+        trans_names = np.transpose(names_loc)
+        trans_cts = np.transpose(cts_loc)
+
+        # get common index for the row, first apply to names
+        common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
+        names_loc = names_loc[common_row_index]
+        # now also apply to cts
+        common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
+        cts_loc = cts_loc[common_row_index]
+
+        # now reduce shape back to 1D
+        names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
+
+        return names_loc, cts_loc
+            
+        
+    def _csv_read(self):
+        """
+        Reads the given data file if it's a csv file
         """
         self._df = pd.read_csv(
                                 self._src, 
@@ -54,6 +155,13 @@ class _CORE_Reader(aux._ID):
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
+
+    def _filesuffix(self):
+        """
+        Returns the file-suffix of the provided file
+        """
+        suffix = self._src.split(".")[-1]
+        return suffix
 
 class Reader(_CORE_Reader):
     """
@@ -69,7 +177,8 @@ class Reader(_CORE_Reader):
     def __init__(self, filename:str) -> pd.DataFrame: 
         super().__init__()
         self._src = filename
-        self._delimiter = ";" if self._is_csv2() else ","
+        if self._filesuffix() == "csv":
+            self._delimiter = ";" if self._is_csv2() else ","
         self.read()
 
     def _is_csv2(self):
@@ -1308,6 +1417,8 @@ class Normaliser(aux._ID):
 if __name__ == "__main__":
     
     files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    files = ["Example Data 2/28S.csv", "Example Data 2/actin.csv", "Example Data 2/HNRNPL_nmd.csv", "Example Data 2/HNRNPL_prot.csv"]
+
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
     analysers = []
