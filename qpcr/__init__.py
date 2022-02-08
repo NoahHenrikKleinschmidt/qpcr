@@ -583,7 +583,7 @@ class SampleReader(Assay):
             self._Assay.replicates(self._replicates)
             self._Assay.group()
         else: 
-            aw.Hardwarning("SampleReader:no_reps_yet")
+            aw.HardWarning("SampleReader:no_reps_yet")
 
         if self._names is not None:
             self._Assay.rename(self._names)
@@ -627,8 +627,8 @@ class _Qupid_SampleReader(SampleReader):
             self._Assay.replicates(self._replicates)
             self._Assay.group()
         else: 
-            aw.Hardwarning("SampleReader:no_reps_yet")
-            
+            aw.HardWarning("SampleReader:no_reps_yet")
+
         if self._names is not None:
             self._Assay.rename(self._names)
 
