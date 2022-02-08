@@ -190,14 +190,15 @@ class _CORE_Reader(aux._ID):
 
 class Reader(_CORE_Reader):
     """
-    Reads qpcr raw data files in csv format. 
+    Reads qpcr raw data files in csv or excel format. 
 
     Parameters
     ----------
     filename : str
-        A filename to a csv containing Ct values. 
-        The file has to have two named columns; one for sample names, one for Ct values. 
+        A filename. 
+        If the file is a `csv` file, it has to have two named columns; one for sample names, one for Ct values. 
         Both csv (, spearated) and csv2 (; separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
     """
     def __init__(self, filename:str) -> pd.DataFrame: 
         super().__init__()
