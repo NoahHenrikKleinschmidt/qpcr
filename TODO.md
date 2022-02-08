@@ -32,6 +32,7 @@ We added a new pipeline `Blueprint` which allows customization of Analyser, Norm
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    3.1   |  x    |            |       |
+
 ### 4. Infer group names
 We add a method to the SampleReader which will adopt Replicate Group names based on their given sample column.  We will start with a simple inference which will only adopt group names if all replicates share the same name.
 

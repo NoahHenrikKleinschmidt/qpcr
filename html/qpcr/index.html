@@ -1,0 +1,4379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>qpcr API documentation</title>
+<meta name="description" content="This module is designed to provide functions to analyse qPCR data.
+It is designed for maximal user-friendliness and streamlined data-visualisation." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>qpcr</code></h1>
+</header>
+<section id="section-intro">
+<p>This module is designed to provide functions to analyse qPCR data.
+It is designed for maximal user-friendliness and streamlined data-visualisation.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module is designed to provide functions to analyse qPCR data. 
+It is designed for maximal user-friendliness and streamlined data-visualisation.
+&#34;&#34;&#34;
+
+import pandas as pd
+import qpcr._auxiliary as aux
+from qpcr._auxiliary import warnings as aw
+import os
+import numpy as np 
+from copy import deepcopy 
+from io import StringIO
+
+# default column names for raw Ct data files (don&#39;t change this!)
+RAW_COL_NAMES = [&#34;Sample&#34;, &#34;Ct&#34;]
+
+class _CORE_Reader(aux._ID):
+    &#34;&#34;&#34;
+    The class handling the core functions of the Reader class. 
+    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+    inherit from this. 
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._src = None
+        self._delimiter = None
+        self._df = None
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        data : pd.DataFrame
+            The samples dataframe.
+        &#34;&#34;&#34;
+        return self._df
+
+    def n(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        n : int
+            The number of samples in the dataframe.
+        &#34;&#34;&#34;
+        return len(self._df[&#34;Sample&#34;])
+
+
+    def read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file.
+
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file. Note, this assumes by default
+        that the replicates are headed by the label `&#34;Name&#34;` and the corresponding Ct values
+        are headed by the label `&#34;Ct&#34;`. Both labels have to be on the same row. 
+
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
+        &#34;&#34;&#34;
+        suffix = self._filesuffix()
+        if suffix == &#34;csv&#34;:
+            self._csv_read()
+        elif suffix == &#34;xlsx&#34;:
+            self._excel_read(**kwargs)
+
+    def _parse_read(self, data, name_label = &#34;Name&#34;, Ct_label = &#34;Ct&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
+        This is the funtional core of the _excel_read() method, but also works as a backup read method
+        in case a csv converted input file is provided that does not conform to the default two-column structure
+        requirements. 
+
+        Parameters
+        ----------
+        data : np.ndarray
+            A numpy array of the raw data file.
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        # locate name_label and Ct_label
+        names_loc = np.argwhere(data == name_label)
+        cts_loc = np.argwhere(data == Ct_label)
+
+        # check if locations match, if not, get the one where both share the same row
+        names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
+
+        # get the values from the excel sheet array
+        sample_ids = self._get_values_from_range(data, names_loc)
+        ct_values = self._get_values_from_range(data, cts_loc)
+
+        # assemble the dataframe
+        df = pd.DataFrame(
+                            dict(
+                                    Sample = sample_ids, 
+                                    Ct = ct_values
+                                )
+                        )
+        return df
+
+    def _excel_read(self, name_label = &#34;Name&#34;, Ct_label = &#34;Ct&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s an excel file
+
+        Parameters
+        ----------
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src)
+        data = data.to_numpy()
+
+        # parse file and get data
+        df = self._parse_read(data, name_label, Ct_label)
+        self._df = df
+        
+
+    def _get_values_from_range(self, data, indices):
+        &#34;&#34;&#34;
+        Gets values from an excel spreadhseet as numpy ndarray starting from the indices
+        provided until the cells are filled with np.nan
+        &#34;&#34;&#34;
+        row, col = indices
+        idx = 0
+        value = 0
+        while True:
+            idx += 1
+            try: value = data[row + idx, col]
+            except: break
+            if value == np.nan: 
+                break
+        
+        values = data[  # we start at row+1 to exclude the header
+                        slice(row+1, row + idx+1), 
+                        col
+                    ]
+        return values
+
+    def _adjust_loc_shapes(self, names_loc, cts_loc):
+        &#34;&#34;&#34;
+        Adjusts the location indices of the start of sample ids and ct values,
+        in case the headers were identified multiple times in the spreadsheet.
+
+        It returns the location indices for both names (ids) and ct values that are 
+        on the same row.
+        &#34;&#34;&#34;
+        trans_names = np.transpose(names_loc)
+        trans_cts = np.transpose(cts_loc)
+
+        # get common index for the row, first apply to names
+        common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
+        names_loc = names_loc[common_row_index]
+        # now also apply to cts
+        common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
+        cts_loc = cts_loc[common_row_index]
+
+        # now reduce shape back to 1D
+        names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
+
+        return names_loc, cts_loc
+            
+        
+    def _csv_read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s a csv file
+        &#34;&#34;&#34;
+        df = None
+        try: 
+            df = pd.read_csv(
+                                self._src, 
+                                sep = self._delimiter, 
+                                header = self._has_header(), 
+                                names = RAW_COL_NAMES
+                            )
+        except: 
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        self._df = df
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._src.split(&#34;.&#34;)[-1]
+        return suffix
+
+class Reader(_CORE_Reader):
+    &#34;&#34;&#34;
+    Reads qpcr raw data files in csv or excel format. 
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
+    &#34;&#34;&#34;
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read()
+        if &#34;;&#34; in content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read().split(&#34;\n&#34;)[0]
+            content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
+
+
+class _Qupid_Reader(_CORE_Reader):
+    &#34;&#34;&#34;
+    This Reader class works with streamlit&#39;s UploadedFile class.
+    
+    Note
+    -------
+    We have to use a little hack to make the UploadedFile readable.
+    We convert to a string and then back to a StringIO which we can then pass to pandas...
+    
+    Parameters
+    ----------
+    file
+        A streamlit UploadedFile object
+    &#34;&#34;&#34;
+    def __init__(self, file) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._filename = file.name
+        if self._filesuffix() == &#34;csv&#34;:
+            self._content = file.read().decode()
+            self._src = StringIO(self._content)
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        else: 
+            self._src = file
+        self.read()
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._filename.split(&#34;.&#34;)[-1]
+        return suffix
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        if &#34;;&#34; in self._content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        content = self._content.split(&#34;\n&#34;)[0]
+        content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
+
+class Assay(aux._ID):
+    &#34;&#34;&#34;
+    Places a set of samples into groups of replicates as specified by the user.
+    Also adds a &#34;group&#34; (numeric) column and &#34;group_name&#34; (string) to the Reader dataframe that specifies the replicate groups. 
+    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
+
+    Parameters
+    ----------
+    Reader : qpcr.Reader
+        A qpcr.Reader object (optional). 
+        Reader objects can also be linked to the assay after setup iteratively.
+
+    &#34;&#34;&#34;
+    def __init__(self, Reader:Reader = None) -&gt; dict:
+        super().__init__()
+        self._Reader = Reader
+        if Reader is not None:
+            self.adopt_id(Reader)
+        self._df = None
+        self._replicates = None
+        self._renamed = False
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        data : pd.DataFrame
+            The stored dataframe
+        &#34;&#34;&#34;
+        return self._df
+
+    def link(self, Reader:Reader):
+        &#34;&#34;&#34;
+        Links a qpcr.Reader object to the Assay.
+
+        Parameters
+        ----------
+        Reader : qpcr.Reader
+            A qpcr.Reader object.
+        &#34;&#34;&#34;
+        self._Reader = Reader
+        self.adopt_id(Reader)
+
+    def names(self, as_set = True):
+        &#34;&#34;&#34;
+        Returns a set of sample group names (maintaing group order).
+
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
+        Returns
+        -------
+        names : list or pd.Series
+            The given group names of all replicate groups.
+        &#34;&#34;&#34;
+        if as_set:
+            return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        else: 
+            return self._df[&#34;group_name&#34;]
+    
+    def is_named(self): # not used so far...
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        bool
+            `True` if .rename() was performed and custom group names are provided
+            else `False`.
+        &#34;&#34;&#34;
+        return self._renamed
+
+    def groups(self):
+        &#34;&#34;&#34;
+        Returns a set of sample groups (numeric).
+
+        Returns
+        -------
+        groups : list
+            The given numeric group identifiers of all replicate groups.
+        &#34;&#34;&#34;
+        return sorted(list(set(self._df[&#34;group&#34;])))
+
+    def replicates(self, replicates : (int or tuple) = None):
+        &#34;&#34;&#34;
+        Either sets or gets the replicates to be used for grouping the samples
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        &#34;&#34;&#34;
+        if replicates is None:
+            return self._replicates
+        else: 
+            if self._vet_replicates(replicates):
+                self._replicates = replicates
+            else: 
+                aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = self._Reader.n(), reps = replicates)
+
+    def group(self, infer_names = True):
+        &#34;&#34;&#34;
+        Groups the samples according to replicates specified.
+
+        Parameters
+        ----------
+        infer_names : bool
+            Try to infer names of replicate groups based on the individual replicate sample identifiers.
+            Note that this only works if all replicates have an identical sample name!
+        &#34;&#34;&#34;
+        df = self._Reader.get()
+        
+        # generate group and group_names columns
+        if isinstance(self._replicates, int):
+            samples = self._Reader.n()
+            groups, group_names = self._make_equal_groups(samples)            
+        elif isinstance(self._replicates, tuple):
+            groups, group_names = self._make_unequal_groups()
+        else:
+            aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
+        
+        df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
+        self._df = df
+        
+        if infer_names:
+            # infer group names
+            self._infer_names()
+            
+
+    def rename(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Replaces the generic Group0,... in the &#34;group_name&#34; column.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        # get new group names based on list (index) or dict (key)
+        if isinstance(names, (list, tuple, set)):
+            new_names = self._rename_per_index(names)       
+        elif isinstance(names, dict):
+            new_names = self._rename_per_key(names)
+        else:
+            aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+
+        # update &#34;group_name&#34;
+        self._df[&#34;group_name&#34;] = new_names
+        self._renamed = True
+
+    def ignore(self, entries:tuple):
+        &#34;&#34;&#34;
+        Remove lines based on index from the dataframe.
+        This is useful when removing corrupted data entries.
+
+        Parameters
+        ----------
+        entries : tuple
+            Tuple of row indices from the dataframe to drop.
+        &#34;&#34;&#34;
+        self._df = self._df.drop(index = list(entries))
+    
+
+    def _infer_names(self):
+        &#34;&#34;&#34;
+        Infers replicate group names from the given sample identifier column
+        &#34;&#34;&#34;
+        # get the first group of replicates
+        group0 = self._df.query(&#34;group == 0&#34;)[&#34;Sample&#34;]
+        all_identical = all(group0 == group0[0])
+        
+        if all_identical:
+            self._df[&#34;group_name&#34;] = self._df[&#34;Sample&#34;]
+        else: 
+            aw.SoftWarning(&#34;Assay:groupnames_not_inferred&#34;)
+
+    def _rename_per_key(self, names):
+        &#34;&#34;&#34;
+        Generates new name list based on current names in &#34;group_name&#34; and uses string.replace()
+        to update groupnames, based on key (old name) : value (new name) indexing. 
+        Before applying it checks if all groups are covered by new names
+        &#34;&#34;&#34;
+        current_names = aux.sorted_set(self._df[&#34;group_name&#34;])
+        all_groups_covered = len(names) == len(current_names)
+        if all_groups_covered:
+            current_names = list(self._df[&#34;group_name&#34;])
+            new_names = &#34;$&#34;.join(current_names)
+            for old_name, new_name in names.items():
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split(&#34;$&#34;)       
+            return new_names
+        else:
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, current_groups = current_names, new_received = names)
+
+    def _rename_per_index(self, names):
+        &#34;&#34;&#34;
+        Generates new name list based on current names in &#34;group_names&#34; and uses string.replace()
+        to update groupnames to new names based on index (using a the order 
+        of groups as is currently present in &#34;group_name&#34;). 
+        &#34;&#34;&#34;
+        current_names_set = aux.sorted_set(self._df[&#34;group_name&#34;])
+        all_groups_covered = len(names) == len(current_names_set)
+        if all_groups_covered:
+            current_names = list(self._df[&#34;group_name&#34;])
+            new_names = &#34;$&#34;.join(current_names)
+            names = list(names)
+            for old_name, new_name in zip(current_names_set, names):
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split(&#34;$&#34;)
+            return new_names
+        else:
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, current_groups = current_names_set, new_received = names)
+
+    def _make_unequal_groups(self):
+        &#34;&#34;&#34;
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with a tuple for replicate group sizes)
+        &#34;&#34;&#34;
+        groups = []
+        group_names = []
+        for rep, idx in zip(self._replicates, range(len(self._replicates))): 
+            groups.extend([idx] * rep)
+            group_names.extend([f&#34;Group{idx}&#34;] * rep)
+        return groups, group_names
+
+    def _make_equal_groups(self, samples):
+        &#34;&#34;&#34;
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with an integer group size, 
+        assuming all groups have the same size)
+        &#34;&#34;&#34;
+        groups = []
+        group_names = []
+        slices = range(int(samples / self._replicates))
+        for i in slices:
+            groups.extend([i] * self._replicates)
+            group_names.extend([f&#34;Group{i}&#34;] * self._replicates)
+        return groups, group_names
+
+    def _vet_replicates(self, replicates : (int or tuple)):
+        &#34;&#34;&#34;
+        Checks if provided replicates will place all sample entries into a group
+        returns True if all samples are covered, False if not...
+        &#34;&#34;&#34;
+        samples = self._Reader.n()
+
+        # for INT -&gt; modulo will be 0 if all samples are covered
+        # for TUPLE -&gt; sum(replicates) should cover all samples...
+
+        if isinstance(replicates, int):
+            verdict = True if samples % replicates == 0 else False
+        elif isinstance(replicates, tuple): 
+            verdict = True if sum(replicates) == samples else False
+        return verdict
+
+class SampleReader(Assay):
+    &#34;&#34;&#34;
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Note
+    ----
+    This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._replicates = None
+        self._names = None
+        self._Reader = None
+        self._Assay = None
+
+    def replicates(self, replicates:(int or tuple)):
+        &#34;&#34;&#34;
+        Set the replicates to group samples.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        &#34;&#34;&#34;
+        self._replicates = replicates
+
+    def names(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        self._names = names
+        
+    def read(self, filename, **kwargs):
+        &#34;&#34;&#34;
+        Reads one raw datafile (csv or excel format).
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+            the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing the grouped and renamed data.
+        &#34;&#34;&#34;
+        self._Reader = Reader(filename, **kwargs)
+        self._Reader.id(aux.fileID(filename))
+
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
+        if self._names is not None:
+            self._Assay.rename(self._names)
+
+        return self._Assay
+
+class _Qupid_SampleReader(SampleReader):
+    &#34;&#34;&#34;
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Note
+    ----
+    This is the Qupid applicable version of the SampleReader
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        
+
+    def read(self, file):
+        &#34;&#34;&#34;
+        Reads one raw datafile (csv format).
+
+        Parameters
+        ----------
+        file
+            An UploadedFile object from streamlit.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing the grouped and renamed data.
+        &#34;&#34;&#34;
+        self._Reader = _Qupid_Reader(file)
+        self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
+
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
+        if self._names is not None:
+            self._Assay.rename(self._names)
+
+        return self._Assay
+
+class Results(aux._ID):
+    &#34;&#34;&#34;
+    Handles a pandas dataframe for the results from qpcr.Analyser.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._df = None
+        self._Assay = None
+        self._stats_results = {&#34;group&#34; : [], &#34;assay&#34; : [], &#34;mean&#34; : [], &#34;stdev&#34; : [], &#34;median&#34; : []}
+        self._stats_df = None
+
+    def adopt_names(self, Assay:Assay):
+        &#34;&#34;&#34;
+        Links an instance of Assay to be used as reference for group_names
+        It copies the group_name column to the results storing dataframe.
+        This step can only be performed once!
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object whose group_name column will be copied.
+        &#34;&#34;&#34;
+        self._Assay = Assay
+        if self.is_empty():
+            self._df = self._Assay.get()
+            self._drop_setup_cols()
+        else:
+            aw.SoftWarning(&#34;Results:cannot_link&#34;)
+    
+    def is_named(self):
+        &#34;&#34;&#34;
+        Note
+        ----
+        This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
+        `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
+        
+        Returns 
+        -------
+        bool
+            `True` if `group_name` column is present in the Results dataframe, else `False`.
+        &#34;&#34;&#34;
+        return &#34;group_name&#34; in self._df.columns
+    
+    def names(self, as_set = False):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        names : list or None
+            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+        &#34;&#34;&#34;
+        if self._Assay is not None:
+            return self._Assay.names(as_set)
+        return None
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        data : pd.DataFrame
+            The results dataframe
+        &#34;&#34;&#34;
+        return self._df
+
+    def is_empty(self):
+        &#34;&#34;&#34;
+        Checks if any results have been stored so far.
+
+        Returns
+        -------
+        bool
+            `True` if NO data is yet stored, else `False`.
+        &#34;&#34;&#34;
+        return self._df is None
+
+    def add(self, column:pd.Series):
+        &#34;&#34;&#34;
+        Adds a new column of either DeltaCt 
+        computed data or normalised DeltaCt data to the results dataframe.
+
+        Parameters
+        ----------
+        column : pd.Series
+            A named pandas Series or DataFrame that can be joined into the already
+            stored dataframe.
+        &#34;&#34;&#34;
+        # print(self._df)
+        # print(column)
+        self._df = self._df.join(column)
+        
+    def merge(self, *Results):
+        &#34;&#34;&#34;
+        Merges any number of other qpcr.Results objects into this one.
+        The source id of the results is added as column-name suffix. 
+
+        Parameters
+        ----------
+        *Results
+            An arbitrary number of qpcr.Results objects.
+
+        &#34;&#34;&#34;
+        new_df = self._df
+        for R in Results: 
+            R_df = R.get()
+            # we merge the dataframes based on their groups, and add the instance id as identifier
+            new_df = pd.merge(new_df, R_df[&#34;dCt&#34;], 
+                                right_index = True, left_index = True, 
+                                suffixes = [f&#34;_{self.id()}&#34;, f&#34;_{R.id()}&#34;]
+                            )
+        self._df = new_df
+
+    def drop_cols(self, *cols):
+        &#34;&#34;&#34;
+        Drops all specified columns from the dataframes
+        this is used for normaliser pre-processing.
+
+        Parameters
+        ----------
+        *cols
+            Any column names (as `str`) to be dropped.
+            If no names are specified any/all `deltaCt` data-containing columns are dropped!
+            If this is the case then the only columns retained are: `&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;`.
+        &#34;&#34;&#34;
+        if cols == ():
+            _to_drop = [c for c in self._df.columns if c not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        else:
+            _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+        self._df = self._df.drop(columns = _to_drop)
+        
+    def rename_cols(self, cols:dict):
+        &#34;&#34;&#34;
+        Renames all columns according to a dictionary as key -&gt; value.
+
+        Parameters
+        ----------
+        cols : dict
+            A dictionary specifying old column names (keys) and new colums names (values).
+        &#34;&#34;&#34;
+        self._df = self._df.rename(columns = cols)
+
+
+    def stats(self, recompute = False) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Computes summary statistis about the replicate groups: 
+        `Mean`, `Median`, and `StDev` of all replicate groups, for all assays.
+        
+        Parameters
+        ----------
+        recompute : bool
+            Statistics will only be once unless recompute is set to `True`.
+
+        Returns
+        -------
+        stats_df : pd.DataFrame
+            A new dataframe containing the computed statistics for each replicate group.
+
+        &#34;&#34;&#34;
+        # if stats_df is already present, return but sorted according to samples, not groups (nicer for user to inspect)
+        if self._stats_df is not None and not recompute:
+            return self._stats_df.sort_values(&#34;assay&#34;)
+        
+        # get groups and samples 
+        groups = aux.sorted_set(list(self._df[&#34;group&#34;]))
+        samples = [c for c in self._df.columns if c not in [&#34;Sample&#34;, &#34;group&#34;, &#34;group_name&#34;, &#34;assay&#34;]]
+     
+        # compute stats for all samples per group
+        for group in groups:
+            group_subset = self._df.query(f&#34;group == {group}&#34;)
+            
+            median = self._stat_var(group_subset, np.nanmedian)
+            mean = self._stat_var(group_subset, np.nanmean)
+            stdv = self._stat_var(group_subset, np.nanstd)
+            self._add_stats(samples, group, median, mean, stdv)
+            
+        # add group names if present
+        if self.is_named():
+            self._add_stats_names(samples)
+
+        self._stats_df = pd.DataFrame(self._stats_results)
+        return self._stats_df.sort_values(&#34;assay&#34;)
+
+    def save(self, path, df = True, stats = True):
+        &#34;&#34;&#34;
+        Saves a csv file for each specified type of results.
+
+        Parameters
+        ----------
+        path : str
+            Path has to be a filepath if only one type of results shall be saved (i.e. either `df` or `stats`), 
+            otherwise a path to the directory where both `df` and `stats` shall be saved.
+        
+        df : bool
+            Save the results dataframe containing all replicate values (the full results).
+            Default is `df = True`.
+        
+        stats : bool
+            Save the results dataframe containing summary statistics for all replicate groups.
+            Default is `stats = True`.
+        
+        &#34;&#34;&#34;
+        if df and stats and not os.path.isdir(path):
+            aw.HardWarning(&#34;Results:save_need_dir&#34;)
+
+        if df:
+            self._save_single(path, self._df, &#34;_df&#34;)
+        if stats:
+            if self._stats_df is None:
+                self.stats()
+            self._save_single(path, self._stats_df, &#34;_stats&#34;)
+
+    def drop_rel(self):
+        &#34;&#34;&#34;
+        Crops the `X_rel_Y` column-names to just `X`.
+        &#34;&#34;&#34;
+        colnames = self._df.columns
+        to_change = {i : i.split(&#34;_rel_&#34;)[0] for i in colnames if &#34;_rel_&#34; in i }
+        self.rename_cols(to_change)
+
+    def split(self, reset_names = False, drop_rel = True):
+        &#34;&#34;&#34;
+        Splits the stored results dataframe into separate qpcr.Results objects containing only a signle deltaCt column each.
+
+        Parameters
+        ----------
+        reset_names : bool
+            Resets the deltaCt column-name from `&#34;X_rel_Y&#34;` to just `&#34;dCt&#34;`.
+
+        drop_rel : bool
+            Crops `&#34;X_rel_Y&#34;` deltaCt column-names to just `&#34;X&#34;`. 
+
+        Returns 
+        -------
+        objects : list
+            A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)
+        &#34;&#34;&#34;
+        shared_columns = [i for i in self._df.columns if i in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        dct_columns = [i for i in self._df.columns if i not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        
+        dfs = [self._df[shared_columns + [i]] for i in dct_columns]
+        objects = [Results() for i in dfs]
+
+        for o, df, dct_col in zip(objects, dfs, dct_columns): 
+            o._df = df
+            if reset_names:
+                o.rename_cols({dct_col : &#34;dCt&#34;})
+            if drop_rel: 
+                o.drop_rel()
+
+            o.id(dct_col)
+        
+        return objects
+
+    def _save_single(self, path, src, suffix=&#34;&#34;):
+        &#34;&#34;&#34;
+        Saves either self._df or self._stats_df to a csv file based on a path
+        (path can be either filename or directory)
+        &#34;&#34;&#34;
+        filename = path if not os.path.isdir(path) else os.path.join(path, f&#34;rel_{self.id()}{suffix}.csv&#34;)
+        src.to_csv(filename)
+        
+    def _drop_setup_cols(self):
+        &#34;&#34;&#34;
+        Removes unnnecessary columns from the Sample df during self._df setup with link()
+        &#34;&#34;&#34;
+        self.drop_cols(&#34;Ct&#34;)
+
+
+    def _add_stats_names(self, samples):
+        &#34;&#34;&#34;
+        Adds a group_name column to self._stats_result with appropriate
+        repetition of group_names for each sample...
+        &#34;&#34;&#34;
+        self._stats_results[&#34;group_name&#34;] = []
+        group_names = aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        for group_name in group_names:
+            self._stats_results[&#34;group_name&#34;].extend([group_name] * len(samples))
+
+    def _add_stats(self, samples, group, median, mean, stdv):
+        &#34;&#34;&#34;
+        Adds new summary entries to self._stats_results
+        &#34;&#34;&#34;
+        self._stats_results[&#34;group&#34;].extend([group] * len(samples))
+        self._stats_results[&#34;assay&#34;].extend(samples)
+        self._stats_results[&#34;median&#34;].extend(median)
+        self._stats_results[&#34;mean&#34;].extend(mean)
+        self._stats_results[&#34;stdev&#34;].extend(stdv)
+
+
+    def _stat_var(self, group_subset, func, **kwargs):
+        &#34;&#34;&#34;
+        Performs a function (like mean or stdv) over all rows
+        and returns the result as list with a float for each column in the df
+        any function can be passed as long as it works with an iterable
+        &#34;&#34;&#34;
+        # ignore group and group_name columns
+        ignore = [&#34;Sample&#34;, &#34;group&#34;, &#34;group_name&#34;, &#34;assay&#34;]
+        all_cols = [g for g in group_subset.columns if g not in ignore]
+        tmp = group_subset[all_cols]
+        # compute stats based on func
+        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
+        return stats
+        
+
+class Analyser(aux._ID):
+    &#34;&#34;&#34;
+    Performs Single Delta CT (first normalisation within dataset) 
+    Note
+    ----
+    Delta Delta CT (normalisation using second dataset), is handled by qpcr.Normaliser!
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
+    &#34;&#34;&#34;
+    def __init__(self, Assay:Assay = None):
+        super().__init__()
+        self._Assay = Assay
+        self._Results = Results()
+
+        # default settings
+        self._anchor = &#34;first&#34;
+        self._efficiency = 2
+        self._deltaCt_function = self._get_deltaCt_function(exp = True)
+
+        if self._Assay is not None: 
+            self._Results.adopt_id(Assay)
+            self._Results.adopt_names(self._Assay)
+    
+    def get(self):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        Results
+            A `qpcr.Results` object that contains the deltaCT results
+        &#34;&#34;&#34;
+        return self._Results
+
+    def has_results(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        bool
+            `True` if any results were already computed, else `False`.
+        &#34;&#34;&#34;
+        return not self._Results.is_empty()
+
+    def link(self, Assay:Assay, force = False, silent = False):
+        &#34;&#34;&#34;
+        Links a `qpcr.Assay` object to the Analyser.
+        Note
+        ----
+        If there are any precomputed results, no new data will be linked, unless force=True is called. 
+        The user is notified if results are already present and how to proceed. 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing data.
+        
+        force : bool
+            Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
+            if `force = True` (default is `force = False`).
+        
+        silent : bool
+            Warnings about overwriting data will be suppressed if `silent = True` (default is `silent = False`).
+            This is only relevant if `force = True`. 
+        &#34;&#34;&#34;
+        empty = self._Results.is_empty()
+        dont_overwrite = not empty and not force
+        if not dont_overwrite:
+            self._Assay = Assay
+            self.adopt_id(self._Assay)
+            self._Results = Results()
+            self._Results.adopt_names(self._Assay)
+            self._Results.adopt_id(self._Assay)
+            
+        if not silent:
+            # notify the user of changes to the Analyser data and results
+            if not dont_overwrite and not empty:
+                aw.SoftWarning(&#34;Analyser:newlinked&#34;)
+            elif dont_overwrite and not empty:
+                aw.SoftWarning(&#34;Analyser:not_newlinked&#34;)
+
+    def pipe(self, Assay:Assay, **kwargs) -&gt; Results:
+        &#34;&#34;&#34;
+        A quick one-step implementation of link + DeltaCt.
+        This is the suggested application of the `qpcr.Analyser` class!
+
+        Note
+        ----
+        This will silently overwrite any previous results! 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+        
+        **kwargs
+            Any additional keyword arguments to be passed to the `DeltaCt()` method.
+
+        Returns 
+        -------
+        results : qpcr.Results
+            A `qpcr.Results` object. 
+        &#34;&#34;&#34;
+        self.link(Assay, force=True, silent=True)
+        self.DeltaCt(**kwargs)
+        return self.get()
+
+    def efficiency(self, e:float = None):
+        &#34;&#34;&#34;
+        Sets an efficiency factor for externally calculated qPCR amplification efficiency.
+        By default `efficiency = 2` is assumed.
+
+        Parameters
+        ----------
+        e : float
+            An amplification efficiency factor. Default is `e = 2`.
+
+        &#34;&#34;&#34;
+        if isinstance(e, (int, float)):
+            self._efficiency = float(e)
+        elif e is None: 
+            return self._efficiency
+
+    def anchor(self, anchor):
+        &#34;&#34;&#34;
+        Sets the anchor for DeltaCt for internal normalisation.
+
+        Parameters
+        ----------
+        anchor : str or float
+            The internal anchor for normalisation.
+            This can be either `&#34;first&#34;` (default, the very first dataset entry),
+            `&#34;grouped&#34;` (first entry for each replicate group), 
+            any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+            If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+            `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+            `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+        &#34;&#34;&#34;
+        self._anchor = anchor
+
+    def func(self, f:(str or function)):
+        &#34;&#34;&#34;
+        Sets the function to be used for DeltaCt (optional)
+
+        Parameters
+        ----------
+        f : str or function
+            The function to be used for DeltaCt computation. Pre-defined functions are 
+            either `&#34;exponential&#34;` (which uses  `efficiency^(-(s-r))`, default), or `&#34;linear&#34;` 
+            (uses uses `s-r`), where `s` is any sample entry in the dataframe and `r` is the anchor.
+            It is also possible to assign any defined function that accepts an anchor (1st!) and sample (2nd!) 
+            numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()...).
+        &#34;&#34;&#34;
+        if f in [&#34;exponential&#34;, &#34;linear&#34;]:
+            f = True if f == &#34;exponential&#34; else False
+            self._deltaCt_function = self._get_deltaCt_function(f)
+        elif type(f) == type(aux.fileID):
+            self._deltaCt_function = f
+        else:
+            aw.HardWarning(&#34;Analyser:cannot_set_func&#34;, func = f)
+
+    def DeltaCt(self, **kwargs):
+        &#34;&#34;&#34;
+        Calculates DeltaCt for all groups within the dataframe.
+        Any specifics such as `anchor` or `func` must have already been 
+        set using the respective methods prior to calling `DeltaCt()`!
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that a custom DeltaCt function may require.
+        &#34;&#34;&#34;
+        if self._anchor == &#34;first&#34;:
+            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+        elif self._anchor == &#34;grouped&#34;:
+            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+        elif isinstance(self._anchor, (float, int)): 
+            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        elif type(self._anchor) == type(aux.fileID):
+            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+
+    def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a function as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        # update a &#34;data&#34; argument into the kwargs for the anchor_function
+        if &#34;data&#34; not in kwargs.keys(): 
+            kwargs.update(dict(data = df))
+        anchor = anchor_function(**kwargs)
+
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+
+
+    def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a specified anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+
+    def _DeltaCt_grouped_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the first entry of each group as anchor
+        &#34;&#34;&#34;
+        # get set of sample groups and dataset
+        groups = self._Assay.groups()
+        df = self._Assay.get()
+
+        dCt = pd.Series()
+        for group in groups: 
+            group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
+            anchor = group_subset[&#34;Ct&#34;][0]
+            delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+            dCt = dCt.append(delta_cts).reset_index(drop = True)
+        dCt.name = &#34;dCt&#34;
+        self._Results.add(dCt)
+
+    def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the very first entry of the dataset as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        anchor = df[&#34;Ct&#34;][0]
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+    def _exp_DCt(self, sample, ref, **kwargs):
+        &#34;&#34;&#34;
+        Calculates deltaCt exponentially
+        &#34;&#34;&#34;
+        factor = sample-ref 
+        return self._efficiency **(-factor)
+
+    def _simple_DCt(self, sample, ref, **kwargs):
+        &#34;&#34;&#34;
+        Calculates deltaCt linearly
+        &#34;&#34;&#34;
+        return sample-ref
+
+    def _get_deltaCt_function(self, exp):
+        &#34;&#34;&#34;
+        Returns the function to be used for DeltaCt based on 
+        whether or not exponential shall be used.
+        &#34;&#34;&#34;
+        if exp == True:
+            dCt = self._exp_DCt
+        else:
+            dCt = self._simple_DCt
+        return dCt
+
+
+class Normaliser(aux._ID):
+    &#34;&#34;&#34;
+    Handles the second normalisation normalisation of two (or more) datasets against one of them used as normaliser.
+    This requires that all have been analysed in the same way before!
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._Normalisers = []
+        self._Assay = []
+        self._Results = Results()
+        self._normaliser = None
+        self._prep_func = self._average
+        self._norm_func = self._divide_by_normaliser
+
+    def get(self, copy=False):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        copy : bool
+            Will return a deepcopy of the Results object if `copy = True` (default is `copy = False`).
+        
+        Returns
+        -------
+        Results : qpcr.Results
+            A `qpcr.Results` object containing the normalised dataframe
+        &#34;&#34;&#34;
+        if copy: 
+            return deepcopy(self._Results)
+        return self._Results
+    
+    def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
+        &#34;&#34;&#34;
+        Links either normaliser- or sample-data-containing `qpcr.Results` objects coming from the same `qpcr.Analyser`.
+
+        Parameters
+        ----------
+        samples : list or tuple
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+        
+        normalisers : list or tuple
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
+            combining the normalisers can be specified using the `prep_func()` method.
+        &#34;&#34;&#34;
+        self._link_normaliser(normalisers)
+        self._link_samples(samples)
+    
+    def prep_func(self, f = None):
+        &#34;&#34;&#34;
+        Sets any defined function for combined normaliser pre-processing.
+        If no `f` is provided, it returns the current `prep_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one list of qpcr.Results objects, and must return 
+            one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
+            If the provided function does adhere to these criteria is NOT vetted by this method!
+        &#34;&#34;&#34;
+        if type(f) == type(aux.fileID):
+            self._prep_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning(&#34;Normaliser:cannot_set_prep_func&#34;, func = f)
+
+    def norm_func(self, f = None):
+        &#34;&#34;&#34;
+        Sets any defined function to perform normalisation of samples against normalisers.
+        If no `f` is provided, it returns the current `norm_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one numeric entry for a sample and a normaliser, and must return 
+            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, and `n` is the corresponding deltaCt column from the combined normaliser.
+        &#34;&#34;&#34;
+        if type(f) == type(aux.fileID):
+            self._norm_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning(&#34;Normaliser:cannot_set_norm_func&#34;, func = f)
+
+    def normalise(self, **kwargs):
+        &#34;&#34;&#34;
+        Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that may be passed to a custom `norm_func`.
+        &#34;&#34;&#34;
+        if self._normaliser is None: 
+            self._preprocess_normalisers()
+
+        if self._Assay == [] or self._normaliser is None:
+            aw.SoftWarning(&#34;Normaliser:no_data_yet&#34;)
+
+        # get normaliser dataframe
+        normaliser = self._normaliser.get()
+
+        # setup groups for _Results
+        self._Results.adopt_names(self._Assay[0])
+        self._Results.drop_cols()
+        # print(self._Results.get())
+
+        # combine normalised samples into unified dataframe
+        for S in self._Assay:
+            S_df = S.get()
+            column_name = f&#34;{S.id()}_rel_{self._normaliser.id()}&#34;
+            normalised = self._norm_func_wrapper(S_df, normaliser, **kwargs)
+            normalised = normalised.rename(column_name)
+            self._Results.add(normalised)
+
+    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col=&#34;dCt&#34;, norm_col=&#34;dCt_combined&#34;):
+        &#34;&#34;&#34;
+        The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
+        &#34;&#34;&#34;
+        # for double normalised we want the same columns as dct and norm...
+        dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
+
+        tmp_df = normaliser.join(sample_assay, lsuffix=&#34;_s&#34;)
+        # tmp_df = sample_assay.join(normaliser, rsuffix = &#34;_n&#34;)
+        results = self._norm_func(tmp_df[[dCt_col, norm_col]])
+        return results
+
+    def _prep_columns(self, sample_assay, dCt_col, norm_col):
+        &#34;&#34;&#34;
+        Returns the columns to use if named columns shall be used (named columns will be used for second-normalisation of entire runs)
+        &#34;&#34;&#34;
+        if dCt_col == &#34;named&#34;:
+            dCt_col = [i for i in sample_assay.columns if i not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+            # assert len(dCt_col) == 1, f&#34;length of dCt_col is: {len(dCt_col)}&#34;
+            dCt_col = dCt_col[0]
+
+        if norm_col == &#34;same&#34;: 
+            norm_col = dCt_col + &#34;_s&#34;
+        return dCt_col,norm_col
+
+    def _divide_by_normaliser(self, df):
+        &#34;&#34;&#34;
+        Performs normalisation of sample s against normaliser n
+        s and n are specified as two pandas dataframe columns
+        Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
+        (default _norm_func)
+        &#34;&#34;&#34;
+        dCt_col, norm_col = df.columns
+        s, n = df[dCt_col], df[norm_col]
+        return s / n
+
+    def _link_samples(self, samples):
+        &#34;&#34;&#34;
+        Links any provided samples and checks their datatype in the process...
+        &#34;&#34;&#34;
+        if samples is not None:
+            for sample in samples: 
+                if isinstance(sample, Results):
+                    self._Assay.append(sample)
+                elif isinstance(sample, Analyser) and sample.has_results():
+                    self._Assay.append(sample.get())
+                elif isinstance(sample, Analyser) and not sample.has_results():
+                    aw.SoftWarning(&#34;Normaliser:empty_data&#34;, s = sample)
+                else: 
+                    aw.SoftWarning(&#34;Normaliser:unknown_data&#34;, s = sample)
+                
+    def _link_normaliser(self, normalisers):
+        &#34;&#34;&#34;
+        Checks if normaliser is provided and has proper datatype to be added...
+        &#34;&#34;&#34;
+        if normalisers is not None:
+            for normaliser in normalisers:
+                if isinstance(normaliser, Results):
+                    self._Normalisers.append(normaliser)
+                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                    self._Normalisers.append(normaliser.get())
+                else: 
+                    aw.SoftWarning(&#34;Normaliser:norm_unknown_data&#34;, s = normaliser)
+
+    def _preprocess_normalisers(self):
+        &#34;&#34;&#34;
+        Averages the provided normalisers row-wise for all normalisers into a 
+        single combined normaliser, that will be stored as a Results instance.
+        &#34;&#34;&#34;
+        combined = Results() # setup new dataframe for combined normalisers, intialise with first id
+        combined.adopt_names(self._Normalisers[0])
+        combined.adopt_id(self._Normalisers[0])
+        combined.merge(*self._Normalisers[1:])
+
+        tmp_df = self._prep_func(combined)
+        tmp_df = tmp_df.rename(&#34;dCt_combined&#34;)
+        combined.add(tmp_df)
+        combined.drop_cols(&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;)
+
+        self._normaliser = combined  
+        if len(self._Normalisers) &gt; 1:
+            self._update_combined_id()
+        
+        # forward combined_id to self and _Results 
+        self.adopt_id(self._normaliser)
+        self._Results.adopt_id(self._normaliser)
+
+    def _update_combined_id(self):
+        &#34;&#34;&#34;
+        Generates a new id based on all normaliser ids,
+        joining them as a+b+c,...
+        &#34;&#34;&#34;
+        ids = [N.id() for N in self._Normalisers]
+        ids = &#34;+&#34;.join(ids)
+        self._normaliser.id(ids)
+        
+
+    def _average(self, combined):
+        &#34;&#34;&#34;
+        Averages row-wise all Normaliser entries and 
+        generates a series of their per-row means
+        (default preprocess_normalisers function)
+        &#34;&#34;&#34;
+        tmp = combined.get()
+        tmp_df = tmp.drop(columns = [&#34;group&#34;]) # drop group as it is a numeric column and would otherwise skew the average
+        tmp_df = tmp_df.mean(axis = 1)
+        return tmp_df
+
+
+if __name__ == &#34;__main__&#34;:
+    
+    files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;, &#34;Example Data/HNRNPL_nmd.csv&#34;, &#34;Example Data/HNRNPL_prot.csv&#34;]
+    files = [&#34;Example Data 2/28S.csv&#34;, &#34;Example Data 2/actin.csv&#34;, &#34;Example Data 2/HNRNPL_nmd.csv&#34;, &#34;Example Data 2/HNRNPL_prot.csv&#34;]
+
+    groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
+
+    analysers = []
+
+    reader = SampleReader()
+    reader.replicates(6)
+    # reader.names(groupnames)
+
+    analyser = Analyser()
+
+    def myanchor(data):
+        &#34;&#34;&#34;
+        computes a custom anchor
+        &#34;&#34;&#34;
+        df = data.query(&#34;group == 0&#34;)[&#34;Ct&#34;].reset_index(drop=True)
+        return df.mean()
+
+    analyser.anchor(myanchor)
+
+    for file in files: 
+
+        # reader = Reader(file)
+        # reader.id(aux.fileID(file))
+
+        # samples = Assay(reader)
+        
+        sample = reader.read(file)
+        # sample.ignore((0,1,3,4))
+
+        # analyser.link(sample, force=True, silent = False)
+        # analyser.DeltaCt()
+        # res = analyser.get()
+        res = analyser.pipe(sample)
+        # print(res)
+        analysers.append(res)
+
+    # for a in analysers: print(a.id(), &#34;\n&#34;, a.get())
+
+    normaliser = Normaliser()
+    normaliser.link(normalisers = analysers[:2])
+    normaliser.link(samples = analysers[2:])
+
+    normaliser.normalise()
+    
+    result = normaliser.get()
+
+    print(result.get())
+
+    splitted = result.split(reset_names = False)
+
+    i, j = splitted
+    i.rename_cols({&#34;HNRNPL_nmd&#34;: &#34;HNRNPL&#34;})
+    j.rename_cols({&#34;HNRNPL_prot&#34;: &#34;HNRNPL&#34;})
+
+    # print(i, j)
+    # print(&#34;-------&#34;)
+    # print(i.get()[&#34;HNRNPL&#34;] / j.get()[&#34;HNRNPL&#34;])
+    # print(&#34;-----&#34;)
+    sn = Normaliser()
+
+    sn.link(
+        samples = [splitted[0]], 
+        normalisers = [splitted[1]],
+    )
+    
+    sn.normalise(dCt_col = &#34;named&#34;, norm_col = &#34;same&#34;)
+
+    print(sn.get().get())
+    print(sn.get().stats())
+
+    # # result.save(&#34;..&#34;)
+    
+    # #result.add_names(samples)
+
+    # print(result.stats())
+
+    exit(0)</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></dt>
+<dd>
+<div class="desc"><p>This submodule defines a number of filters that can be used to
+remove faulty reads prior to deltact analysis …</p></div>
+</dd>
+<dt><code class="name"><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></dt>
+<dd>
+<div class="desc"><p>This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
+This is designed for lightweight …</p></div>
+</dd>
+<dt><code class="name"><a title="qpcr.Plotters" href="Plotters.html">qpcr.Plotters</a></code></dt>
+<dd>
+<div class="desc"><p>This module is designed for streamlined data visualisation of the qpcr generated results
+It is designed to work directly with qpcr.Results() instances.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="qpcr.Analyser"><code class="flex name class">
+<span>class <span class="ident">Analyser</span></span>
+<span>(</span><span>Assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a> = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Performs Single Delta CT (first normalisation within dataset)
+Note</p>
+<hr>
+<p>Delta Delta CT (normalisation using second dataset), is handled by qpcr.Normaliser!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object (optional) to compute DeltaCT on.
+<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects can be iteratively linked subsequently using <code>link()</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Analyser(aux._ID):
+    &#34;&#34;&#34;
+    Performs Single Delta CT (first normalisation within dataset) 
+    Note
+    ----
+    Delta Delta CT (normalisation using second dataset), is handled by qpcr.Normaliser!
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
+        `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
+    &#34;&#34;&#34;
+    def __init__(self, Assay:Assay = None):
+        super().__init__()
+        self._Assay = Assay
+        self._Results = Results()
+
+        # default settings
+        self._anchor = &#34;first&#34;
+        self._efficiency = 2
+        self._deltaCt_function = self._get_deltaCt_function(exp = True)
+
+        if self._Assay is not None: 
+            self._Results.adopt_id(Assay)
+            self._Results.adopt_names(self._Assay)
+    
+    def get(self):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        Results
+            A `qpcr.Results` object that contains the deltaCT results
+        &#34;&#34;&#34;
+        return self._Results
+
+    def has_results(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        bool
+            `True` if any results were already computed, else `False`.
+        &#34;&#34;&#34;
+        return not self._Results.is_empty()
+
+    def link(self, Assay:Assay, force = False, silent = False):
+        &#34;&#34;&#34;
+        Links a `qpcr.Assay` object to the Analyser.
+        Note
+        ----
+        If there are any precomputed results, no new data will be linked, unless force=True is called. 
+        The user is notified if results are already present and how to proceed. 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing data.
+        
+        force : bool
+            Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
+            if `force = True` (default is `force = False`).
+        
+        silent : bool
+            Warnings about overwriting data will be suppressed if `silent = True` (default is `silent = False`).
+            This is only relevant if `force = True`. 
+        &#34;&#34;&#34;
+        empty = self._Results.is_empty()
+        dont_overwrite = not empty and not force
+        if not dont_overwrite:
+            self._Assay = Assay
+            self.adopt_id(self._Assay)
+            self._Results = Results()
+            self._Results.adopt_names(self._Assay)
+            self._Results.adopt_id(self._Assay)
+            
+        if not silent:
+            # notify the user of changes to the Analyser data and results
+            if not dont_overwrite and not empty:
+                aw.SoftWarning(&#34;Analyser:newlinked&#34;)
+            elif dont_overwrite and not empty:
+                aw.SoftWarning(&#34;Analyser:not_newlinked&#34;)
+
+    def pipe(self, Assay:Assay, **kwargs) -&gt; Results:
+        &#34;&#34;&#34;
+        A quick one-step implementation of link + DeltaCt.
+        This is the suggested application of the `qpcr.Analyser` class!
+
+        Note
+        ----
+        This will silently overwrite any previous results! 
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+        
+        **kwargs
+            Any additional keyword arguments to be passed to the `DeltaCt()` method.
+
+        Returns 
+        -------
+        results : qpcr.Results
+            A `qpcr.Results` object. 
+        &#34;&#34;&#34;
+        self.link(Assay, force=True, silent=True)
+        self.DeltaCt(**kwargs)
+        return self.get()
+
+    def efficiency(self, e:float = None):
+        &#34;&#34;&#34;
+        Sets an efficiency factor for externally calculated qPCR amplification efficiency.
+        By default `efficiency = 2` is assumed.
+
+        Parameters
+        ----------
+        e : float
+            An amplification efficiency factor. Default is `e = 2`.
+
+        &#34;&#34;&#34;
+        if isinstance(e, (int, float)):
+            self._efficiency = float(e)
+        elif e is None: 
+            return self._efficiency
+
+    def anchor(self, anchor):
+        &#34;&#34;&#34;
+        Sets the anchor for DeltaCt for internal normalisation.
+
+        Parameters
+        ----------
+        anchor : str or float
+            The internal anchor for normalisation.
+            This can be either `&#34;first&#34;` (default, the very first dataset entry),
+            `&#34;grouped&#34;` (first entry for each replicate group), 
+            any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+            If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+            `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+            `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+        &#34;&#34;&#34;
+        self._anchor = anchor
+
+    def func(self, f:(str or function)):
+        &#34;&#34;&#34;
+        Sets the function to be used for DeltaCt (optional)
+
+        Parameters
+        ----------
+        f : str or function
+            The function to be used for DeltaCt computation. Pre-defined functions are 
+            either `&#34;exponential&#34;` (which uses  `efficiency^(-(s-r))`, default), or `&#34;linear&#34;` 
+            (uses uses `s-r`), where `s` is any sample entry in the dataframe and `r` is the anchor.
+            It is also possible to assign any defined function that accepts an anchor (1st!) and sample (2nd!) 
+            numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()...).
+        &#34;&#34;&#34;
+        if f in [&#34;exponential&#34;, &#34;linear&#34;]:
+            f = True if f == &#34;exponential&#34; else False
+            self._deltaCt_function = self._get_deltaCt_function(f)
+        elif type(f) == type(aux.fileID):
+            self._deltaCt_function = f
+        else:
+            aw.HardWarning(&#34;Analyser:cannot_set_func&#34;, func = f)
+
+    def DeltaCt(self, **kwargs):
+        &#34;&#34;&#34;
+        Calculates DeltaCt for all groups within the dataframe.
+        Any specifics such as `anchor` or `func` must have already been 
+        set using the respective methods prior to calling `DeltaCt()`!
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that a custom DeltaCt function may require.
+        &#34;&#34;&#34;
+        if self._anchor == &#34;first&#34;:
+            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+        elif self._anchor == &#34;grouped&#34;:
+            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+        elif isinstance(self._anchor, (float, int)): 
+            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        elif type(self._anchor) == type(aux.fileID):
+            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+
+    def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a function as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        # update a &#34;data&#34; argument into the kwargs for the anchor_function
+        if &#34;data&#34; not in kwargs.keys(): 
+            kwargs.update(dict(data = df))
+        anchor = anchor_function(**kwargs)
+
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+
+
+    def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a specified anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+
+    def _DeltaCt_grouped_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the first entry of each group as anchor
+        &#34;&#34;&#34;
+        # get set of sample groups and dataset
+        groups = self._Assay.groups()
+        df = self._Assay.get()
+
+        dCt = pd.Series()
+        for group in groups: 
+            group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
+            anchor = group_subset[&#34;Ct&#34;][0]
+            delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+            dCt = dCt.append(delta_cts).reset_index(drop = True)
+        dCt.name = &#34;dCt&#34;
+        self._Results.add(dCt)
+
+    def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the very first entry of the dataset as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        anchor = df[&#34;Ct&#34;][0]
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
+    def _exp_DCt(self, sample, ref, **kwargs):
+        &#34;&#34;&#34;
+        Calculates deltaCt exponentially
+        &#34;&#34;&#34;
+        factor = sample-ref 
+        return self._efficiency **(-factor)
+
+    def _simple_DCt(self, sample, ref, **kwargs):
+        &#34;&#34;&#34;
+        Calculates deltaCt linearly
+        &#34;&#34;&#34;
+        return sample-ref
+
+    def _get_deltaCt_function(self, exp):
+        &#34;&#34;&#34;
+        Returns the function to be used for DeltaCt based on 
+        whether or not exponential shall be used.
+        &#34;&#34;&#34;
+        if exp == True:
+            dCt = self._exp_DCt
+        else:
+            dCt = self._simple_DCt
+        return dCt</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Analyser.DeltaCt"><code class="name flex">
+<span>def <span class="ident">DeltaCt</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates DeltaCt for all groups within the dataframe.
+Any specifics such as <code>anchor</code> or <code>func</code> must have already been
+set using the respective methods prior to calling <code>DeltaCt()</code>!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that a custom DeltaCt function may require.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def DeltaCt(self, **kwargs):
+    &#34;&#34;&#34;
+    Calculates DeltaCt for all groups within the dataframe.
+    Any specifics such as `anchor` or `func` must have already been 
+    set using the respective methods prior to calling `DeltaCt()`!
+
+    Parameters
+    ----------
+    **kwargs
+        Any additional keyword arguments that a custom DeltaCt function may require.
+    &#34;&#34;&#34;
+    if self._anchor == &#34;first&#34;:
+        self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+    elif self._anchor == &#34;grouped&#34;:
+        self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+    elif isinstance(self._anchor, (float, int)): 
+        self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+    elif type(self._anchor) == type(aux.fileID):
+        self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.anchor"><code class="name flex">
+<span>def <span class="ident">anchor</span></span>(<span>self, anchor)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the anchor for DeltaCt for internal normalisation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>anchor</code></strong> :&ensp;<code>str</code> or <code>float</code></dt>
+<dd>The internal anchor for normalisation.
+This can be either <code>"first"</code> (default, the very first dataset entry),
+<code>"grouped"</code> (first entry for each replicate group),
+any specified numeric value (as <code>float</code>), or a <code>function</code> that will calculate the anchor and returns a single numeric value.
+If you wish to use a function to compute the anchor, you can access the dataframe stored by the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> that is being analysed through the
+<code>data</code> argument. <code>data</code> will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+<code>**kwargs</code> because any kwargs supplied during <code>DeltaCt()</code>-calling will be passed per default to both the anchor-function and DeltaCt-function.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def anchor(self, anchor):
+    &#34;&#34;&#34;
+    Sets the anchor for DeltaCt for internal normalisation.
+
+    Parameters
+    ----------
+    anchor : str or float
+        The internal anchor for normalisation.
+        This can be either `&#34;first&#34;` (default, the very first dataset entry),
+        `&#34;grouped&#34;` (first entry for each replicate group), 
+        any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+        If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+        `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+        `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+    &#34;&#34;&#34;
+    self._anchor = anchor</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.efficiency"><code class="name flex">
+<span>def <span class="ident">efficiency</span></span>(<span>self, e: float = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets an efficiency factor for externally calculated qPCR amplification efficiency.
+By default <code>efficiency = 2</code> is assumed.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>e</code></strong> :&ensp;<code>float</code></dt>
+<dd>An amplification efficiency factor. Default is <code>e = 2</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def efficiency(self, e:float = None):
+    &#34;&#34;&#34;
+    Sets an efficiency factor for externally calculated qPCR amplification efficiency.
+    By default `efficiency = 2` is assumed.
+
+    Parameters
+    ----------
+    e : float
+        An amplification efficiency factor. Default is `e = 2`.
+
+    &#34;&#34;&#34;
+    if isinstance(e, (int, float)):
+        self._efficiency = float(e)
+    elif e is None: 
+        return self._efficiency</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.func"><code class="name flex">
+<span>def <span class="ident">func</span></span>(<span>self, f: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the function to be used for DeltaCt (optional)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>f</code></strong> :&ensp;<code>str</code> or <code>function</code></dt>
+<dd>The function to be used for DeltaCt computation. Pre-defined functions are
+either <code>"exponential"</code> (which uses
+<code>efficiency^(-(s-r))</code>, default), or <code>"linear"</code>
+(uses uses <code>s-r</code>), where <code>s</code> is any sample entry in the dataframe and <code>r</code> is the anchor.
+It is also possible to assign any defined function that accepts an anchor (1st!) and sample (2nd!)
+numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()&hellip;).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(self, f:(str or function)):
+    &#34;&#34;&#34;
+    Sets the function to be used for DeltaCt (optional)
+
+    Parameters
+    ----------
+    f : str or function
+        The function to be used for DeltaCt computation. Pre-defined functions are 
+        either `&#34;exponential&#34;` (which uses  `efficiency^(-(s-r))`, default), or `&#34;linear&#34;` 
+        (uses uses `s-r`), where `s` is any sample entry in the dataframe and `r` is the anchor.
+        It is also possible to assign any defined function that accepts an anchor (1st!) and sample (2nd!) 
+        numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()...).
+    &#34;&#34;&#34;
+    if f in [&#34;exponential&#34;, &#34;linear&#34;]:
+        f = True if f == &#34;exponential&#34; else False
+        self._deltaCt_function = self._get_deltaCt_function(f)
+    elif type(f) == type(aux.fileID):
+        self._deltaCt_function = f
+    else:
+        aw.HardWarning(&#34;Analyser:cannot_set_func&#34;, func = f)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<p>Results
+A <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> object that contains the deltaCT results</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    &#34;&#34;&#34;
+    Returns 
+    -------
+    Results
+        A `qpcr.Results` object that contains the deltaCT results
+    &#34;&#34;&#34;
+    return self._Results</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.has_results"><code class="name flex">
+<span>def <span class="ident">has_results</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if any results were already computed, else <code>False</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_results(self):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    bool
+        `True` if any results were already computed, else `False`.
+    &#34;&#34;&#34;
+    return not self._Results.is_empty()</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.link"><code class="name flex">
+<span>def <span class="ident">link</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>, force=False, silent=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to the Analyser.
+Note</p>
+<hr>
+<p>If there are any precomputed results, no new data will be linked, unless force=True is called.
+The user is notified if results are already present and how to proceed. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing data.</dd>
+<dt><strong><code>force</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Any already linked <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects (and their data and results) will be overwritten
+if <code>force = True</code> (default is <code>force = False</code>).</dd>
+<dt><strong><code>silent</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Warnings about overwriting data will be suppressed if <code>silent = True</code> (default is <code>silent = False</code>).
+This is only relevant if <code>force = True</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def link(self, Assay:Assay, force = False, silent = False):
+    &#34;&#34;&#34;
+    Links a `qpcr.Assay` object to the Analyser.
+    Note
+    ----
+    If there are any precomputed results, no new data will be linked, unless force=True is called. 
+    The user is notified if results are already present and how to proceed. 
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object containing data.
+    
+    force : bool
+        Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
+        if `force = True` (default is `force = False`).
+    
+    silent : bool
+        Warnings about overwriting data will be suppressed if `silent = True` (default is `silent = False`).
+        This is only relevant if `force = True`. 
+    &#34;&#34;&#34;
+    empty = self._Results.is_empty()
+    dont_overwrite = not empty and not force
+    if not dont_overwrite:
+        self._Assay = Assay
+        self.adopt_id(self._Assay)
+        self._Results = Results()
+        self._Results.adopt_names(self._Assay)
+        self._Results.adopt_id(self._Assay)
+        
+    if not silent:
+        # notify the user of changes to the Analyser data and results
+        if not dont_overwrite and not empty:
+            aw.SoftWarning(&#34;Analyser:newlinked&#34;)
+        elif dont_overwrite and not empty:
+            aw.SoftWarning(&#34;Analyser:not_newlinked&#34;)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Analyser.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>, **kwargs) ‑> <a title="qpcr.Results" href="#qpcr.Results">Results</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>A quick one-step implementation of link + DeltaCt.
+This is the suggested application of the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> class!</p>
+<h2 id="note">Note</h2>
+<p>This will silently overwrite any previous results! </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to be linked to the Analyser for DeltaCt computation.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments to be passed to the <code>DeltaCt()</code> method.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>results : qpcr.Results
+A <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(self, Assay:Assay, **kwargs) -&gt; Results:
+    &#34;&#34;&#34;
+    A quick one-step implementation of link + DeltaCt.
+    This is the suggested application of the `qpcr.Analyser` class!
+
+    Note
+    ----
+    This will silently overwrite any previous results! 
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+    
+    **kwargs
+        Any additional keyword arguments to be passed to the `DeltaCt()` method.
+
+    Returns 
+    -------
+    results : qpcr.Results
+        A `qpcr.Results` object. 
+    &#34;&#34;&#34;
+    self.link(Assay, force=True, silent=True)
+    self.DeltaCt(**kwargs)
+    return self.get()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="qpcr.Assay"><code class="flex name class">
+<span>class <span class="ident">Assay</span></span>
+<span>(</span><span>Reader: <a title="qpcr.Reader" href="#qpcr.Reader">Reader</a> = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Places a set of samples into groups of replicates as specified by the user.
+Also adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups.
+Optionally, users may re-name the groups manually (otherwise Group1,&hellip; will be used by default).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Reader</code></strong> :&ensp;<code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code></dt>
+<dd>A qpcr.Reader object (optional).
+Reader objects can also be linked to the assay after setup iteratively.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Assay(aux._ID):
+    &#34;&#34;&#34;
+    Places a set of samples into groups of replicates as specified by the user.
+    Also adds a &#34;group&#34; (numeric) column and &#34;group_name&#34; (string) to the Reader dataframe that specifies the replicate groups. 
+    Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
+
+    Parameters
+    ----------
+    Reader : qpcr.Reader
+        A qpcr.Reader object (optional). 
+        Reader objects can also be linked to the assay after setup iteratively.
+
+    &#34;&#34;&#34;
+    def __init__(self, Reader:Reader = None) -&gt; dict:
+        super().__init__()
+        self._Reader = Reader
+        if Reader is not None:
+            self.adopt_id(Reader)
+        self._df = None
+        self._replicates = None
+        self._renamed = False
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        data : pd.DataFrame
+            The stored dataframe
+        &#34;&#34;&#34;
+        return self._df
+
+    def link(self, Reader:Reader):
+        &#34;&#34;&#34;
+        Links a qpcr.Reader object to the Assay.
+
+        Parameters
+        ----------
+        Reader : qpcr.Reader
+            A qpcr.Reader object.
+        &#34;&#34;&#34;
+        self._Reader = Reader
+        self.adopt_id(Reader)
+
+    def names(self, as_set = True):
+        &#34;&#34;&#34;
+        Returns a set of sample group names (maintaing group order).
+
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
+        Returns
+        -------
+        names : list or pd.Series
+            The given group names of all replicate groups.
+        &#34;&#34;&#34;
+        if as_set:
+            return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        else: 
+            return self._df[&#34;group_name&#34;]
+    
+    def is_named(self): # not used so far...
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        bool
+            `True` if .rename() was performed and custom group names are provided
+            else `False`.
+        &#34;&#34;&#34;
+        return self._renamed
+
+    def groups(self):
+        &#34;&#34;&#34;
+        Returns a set of sample groups (numeric).
+
+        Returns
+        -------
+        groups : list
+            The given numeric group identifiers of all replicate groups.
+        &#34;&#34;&#34;
+        return sorted(list(set(self._df[&#34;group&#34;])))
+
+    def replicates(self, replicates : (int or tuple) = None):
+        &#34;&#34;&#34;
+        Either sets or gets the replicates to be used for grouping the samples
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        &#34;&#34;&#34;
+        if replicates is None:
+            return self._replicates
+        else: 
+            if self._vet_replicates(replicates):
+                self._replicates = replicates
+            else: 
+                aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = self._Reader.n(), reps = replicates)
+
+    def group(self, infer_names = True):
+        &#34;&#34;&#34;
+        Groups the samples according to replicates specified.
+
+        Parameters
+        ----------
+        infer_names : bool
+            Try to infer names of replicate groups based on the individual replicate sample identifiers.
+            Note that this only works if all replicates have an identical sample name!
+        &#34;&#34;&#34;
+        df = self._Reader.get()
+        
+        # generate group and group_names columns
+        if isinstance(self._replicates, int):
+            samples = self._Reader.n()
+            groups, group_names = self._make_equal_groups(samples)            
+        elif isinstance(self._replicates, tuple):
+            groups, group_names = self._make_unequal_groups()
+        else:
+            aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
+        
+        df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
+        self._df = df
+        
+        if infer_names:
+            # infer group names
+            self._infer_names()
+            
+
+    def rename(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Replaces the generic Group0,... in the &#34;group_name&#34; column.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        # get new group names based on list (index) or dict (key)
+        if isinstance(names, (list, tuple, set)):
+            new_names = self._rename_per_index(names)       
+        elif isinstance(names, dict):
+            new_names = self._rename_per_key(names)
+        else:
+            aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+
+        # update &#34;group_name&#34;
+        self._df[&#34;group_name&#34;] = new_names
+        self._renamed = True
+
+    def ignore(self, entries:tuple):
+        &#34;&#34;&#34;
+        Remove lines based on index from the dataframe.
+        This is useful when removing corrupted data entries.
+
+        Parameters
+        ----------
+        entries : tuple
+            Tuple of row indices from the dataframe to drop.
+        &#34;&#34;&#34;
+        self._df = self._df.drop(index = list(entries))
+    
+
+    def _infer_names(self):
+        &#34;&#34;&#34;
+        Infers replicate group names from the given sample identifier column
+        &#34;&#34;&#34;
+        # get the first group of replicates
+        group0 = self._df.query(&#34;group == 0&#34;)[&#34;Sample&#34;]
+        all_identical = all(group0 == group0[0])
+        
+        if all_identical:
+            self._df[&#34;group_name&#34;] = self._df[&#34;Sample&#34;]
+        else: 
+            aw.SoftWarning(&#34;Assay:groupnames_not_inferred&#34;)
+
+    def _rename_per_key(self, names):
+        &#34;&#34;&#34;
+        Generates new name list based on current names in &#34;group_name&#34; and uses string.replace()
+        to update groupnames, based on key (old name) : value (new name) indexing. 
+        Before applying it checks if all groups are covered by new names
+        &#34;&#34;&#34;
+        current_names = aux.sorted_set(self._df[&#34;group_name&#34;])
+        all_groups_covered = len(names) == len(current_names)
+        if all_groups_covered:
+            current_names = list(self._df[&#34;group_name&#34;])
+            new_names = &#34;$&#34;.join(current_names)
+            for old_name, new_name in names.items():
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split(&#34;$&#34;)       
+            return new_names
+        else:
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, current_groups = current_names, new_received = names)
+
+    def _rename_per_index(self, names):
+        &#34;&#34;&#34;
+        Generates new name list based on current names in &#34;group_names&#34; and uses string.replace()
+        to update groupnames to new names based on index (using a the order 
+        of groups as is currently present in &#34;group_name&#34;). 
+        &#34;&#34;&#34;
+        current_names_set = aux.sorted_set(self._df[&#34;group_name&#34;])
+        all_groups_covered = len(names) == len(current_names_set)
+        if all_groups_covered:
+            current_names = list(self._df[&#34;group_name&#34;])
+            new_names = &#34;$&#34;.join(current_names)
+            names = list(names)
+            for old_name, new_name in zip(current_names_set, names):
+                new_names = new_names.replace(old_name, new_name)
+            new_names = new_names.split(&#34;$&#34;)
+            return new_names
+        else:
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, current_groups = current_names_set, new_received = names)
+
+    def _make_unequal_groups(self):
+        &#34;&#34;&#34;
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with a tuple for replicate group sizes)
+        &#34;&#34;&#34;
+        groups = []
+        group_names = []
+        for rep, idx in zip(self._replicates, range(len(self._replicates))): 
+            groups.extend([idx] * rep)
+            group_names.extend([f&#34;Group{idx}&#34;] * rep)
+        return groups, group_names
+
+    def _make_equal_groups(self, samples):
+        &#34;&#34;&#34;
+        Returns two lists of [0,0,0,1,1,1] and 
+        [Group0, Group0, Group0, Group1,...] 
+        to cover all sample entries.
+        (this function works with an integer group size, 
+        assuming all groups have the same size)
+        &#34;&#34;&#34;
+        groups = []
+        group_names = []
+        slices = range(int(samples / self._replicates))
+        for i in slices:
+            groups.extend([i] * self._replicates)
+            group_names.extend([f&#34;Group{i}&#34;] * self._replicates)
+        return groups, group_names
+
+    def _vet_replicates(self, replicates : (int or tuple)):
+        &#34;&#34;&#34;
+        Checks if provided replicates will place all sample entries into a group
+        returns True if all samples are covered, False if not...
+        &#34;&#34;&#34;
+        samples = self._Reader.n()
+
+        # for INT -&gt; modulo will be 0 if all samples are covered
+        # for TUPLE -&gt; sum(replicates) should cover all samples...
+
+        if isinstance(replicates, int):
+            verdict = True if samples % replicates == 0 else False
+        elif isinstance(replicates, tuple): 
+            verdict = True if sum(replicates) == samples else False
+        return verdict</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.SampleReader" href="#qpcr.SampleReader">SampleReader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Assay.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>The stored dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    data : pd.DataFrame
+        The stored dataframe
+    &#34;&#34;&#34;
+    return self._df</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.group"><code class="name flex">
+<span>def <span class="ident">group</span></span>(<span>self, infer_names=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Groups the samples according to replicates specified.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>infer_names</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Try to infer names of replicate groups based on the individual replicate sample identifiers.
+Note that this only works if all replicates have an identical sample name!</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def group(self, infer_names = True):
+    &#34;&#34;&#34;
+    Groups the samples according to replicates specified.
+
+    Parameters
+    ----------
+    infer_names : bool
+        Try to infer names of replicate groups based on the individual replicate sample identifiers.
+        Note that this only works if all replicates have an identical sample name!
+    &#34;&#34;&#34;
+    df = self._Reader.get()
+    
+    # generate group and group_names columns
+    if isinstance(self._replicates, int):
+        samples = self._Reader.n()
+        groups, group_names = self._make_equal_groups(samples)            
+    elif isinstance(self._replicates, tuple):
+        groups, group_names = self._make_unequal_groups()
+    else:
+        aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
+    
+    df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
+    self._df = df
+    
+    if infer_names:
+        # infer group names
+        self._infer_names()</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.groups"><code class="name flex">
+<span>def <span class="ident">groups</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a set of sample groups (numeric).</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>groups</code></strong> :&ensp;<code>list</code></dt>
+<dd>The given numeric group identifiers of all replicate groups.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def groups(self):
+    &#34;&#34;&#34;
+    Returns a set of sample groups (numeric).
+
+    Returns
+    -------
+    groups : list
+        The given numeric group identifiers of all replicate groups.
+    &#34;&#34;&#34;
+    return sorted(list(set(self._df[&#34;group&#34;])))</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.ignore"><code class="name flex">
+<span>def <span class="ident">ignore</span></span>(<span>self, entries: tuple)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove lines based on index from the dataframe.
+This is useful when removing corrupted data entries.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>entries</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>Tuple of row indices from the dataframe to drop.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ignore(self, entries:tuple):
+    &#34;&#34;&#34;
+    Remove lines based on index from the dataframe.
+    This is useful when removing corrupted data entries.
+
+    Parameters
+    ----------
+    entries : tuple
+        Tuple of row indices from the dataframe to drop.
+    &#34;&#34;&#34;
+    self._df = self._df.drop(index = list(entries))</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.is_named"><code class="name flex">
+<span>def <span class="ident">is_named</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<p>bool
+<code>True</code> if .rename() was performed and custom group names are provided
+else <code>False</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_named(self): # not used so far...
+    &#34;&#34;&#34;
+    Returns 
+    -------
+    bool
+        `True` if .rename() was performed and custom group names are provided
+        else `False`.
+    &#34;&#34;&#34;
+    return self._renamed</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.link"><code class="name flex">
+<span>def <span class="ident">link</span></span>(<span>self, Reader: <a title="qpcr.Reader" href="#qpcr.Reader">Reader</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a qpcr.Reader object to the Assay.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Reader</code></strong> :&ensp;<code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code></dt>
+<dd>A qpcr.Reader object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def link(self, Reader:Reader):
+    &#34;&#34;&#34;
+    Links a qpcr.Reader object to the Assay.
+
+    Parameters
+    ----------
+    Reader : qpcr.Reader
+        A qpcr.Reader object.
+    &#34;&#34;&#34;
+    self._Reader = Reader
+    self.adopt_id(Reader)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.names"><code class="name flex">
+<span>def <span class="ident">names</span></span>(<span>self, as_set=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a set of sample group names (maintaing group order).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>as_set</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If <code>as_set = True</code> (default) it returns a set (as list without duplicates)
+of assigned group names for replicate groups.
+If <code>as_set = False</code> it returns the full group_name column (including all repeated entries).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code> or <code>pd.Series</code></dt>
+<dd>The given group names of all replicate groups.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def names(self, as_set = True):
+    &#34;&#34;&#34;
+    Returns a set of sample group names (maintaing group order).
+
+    Parameters
+    ----------
+    as_set : bool
+        If `as_set = True` (default) it returns a set (as list without duplicates) 
+        of assigned group names for replicate groups.
+        If `as_set = False` it returns the full group_name column (including all repeated entries).
+    
+    Returns
+    -------
+    names : list or pd.Series
+        The given group names of all replicate groups.
+    &#34;&#34;&#34;
+    if as_set:
+        return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+    else: 
+        return self._df[&#34;group_name&#34;]</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.rename"><code class="name flex">
+<span>def <span class="ident">rename</span></span>(<span>self, names: list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replaces the generic Group0,&hellip; in the "group_name" column.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code> or <code>dict</code></dt>
+<dd>Either a <code>list</code> (new names without repetitions) or <code>dict</code> (key = old name, value = new name) specifying new group names.
+Group names only need to be specified once, and are applied to all replicate entries.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rename(self, names:(list or dict)):
+    &#34;&#34;&#34;
+    Replaces the generic Group0,... in the &#34;group_name&#34; column.
+
+    Parameters
+    ----------
+    names : list or dict
+        Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+        Group names only need to be specified once, and are applied to all replicate entries.
+    &#34;&#34;&#34;
+    # get new group names based on list (index) or dict (key)
+    if isinstance(names, (list, tuple, set)):
+        new_names = self._rename_per_index(names)       
+    elif isinstance(names, dict):
+        new_names = self._rename_per_key(names)
+    else:
+        aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+
+    # update &#34;group_name&#34;
+    self._df[&#34;group_name&#34;] = new_names
+    self._renamed = True</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Assay.replicates"><code class="name flex">
+<span>def <span class="ident">replicates</span></span>(<span>self, replicates: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Either sets or gets the replicates to be used for grouping the samples
+Before they are assigned, replicates are vetted to ensure they cover all data entries.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>replicates</code></strong> :&ensp;<code>int</code> or <code>tuple</code></dt>
+<dd>Can be an <code>integer</code> (equal group sizes, e.g. <code>3</code> for triplicates),
+or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the second group is only a duplicate).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replicates(self, replicates : (int or tuple) = None):
+    &#34;&#34;&#34;
+    Either sets or gets the replicates to be used for grouping the samples
+    Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+    Parameters
+    ----------
+    replicates : int or tuple
+        Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+        or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+    &#34;&#34;&#34;
+    if replicates is None:
+        return self._replicates
+    else: 
+        if self._vet_replicates(replicates):
+            self._replicates = replicates
+        else: 
+            aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = self._Reader.n(), reps = replicates)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="qpcr.Normaliser"><code class="flex name class">
+<span>class <span class="ident">Normaliser</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles the second normalisation normalisation of two (or more) datasets against one of them used as normaliser.
+This requires that all have been analysed in the same way before!</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Normaliser(aux._ID):
+    &#34;&#34;&#34;
+    Handles the second normalisation normalisation of two (or more) datasets against one of them used as normaliser.
+    This requires that all have been analysed in the same way before!
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._Normalisers = []
+        self._Assay = []
+        self._Results = Results()
+        self._normaliser = None
+        self._prep_func = self._average
+        self._norm_func = self._divide_by_normaliser
+
+    def get(self, copy=False):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        copy : bool
+            Will return a deepcopy of the Results object if `copy = True` (default is `copy = False`).
+        
+        Returns
+        -------
+        Results : qpcr.Results
+            A `qpcr.Results` object containing the normalised dataframe
+        &#34;&#34;&#34;
+        if copy: 
+            return deepcopy(self._Results)
+        return self._Results
+    
+    def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
+        &#34;&#34;&#34;
+        Links either normaliser- or sample-data-containing `qpcr.Results` objects coming from the same `qpcr.Analyser`.
+
+        Parameters
+        ----------
+        samples : list or tuple
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+        
+        normalisers : list or tuple
+            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
+            combining the normalisers can be specified using the `prep_func()` method.
+        &#34;&#34;&#34;
+        self._link_normaliser(normalisers)
+        self._link_samples(samples)
+    
+    def prep_func(self, f = None):
+        &#34;&#34;&#34;
+        Sets any defined function for combined normaliser pre-processing.
+        If no `f` is provided, it returns the current `prep_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one list of qpcr.Results objects, and must return 
+            one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
+            If the provided function does adhere to these criteria is NOT vetted by this method!
+        &#34;&#34;&#34;
+        if type(f) == type(aux.fileID):
+            self._prep_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning(&#34;Normaliser:cannot_set_prep_func&#34;, func = f)
+
+    def norm_func(self, f = None):
+        &#34;&#34;&#34;
+        Sets any defined function to perform normalisation of samples against normalisers.
+        If no `f` is provided, it returns the current `norm_func`.
+
+        Parameters
+        ----------
+        f : function
+            The function may accept one numeric entry for a sample and a normaliser, and must return 
+            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, and `n` is the corresponding deltaCt column from the combined normaliser.
+        &#34;&#34;&#34;
+        if type(f) == type(aux.fileID):
+            self._norm_func = f
+        elif f is None:
+            return f
+        else: 
+            aw.HardWarning(&#34;Normaliser:cannot_set_norm_func&#34;, func = f)
+
+    def normalise(self, **kwargs):
+        &#34;&#34;&#34;
+        Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.
+
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that may be passed to a custom `norm_func`.
+        &#34;&#34;&#34;
+        if self._normaliser is None: 
+            self._preprocess_normalisers()
+
+        if self._Assay == [] or self._normaliser is None:
+            aw.SoftWarning(&#34;Normaliser:no_data_yet&#34;)
+
+        # get normaliser dataframe
+        normaliser = self._normaliser.get()
+
+        # setup groups for _Results
+        self._Results.adopt_names(self._Assay[0])
+        self._Results.drop_cols()
+        # print(self._Results.get())
+
+        # combine normalised samples into unified dataframe
+        for S in self._Assay:
+            S_df = S.get()
+            column_name = f&#34;{S.id()}_rel_{self._normaliser.id()}&#34;
+            normalised = self._norm_func_wrapper(S_df, normaliser, **kwargs)
+            normalised = normalised.rename(column_name)
+            self._Results.add(normalised)
+
+    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col=&#34;dCt&#34;, norm_col=&#34;dCt_combined&#34;):
+        &#34;&#34;&#34;
+        The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
+        &#34;&#34;&#34;
+        # for double normalised we want the same columns as dct and norm...
+        dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
+
+        tmp_df = normaliser.join(sample_assay, lsuffix=&#34;_s&#34;)
+        # tmp_df = sample_assay.join(normaliser, rsuffix = &#34;_n&#34;)
+        results = self._norm_func(tmp_df[[dCt_col, norm_col]])
+        return results
+
+    def _prep_columns(self, sample_assay, dCt_col, norm_col):
+        &#34;&#34;&#34;
+        Returns the columns to use if named columns shall be used (named columns will be used for second-normalisation of entire runs)
+        &#34;&#34;&#34;
+        if dCt_col == &#34;named&#34;:
+            dCt_col = [i for i in sample_assay.columns if i not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+            # assert len(dCt_col) == 1, f&#34;length of dCt_col is: {len(dCt_col)}&#34;
+            dCt_col = dCt_col[0]
+
+        if norm_col == &#34;same&#34;: 
+            norm_col = dCt_col + &#34;_s&#34;
+        return dCt_col,norm_col
+
+    def _divide_by_normaliser(self, df):
+        &#34;&#34;&#34;
+        Performs normalisation of sample s against normaliser n
+        s and n are specified as two pandas dataframe columns
+        Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
+        (default _norm_func)
+        &#34;&#34;&#34;
+        dCt_col, norm_col = df.columns
+        s, n = df[dCt_col], df[norm_col]
+        return s / n
+
+    def _link_samples(self, samples):
+        &#34;&#34;&#34;
+        Links any provided samples and checks their datatype in the process...
+        &#34;&#34;&#34;
+        if samples is not None:
+            for sample in samples: 
+                if isinstance(sample, Results):
+                    self._Assay.append(sample)
+                elif isinstance(sample, Analyser) and sample.has_results():
+                    self._Assay.append(sample.get())
+                elif isinstance(sample, Analyser) and not sample.has_results():
+                    aw.SoftWarning(&#34;Normaliser:empty_data&#34;, s = sample)
+                else: 
+                    aw.SoftWarning(&#34;Normaliser:unknown_data&#34;, s = sample)
+                
+    def _link_normaliser(self, normalisers):
+        &#34;&#34;&#34;
+        Checks if normaliser is provided and has proper datatype to be added...
+        &#34;&#34;&#34;
+        if normalisers is not None:
+            for normaliser in normalisers:
+                if isinstance(normaliser, Results):
+                    self._Normalisers.append(normaliser)
+                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                    self._Normalisers.append(normaliser.get())
+                else: 
+                    aw.SoftWarning(&#34;Normaliser:norm_unknown_data&#34;, s = normaliser)
+
+    def _preprocess_normalisers(self):
+        &#34;&#34;&#34;
+        Averages the provided normalisers row-wise for all normalisers into a 
+        single combined normaliser, that will be stored as a Results instance.
+        &#34;&#34;&#34;
+        combined = Results() # setup new dataframe for combined normalisers, intialise with first id
+        combined.adopt_names(self._Normalisers[0])
+        combined.adopt_id(self._Normalisers[0])
+        combined.merge(*self._Normalisers[1:])
+
+        tmp_df = self._prep_func(combined)
+        tmp_df = tmp_df.rename(&#34;dCt_combined&#34;)
+        combined.add(tmp_df)
+        combined.drop_cols(&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;)
+
+        self._normaliser = combined  
+        if len(self._Normalisers) &gt; 1:
+            self._update_combined_id()
+        
+        # forward combined_id to self and _Results 
+        self.adopt_id(self._normaliser)
+        self._Results.adopt_id(self._normaliser)
+
+    def _update_combined_id(self):
+        &#34;&#34;&#34;
+        Generates a new id based on all normaliser ids,
+        joining them as a+b+c,...
+        &#34;&#34;&#34;
+        ids = [N.id() for N in self._Normalisers]
+        ids = &#34;+&#34;.join(ids)
+        self._normaliser.id(ids)
+        
+
+    def _average(self, combined):
+        &#34;&#34;&#34;
+        Averages row-wise all Normaliser entries and 
+        generates a series of their per-row means
+        (default preprocess_normalisers function)
+        &#34;&#34;&#34;
+        tmp = combined.get()
+        tmp_df = tmp.drop(columns = [&#34;group&#34;]) # drop group as it is a numeric column and would otherwise skew the average
+        tmp_df = tmp_df.mean(axis = 1)
+        return tmp_df</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Normaliser.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, copy=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>copy</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Will return a deepcopy of the Results object if <code>copy = True</code> (default is <code>copy = False</code>).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Results</code></strong> :&ensp;<code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code></dt>
+<dd>A <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> object containing the normalised dataframe</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, copy=False):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    copy : bool
+        Will return a deepcopy of the Results object if `copy = True` (default is `copy = False`).
+    
+    Returns
+    -------
+    Results : qpcr.Results
+        A `qpcr.Results` object containing the normalised dataframe
+    &#34;&#34;&#34;
+    if copy: 
+        return deepcopy(self._Results)
+    return self._Results</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Normaliser.link"><code class="name flex">
+<span>def <span class="ident">link</span></span>(<span>self, samples: list = None, normalisers: list = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links either normaliser- or sample-data-containing <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from the same <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>samples</code></strong> :&ensp;<code>list</code> or <code>tuple</code></dt>
+<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be normalised against a normaliser.</dd>
+<dt><strong><code>normalisers</code></strong> :&ensp;<code>list</code> or <code>tuple</code></dt>
+<dd>A list of <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects coming from a <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> which shall be used as normalisers. These will be
+combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of
+combining the normalisers can be specified using the <code>prep_func()</code> method.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
+    &#34;&#34;&#34;
+    Links either normaliser- or sample-data-containing `qpcr.Results` objects coming from the same `qpcr.Analyser`.
+
+    Parameters
+    ----------
+    samples : list or tuple
+        A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+    
+    normalisers : list or tuple
+        A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+        combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
+        combining the normalisers can be specified using the `prep_func()` method.
+    &#34;&#34;&#34;
+    self._link_normaliser(normalisers)
+    self._link_samples(samples)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Normaliser.norm_func"><code class="name flex">
+<span>def <span class="ident">norm_func</span></span>(<span>self, f=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets any defined function to perform normalisation of samples against normalisers.
+If no <code>f</code> is provided, it returns the current <code>norm_func</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>f</code></strong> :&ensp;<code>function</code></dt>
+<dd>The function may accept one numeric entry for a sample and a normaliser, and must return
+a numeric value. By default <code>s/n</code> is used, where <code>s</code> is a column of sample deltaCt values, and <code>n</code> is the corresponding deltaCt column from the combined normaliser.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def norm_func(self, f = None):
+    &#34;&#34;&#34;
+    Sets any defined function to perform normalisation of samples against normalisers.
+    If no `f` is provided, it returns the current `norm_func`.
+
+    Parameters
+    ----------
+    f : function
+        The function may accept one numeric entry for a sample and a normaliser, and must return 
+        a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, and `n` is the corresponding deltaCt column from the combined normaliser.
+    &#34;&#34;&#34;
+    if type(f) == type(aux.fileID):
+        self._norm_func = f
+    elif f is None:
+        return f
+    else: 
+        aw.HardWarning(&#34;Normaliser:cannot_set_norm_func&#34;, func = f)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Normaliser.normalise"><code class="name flex">
+<span>def <span class="ident">normalise</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that may be passed to a custom <code>norm_func</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def normalise(self, **kwargs):
+    &#34;&#34;&#34;
+    Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.
+
+    Parameters
+    ----------
+    **kwargs
+        Any additional keyword arguments that may be passed to a custom `norm_func`.
+    &#34;&#34;&#34;
+    if self._normaliser is None: 
+        self._preprocess_normalisers()
+
+    if self._Assay == [] or self._normaliser is None:
+        aw.SoftWarning(&#34;Normaliser:no_data_yet&#34;)
+
+    # get normaliser dataframe
+    normaliser = self._normaliser.get()
+
+    # setup groups for _Results
+    self._Results.adopt_names(self._Assay[0])
+    self._Results.drop_cols()
+    # print(self._Results.get())
+
+    # combine normalised samples into unified dataframe
+    for S in self._Assay:
+        S_df = S.get()
+        column_name = f&#34;{S.id()}_rel_{self._normaliser.id()}&#34;
+        normalised = self._norm_func_wrapper(S_df, normaliser, **kwargs)
+        normalised = normalised.rename(column_name)
+        self._Results.add(normalised)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Normaliser.prep_func"><code class="name flex">
+<span>def <span class="ident">prep_func</span></span>(<span>self, f=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets any defined function for combined normaliser pre-processing.
+If no <code>f</code> is provided, it returns the current <code>prep_func</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>f</code></strong> :&ensp;<code>function</code></dt>
+<dd>The function may accept one list of qpcr.Results objects, and must return
+one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
+If the provided function does adhere to these criteria is NOT vetted by this method!</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prep_func(self, f = None):
+    &#34;&#34;&#34;
+    Sets any defined function for combined normaliser pre-processing.
+    If no `f` is provided, it returns the current `prep_func`.
+
+    Parameters
+    ----------
+    f : function
+        The function may accept one list of qpcr.Results objects, and must return 
+        one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
+        If the provided function does adhere to these criteria is NOT vetted by this method!
+    &#34;&#34;&#34;
+    if type(f) == type(aux.fileID):
+        self._prep_func = f
+    elif f is None:
+        return f
+    else: 
+        aw.HardWarning(&#34;Normaliser:cannot_set_prep_func&#34;, func = f)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="qpcr.Reader"><code class="flex name class">
+<span>class <span class="ident">Reader</span></span>
+<span>(</span><span>filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads qpcr raw data files in csv or excel format. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file.
+If the file is a <code>csv</code> file, it has to have two named columns; one for replicate names, one for Ct values.
+Both csv (<code>,</code> spearated) and csv2 (<code>;</code> separated) are accepted.
+If the file is an <code>excel</code> file it the relevant sections of the spreadsheet are identified automatically.
+But they require identifying headers. By default <code>Name</code> and <code>Ct</code> are assumed but these can be changed using
+the <code>name_label</code> and <code>Ct_label</code> arguments that can be passed as kwargs (they will be forwarded to the <code>.read()</code> method).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that shall be passed to the <code>read()</code> method which is immediately called during init.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Reader(_CORE_Reader):
+    &#34;&#34;&#34;
+    Reads qpcr raw data files in csv or excel format. 
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
+    &#34;&#34;&#34;
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read()
+        if &#34;;&#34; in content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read().split(&#34;\n&#34;)[0]
+            content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._CORE_Reader</li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+</dd>
+<dt id="qpcr.Results"><code class="flex name class">
+<span>class <span class="ident">Results</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles a pandas dataframe for the results from qpcr.Analyser.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Results(aux._ID):
+    &#34;&#34;&#34;
+    Handles a pandas dataframe for the results from qpcr.Analyser.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._df = None
+        self._Assay = None
+        self._stats_results = {&#34;group&#34; : [], &#34;assay&#34; : [], &#34;mean&#34; : [], &#34;stdev&#34; : [], &#34;median&#34; : []}
+        self._stats_df = None
+
+    def adopt_names(self, Assay:Assay):
+        &#34;&#34;&#34;
+        Links an instance of Assay to be used as reference for group_names
+        It copies the group_name column to the results storing dataframe.
+        This step can only be performed once!
+
+        Parameters
+        ----------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object whose group_name column will be copied.
+        &#34;&#34;&#34;
+        self._Assay = Assay
+        if self.is_empty():
+            self._df = self._Assay.get()
+            self._drop_setup_cols()
+        else:
+            aw.SoftWarning(&#34;Results:cannot_link&#34;)
+    
+    def is_named(self):
+        &#34;&#34;&#34;
+        Note
+        ----
+        This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
+        `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
+        
+        Returns 
+        -------
+        bool
+            `True` if `group_name` column is present in the Results dataframe, else `False`.
+        &#34;&#34;&#34;
+        return &#34;group_name&#34; in self._df.columns
+    
+    def names(self, as_set = False):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        names : list or None
+            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+        &#34;&#34;&#34;
+        if self._Assay is not None:
+            return self._Assay.names(as_set)
+        return None
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns 
+        -------
+        data : pd.DataFrame
+            The results dataframe
+        &#34;&#34;&#34;
+        return self._df
+
+    def is_empty(self):
+        &#34;&#34;&#34;
+        Checks if any results have been stored so far.
+
+        Returns
+        -------
+        bool
+            `True` if NO data is yet stored, else `False`.
+        &#34;&#34;&#34;
+        return self._df is None
+
+    def add(self, column:pd.Series):
+        &#34;&#34;&#34;
+        Adds a new column of either DeltaCt 
+        computed data or normalised DeltaCt data to the results dataframe.
+
+        Parameters
+        ----------
+        column : pd.Series
+            A named pandas Series or DataFrame that can be joined into the already
+            stored dataframe.
+        &#34;&#34;&#34;
+        # print(self._df)
+        # print(column)
+        self._df = self._df.join(column)
+        
+    def merge(self, *Results):
+        &#34;&#34;&#34;
+        Merges any number of other qpcr.Results objects into this one.
+        The source id of the results is added as column-name suffix. 
+
+        Parameters
+        ----------
+        *Results
+            An arbitrary number of qpcr.Results objects.
+
+        &#34;&#34;&#34;
+        new_df = self._df
+        for R in Results: 
+            R_df = R.get()
+            # we merge the dataframes based on their groups, and add the instance id as identifier
+            new_df = pd.merge(new_df, R_df[&#34;dCt&#34;], 
+                                right_index = True, left_index = True, 
+                                suffixes = [f&#34;_{self.id()}&#34;, f&#34;_{R.id()}&#34;]
+                            )
+        self._df = new_df
+
+    def drop_cols(self, *cols):
+        &#34;&#34;&#34;
+        Drops all specified columns from the dataframes
+        this is used for normaliser pre-processing.
+
+        Parameters
+        ----------
+        *cols
+            Any column names (as `str`) to be dropped.
+            If no names are specified any/all `deltaCt` data-containing columns are dropped!
+            If this is the case then the only columns retained are: `&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;`.
+        &#34;&#34;&#34;
+        if cols == ():
+            _to_drop = [c for c in self._df.columns if c not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        else:
+            _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+        self._df = self._df.drop(columns = _to_drop)
+        
+    def rename_cols(self, cols:dict):
+        &#34;&#34;&#34;
+        Renames all columns according to a dictionary as key -&gt; value.
+
+        Parameters
+        ----------
+        cols : dict
+            A dictionary specifying old column names (keys) and new colums names (values).
+        &#34;&#34;&#34;
+        self._df = self._df.rename(columns = cols)
+
+
+    def stats(self, recompute = False) -&gt; pd.DataFrame:
+        &#34;&#34;&#34;
+        Computes summary statistis about the replicate groups: 
+        `Mean`, `Median`, and `StDev` of all replicate groups, for all assays.
+        
+        Parameters
+        ----------
+        recompute : bool
+            Statistics will only be once unless recompute is set to `True`.
+
+        Returns
+        -------
+        stats_df : pd.DataFrame
+            A new dataframe containing the computed statistics for each replicate group.
+
+        &#34;&#34;&#34;
+        # if stats_df is already present, return but sorted according to samples, not groups (nicer for user to inspect)
+        if self._stats_df is not None and not recompute:
+            return self._stats_df.sort_values(&#34;assay&#34;)
+        
+        # get groups and samples 
+        groups = aux.sorted_set(list(self._df[&#34;group&#34;]))
+        samples = [c for c in self._df.columns if c not in [&#34;Sample&#34;, &#34;group&#34;, &#34;group_name&#34;, &#34;assay&#34;]]
+     
+        # compute stats for all samples per group
+        for group in groups:
+            group_subset = self._df.query(f&#34;group == {group}&#34;)
+            
+            median = self._stat_var(group_subset, np.nanmedian)
+            mean = self._stat_var(group_subset, np.nanmean)
+            stdv = self._stat_var(group_subset, np.nanstd)
+            self._add_stats(samples, group, median, mean, stdv)
+            
+        # add group names if present
+        if self.is_named():
+            self._add_stats_names(samples)
+
+        self._stats_df = pd.DataFrame(self._stats_results)
+        return self._stats_df.sort_values(&#34;assay&#34;)
+
+    def save(self, path, df = True, stats = True):
+        &#34;&#34;&#34;
+        Saves a csv file for each specified type of results.
+
+        Parameters
+        ----------
+        path : str
+            Path has to be a filepath if only one type of results shall be saved (i.e. either `df` or `stats`), 
+            otherwise a path to the directory where both `df` and `stats` shall be saved.
+        
+        df : bool
+            Save the results dataframe containing all replicate values (the full results).
+            Default is `df = True`.
+        
+        stats : bool
+            Save the results dataframe containing summary statistics for all replicate groups.
+            Default is `stats = True`.
+        
+        &#34;&#34;&#34;
+        if df and stats and not os.path.isdir(path):
+            aw.HardWarning(&#34;Results:save_need_dir&#34;)
+
+        if df:
+            self._save_single(path, self._df, &#34;_df&#34;)
+        if stats:
+            if self._stats_df is None:
+                self.stats()
+            self._save_single(path, self._stats_df, &#34;_stats&#34;)
+
+    def drop_rel(self):
+        &#34;&#34;&#34;
+        Crops the `X_rel_Y` column-names to just `X`.
+        &#34;&#34;&#34;
+        colnames = self._df.columns
+        to_change = {i : i.split(&#34;_rel_&#34;)[0] for i in colnames if &#34;_rel_&#34; in i }
+        self.rename_cols(to_change)
+
+    def split(self, reset_names = False, drop_rel = True):
+        &#34;&#34;&#34;
+        Splits the stored results dataframe into separate qpcr.Results objects containing only a signle deltaCt column each.
+
+        Parameters
+        ----------
+        reset_names : bool
+            Resets the deltaCt column-name from `&#34;X_rel_Y&#34;` to just `&#34;dCt&#34;`.
+
+        drop_rel : bool
+            Crops `&#34;X_rel_Y&#34;` deltaCt column-names to just `&#34;X&#34;`. 
+
+        Returns 
+        -------
+        objects : list
+            A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)
+        &#34;&#34;&#34;
+        shared_columns = [i for i in self._df.columns if i in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        dct_columns = [i for i in self._df.columns if i not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+        
+        dfs = [self._df[shared_columns + [i]] for i in dct_columns]
+        objects = [Results() for i in dfs]
+
+        for o, df, dct_col in zip(objects, dfs, dct_columns): 
+            o._df = df
+            if reset_names:
+                o.rename_cols({dct_col : &#34;dCt&#34;})
+            if drop_rel: 
+                o.drop_rel()
+
+            o.id(dct_col)
+        
+        return objects
+
+    def _save_single(self, path, src, suffix=&#34;&#34;):
+        &#34;&#34;&#34;
+        Saves either self._df or self._stats_df to a csv file based on a path
+        (path can be either filename or directory)
+        &#34;&#34;&#34;
+        filename = path if not os.path.isdir(path) else os.path.join(path, f&#34;rel_{self.id()}{suffix}.csv&#34;)
+        src.to_csv(filename)
+        
+    def _drop_setup_cols(self):
+        &#34;&#34;&#34;
+        Removes unnnecessary columns from the Sample df during self._df setup with link()
+        &#34;&#34;&#34;
+        self.drop_cols(&#34;Ct&#34;)
+
+
+    def _add_stats_names(self, samples):
+        &#34;&#34;&#34;
+        Adds a group_name column to self._stats_result with appropriate
+        repetition of group_names for each sample...
+        &#34;&#34;&#34;
+        self._stats_results[&#34;group_name&#34;] = []
+        group_names = aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        for group_name in group_names:
+            self._stats_results[&#34;group_name&#34;].extend([group_name] * len(samples))
+
+    def _add_stats(self, samples, group, median, mean, stdv):
+        &#34;&#34;&#34;
+        Adds new summary entries to self._stats_results
+        &#34;&#34;&#34;
+        self._stats_results[&#34;group&#34;].extend([group] * len(samples))
+        self._stats_results[&#34;assay&#34;].extend(samples)
+        self._stats_results[&#34;median&#34;].extend(median)
+        self._stats_results[&#34;mean&#34;].extend(mean)
+        self._stats_results[&#34;stdev&#34;].extend(stdv)
+
+
+    def _stat_var(self, group_subset, func, **kwargs):
+        &#34;&#34;&#34;
+        Performs a function (like mean or stdv) over all rows
+        and returns the result as list with a float for each column in the df
+        any function can be passed as long as it works with an iterable
+        &#34;&#34;&#34;
+        # ignore group and group_name columns
+        ignore = [&#34;Sample&#34;, &#34;group&#34;, &#34;group_name&#34;, &#34;assay&#34;]
+        all_cols = [g for g in group_subset.columns if g not in ignore]
+        tmp = group_subset[all_cols]
+        # compute stats based on func
+        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
+        return stats</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Results.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, column: pandas.core.series.Series)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds a new column of either DeltaCt
+computed data or normalised DeltaCt data to the results dataframe.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>column</code></strong> :&ensp;<code>pd.Series</code></dt>
+<dd>A named pandas Series or DataFrame that can be joined into the already
+stored dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add(self, column:pd.Series):
+    &#34;&#34;&#34;
+    Adds a new column of either DeltaCt 
+    computed data or normalised DeltaCt data to the results dataframe.
+
+    Parameters
+    ----------
+    column : pd.Series
+        A named pandas Series or DataFrame that can be joined into the already
+        stored dataframe.
+    &#34;&#34;&#34;
+    # print(self._df)
+    # print(column)
+    self._df = self._df.join(column)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.adopt_names"><code class="name flex">
+<span>def <span class="ident">adopt_names</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links an instance of Assay to be used as reference for group_names
+It copies the group_name column to the results storing dataframe.
+This step can only be performed once!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object whose group_name column will be copied.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adopt_names(self, Assay:Assay):
+    &#34;&#34;&#34;
+    Links an instance of Assay to be used as reference for group_names
+    It copies the group_name column to the results storing dataframe.
+    This step can only be performed once!
+
+    Parameters
+    ----------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object whose group_name column will be copied.
+    &#34;&#34;&#34;
+    self._Assay = Assay
+    if self.is_empty():
+        self._df = self._Assay.get()
+        self._drop_setup_cols()
+    else:
+        aw.SoftWarning(&#34;Results:cannot_link&#34;)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.drop_cols"><code class="name flex">
+<span>def <span class="ident">drop_cols</span></span>(<span>self, *cols)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Drops all specified columns from the dataframes
+this is used for normaliser pre-processing.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*cols</code></strong></dt>
+<dd>Any column names (as <code>str</code>) to be dropped.
+If no names are specified any/all <code>deltaCt</code> data-containing columns are dropped!
+If this is the case then the only columns retained are: <code>"group", "group_name", "Sample", "assay"</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def drop_cols(self, *cols):
+    &#34;&#34;&#34;
+    Drops all specified columns from the dataframes
+    this is used for normaliser pre-processing.
+
+    Parameters
+    ----------
+    *cols
+        Any column names (as `str`) to be dropped.
+        If no names are specified any/all `deltaCt` data-containing columns are dropped!
+        If this is the case then the only columns retained are: `&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;`.
+    &#34;&#34;&#34;
+    if cols == ():
+        _to_drop = [c for c in self._df.columns if c not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+    else:
+        _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+    self._df = self._df.drop(columns = _to_drop)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.drop_rel"><code class="name flex">
+<span>def <span class="ident">drop_rel</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Crops the <code>X_rel_Y</code> column-names to just <code>X</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def drop_rel(self):
+    &#34;&#34;&#34;
+    Crops the `X_rel_Y` column-names to just `X`.
+    &#34;&#34;&#34;
+    colnames = self._df.columns
+    to_change = {i : i.split(&#34;_rel_&#34;)[0] for i in colnames if &#34;_rel_&#34; in i }
+    self.rename_cols(to_change)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<p>data : pd.DataFrame
+The results dataframe</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    &#34;&#34;&#34;
+    Returns 
+    -------
+    data : pd.DataFrame
+        The results dataframe
+    &#34;&#34;&#34;
+    return self._df</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.is_empty"><code class="name flex">
+<span>def <span class="ident">is_empty</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if any results have been stored so far.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd><code>True</code> if NO data is yet stored, else <code>False</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_empty(self):
+    &#34;&#34;&#34;
+    Checks if any results have been stored so far.
+
+    Returns
+    -------
+    bool
+        `True` if NO data is yet stored, else `False`.
+    &#34;&#34;&#34;
+    return self._df is None</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.is_named"><code class="name flex">
+<span>def <span class="ident">is_named</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="note">Note</h2>
+<p>This is primarily a legacy function from a development-version that discarded <code>group_name</code> if no custom names were provided in <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects.
+<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects now retain the <code>group_name</code> column in any case, but migrating names into <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> is still an additional step performed by <code>adopt_names()</code>.</p>
+<h2 id="returns">Returns</h2>
+<p>bool
+<code>True</code> if <code>group_name</code> column is present in the Results dataframe, else <code>False</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_named(self):
+    &#34;&#34;&#34;
+    Note
+    ----
+    This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
+    `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
+    
+    Returns 
+    -------
+    bool
+        `True` if `group_name` column is present in the Results dataframe, else `False`.
+    &#34;&#34;&#34;
+    return &#34;group_name&#34; in self._df.columns</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.merge"><code class="name flex">
+<span>def <span class="ident">merge</span></span>(<span>self, *Results)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Merges any number of other qpcr.Results objects into this one.
+The source id of the results is added as column-name suffix. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*Results</code></strong></dt>
+<dd>An arbitrary number of qpcr.Results objects.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge(self, *Results):
+    &#34;&#34;&#34;
+    Merges any number of other qpcr.Results objects into this one.
+    The source id of the results is added as column-name suffix. 
+
+    Parameters
+    ----------
+    *Results
+        An arbitrary number of qpcr.Results objects.
+
+    &#34;&#34;&#34;
+    new_df = self._df
+    for R in Results: 
+        R_df = R.get()
+        # we merge the dataframes based on their groups, and add the instance id as identifier
+        new_df = pd.merge(new_df, R_df[&#34;dCt&#34;], 
+                            right_index = True, left_index = True, 
+                            suffixes = [f&#34;_{self.id()}&#34;, f&#34;_{R.id()}&#34;]
+                        )
+    self._df = new_df</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.names"><code class="name flex">
+<span>def <span class="ident">names</span></span>(<span>self, as_set=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<p>names : list or None
+The adopted <code>group_names</code> (only works if a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> have been linked using <code>adopt_names()</code>!)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def names(self, as_set = False):
+    &#34;&#34;&#34;
+    Returns 
+    -------
+    names : list or None
+        The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+    &#34;&#34;&#34;
+    if self._Assay is not None:
+        return self._Assay.names(as_set)
+    return None</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.rename_cols"><code class="name flex">
+<span>def <span class="ident">rename_cols</span></span>(<span>self, cols: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Renames all columns according to a dictionary as key -&gt; value.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>cols</code></strong> :&ensp;<code>dict</code></dt>
+<dd>A dictionary specifying old column names (keys) and new colums names (values).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rename_cols(self, cols:dict):
+    &#34;&#34;&#34;
+    Renames all columns according to a dictionary as key -&gt; value.
+
+    Parameters
+    ----------
+    cols : dict
+        A dictionary specifying old column names (keys) and new colums names (values).
+    &#34;&#34;&#34;
+    self._df = self._df.rename(columns = cols)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, path, df=True, stats=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves a csv file for each specified type of results.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path has to be a filepath if only one type of results shall be saved (i.e. either <code>df</code> or <code>stats</code>),
+otherwise a path to the directory where both <code>df</code> and <code>stats</code> shall be saved.</dd>
+<dt><strong><code>df</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save the results dataframe containing all replicate values (the full results).
+Default is <code>df = True</code>.</dd>
+<dt><strong><code>stats</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save the results dataframe containing summary statistics for all replicate groups.
+Default is <code>stats = True</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, path, df = True, stats = True):
+    &#34;&#34;&#34;
+    Saves a csv file for each specified type of results.
+
+    Parameters
+    ----------
+    path : str
+        Path has to be a filepath if only one type of results shall be saved (i.e. either `df` or `stats`), 
+        otherwise a path to the directory where both `df` and `stats` shall be saved.
+    
+    df : bool
+        Save the results dataframe containing all replicate values (the full results).
+        Default is `df = True`.
+    
+    stats : bool
+        Save the results dataframe containing summary statistics for all replicate groups.
+        Default is `stats = True`.
+    
+    &#34;&#34;&#34;
+    if df and stats and not os.path.isdir(path):
+        aw.HardWarning(&#34;Results:save_need_dir&#34;)
+
+    if df:
+        self._save_single(path, self._df, &#34;_df&#34;)
+    if stats:
+        if self._stats_df is None:
+            self.stats()
+        self._save_single(path, self._stats_df, &#34;_stats&#34;)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.split"><code class="name flex">
+<span>def <span class="ident">split</span></span>(<span>self, reset_names=False, drop_rel=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Splits the stored results dataframe into separate qpcr.Results objects containing only a signle deltaCt column each.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>reset_names</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Resets the deltaCt column-name from <code>"X_rel_Y"</code> to just <code>"dCt"</code>.</dd>
+<dt><strong><code>drop_rel</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Crops <code>"X_rel_Y"</code> deltaCt column-names to just <code>"X"</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>objects : list
+A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def split(self, reset_names = False, drop_rel = True):
+    &#34;&#34;&#34;
+    Splits the stored results dataframe into separate qpcr.Results objects containing only a signle deltaCt column each.
+
+    Parameters
+    ----------
+    reset_names : bool
+        Resets the deltaCt column-name from `&#34;X_rel_Y&#34;` to just `&#34;dCt&#34;`.
+
+    drop_rel : bool
+        Crops `&#34;X_rel_Y&#34;` deltaCt column-names to just `&#34;X&#34;`. 
+
+    Returns 
+    -------
+    objects : list
+        A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)
+    &#34;&#34;&#34;
+    shared_columns = [i for i in self._df.columns if i in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+    dct_columns = [i for i in self._df.columns if i not in [&#34;group&#34;, &#34;group_name&#34;, &#34;Sample&#34;, &#34;assay&#34;]]
+    
+    dfs = [self._df[shared_columns + [i]] for i in dct_columns]
+    objects = [Results() for i in dfs]
+
+    for o, df, dct_col in zip(objects, dfs, dct_columns): 
+        o._df = df
+        if reset_names:
+            o.rename_cols({dct_col : &#34;dCt&#34;})
+        if drop_rel: 
+            o.drop_rel()
+
+        o.id(dct_col)
+    
+    return objects</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Results.stats"><code class="name flex">
+<span>def <span class="ident">stats</span></span>(<span>self, recompute=False) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes summary statistis about the replicate groups:
+<code>Mean</code>, <code>Median</code>, and <code>StDev</code> of all replicate groups, for all assays.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>recompute</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Statistics will only be once unless recompute is set to <code>True</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stats_df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>A new dataframe containing the computed statistics for each replicate group.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stats(self, recompute = False) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;
+    Computes summary statistis about the replicate groups: 
+    `Mean`, `Median`, and `StDev` of all replicate groups, for all assays.
+    
+    Parameters
+    ----------
+    recompute : bool
+        Statistics will only be once unless recompute is set to `True`.
+
+    Returns
+    -------
+    stats_df : pd.DataFrame
+        A new dataframe containing the computed statistics for each replicate group.
+
+    &#34;&#34;&#34;
+    # if stats_df is already present, return but sorted according to samples, not groups (nicer for user to inspect)
+    if self._stats_df is not None and not recompute:
+        return self._stats_df.sort_values(&#34;assay&#34;)
+    
+    # get groups and samples 
+    groups = aux.sorted_set(list(self._df[&#34;group&#34;]))
+    samples = [c for c in self._df.columns if c not in [&#34;Sample&#34;, &#34;group&#34;, &#34;group_name&#34;, &#34;assay&#34;]]
+ 
+    # compute stats for all samples per group
+    for group in groups:
+        group_subset = self._df.query(f&#34;group == {group}&#34;)
+        
+        median = self._stat_var(group_subset, np.nanmedian)
+        mean = self._stat_var(group_subset, np.nanmean)
+        stdv = self._stat_var(group_subset, np.nanstd)
+        self._add_stats(samples, group, median, mean, stdv)
+        
+    # add group names if present
+    if self.is_named():
+        self._add_stats_names(samples)
+
+    self._stats_df = pd.DataFrame(self._stats_results)
+    return self._stats_df.sort_values(&#34;assay&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="qpcr.SampleReader"><code class="flex name class">
+<span>class <span class="ident">SampleReader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets up a Reader+Assay pipeline that reads in a sample file and handles the
+stored raw data in a pandas dataframe.
+Its <code>read()</code> method directly returns a <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object that can be piped to Analyser.
+Note</p>
+<hr>
+<p>This is the suggested to read in data, instead of manually setting up Reader and Assay objects.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SampleReader(Assay):
+    &#34;&#34;&#34;
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Note
+    ----
+    This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._replicates = None
+        self._names = None
+        self._Reader = None
+        self._Assay = None
+
+    def replicates(self, replicates:(int or tuple)):
+        &#34;&#34;&#34;
+        Set the replicates to group samples.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        &#34;&#34;&#34;
+        self._replicates = replicates
+
+    def names(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        self._names = names
+        
+    def read(self, filename, **kwargs):
+        &#34;&#34;&#34;
+        Reads one raw datafile (csv or excel format).
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+            the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing the grouped and renamed data.
+        &#34;&#34;&#34;
+        self._Reader = Reader(filename, **kwargs)
+        self._Reader.id(aux.fileID(filename))
+
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
+        if self._names is not None:
+            self._Assay.rename(self._names)
+
+        return self._Assay</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li>qpcr._Qupid_SampleReader</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.SampleReader.names"><code class="name flex">
+<span>def <span class="ident">names</span></span>(<span>self, names: list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set names for replicates groups.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code> or <code>dict</code></dt>
+<dd>Either a <code>list</code> (new names without repetitions) or <code>dict</code> (key = old name, value = new name) specifying new group names.
+Group names only need to be specified once, and are applied to all replicate entries.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def names(self, names:(list or dict)):
+    &#34;&#34;&#34;
+    Set names for replicates groups.
+
+    Parameters
+    ----------
+    names : list or dict
+        Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+        Group names only need to be specified once, and are applied to all replicate entries.
+    &#34;&#34;&#34;
+    self._names = names</code></pre>
+</details>
+</dd>
+<dt id="qpcr.SampleReader.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, filename, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads one raw datafile (csv or excel format).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file.
+If the file is a <code>csv</code> file, it has to have two named columns; one for replicate names, one for Ct values.
+Both csv (<code>,</code> spearated) and csv2 (<code>;</code> separated) are accepted.
+If the file is an <code>excel</code> file it the relevant sections of the spreadsheet are identified automatically.
+But they require identifying headers. By default <code>Name</code> and <code>Ct</code> are assumed but these can be changed using
+the <code>name_label</code> and <code>Ct_label</code> arguments that can be passed to <code>read()</code> as kwargs.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing the grouped and renamed data.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, filename, **kwargs):
+    &#34;&#34;&#34;
+    Reads one raw datafile (csv or excel format).
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
+
+    Returns
+    -------
+    Assay : qpcr.Assay
+        A `qpcr.Assay` object containing the grouped and renamed data.
+    &#34;&#34;&#34;
+    self._Reader = Reader(filename, **kwargs)
+    self._Reader.id(aux.fileID(filename))
+
+    self._Assay = Assay(self._Reader)
+    self._Assay.adopt_id(self._Reader)
+
+    if self._replicates is not None:
+        self._Assay.replicates(self._replicates)
+        self._Assay.group()
+    else: 
+        aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
+    if self._names is not None:
+        self._Assay.rename(self._names)
+
+    return self._Assay</code></pre>
+</details>
+</dd>
+<dt id="qpcr.SampleReader.replicates"><code class="name flex">
+<span>def <span class="ident">replicates</span></span>(<span>self, replicates: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the replicates to group samples.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>replicates</code></strong> :&ensp;<code>int</code> or <code>tuple</code></dt>
+<dd>Can be an <code>integer</code> (equal group sizes, e.g. <code>3</code> for triplicates),
+or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the second group is only a duplicate).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replicates(self, replicates:(int or tuple)):
+    &#34;&#34;&#34;
+    Set the replicates to group samples.
+
+    Parameters
+    ----------
+    replicates : int or tuple
+        Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+        or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+    &#34;&#34;&#34;
+    self._replicates = replicates</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Assay.get" href="#qpcr.Assay.get">get</a></code></li>
+<li><code><a title="qpcr.Assay.group" href="#qpcr.Assay.group">group</a></code></li>
+<li><code><a title="qpcr.Assay.groups" href="#qpcr.Assay.groups">groups</a></code></li>
+<li><code><a title="qpcr.Assay.ignore" href="#qpcr.Assay.ignore">ignore</a></code></li>
+<li><code><a title="qpcr.Assay.is_named" href="#qpcr.Assay.is_named">is_named</a></code></li>
+<li><code><a title="qpcr.Assay.link" href="#qpcr.Assay.link">link</a></code></li>
+<li><code><a title="qpcr.Assay.rename" href="#qpcr.Assay.rename">rename</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></li>
+<li><code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></li>
+<li><code><a title="qpcr.Plotters" href="Plotters.html">qpcr.Plotters</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code></h4>
+<ul class="two-column">
+<li><code><a title="qpcr.Analyser.DeltaCt" href="#qpcr.Analyser.DeltaCt">DeltaCt</a></code></li>
+<li><code><a title="qpcr.Analyser.anchor" href="#qpcr.Analyser.anchor">anchor</a></code></li>
+<li><code><a title="qpcr.Analyser.efficiency" href="#qpcr.Analyser.efficiency">efficiency</a></code></li>
+<li><code><a title="qpcr.Analyser.func" href="#qpcr.Analyser.func">func</a></code></li>
+<li><code><a title="qpcr.Analyser.get" href="#qpcr.Analyser.get">get</a></code></li>
+<li><code><a title="qpcr.Analyser.has_results" href="#qpcr.Analyser.has_results">has_results</a></code></li>
+<li><code><a title="qpcr.Analyser.link" href="#qpcr.Analyser.link">link</a></code></li>
+<li><code><a title="qpcr.Analyser.pipe" href="#qpcr.Analyser.pipe">pipe</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></h4>
+<ul class="two-column">
+<li><code><a title="qpcr.Assay.get" href="#qpcr.Assay.get">get</a></code></li>
+<li><code><a title="qpcr.Assay.group" href="#qpcr.Assay.group">group</a></code></li>
+<li><code><a title="qpcr.Assay.groups" href="#qpcr.Assay.groups">groups</a></code></li>
+<li><code><a title="qpcr.Assay.ignore" href="#qpcr.Assay.ignore">ignore</a></code></li>
+<li><code><a title="qpcr.Assay.is_named" href="#qpcr.Assay.is_named">is_named</a></code></li>
+<li><code><a title="qpcr.Assay.link" href="#qpcr.Assay.link">link</a></code></li>
+<li><code><a title="qpcr.Assay.names" href="#qpcr.Assay.names">names</a></code></li>
+<li><code><a title="qpcr.Assay.rename" href="#qpcr.Assay.rename">rename</a></code></li>
+<li><code><a title="qpcr.Assay.replicates" href="#qpcr.Assay.replicates">replicates</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Normaliser.get" href="#qpcr.Normaliser.get">get</a></code></li>
+<li><code><a title="qpcr.Normaliser.link" href="#qpcr.Normaliser.link">link</a></code></li>
+<li><code><a title="qpcr.Normaliser.norm_func" href="#qpcr.Normaliser.norm_func">norm_func</a></code></li>
+<li><code><a title="qpcr.Normaliser.normalise" href="#qpcr.Normaliser.normalise">normalise</a></code></li>
+<li><code><a title="qpcr.Normaliser.prep_func" href="#qpcr.Normaliser.prep_func">prep_func</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code></h4>
+</li>
+<li>
+<h4><code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code></h4>
+<ul class="two-column">
+<li><code><a title="qpcr.Results.add" href="#qpcr.Results.add">add</a></code></li>
+<li><code><a title="qpcr.Results.adopt_names" href="#qpcr.Results.adopt_names">adopt_names</a></code></li>
+<li><code><a title="qpcr.Results.drop_cols" href="#qpcr.Results.drop_cols">drop_cols</a></code></li>
+<li><code><a title="qpcr.Results.drop_rel" href="#qpcr.Results.drop_rel">drop_rel</a></code></li>
+<li><code><a title="qpcr.Results.get" href="#qpcr.Results.get">get</a></code></li>
+<li><code><a title="qpcr.Results.is_empty" href="#qpcr.Results.is_empty">is_empty</a></code></li>
+<li><code><a title="qpcr.Results.is_named" href="#qpcr.Results.is_named">is_named</a></code></li>
+<li><code><a title="qpcr.Results.merge" href="#qpcr.Results.merge">merge</a></code></li>
+<li><code><a title="qpcr.Results.names" href="#qpcr.Results.names">names</a></code></li>
+<li><code><a title="qpcr.Results.rename_cols" href="#qpcr.Results.rename_cols">rename_cols</a></code></li>
+<li><code><a title="qpcr.Results.save" href="#qpcr.Results.save">save</a></code></li>
+<li><code><a title="qpcr.Results.split" href="#qpcr.Results.split">split</a></code></li>
+<li><code><a title="qpcr.Results.stats" href="#qpcr.Results.stats">stats</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.SampleReader" href="#qpcr.SampleReader">SampleReader</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.SampleReader.names" href="#qpcr.SampleReader.names">names</a></code></li>
+<li><code><a title="qpcr.SampleReader.read" href="#qpcr.SampleReader.read">read</a></code></li>
+<li><code><a title="qpcr.SampleReader.replicates" href="#qpcr.SampleReader.replicates">replicates</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
