@@ -375,6 +375,8 @@ class PreviewResults(Plotter):
         show_spines = aux.from_kwargs(&#34;frame&#34;, True, kwargs, rm = True)
         show = aux.from_kwargs(&#34;show&#34;, True, kwargs, rm = True)
 
+        edgecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs, rm = True)
+        edgewidth = aux.from_kwargs(&#34;edgewidth&#34;, 0.3, kwargs, rm = True)
         figsize = aux.from_kwargs(&#34;figsize&#34;, None, kwargs, rm = True)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
 
@@ -393,8 +395,8 @@ class PreviewResults(Plotter):
                                 x = x, y = y, 
                                 ax = subplot,
 
-                                edgecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs),
-                                linewidth = aux.from_kwargs(&#34;borderwidth&#34;, 0.3, kwargs, rm = True),
+                                edgecolor = edgecolor,
+                                linewidth = edgewidth,
                                 **kwargs
                             )
 
@@ -402,7 +404,7 @@ class PreviewResults(Plotter):
                                 x = tmp_df[x], y = tmp_df[y], 
                                 yerr = tmp_df[sterr], 
                                 fmt = &#34;.&#34;, markersize = 0, capsize = 3, 
-                                ecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs),
+                                ecolor = aux.from_kwargs(&#34;ecolor&#34;, &#34;black&#34;, kwargs),
                             )
 
                 subplot.set(
@@ -712,7 +714,7 @@ if __name__ == &#39;__main__&#39;:
     )
 
     # predefined pipeline use
-    pipe = Pipes.Basic()
+    pipe = qpcr.Pipes.Basic()
     pipe.link(files)
     pipe.add_normalisers(files[:2])
     pipe.replicates(6)
@@ -1480,6 +1482,8 @@ or keep old ones (supersede = False).</dd>
         show_spines = aux.from_kwargs(&#34;frame&#34;, True, kwargs, rm = True)
         show = aux.from_kwargs(&#34;show&#34;, True, kwargs, rm = True)
 
+        edgecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs, rm = True)
+        edgewidth = aux.from_kwargs(&#34;edgewidth&#34;, 0.3, kwargs, rm = True)
         figsize = aux.from_kwargs(&#34;figsize&#34;, None, kwargs, rm = True)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
 
@@ -1498,8 +1502,8 @@ or keep old ones (supersede = False).</dd>
                                 x = x, y = y, 
                                 ax = subplot,
 
-                                edgecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs),
-                                linewidth = aux.from_kwargs(&#34;borderwidth&#34;, 0.3, kwargs, rm = True),
+                                edgecolor = edgecolor,
+                                linewidth = edgewidth,
                                 **kwargs
                             )
 
@@ -1507,7 +1511,7 @@ or keep old ones (supersede = False).</dd>
                                 x = tmp_df[x], y = tmp_df[y], 
                                 yerr = tmp_df[sterr], 
                                 fmt = &#34;.&#34;, markersize = 0, capsize = 3, 
-                                ecolor = aux.from_kwargs(&#34;edgecolor&#34;, &#34;black&#34;, kwargs),
+                                ecolor = aux.from_kwargs(&#34;ecolor&#34;, &#34;black&#34;, kwargs),
                             )
 
                 subplot.set(
@@ -1931,9 +1935,6 @@ This will simply add the Ct column to the current overall data!</p>
 </section>
 </article>
 <nav id="sidebar">
-<a href="https://github.com/NoahHenrikKleinschmidt/qpcr">
-<img src="./qpcr_light.svg" width = "100%" >
-</a>
 <h1>Index</h1>
 <div class="toc">
 <ul></ul>
