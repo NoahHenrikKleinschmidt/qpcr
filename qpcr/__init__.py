@@ -115,7 +115,7 @@ class _CORE_Reader(aux._ID):
                 break
         
         values = data[  # we start at row+1 to exclude the header
-                        slice(row+1, row + idx), 
+                        slice(row+1, row + idx+1), 
                         col
                     ]
         return values
