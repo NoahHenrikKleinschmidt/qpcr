@@ -11,7 +11,7 @@ import numpy as np
 from copy import deepcopy 
 from io import StringIO
 
-# default column names for raw Ct data files
+# default column names for raw Ct data files (don't change this!)
 RAW_COL_NAMES = ["Sample", "Ct"]
 
 class _CORE_Reader(aux._ID):
@@ -249,9 +249,15 @@ class Assay(aux._ID):
             else: 
                 aw.HardWarning("Assay:reps_dont_cover", n_samples = self._Reader.n(), reps = replicates)
 
-    def group(self):
+    def group(self, infer_names = True):
         """
         Groups the samples according to replicates specified.
+
+        Parameters
+        ----------
+        infer_names : bool
+            Try to infer names of replicate groups based on the individual replicate sample identifiers.
+            Note that this only works if all replicates have an identical sample name!
         """
         df = self._Reader.get()
         
@@ -263,9 +269,14 @@ class Assay(aux._ID):
             groups, group_names = self._make_unequal_groups()
         else:
             aw.HardWarning("Assay:no_reps_yet")
-
+        
         df["group"], df["group_name"] = groups, group_names
         self._df = df
+        
+        if infer_names:
+            # infer group names
+            self._infer_names()
+            
 
     def rename(self, names:(list or dict)):
         """
@@ -300,7 +311,21 @@ class Assay(aux._ID):
             Tuple of row indices from the dataframe to drop.
         """
         self._df = self._df.drop(index = list(entries))
+    
+
+    def _infer_names(self):
+        """
+        Infers replicate group names from the given sample identifier column
+        """
+        # get the first group of replicates
+        group0 = self._df.query("group == 0")["Sample"]
+        all_identical = all(group0 == group0[0])
         
+        if all_identical:
+            self._df["group_name"] = self._df["Sample"]
+        else: 
+            aw.SoftWarning("Assay:groupnames_not_inferred")
+
     def _rename_per_key(self, names):
         """
         Generates new name list based on current names in "group_name" and uses string.replace()
@@ -1289,7 +1314,7 @@ if __name__ == "__main__":
 
     reader = SampleReader()
     reader.replicates(6)
-    reader.names(groupnames)
+    # reader.names(groupnames)
 
     analyser = Analyser()
 
