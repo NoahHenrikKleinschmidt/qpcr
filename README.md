@@ -1,4 +1,4 @@
-# <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="30"> qpcr
+# <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="40"> qpcr
 
 ### A python module to analyse qPCR data on single-datasets or high-throughput
 
