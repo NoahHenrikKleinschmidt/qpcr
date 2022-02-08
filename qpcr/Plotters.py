@@ -62,10 +62,11 @@ class Plotter:
     """
     A superclass that handles Data Linking and Parameter setup for FigureClasses
     (not for End-User usage)
+
     Parameters
     ----------
     mode : str
-        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).    
     """
     def __init__(self, mode = None):
         self._default_params = None
@@ -315,10 +316,31 @@ class PreviewResults(Plotter):
     """
     Generate a Preview of all results from all Assays in subplots.
 
+    ### Plotting Kwargs
+    
+    Generally, "static" and "interactive" figures accept different `kwargs`, given their different underlying plotting backends. 
+    
+    #### `"static"` Kwargs
+    `"static"` `PreviewResults` figures accept the following kwargs:
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   edgecolor : `str`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
+    |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
+    |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
+
     Parameters
     ----------
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
 
     """
     def __init__(self, mode:str):
