@@ -3,24 +3,35 @@
 
 New planned features for this next release are: 
 
-### 1. Integration of `Qlipper` functionality 
-to allow starting from absorption curves already instead of Ct values
+### 1. Qupid 
+New Qupid web-app for easy access to the analysis pipeline for non-experienced users. 
 
-- 1.1 write a proper `Qlipper` module (sub-module)
-
-- 1.2 that needs an automated function to find the optimal threshold where all curves are most linear
-
-- 1.3 at that point we will probably also re-write the `Qlipper` stand-alone web-app to work with the new `qpcr.Qlipper` integration...
-
-- 1.4 a visualisation of the absorption curves alongside the threshold would be in order here as well...
+- 1.1 Make a new Qupid web-app
+- 1.2 Make functional Cores within `qpcr` for Qupid
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
-|    1.1   |      |      x       |       |
+|    1.1   |  x    |            |       |
 |    1.2   |   x   |             |       |
-|    1.3   |      |      x       |       |
-|    1.4   |      |             |       |
 
+### 2. Anchor 
+- 2.1 This new release has fixed the "grouped" anchor default settings.
+- 2.2 Also it added a new feature that allows linking a custom `function` as anchor instead of an externally computed value or the default "first" or "grouped" arguments.
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    2.1   |  x    |            |       |
+|    2.2   |   x   |             |       |
+
+
+### 3. Blueprint pipeline
+We added a new pipeline `Blueprint` which allows customization of Analyser, Normaliser, and SampleReader
+
+- 3.1 New Blueprint Pipeline
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    3.1   |  x    |            |       |
 
 # New features of *some future* release
 
