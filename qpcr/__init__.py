@@ -195,17 +195,22 @@ class Reader(_CORE_Reader):
     Parameters
     ----------
     filename : str
-        A filename. 
-        If the file is a `csv` file, it has to have two named columns; one for sample names, one for Ct values. 
-        Both csv (, spearated) and csv2 (; separated) are accepted.
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
         If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
     """
-    def __init__(self, filename:str) -> pd.DataFrame: 
+    def __init__(self, filename:str, **kwargs) -> pd.DataFrame: 
         super().__init__()
         self._src = filename
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
-        self.read()
+        self.read(**kwargs)
 
     def _is_csv2(self):
         """
@@ -595,23 +600,26 @@ class SampleReader(Assay):
         """
         self._names = names
         
-    def read(self, filename):
+    def read(self, filename, **kwargs):
         """
-        Reads one raw datafile (csv format).
+        Reads one raw datafile (csv or excel format).
 
         Parameters
         ----------
         filename : str
-            A filename to a csv containing Ct values. 
-            The file has to have two named columns; one for sample names, one for Ct values. 
-            Both csv (, spearated) and csv2 (; separated) are accepted.
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+            the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
 
         Returns
         -------
         Assay : qpcr.Assay
             A `qpcr.Assay` object containing the grouped and renamed data.
         """
-        self._Reader = Reader(filename)
+        self._Reader = Reader(filename, **kwargs)
         self._Reader.id(aux.fileID(filename))
 
         self._Assay = Assay(self._Reader)
