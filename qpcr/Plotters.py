@@ -316,30 +316,50 @@ class PreviewResults(Plotter):
     """
     Generate a Preview of all results from all Assays in subplots.
 
-    ### Plotting Kwargs
-    
-    Generally, "static" and "interactive" figures accept different `kwargs`, given their different underlying plotting backends. 
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
+
+    Plotting Kwargs
+    ----
     
     #### `"static"` Kwargs
-    `"static"` `PreviewResults` figures accept the following kwargs:
+    Static PreviewResults figures accept the following kwargs:
+    
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
     |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   color : `str`   | The fillcolor for the individual bars   | `color = "yellow"`     |
     |   edgecolor : `str`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
     |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
     |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
     |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
 
-    Parameters
-    ----------
-    mode : str
-        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive PreviewResults figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
 
 
     """
@@ -508,10 +528,6 @@ class ReplicateBoxPlot(Plotter):
     """
     Generate a boxplot figure summary for the input sample replicates.
     
-    Note
-    ----
-    This is embedded in the Filter class. Since this is designed to work with Assays and not with DeltaCt Results,
-    it redefines link to get() and not stats() the get required tables.
 
     Parameters
     ----------
@@ -520,6 +536,38 @@ class ReplicateBoxPlot(Plotter):
 
     mode : str
         The plotting mode (either `"interactive"` or `"static"`).
+
+
+    
+    Plotting Kwargs
+    ----
+    
+    #### `"static"` Kwargs
+    Static ReplicateBoxPlot figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
+    | title : `str`   |  The overall figure title   | `title = "My assays"    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive ReplicateBoxPlot figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
+
+
+
     """
     def __init__(self, Filter = None, mode="interactive"):
         self._setup_default_params(
@@ -591,6 +639,14 @@ class ReplicateBoxPlot(Plotter):
 
         fig = go.Figure()
 
+        fig.update_layout(
+                            boxmode="group", 
+                            height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                            width = aux.from_kwargs("width", None, kwargs, rm = True),
+                            template = template, 
+                            title = title,
+                        )
+
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
             
@@ -607,13 +663,6 @@ class ReplicateBoxPlot(Plotter):
                                 hoverinfo = "y+name",
                                 **kwargs,
                             ),
-                        )
-            
-           
-        fig.update_layout(
-                            boxmode="group", 
-                            template = template, 
-                            title = title,
                         )
 
         if show:
