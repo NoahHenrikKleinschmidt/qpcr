@@ -39,7 +39,7 @@ We add a method to the SampleReader which will adopt Replicate Group names based
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
-|    4.1   |      |            |       |
+|    4.1   |    x  |            |       |
 
 # New features of *some future* release
 
