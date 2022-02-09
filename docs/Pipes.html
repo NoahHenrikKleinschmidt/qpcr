@@ -113,7 +113,10 @@ class Pipeline(qpcr.SampleReader):
         if kind == &#34;stats&#34;:
             return self._stats_df
         elif kind == &#34;df&#34;:
-            return self._df
+            df = self._df
+            if &#34;assay&#34; in df.columns: 
+                df = df.drop(columns = [&#34;assay&#34;])
+            return df
         elif kind == &#34;obj&#34;:
             return self._Results
     
@@ -354,16 +357,15 @@ class BasicPlus(Basic):
         if self._save_to is not None:
             results.save(self._save_to)
 
-        # plot replicate overview
-        if self._save_to is not None:
-            for filter in self._Filters:
-
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
                 # add report location if none was specified...
                 if filter.report() is None: 
                     filter.report(self._save_to)
-                
-                figs = filter.plot()
-                self._Figures.extend(figs)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
 
         # plot results
         for plotter in self._Plotters:
@@ -388,6 +390,158 @@ class BasicPlus(Basic):
             num+=1
         return filename
 
+class Blueprint(BasicPlus):
+    &#34;&#34;&#34;
+    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
+    Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._Reader = None
+        self._Analyser = None
+        self._Normaliser = None
+
+    def Reader(self, Reader : qpcr.SampleReader = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.SampleReader` object to the pipeline.
+
+        Parameters
+        ----------
+        Reader : qpcr.SampleReader
+            A `qpcr.SampleReader` object
+        &#34;&#34;&#34;
+        if Reader is not None: 
+            self._Reader = Reader
+        return self._Reader
+
+    def Analyser(self, Analyser : qpcr.Analyser = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.Analyser` object to the pipeline.
+
+        Parameters
+        ----------
+        Analyser : qpcr.Analyser
+            A `qpcr.Analyser` object
+        &#34;&#34;&#34;
+        if Analyser is not None:
+            self._Analyser = Analyser
+        return self._Analyser
+
+    def Normaliser(self, Normaliser : qpcr.Normaliser = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.Normaliser` object to the pipeline.
+
+        Parameters
+        ----------
+        Normaliser : qpcr.Normaliser
+            A `qpcr.Normaliser` object
+        &#34;&#34;&#34;
+        if Normaliser is not None:
+            self._Normaliser = Normaliser
+        return self._Normaliser
+    
+    def _setup_cores(self):
+        &#34;&#34;&#34;
+        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        &#34;&#34;&#34;
+        if self.Reader() is None: 
+            self.Reader(qpcr.SampleReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
+    def _run(self):
+        &#34;&#34;&#34;
+        The automated standard DeltaDeltaCt pipeline. 
+        Also produces applies and Plotters to produce figures...
+        &#34;&#34;&#34;
+        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        reader = self.Reader()
+        reader.replicates(self._replicates)
+        if self._names is not None:
+            reader.names(self._names)
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for _normaliser in self._Normalisers:
+            norm = reader.read(_normaliser)
+
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            _sample = reader.read(sample)
+
+            for filter in self._Filters:
+                _sample = filter.pipe(_sample)
+
+            _sample = analyser.pipe(_sample)
+            samples.append(_sample)
+        normaliser.link(samples = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)
+
+
+
+class _Qupid_Blueprint(Blueprint):
+    &#34;&#34;&#34;
+    This is the implementation of the Plueprint pipeline for the Qupid webapp.
+    It redefines the file-reading functions with methods compatible with the UploadedFile objects from streamlit.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def _setup_cores(self):
+        &#34;&#34;&#34;
+        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        &#34;&#34;&#34;
+        if self.Reader() is None: 
+            self.Reader(qpcr._Qupid_SampleReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
 
 
 if __name__ == &#34;__main__&#34;:
@@ -400,10 +554,15 @@ if __name__ == &#34;__main__&#34;:
 
     groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
     
-    analysis = BasicPlus()
+    analysis = Blueprint()
+    
+    grouped_analyser = qpcr.Analyser()
+    grouped_analyser.anchor(&#34;grouped&#34;)
+    analysis.Analyser(grouped_analyser)
+
     analysis.save_to(&#34;Example Data 2&#34;)
-    analysis.add_assays(sample_folder) # alternative: link() for iteratively linking new assays...
-    analysis.add_normalisers(norm_folder)
+    analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
+    analysis.add_normalisers(norm_files)
     
     analysis.replicates(6)
     analysis.names(groupnames)
@@ -653,16 +812,15 @@ which cannot be customized! For customization generate your own pipeline!</p></d
         if self._save_to is not None:
             results.save(self._save_to)
 
-        # plot replicate overview
-        if self._save_to is not None:
-            for filter in self._Filters:
-
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
                 # add report location if none was specified...
                 if filter.report() is None: 
                     filter.report(self._save_to)
-                
-                figs = filter.plot()
-                self._Figures.extend(figs)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
 
         # plot results
         for plotter in self._Plotters:
@@ -694,6 +852,10 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <li>qpcr.__init__.SampleReader</li>
 <li>qpcr.__init__.Assay</li>
 <li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.Pipes.Blueprint" href="#qpcr.Pipes.Blueprint">Blueprint</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -789,6 +951,267 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 </li>
 </ul>
 </dd>
+<dt id="qpcr.Pipes.Blueprint"><code class="flex name class">
+<span>class <span class="ident">Blueprint</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Performs simple Delta-Delta-Ct analysis based on the same workflow as the <code><a title="qpcr.Pipes.Basic" href="#qpcr.Pipes.Basic">Basic</a></code> pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
+Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Blueprint(BasicPlus):
+    &#34;&#34;&#34;
+    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
+    Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._Reader = None
+        self._Analyser = None
+        self._Normaliser = None
+
+    def Reader(self, Reader : qpcr.SampleReader = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.SampleReader` object to the pipeline.
+
+        Parameters
+        ----------
+        Reader : qpcr.SampleReader
+            A `qpcr.SampleReader` object
+        &#34;&#34;&#34;
+        if Reader is not None: 
+            self._Reader = Reader
+        return self._Reader
+
+    def Analyser(self, Analyser : qpcr.Analyser = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.Analyser` object to the pipeline.
+
+        Parameters
+        ----------
+        Analyser : qpcr.Analyser
+            A `qpcr.Analyser` object
+        &#34;&#34;&#34;
+        if Analyser is not None:
+            self._Analyser = Analyser
+        return self._Analyser
+
+    def Normaliser(self, Normaliser : qpcr.Normaliser = None):
+        &#34;&#34;&#34;
+        Links a `qpcr.Normaliser` object to the pipeline.
+
+        Parameters
+        ----------
+        Normaliser : qpcr.Normaliser
+            A `qpcr.Normaliser` object
+        &#34;&#34;&#34;
+        if Normaliser is not None:
+            self._Normaliser = Normaliser
+        return self._Normaliser
+    
+    def _setup_cores(self):
+        &#34;&#34;&#34;
+        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        &#34;&#34;&#34;
+        if self.Reader() is None: 
+            self.Reader(qpcr.SampleReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
+    def _run(self):
+        &#34;&#34;&#34;
+        The automated standard DeltaDeltaCt pipeline. 
+        Also produces applies and Plotters to produce figures...
+        &#34;&#34;&#34;
+        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        reader = self.Reader()
+        reader.replicates(self._replicates)
+        if self._names is not None:
+            reader.names(self._names)
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for _normaliser in self._Normalisers:
+            norm = reader.read(_normaliser)
+
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            _sample = reader.read(sample)
+
+            for filter in self._Filters:
+                _sample = filter.pipe(_sample)
+
+            _sample = analyser.pipe(_sample)
+            samples.append(_sample)
+        normaliser.link(samples = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="qpcr.Pipes.BasicPlus" href="#qpcr.Pipes.BasicPlus">BasicPlus</a></li>
+<li><a title="qpcr.Pipes.Basic" href="#qpcr.Pipes.Basic">Basic</a></li>
+<li><a title="qpcr.Pipes.Pipeline" href="#qpcr.Pipes.Pipeline">Pipeline</a></li>
+<li>qpcr.__init__.SampleReader</li>
+<li>qpcr.__init__.Assay</li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li>qpcr.Pipes._Qupid_Blueprint</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Pipes.Blueprint.Analyser"><code class="name flex">
+<span>def <span class="ident">Analyser</span></span>(<span>self, Analyser: qpcr.__init__.Analyser = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code> object to the pipeline.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Analyser</code></strong> :&ensp;<code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code></dt>
+<dd>A <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code> object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Analyser(self, Analyser : qpcr.Analyser = None):
+    &#34;&#34;&#34;
+    Links a `qpcr.Analyser` object to the pipeline.
+
+    Parameters
+    ----------
+    Analyser : qpcr.Analyser
+        A `qpcr.Analyser` object
+    &#34;&#34;&#34;
+    if Analyser is not None:
+        self._Analyser = Analyser
+    return self._Analyser</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Pipes.Blueprint.Normaliser"><code class="name flex">
+<span>def <span class="ident">Normaliser</span></span>(<span>self, Normaliser: qpcr.__init__.Normaliser = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a <code><a title="qpcr.Normaliser" href="index.html#qpcr.Normaliser">Normaliser</a></code> object to the pipeline.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Normaliser</code></strong> :&ensp;<code><a title="qpcr.Normaliser" href="index.html#qpcr.Normaliser">Normaliser</a></code></dt>
+<dd>A <code><a title="qpcr.Normaliser" href="index.html#qpcr.Normaliser">Normaliser</a></code> object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Normaliser(self, Normaliser : qpcr.Normaliser = None):
+    &#34;&#34;&#34;
+    Links a `qpcr.Normaliser` object to the pipeline.
+
+    Parameters
+    ----------
+    Normaliser : qpcr.Normaliser
+        A `qpcr.Normaliser` object
+    &#34;&#34;&#34;
+    if Normaliser is not None:
+        self._Normaliser = Normaliser
+    return self._Normaliser</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Pipes.Blueprint.Reader"><code class="name flex">
+<span>def <span class="ident">Reader</span></span>(<span>self, Reader: qpcr.__init__.SampleReader = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a <code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code> object to the pipeline.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>Reader</code></strong> :&ensp;<code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code></dt>
+<dd>A <code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code> object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Reader(self, Reader : qpcr.SampleReader = None):
+    &#34;&#34;&#34;
+    Links a `qpcr.SampleReader` object to the pipeline.
+
+    Parameters
+    ----------
+    Reader : qpcr.SampleReader
+        A `qpcr.SampleReader` object
+    &#34;&#34;&#34;
+    if Reader is not None: 
+        self._Reader = Reader
+    return self._Reader</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Pipes.BasicPlus" href="#qpcr.Pipes.BasicPlus">BasicPlus</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Pipes.BasicPlus.Figures" href="#qpcr.Pipes.BasicPlus.Figures">Figures</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.add_assays" href="#qpcr.Pipes.Pipeline.add_assays">add_assays</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.add_filters" href="#qpcr.Pipes.BasicPlus.add_filters">add_filters</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.add_normalisers" href="#qpcr.Pipes.Pipeline.add_normalisers">add_normalisers</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.add_plotters" href="#qpcr.Pipes.BasicPlus.add_plotters">add_plotters</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.get" href="#qpcr.Pipes.Pipeline.get">get</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.link" href="#qpcr.Pipes.Pipeline.link">link</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.prune" href="#qpcr.Pipes.Pipeline.prune">prune</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.run" href="#qpcr.Pipes.Pipeline.run">run</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.save_to" href="#qpcr.Pipes.Pipeline.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Pipes.BasicPlus.softlink" href="#qpcr.Pipes.Pipeline.softlink">softlink</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="qpcr.Pipes.Pipeline"><code class="flex name class">
 <span>class <span class="ident">Pipeline</span></span>
 </code></dt>
@@ -869,7 +1292,10 @@ that ensure that elementary required inputs are provided.</p>
         if kind == &#34;stats&#34;:
             return self._stats_df
         elif kind == &#34;df&#34;:
-            return self._df
+            df = self._df
+            if &#34;assay&#34; in df.columns: 
+                df = df.drop(columns = [&#34;assay&#34;])
+            return df
         elif kind == &#34;obj&#34;:
             return self._Results
     
@@ -1062,7 +1488,10 @@ a qpcr.Results object can be returned using <code>kind="obj"</code>.</dd>
     if kind == &#34;stats&#34;:
         return self._stats_df
     elif kind == &#34;df&#34;:
-        return self._df
+        df = self._df
+        if &#34;assay&#34; in df.columns: 
+            df = df.drop(columns = [&#34;assay&#34;])
+        return df
     elif kind == &#34;obj&#34;:
         return self._Results</code></pre>
 </details>
@@ -1267,6 +1696,14 @@ add new ones and keep old ones.</p>
 <li><code><a title="qpcr.Pipes.BasicPlus.Figures" href="#qpcr.Pipes.BasicPlus.Figures">Figures</a></code></li>
 <li><code><a title="qpcr.Pipes.BasicPlus.add_filters" href="#qpcr.Pipes.BasicPlus.add_filters">add_filters</a></code></li>
 <li><code><a title="qpcr.Pipes.BasicPlus.add_plotters" href="#qpcr.Pipes.BasicPlus.add_plotters">add_plotters</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Pipes.Blueprint" href="#qpcr.Pipes.Blueprint">Blueprint</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Pipes.Blueprint.Analyser" href="#qpcr.Pipes.Blueprint.Analyser">Analyser</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.Normaliser" href="#qpcr.Pipes.Blueprint.Normaliser">Normaliser</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.Reader" href="#qpcr.Pipes.Blueprint.Reader">Reader</a></code></li>
 </ul>
 </li>
 <li>

@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>qpcr API documentation</title>
 <meta name="description" content="This module is designed to provide functions to analyse qPCR data.
-It is designed for maximal user-friendliness and streamlined data-visualisation." />
+It is designed for maximal user-friendliness and streamlined data-visualisation …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -25,6 +25,84 @@ It is designed for maximal user-friendliness and streamlined data-visualisation.
 <section id="section-intro">
 <p>This module is designed to provide functions to analyse qPCR data.
 It is designed for maximal user-friendliness and streamlined data-visualisation.</p>
+<h2 id="terminology">Terminology</h2>
+<p>Let's talk some terminology first. There are a number of important terms that you will meet when using the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module that you may feel have nothing to do with qPCR.
+Read on to learn what these terms mean and why they are important. </p>
+<h4 id="file-or-datafile">File (or "datafile")</h4>
+<p>A <code>file</code> is simply a datafile. For the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module this means either a <code>csv</code> or an <code>excel</code> file. Files are the at the very basis of our data pipeline.
+However, we do not strictly assume that these files correspond to qPCR assays per se. The default settings of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> processing classes are designed to work with
+datafiles that contain Ct values of <em>one single qPCR assay</em>. However, if your experimental setup looks differently, there are ways to adapt <code><a title="qpcr" href="#qpcr">qpcr</a></code> to handle different setups.
+However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".</p>
+<h4 id="an-assay">An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></h4>
+<p>The <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
+if this does not match your setup then this class will still handle the data of your datafiles.</p>
+<h4 id="replicates">Replicates</h4>
+<p>Each row within your datafiles corresponds to one replicate. Hence, a <em>replicate</em> is just a single pair of some identifier and a corresponding Ct value.
+That's it for what "replicates" <em>are</em>. Now to how we deal with them. The <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> class has an attribute called <code>replicates</code> which must be set
+if you want to read your data. <code>replicates</code> can be either an <code>integer</code> or a <code>tuple</code>. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets.
+Hence, we have different individual replicates that actually belong together (they form a "group", see the next paragraph!). To tell the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module that your experiment was done as
+triplicates for instance, you would specify <code>replicates = 3</code>. Of course, most qPCR machines already output averaged Ct values alongside the individual ones. If you wish to use these,
+then you might specify <code>replicates = 1</code>, for instance (there is no strict contraint to have multipltets). On the other hand, if you did biological triplicates and technical duplicates you can choose
+if you would like keep the triplicates separately or merge them together. If you choose the latter then you would assign <code>replicates = 6</code> (2x3 = 6), otherwise you might keep to <code>replicates = 2</code>.
+And so forth, you get the idea&hellip; Why then is a tuple also a valid input for <code>replicates</code>? Well, if you manually removed outliers from your data, then your groups of replicates would no longer all have the same length.
+You can account for this by specifying the number of replicates in each group in a tuple.
+However, at this point it must be mentioned that <code><a title="qpcr" href="#qpcr">qpcr</a></code> comes with <code><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code> that will handle this for you automatically, so there is no need to tamper with your datafiles manually!</p>
+<h4 id="groups-of-replicates">Groups (of Replicates)</h4>
+<p>This is one of the most fundamental terms. In the previous paragraph we already started to talk about "groups of replicates".
+Groups of replicates are, as their name already implies, well, a number of replicates that somehow belong together.
+For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions.
+We talk about <em>groups</em> of replicates instead of samples or conditions, primarily, because there might be different data setups so that these terms might not be always appropriate.
+If your data follows default arrangements, however, then a <em>group of replicates</em> is just what you would think of as a "qPCR sample".
+Groups are assigned a numeric index starting from 0, which is how they are identified by the classes.
+However, they also come with a text label called the <code>group_name</code> (you can manually set and re-set the group names as you like). Some classes such as the <code><a title="qpcr.SampleReader" href="#qpcr.SampleReader">SampleReader</a></code> class will actually just use the term <code>names</code> instead of the full <code>group_names</code>.
+Whenever you see anything "names"-related it is (super-duper most likely) a reference to the <code>group_names</code>.</p>
+<h4 id="sample">"Sample"</h4>
+<p>We described in the previous section how we use the term "group of replicates". However, you may find that there is also a term "Sample" within <code><a title="qpcr" href="#qpcr">qpcr</a></code>'s vocabulary.
+As far as the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module is concerned, the term "Sample" is intercangable with the term "Replicate" (see above) but has nothing to do with qPCR samples or experimental conditions as a wet-lab biochemist would understand them.
+You will find that your dataframes contain a "Sample" column that contains the original replicate identifiers from your datafiles.
+Why is this? Essentially because the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module does not make strict assumptions of what data is actually contained within the files, it simply considers all replicate values as its "sample data" to work on.
+So would another name have also worked here? Sure, it would have.</p>
+<h4 id="delta-ct-vs-delta-delta-ct-vs-normalisation"><code>Delta-Ct</code> vs <code>Delta-Delta-Ct</code> vs <code>normalisation</code> ???</h4>
+<p>Now it gets even more technical (sorry).
+The default analysis workflow in $\Delta \Delta Ct$ analysis is to first calculate a $\Delta Ct$ using an intra-assay reference and then calculate the $\Delta \Delta Ct$ using a normaliser assay.
+The first $\Delta Ct$ step is performed by a class called <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> using its native method <code>DeltaCt()</code>.
+Why just <code>DeltaCt()</code> and not <code>DeltaDeltaCt()</code>? Well, we call this second <code>Delta</code>-step in <code>DeltaDeltaCt</code> differently.
+We name it <code>normalisation</code>, and it is handled by a class called <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> using its native method <code>normalise()</code>.
+So, as far as the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module is concerned there is only <code>DeltaCt()</code> which performs the first $\Delta Ct$, and <code>normalise()</code> which later handles the second "delta"-step to get to $\Delta \Delta Ct$.
+Of course, this means that the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> will need to have knowledge about which <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).</p>
+<h4 id="the-anchor-and-the-reference-group">The <code>anchor</code> and the "reference group"</h4>
+<p>Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The <code>anchor</code> is simply the intra-dataset reference used by the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> to perform its first $\Delta Ct$.
+If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in <code><a title="qpcr" href="#qpcr">qpcr</a></code> terms that would be your <em>reference group</em>.
+Usually your <code>anchor</code> is part of or generated from the Ct values of your <em>reference group</em> (like their mean for instance).
+By default it is assumed that your reference group is the <em>very first</em> group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
+So, again, the <code>anchor</code> is the dataset-internal reference value used for the first $\Delta Ct$.</p>
+<h4 id="assays-vs-normalisers">"assays" vs "normalisers"</h4>
+<p>You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code>.
+For all intents and purposes, these terms simply refer to datasets stored as <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> or <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> objects (ultimately they refer to your datafiles).
+"Assays" are the short notation for assays-of-interest.
+"Normalisers" on the other hand are your normaliser-assays (from housekeeping genes like ActinB for instance).
+You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode).
+In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays.
+In fact, the entries within the "assay" column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it'll be immediately clear).
+Please, do not confuse these with the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!</p>
+<p>The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.</p>
+<h4 id="results-my-final-results">"Results" = my final results?</h4>
+<p>Yes and no. Anything that is computed through any of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> classes is called a "result" of some kind.
+In practice as soon as you pass your data through an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> you generate some "results" which are actually stored in a separate class called <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> (that's not so important, though).
+The <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> that comes out of your <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> will probably be what you would think of as your "final results", yes. The one from the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> will probably not be.</p>
+<h4 id="getting-your-data"><code>get</code>ting your data</h4>
+<p>Too many classes and objects? Well, no worries, the underlying data is stored as <code>pandas DataFrames</code>. To get your data from the clutches of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> processing classes you can always use the <code>get()</code> method.
+<code>get</code> is pretty universal in the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module, so whenever you want to extract your data, there's a <code>get()</code> method to help you. </p>
+<h4 id="link-vs-add-vs-pipe"><code>link</code> vs <code>add</code> vs <code>pipe</code></h4>
+<p>Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object or a single filepath as <code>string</code>)
+usually have a <code>link()</code> method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> would perform <code>DeltaCt()</code> for instance).
+Some classes such as the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> have a wrapper that will call both their <code>link()</code> as well as their actual core-functional method together in one go. This wrapper is called <code>pipe()</code>.
+So for the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> you could either manually use <code>link()</code> and then <code>DeltaCt()</code>, or simply call <code>pipe()</code> which does both for you. It is noteworthy that <code>pipe</code> methods actually <em>return</em> whatever
+their output is, which is <em>not</em> normally the case otherwise (normally you'd use the <code>get()</code> method to extract your data, see above).
+Alright, we know about <code>link()</code> and <code>pipe()</code> now, what about <code>add</code>?
+Classes that accept multiple inputs have <code>add</code> methods, which tells the class where exactly to store the input data.
+<code>add</code>-methods are especially implemented within the pre-defined analysis pipelines of the <code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code> submodule. You will probably often use the methods <code>add_assays()</code> and <code>add_normalisers()</code> if you plan on using these predefined pipelines.
+However, these classes usually still have a <code>link()</code> method somewhere that you can use as well. For instance, the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> uses a <code>link</code> method to add both assays-of-interest and normaliser-assays simultaneously.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -32,35 +110,125 @@ It is designed for maximal user-friendliness and streamlined data-visualisation.
 <pre><code class="python">&#34;&#34;&#34;
 This module is designed to provide functions to analyse qPCR data. 
 It is designed for maximal user-friendliness and streamlined data-visualisation.
+
+Terminology
+-------
+
+Let&#39;s talk some terminology first. There are a number of important terms that you will meet when using the `qpcr` module that you may feel have nothing to do with qPCR. 
+Read on to learn what these terms mean and why they are important. 
+
+#### File (or &#34;datafile&#34;)
+A `file` is simply a datafile. For the `qpcr` module this means either a `csv` or an `excel` file. Files are the at the very basis of our data pipeline. 
+However, we do not strictly assume that these files correspond to qPCR assays per se. The default settings of the `qpcr` processing classes are designed to work with 
+datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
+However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a &#34;qPCR assay&#34;.
+
+#### An `qpcr.Assay`
+The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
+if this does not match your setup then this class will still handle the data of your datafiles.
+
+#### Replicates
+Each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
+That&#39;s it for what &#34;replicates&#34; _are_. Now to how we deal with them. The `qpcr.Assay` class has an attribute called `replicates` which must be set 
+if you want to read your data. `replicates` can be either an `integer` or a `tuple`. Why&#39;s that? Well, normally we perform experiments as &#34;triplicates&#34;, or &#34;duplicates&#34;, or whatever multiplets. 
+Hence, we have different individual replicates that actually belong together (they form a &#34;group&#34;, see the next paragraph!). To tell the `qpcr` module that your experiment was done as 
+triplicates for instance, you would specify `replicates = 3`. Of course, most qPCR machines already output averaged Ct values alongside the individual ones. If you wish to use these, 
+then you might specify `replicates = 1`, for instance (there is no strict contraint to have multipltets). On the other hand, if you did biological triplicates and technical duplicates you can choose
+if you would like keep the triplicates separately or merge them together. If you choose the latter then you would assign `replicates = 6` (2x3 = 6), otherwise you might keep to `replicates = 2`. 
+And so forth, you get the idea... Why then is a tuple also a valid input for `replicates`? Well, if you manually removed outliers from your data, then your groups of replicates would no longer all have the same length. 
+You can account for this by specifying the number of replicates in each group in a tuple. 
+However, at this point it must be mentioned that `qpcr` comes with `Filters` that will handle this for you automatically, so there is no need to tamper with your datafiles manually!
+
+#### Groups (of Replicates)
+This is one of the most fundamental terms. In the previous paragraph we already started to talk about &#34;groups of replicates&#34;. 
+Groups of replicates are, as their name already implies, well, a number of replicates that somehow belong together.
+For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions. 
+We talk about _groups_ of replicates instead of samples or conditions, primarily, because there might be different data setups so that these terms might not be always appropriate.
+If your data follows default arrangements, however, then a _group of replicates_ is just what you would think of as a &#34;qPCR sample&#34;. 
+Groups are assigned a numeric index starting from 0, which is how they are identified by the classes. 
+However, they also come with a text label called the `group_name` (you can manually set and re-set the group names as you like). Some classes such as the `qpcr.SampleReader` class will actually just use the term `names` instead of the full `group_names`. 
+Whenever you see anything &#34;names&#34;-related it is (super-duper most likely) a reference to the `group_names`.
+
+#### &#34;Sample&#34;
+We described in the previous section how we use the term &#34;group of replicates&#34;. However, you may find that there is also a term &#34;Sample&#34; within `qpcr`&#39;s vocabulary. 
+As far as the `qpcr` module is concerned, the term &#34;Sample&#34; is intercangable with the term &#34;Replicate&#34; (see above) but has nothing to do with qPCR samples or experimental conditions as a wet-lab biochemist would understand them. 
+You will find that your dataframes contain a &#34;Sample&#34; column that contains the original replicate identifiers from your datafiles. 
+Why is this? Essentially because the `qpcr` module does not make strict assumptions of what data is actually contained within the files, it simply considers all replicate values as its &#34;sample data&#34; to work on.
+So would another name have also worked here? Sure, it would have.
+
+#### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
+Now it gets even more technical (sorry).
+The default analysis workflow in $\Delta \Delta Ct$ analysis is to first calculate a $\Delta Ct$ using an intra-assay reference and then calculate the $\Delta \Delta Ct$ using a normaliser assay. 
+The first $\Delta Ct$ step is performed by a class called `qpcr.Analyser` using its native method `DeltaCt()`. 
+Why just `DeltaCt()` and not `DeltaDeltaCt()`? Well, we call this second `Delta`-step in `DeltaDeltaCt` differently. 
+We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser` using its native method `normalise()`. 
+So, as far as the `qpcr` module is concerned there is only `DeltaCt()` which performs the first $\Delta Ct$, and `normalise()` which later handles the second &#34;delta&#34;-step to get to $\Delta \Delta Ct$. 
+Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don&#39;t worry about that).
+
+#### The `anchor` and the &#34;reference group&#34;
+Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
+If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some &#34;wildtype&#34;, &#34;untreated&#34;, or &#34;control&#34; sample, right? Well, in `qpcr` terms that would be your _reference group_.
+Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their mean for instance).
+By default it is assumed that your reference group is the _very first_ group of replicates. However, it&#39;s not a big problem if this is not the case, as you can specify different anchors easily.
+So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
+
+#### &#34;assays&#34; vs &#34;normalisers&#34;
+You will likely encounter methods and/or arguments that speak of &#34;assays&#34; and &#34;normalisers&#34;, especially with the `qpcr.Normaliser`. 
+For all intents and purposes, these terms simply refer to datasets stored as `qpcr.Assay` or `qpcr.Results` objects (ultimately they refer to your datafiles). 
+&#34;Assays&#34; are the short notation for assays-of-interest. 
+&#34;Normalisers&#34; on the other hand are your normaliser-assays (from housekeeping genes like ActinB for instance). 
+You will also find that the term &#34;assays&#34; is used within the final results dataframe (when using the summary-statistics mode). 
+In this setting &#34;assays&#34; refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
+In fact, the entries within the &#34;assay&#34; column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it&#39;ll be immediately clear).
+Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!
+
+The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.
+
+#### &#34;Results&#34; = my final results?
+Yes and no. Anything that is computed through any of the `qpcr` classes is called a &#34;result&#34; of some kind.
+In practice as soon as you pass your data through an `qpcr.Analyser` or `qpcr.Normaliser` you generate some &#34;results&#34; which are actually stored in a separate class called `qpcr.Results` (that&#39;s not so important, though).
+The `qpcr.Results` that comes out of your `qpcr.Normaliser` will probably be what you would think of as your &#34;final results&#34;, yes. The one from the `qpcr.Analyser` will probably not be.
+
+#### `get`ting your data
+Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` processing classes you can always use the `get()` method. 
+`get` is pretty universal in the `qpcr` module, so whenever you want to extract your data, there&#39;s a `get()` method to help you. 
+
+#### `link` vs `add` vs `pipe`
+Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single `qpcr.Assay` object or a single filepath as `string`)
+usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an `qpcr.Analyser` would perform `DeltaCt()` for instance). 
+Some classes such as the `qpcr.Analyser` have a wrapper that will call both their `link()` as well as their actual core-functional method together in one go. This wrapper is called `pipe()`. 
+So for the `qpcr.Analyser` you could either manually use `link()` and then `DeltaCt()`, or simply call `pipe()` which does both for you. It is noteworthy that `pipe` methods actually _return_ whatever
+their output is, which is *not* normally the case otherwise (normally you&#39;d use the `get()` method to extract your data, see above).
+Alright, we know about `link()` and `pipe()` now, what about `add`?  Classes that accept multiple inputs have `add` methods, which tells the class where exactly to store the input data. 
+`add`-methods are especially implemented within the pre-defined analysis pipelines of the `qpcr.Pipes` submodule. You will probably often use the methods `add_assays()` and `add_normalisers()` if you plan on using these predefined pipelines.
+However, these classes usually still have a `link()` method somewhere that you can use as well. For instance, the `qpcr.Normaliser` uses a `link` method to add both assays-of-interest and normaliser-assays simultaneously.
+
+
 &#34;&#34;&#34;
 
 import pandas as pd
 import qpcr._auxiliary as aux
 from qpcr._auxiliary import warnings as aw
+import qpcr.Parsers as Parsers
 import os
 import numpy as np 
 from copy import deepcopy 
+from io import StringIO
 
-
-# default column names for raw Ct data files
+# default column names for raw Ct data files (don&#39;t change this!)
 RAW_COL_NAMES = [&#34;Sample&#34;, &#34;Ct&#34;]
 
-class Reader(aux._ID):
+class _CORE_Reader(aux._ID):
     &#34;&#34;&#34;
-    Reads qpcr raw data files in csv format. 
-
-    Parameters
-    ----------
-    filename : str
-        A filename to a csv containing Ct values. 
-        The file has to have two named columns; one for sample names, one for Ct values. 
-        Both csv (, spearated) and csv2 (; separated) are accepted.
+    The class handling the core functions of the Reader class. 
+    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+    inherit from this. 
     &#34;&#34;&#34;
-    def __init__(self, filename:str) -&gt; pd.DataFrame: 
+    def __init__(self):
         super().__init__()
-        self._src = filename
-        self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
-        self.read()
+        self._src = None
+        self._delimiter = None
+        self._df = None
 
     def get(self):
         &#34;&#34;&#34;
@@ -80,17 +248,207 @@ class Reader(aux._ID):
         &#34;&#34;&#34;
         return len(self._df[&#34;Sample&#34;])
 
-    def read(self):
+
+    def read(self, **kwargs):
         &#34;&#34;&#34;
-        Reads the given data file
+        Reads the given data file.
+
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file. Note, this assumes by default
+        that the replicates are headed by the label `&#34;Name&#34;` and the corresponding Ct values
+        are headed by the label `&#34;Ct&#34;`. Both labels have to be on the same row. 
+
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
         &#34;&#34;&#34;
-        self._df = pd.read_csv(
+        suffix = self._filesuffix()
+        if suffix == &#34;csv&#34;:
+            try: 
+                self._csv_read()
+            except:
+                parser = Parsers.CsvParser()
+                assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+                assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+                parser.assay_pattern(assay_pattern)
+                parser.pipe(self._src, **kwargs)
+
+                if len(parser.assays()) &gt; 1:
+                    if assay_of_interest is None: 
+                        aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays())
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+                else:
+                    assay_of_interest = parser.assays()[0]
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+
+        elif suffix == &#34;xlsx&#34;:
+            parser = Parsers.ExcelParser()
+            assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+            assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+            parser.assay_pattern(assay_pattern)
+            parser.pipe(self._src, **kwargs)
+
+            if len(parser.assays()) &gt; 1:
+                if assay_of_interest is None: 
+                    aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays())
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+            else:
+                assay_of_interest = parser.assays()[0]
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+
+            # self._excel_read(**kwargs)
+
+    def _parse_read(self, data, name_label = &#34;Name&#34;, Ct_label = &#34;Ct&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
+        This is the funtional core of the _excel_read() method, but also works as a backup read method
+        in case a csv converted input file is provided that does not conform to the default two-column structure
+        requirements. 
+
+        Parameters
+        ----------
+        data : np.ndarray
+            A numpy array of the raw data file.
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        # locate name_label and Ct_label
+        names_loc = np.argwhere(data == name_label)
+        cts_loc = np.argwhere(data == Ct_label)
+
+        # check if locations match, if not, get the one where both share the same row
+        names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
+
+        # get the values from the excel sheet array
+        sample_ids = self._get_values_from_range(data, names_loc)
+        ct_values = self._get_values_from_range(data, cts_loc)
+
+        # assemble the dataframe
+        df = pd.DataFrame(
+                            dict(
+                                    Sample = sample_ids, 
+                                    Ct = ct_values
+                                )
+                        )
+        return df
+
+    def _excel_read(self, name_label = &#34;Name&#34;, Ct_label = &#34;Ct&#34;, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s an excel file
+
+        Parameters
+        ----------
+        name_label : str
+            The header above the replicate sample ids.
+        Ct_label : str
+            The header above the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src)
+        data = data.to_numpy()
+
+        # parse file and get data
+        df = self._parse_read(data, name_label, Ct_label)
+        self._df = df
+        
+
+    def _get_values_from_range(self, data, indices):
+        &#34;&#34;&#34;
+        Gets values from an excel spreadhseet as numpy ndarray starting from the indices
+        provided until the cells are filled with np.nan
+        &#34;&#34;&#34;
+        row, col = indices
+        idx = 0
+        value = 0
+        while True:
+            idx += 1
+            try: value = data[row + idx, col]
+            except: break
+            if value == np.nan: 
+                break
+        
+        values = data[  # we start at row+1 to exclude the header
+                        slice(row+1, row + idx+1), 
+                        col
+                    ]
+        return values
+
+    def _adjust_loc_shapes(self, names_loc, cts_loc):
+        &#34;&#34;&#34;
+        Adjusts the location indices of the start of sample ids and ct values,
+        in case the headers were identified multiple times in the spreadsheet.
+
+        It returns the location indices for both names (ids) and ct values that are 
+        on the same row.
+        &#34;&#34;&#34;
+        trans_names = np.transpose(names_loc)
+        trans_cts = np.transpose(cts_loc)
+
+        # get common index for the row, first apply to names
+        common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
+        names_loc = names_loc[common_row_index]
+        # now also apply to cts
+        common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
+        cts_loc = cts_loc[common_row_index]
+
+        # now reduce shape back to 1D
+        names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
+
+        return names_loc, cts_loc
+            
+        
+    def _csv_read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s a csv file
+        &#34;&#34;&#34;
+        df = None
+        try: 
+            df = pd.read_csv(
                                 self._src, 
                                 sep = self._delimiter, 
                                 header = self._has_header(), 
                                 names = RAW_COL_NAMES
                             )
-        # self._df[&#34;_index&#34;] = list(self._df.index)
+        except: 
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        self._df = df
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._src.split(&#34;.&#34;)[-1]
+        return suffix
+
+class Reader(_CORE_Reader):
+    &#34;&#34;&#34;
+    Reads qpcr raw data files in csv or excel format. 
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
+    &#34;&#34;&#34;
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
 
     def _is_csv2(self):
         &#34;&#34;&#34;
@@ -119,6 +477,62 @@ class Reader(aux._ID):
             return 0 # Headers in row 0
         return None  # no headers
 
+
+class _Qupid_Reader(_CORE_Reader):
+    &#34;&#34;&#34;
+    This Reader class works with streamlit&#39;s UploadedFile class.
+    
+    Note
+    -------
+    We have to use a little hack to make the UploadedFile readable.
+    We convert to a string and then back to a StringIO which we can then pass to pandas...
+    
+    Parameters
+    ----------
+    file
+        A streamlit UploadedFile object
+    &#34;&#34;&#34;
+    def __init__(self, file) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._filename = file.name
+        if self._filesuffix() == &#34;csv&#34;:
+            self._content = file.read().decode()
+            self._src = StringIO(self._content)
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        else: 
+            self._src = file
+        self.read()
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._filename.split(&#34;.&#34;)[-1]
+        return suffix
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        if &#34;;&#34; in self._content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        content = self._content.split(&#34;\n&#34;)[0]
+        content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
 
 class Assay(aux._ID):
     &#34;&#34;&#34;
@@ -205,28 +619,44 @@ class Assay(aux._ID):
         &#34;&#34;&#34;
         return sorted(list(set(self._df[&#34;group&#34;])))
 
-    def replicates(self, replicates : (int or tuple) = None):
+    def replicates(self, replicates : (int or tuple or str) = None):
         &#34;&#34;&#34;
         Either sets or gets the replicates to be used for grouping the samples
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
 
         Parameters
         ----------
-        replicates : int or tuple
+        replicates : int or tuple or str
             Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+            any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
         &#34;&#34;&#34;
         if replicates is None:
             return self._replicates
         else: 
+            # convert a string formula to tuple if one was provided
+            if isinstance(replicates, str): 
+                replicates = self._reps_from_formula(replicates)
+            # vet replicate coverage
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
                 aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = self._Reader.n(), reps = replicates)
 
-    def group(self):
+    def group(self, infer_names = True):
         &#34;&#34;&#34;
         Groups the samples according to replicates specified.
+
+        Parameters
+        ----------
+        infer_names : bool
+            Try to infer names of replicate groups based on the individual replicate sample identifiers.
+            Note that this only works if all replicates have an identical sample name!
         &#34;&#34;&#34;
         df = self._Reader.get()
         
@@ -238,9 +668,14 @@ class Assay(aux._ID):
             groups, group_names = self._make_unequal_groups()
         else:
             aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
-
+        
         df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
         self._df = df
+        
+        if infer_names:
+            # infer group names
+            self._infer_names()
+            
 
     def rename(self, names:(list or dict)):
         &#34;&#34;&#34;
@@ -275,7 +710,43 @@ class Assay(aux._ID):
             Tuple of row indices from the dataframe to drop.
         &#34;&#34;&#34;
         self._df = self._df.drop(index = list(entries))
+    
+    def _reps_from_formula(self, replicates):
+        &#34;&#34;&#34;
+        Generates a replicate tuple from a string formula. 
+        See the docstring of `replicates()` for more info on the formula.
+
+        Example:
+        &#34;3:4,1:4,2:3,9&#34; -&gt; (3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 9)
+        &#34;&#34;&#34;
+
+        # split the formula and adjust standard formatting
+        replicates = replicates.split(&#34;,&#34;)
+        replicates = [i + &#34;:1&#34; if &#34;:&#34; not in i else i for i in replicates]
+
+        # convert to numeric values and extend
+        replicates = [np.array(i.split(&#34;:&#34;), dtype = int) for i in replicates]
+        replicates = [np.tile(i[0], i[1]) for i in replicates]
         
+        # generate replicate tuple
+        replicates = np.concatenate(replicates)
+        replicates = tuple(replicates)
+        
+        return replicates
+
+    def _infer_names(self):
+        &#34;&#34;&#34;
+        Infers replicate group names from the given sample identifier column
+        &#34;&#34;&#34;
+        # get the first group of replicates
+        group0 = self._df.query(&#34;group == 0&#34;)[&#34;Sample&#34;]
+        all_identical = all(group0 == group0[0])
+        
+        if all_identical:
+            self._df[&#34;group_name&#34;] = self._df[&#34;Sample&#34;]
+        else: 
+            aw.SoftWarning(&#34;Assay:groupnames_not_inferred&#34;)
+
     def _rename_per_key(self, names):
         &#34;&#34;&#34;
         Generates new name list based on current names in &#34;group_name&#34; and uses string.replace()
@@ -349,7 +820,8 @@ class Assay(aux._ID):
         returns True if all samples are covered, False if not...
         &#34;&#34;&#34;
         samples = self._Reader.n()
-
+        verdict = None
+        
         # for INT -&gt; modulo will be 0 if all samples are covered
         # for TUPLE -&gt; sum(replicates) should cover all samples...
 
@@ -357,6 +829,10 @@ class Assay(aux._ID):
             verdict = True if samples % replicates == 0 else False
         elif isinstance(replicates, tuple): 
             verdict = True if sum(replicates) == samples else False
+        
+        if verdict is None: 
+            aw.HardWarning(&#34;Assay:reps_could_not_vet&#34;, reps = replicates)
+
         return verdict
 
 class SampleReader(Assay):
@@ -399,23 +875,26 @@ class SampleReader(Assay):
         &#34;&#34;&#34;
         self._names = names
         
-    def read(self, filename):
+    def read(self, filename, **kwargs):
         &#34;&#34;&#34;
-        Reads one raw datafile (csv format).
+        Reads one raw datafile (csv or excel format).
 
         Parameters
         ----------
         filename : str
-            A filename to a csv containing Ct values. 
-            The file has to have two named columns; one for sample names, one for Ct values. 
-            Both csv (, spearated) and csv2 (; separated) are accepted.
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+            the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
 
         Returns
         -------
         Assay : qpcr.Assay
             A `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
-        self._Reader = Reader(filename)
+        self._Reader = Reader(filename, **kwargs)
         self._Reader.id(aux.fileID(filename))
 
         self._Assay = Assay(self._Reader)
@@ -424,12 +903,57 @@ class SampleReader(Assay):
         if self._replicates is not None:
             self._Assay.replicates(self._replicates)
             self._Assay.group()
-        
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
         if self._names is not None:
             self._Assay.rename(self._names)
 
         return self._Assay
 
+class _Qupid_SampleReader(SampleReader):
+    &#34;&#34;&#34;
+    Sets up a Reader+Assay pipeline that reads in a sample file and handles the 
+    stored raw data in a pandas dataframe. 
+    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    Note
+    ----
+    This is the Qupid applicable version of the SampleReader
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        
+
+    def read(self, file):
+        &#34;&#34;&#34;
+        Reads one raw datafile (csv format).
+
+        Parameters
+        ----------
+        file
+            An UploadedFile object from streamlit.
+
+        Returns
+        -------
+        Assay : qpcr.Assay
+            A `qpcr.Assay` object containing the grouped and renamed data.
+        &#34;&#34;&#34;
+        self._Reader = _Qupid_Reader(file)
+        self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
+
+        self._Assay = Assay(self._Reader)
+        self._Assay.adopt_id(self._Reader)
+
+        if self._replicates is not None:
+            self._Assay.replicates(self._replicates)
+            self._Assay.group()
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
+        if self._names is not None:
+            self._Assay.rename(self._names)
+
+        return self._Assay
 
 class Results(aux._ID):
     &#34;&#34;&#34;
@@ -504,9 +1028,6 @@ class Results(aux._ID):
             `True` if NO data is yet stored, else `False`.
         &#34;&#34;&#34;
         return self._df is None
-
-# ah for whatever funcking reason it tries to add the HNRNPL_rel28fuck twice
-# dunno why, sucks big time... 
 
     def add(self, column:pd.Series):
         &#34;&#34;&#34;
@@ -732,7 +1253,13 @@ class Results(aux._ID):
         all_cols = [g for g in group_subset.columns if g not in ignore]
         tmp = group_subset[all_cols]
         # compute stats based on func
-        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
+        stats = []
+        for col in tmp.columns:
+            try: 
+                stat = func(tmp[col], **kwargs)
+            except: 
+                stat = np.nan
+            stats.append(stat)
         return stats
         
 
@@ -869,8 +1396,11 @@ class Analyser(aux._ID):
         anchor : str or float
             The internal anchor for normalisation.
             This can be either `&#34;first&#34;` (default, the very first dataset entry),
-            `&#34;grouped&#34;` (first entry for each replicate group), or 
-            any specified numeric value (as `float`).
+            `&#34;grouped&#34;` (first entry for each replicate group), 
+            any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+            If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+            `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+            `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
         &#34;&#34;&#34;
         self._anchor = anchor
 
@@ -910,8 +1440,24 @@ class Analyser(aux._ID):
             self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
         elif self._anchor == &#34;grouped&#34;:
             self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
-        else: 
+        elif isinstance(self._anchor, (float, int)): 
             self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        elif type(self._anchor) == type(aux.fileID):
+            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+
+    def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a function as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        # update a &#34;data&#34; argument into the kwargs for the anchor_function
+        if &#34;data&#34; not in kwargs.keys(): 
+            kwargs.update(dict(data = df))
+        anchor = anchor_function(**kwargs)
+
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
@@ -933,10 +1479,11 @@ class Analyser(aux._ID):
 
         dCt = pd.Series()
         for group in groups: 
-            group_subset = df.query(f&#34;group == {group}&#34;)
+            group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
             anchor = group_subset[&#34;Ct&#34;][0]
             delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
-            dCt.append(delta_cts)
+            dCt = dCt.append(delta_cts).reset_index(drop = True)
+        dCt.name = &#34;dCt&#34;
         self._Results.add(dCt)
 
     def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
@@ -1200,16 +1747,26 @@ class Normaliser(aux._ID):
 if __name__ == &#34;__main__&#34;:
     
     files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;, &#34;Example Data/HNRNPL_nmd.csv&#34;, &#34;Example Data/HNRNPL_prot.csv&#34;]
+    files = [&#34;Example Data 2/28S.csv&#34;, &#34;Example Data 2/actin.csv&#34;, &#34;Example Data 2/HNRNPL_nmd.csv&#34;, &#34;Example Data 2/HNRNPL_prot.csv&#34;]
+
     groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
 
     analysers = []
 
     reader = SampleReader()
-    reader.replicates(6)
-    reader.names(groupnames)
+    reader.replicates(&#34;6:4&#34;)
+    # reader.names(groupnames)
 
     analyser = Analyser()
-    analyser.anchor(&#34;first&#34;)
+
+    def myanchor(data):
+        &#34;&#34;&#34;
+        computes a custom anchor
+        &#34;&#34;&#34;
+        df = data.query(&#34;group == 0&#34;)[&#34;Ct&#34;].reset_index(drop=True)
+        return df.mean()
+
+    analyser.anchor(myanchor)
 
     for file in files: 
 
@@ -1224,7 +1781,6 @@ if __name__ == &#34;__main__&#34;:
         # analyser.link(sample, force=True, silent = False)
         # analyser.DeltaCt()
         # res = analyser.get()
-
         res = analyser.pipe(sample)
         # print(res)
         analysers.append(res)
@@ -1279,6 +1835,11 @@ if __name__ == &#34;__main__&#34;:
 <dd>
 <div class="desc"><p>This submodule defines a number of filters that can be used to
 remove faulty reads prior to deltact analysis …</p></div>
+</dd>
+<dt><code class="name"><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code></dt>
+<dd>
+<div class="desc"><p>This module contains classes designed to work with irregularly structured datafiles.
+It provides <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> that are able to extract the replicate and …</p></div>
 </dd>
 <dt><code class="name"><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></dt>
 <dd>
@@ -1451,8 +2012,11 @@ Note</p>
         anchor : str or float
             The internal anchor for normalisation.
             This can be either `&#34;first&#34;` (default, the very first dataset entry),
-            `&#34;grouped&#34;` (first entry for each replicate group), or 
-            any specified numeric value (as `float`).
+            `&#34;grouped&#34;` (first entry for each replicate group), 
+            any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+            If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+            `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+            `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
         &#34;&#34;&#34;
         self._anchor = anchor
 
@@ -1492,8 +2056,24 @@ Note</p>
             self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
         elif self._anchor == &#34;grouped&#34;:
             self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
-        else: 
+        elif isinstance(self._anchor, (float, int)): 
             self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        elif type(self._anchor) == type(aux.fileID):
+            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+
+    def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using a function as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+        # update a &#34;data&#34; argument into the kwargs for the anchor_function
+        if &#34;data&#34; not in kwargs.keys(): 
+            kwargs.update(dict(data = df))
+        anchor = anchor_function(**kwargs)
+
+        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
+
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
@@ -1515,10 +2095,11 @@ Note</p>
 
         dCt = pd.Series()
         for group in groups: 
-            group_subset = df.query(f&#34;group == {group}&#34;)
+            group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
             anchor = group_subset[&#34;Ct&#34;][0]
             delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
-            dCt.append(delta_cts)
+            dCt = dCt.append(delta_cts).reset_index(drop = True)
+        dCt.name = &#34;dCt&#34;
         self._Results.add(dCt)
 
     def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
@@ -1591,8 +2172,10 @@ set using the respective methods prior to calling <code>DeltaCt()</code>!</p>
         self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
     elif self._anchor == &#34;grouped&#34;:
         self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
-    else: 
-        self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)</code></pre>
+    elif isinstance(self._anchor, (float, int)): 
+        self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+    elif type(self._anchor) == type(aux.fileID):
+        self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Analyser.anchor"><code class="name flex">
@@ -1605,8 +2188,11 @@ set using the respective methods prior to calling <code>DeltaCt()</code>!</p>
 <dt><strong><code>anchor</code></strong> :&ensp;<code>str</code> or <code>float</code></dt>
 <dd>The internal anchor for normalisation.
 This can be either <code>"first"</code> (default, the very first dataset entry),
-<code>"grouped"</code> (first entry for each replicate group), or
-any specified numeric value (as <code>float</code>).</dd>
+<code>"grouped"</code> (first entry for each replicate group),
+any specified numeric value (as <code>float</code>), or a <code>function</code> that will calculate the anchor and returns a single numeric value.
+If you wish to use a function to compute the anchor, you can access the dataframe stored by the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> that is being analysed through the
+<code>data</code> argument. <code>data</code> will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+<code>**kwargs</code> because any kwargs supplied during <code>DeltaCt()</code>-calling will be passed per default to both the anchor-function and DeltaCt-function.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1621,8 +2207,11 @@ any specified numeric value (as <code>float</code>).</dd>
     anchor : str or float
         The internal anchor for normalisation.
         This can be either `&#34;first&#34;` (default, the very first dataset entry),
-        `&#34;grouped&#34;` (first entry for each replicate group), or 
-        any specified numeric value (as `float`).
+        `&#34;grouped&#34;` (first entry for each replicate group), 
+        any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
+        If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
+        `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
+        `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
     &#34;&#34;&#34;
     self._anchor = anchor</code></pre>
 </details>
@@ -1960,28 +2549,44 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
         &#34;&#34;&#34;
         return sorted(list(set(self._df[&#34;group&#34;])))
 
-    def replicates(self, replicates : (int or tuple) = None):
+    def replicates(self, replicates : (int or tuple or str) = None):
         &#34;&#34;&#34;
         Either sets or gets the replicates to be used for grouping the samples
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
 
         Parameters
         ----------
-        replicates : int or tuple
+        replicates : int or tuple or str
             Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+            any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
         &#34;&#34;&#34;
         if replicates is None:
             return self._replicates
         else: 
+            # convert a string formula to tuple if one was provided
+            if isinstance(replicates, str): 
+                replicates = self._reps_from_formula(replicates)
+            # vet replicate coverage
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
                 aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = self._Reader.n(), reps = replicates)
 
-    def group(self):
+    def group(self, infer_names = True):
         &#34;&#34;&#34;
         Groups the samples according to replicates specified.
+
+        Parameters
+        ----------
+        infer_names : bool
+            Try to infer names of replicate groups based on the individual replicate sample identifiers.
+            Note that this only works if all replicates have an identical sample name!
         &#34;&#34;&#34;
         df = self._Reader.get()
         
@@ -1993,9 +2598,14 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
             groups, group_names = self._make_unequal_groups()
         else:
             aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
-
+        
         df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
         self._df = df
+        
+        if infer_names:
+            # infer group names
+            self._infer_names()
+            
 
     def rename(self, names:(list or dict)):
         &#34;&#34;&#34;
@@ -2030,7 +2640,43 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
             Tuple of row indices from the dataframe to drop.
         &#34;&#34;&#34;
         self._df = self._df.drop(index = list(entries))
+    
+    def _reps_from_formula(self, replicates):
+        &#34;&#34;&#34;
+        Generates a replicate tuple from a string formula. 
+        See the docstring of `replicates()` for more info on the formula.
+
+        Example:
+        &#34;3:4,1:4,2:3,9&#34; -&gt; (3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 9)
+        &#34;&#34;&#34;
+
+        # split the formula and adjust standard formatting
+        replicates = replicates.split(&#34;,&#34;)
+        replicates = [i + &#34;:1&#34; if &#34;:&#34; not in i else i for i in replicates]
+
+        # convert to numeric values and extend
+        replicates = [np.array(i.split(&#34;:&#34;), dtype = int) for i in replicates]
+        replicates = [np.tile(i[0], i[1]) for i in replicates]
         
+        # generate replicate tuple
+        replicates = np.concatenate(replicates)
+        replicates = tuple(replicates)
+        
+        return replicates
+
+    def _infer_names(self):
+        &#34;&#34;&#34;
+        Infers replicate group names from the given sample identifier column
+        &#34;&#34;&#34;
+        # get the first group of replicates
+        group0 = self._df.query(&#34;group == 0&#34;)[&#34;Sample&#34;]
+        all_identical = all(group0 == group0[0])
+        
+        if all_identical:
+            self._df[&#34;group_name&#34;] = self._df[&#34;Sample&#34;]
+        else: 
+            aw.SoftWarning(&#34;Assay:groupnames_not_inferred&#34;)
+
     def _rename_per_key(self, names):
         &#34;&#34;&#34;
         Generates new name list based on current names in &#34;group_name&#34; and uses string.replace()
@@ -2104,7 +2750,8 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
         returns True if all samples are covered, False if not...
         &#34;&#34;&#34;
         samples = self._Reader.n()
-
+        verdict = None
+        
         # for INT -&gt; modulo will be 0 if all samples are covered
         # for TUPLE -&gt; sum(replicates) should cover all samples...
 
@@ -2112,6 +2759,10 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
             verdict = True if samples % replicates == 0 else False
         elif isinstance(replicates, tuple): 
             verdict = True if sum(replicates) == samples else False
+        
+        if verdict is None: 
+            aw.HardWarning(&#34;Assay:reps_could_not_vet&#34;, reps = replicates)
+
         return verdict</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2148,17 +2799,29 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
 </details>
 </dd>
 <dt id="qpcr.Assay.group"><code class="name flex">
-<span>def <span class="ident">group</span></span>(<span>self)</span>
+<span>def <span class="ident">group</span></span>(<span>self, infer_names=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Groups the samples according to replicates specified.</p></div>
+<div class="desc"><p>Groups the samples according to replicates specified.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>infer_names</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Try to infer names of replicate groups based on the individual replicate sample identifiers.
+Note that this only works if all replicates have an identical sample name!</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def group(self):
+<pre><code class="python">def group(self, infer_names = True):
     &#34;&#34;&#34;
     Groups the samples according to replicates specified.
+
+    Parameters
+    ----------
+    infer_names : bool
+        Try to infer names of replicate groups based on the individual replicate sample identifiers.
+        Note that this only works if all replicates have an identical sample name!
     &#34;&#34;&#34;
     df = self._Reader.get()
     
@@ -2170,9 +2833,13 @@ Reader objects can also be linked to the assay after setup iteratively.</dd>
         groups, group_names = self._make_unequal_groups()
     else:
         aw.HardWarning(&#34;Assay:no_reps_yet&#34;)
-
+    
     df[&#34;group&#34;], df[&#34;group_name&#34;] = groups, group_names
-    self._df = df</code></pre>
+    self._df = df
+    
+    if infer_names:
+        # infer group names
+        self._infer_names()</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Assay.groups"><code class="name flex">
@@ -2368,28 +3035,44 @@ Group names only need to be specified once, and are applied to all replicate ent
 Before they are assigned, replicates are vetted to ensure they cover all data entries.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>replicates</code></strong> :&ensp;<code>int</code> or <code>tuple</code></dt>
+<dt><strong><code>replicates</code></strong> :&ensp;<code>int</code> or <code>tuple</code> or <code>str</code></dt>
 <dd>Can be an <code>integer</code> (equal group sizes, e.g. <code>3</code> for triplicates),
-or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the second group is only a duplicate).</dd>
+or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the second group is only a duplicate).
+Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+The allowed structure of such a formula is <code>n:m,</code> where <code>n</code> is the number of replicates in a group and <code>m</code> is the number of times
+this pattern is repeated (if no <code>:m</code> is specified <code>:1</code> is assumed). So, as an example, if there are 12 groups which are triplicates, but
+at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+individually as <code>replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)</code> or we use the formula to specify <code>replicates = "3:12,1"</code>. Of course, this works for
+any arbitrary setting such as <code>"3:5,2:5,10,3:12"</code> (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)&hellip;</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def replicates(self, replicates : (int or tuple) = None):
+<pre><code class="python">def replicates(self, replicates : (int or tuple or str) = None):
     &#34;&#34;&#34;
     Either sets or gets the replicates to be used for grouping the samples
     Before they are assigned, replicates are vetted to ensure they cover all data entries.
 
     Parameters
     ----------
-    replicates : int or tuple
+    replicates : int or tuple or str
         Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
         or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+        The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+        this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+        at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+        individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+        any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
     &#34;&#34;&#34;
     if replicates is None:
         return self._replicates
     else: 
+        # convert a string formula to tuple if one was provided
+        if isinstance(replicates, str): 
+            replicates = self._reps_from_formula(replicates)
+        # vet replicate coverage
         if self._vet_replicates(replicates):
             self._replicates = replicates
         else: 
@@ -2830,67 +3513,49 @@ If the provided function does adhere to these criteria is NOT vetted by this met
 </dd>
 <dt id="qpcr.Reader"><code class="flex name class">
 <span>class <span class="ident">Reader</span></span>
-<span>(</span><span>filename: str)</span>
+<span>(</span><span>filename: str, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Reads qpcr raw data files in csv format. </p>
+<div class="desc"><p>Reads qpcr raw data files in csv or excel format. </p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
-<dd>A filename to a csv containing Ct values.
-The file has to have two named columns; one for sample names, one for Ct values.
-Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
+<dd>A filepath to a raw data file.
+If the file is a <code>csv</code> file, it has to have two named columns; one for replicate names, one for Ct values.
+Both csv (<code>,</code> spearated) and csv2 (<code>;</code> separated) are accepted.
+If the file is an <code>excel</code> file it the relevant sections of the spreadsheet are identified automatically.
+But they require identifying headers. By default <code>Name</code> and <code>Ct</code> are assumed but these can be changed using
+the <code>name_label</code> and <code>Ct_label</code> arguments that can be passed as kwargs (they will be forwarded to the <code>.read()</code> method).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that shall be passed to the <code>read()</code> method which is immediately called during init.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Reader(aux._ID):
+<pre><code class="python">class Reader(_CORE_Reader):
     &#34;&#34;&#34;
-    Reads qpcr raw data files in csv format. 
+    Reads qpcr raw data files in csv or excel format. 
 
     Parameters
     ----------
     filename : str
-        A filename to a csv containing Ct values. 
-        The file has to have two named columns; one for sample names, one for Ct values. 
-        Both csv (, spearated) and csv2 (; separated) are accepted.
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
     &#34;&#34;&#34;
-    def __init__(self, filename:str) -&gt; pd.DataFrame: 
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
         super().__init__()
         self._src = filename
-        self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
-        self.read()
-
-    def get(self):
-        &#34;&#34;&#34;
-        Returns
-        -------
-        data : pd.DataFrame
-            The samples dataframe.
-        &#34;&#34;&#34;
-        return self._df
-
-    def n(self):
-        &#34;&#34;&#34;
-        Returns
-        -------
-        n : int
-            The number of samples in the dataframe.
-        &#34;&#34;&#34;
-        return len(self._df[&#34;Sample&#34;])
-
-    def read(self):
-        &#34;&#34;&#34;
-        Reads the given data file
-        &#34;&#34;&#34;
-        self._df = pd.read_csv(
-                                self._src, 
-                                sep = self._delimiter, 
-                                header = self._has_header(), 
-                                names = RAW_COL_NAMES
-                            )
-        # self._df[&#34;_index&#34;] = list(self._df.index)
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
 
     def _is_csv2(self):
         &#34;&#34;&#34;
@@ -2921,79 +3586,9 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li>qpcr._CORE_Reader</li>
 <li>qpcr._auxiliary._ID</li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="qpcr.Reader.get"><code class="name flex">
-<span>def <span class="ident">get</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
-<dd>The samples dataframe.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get(self):
-    &#34;&#34;&#34;
-    Returns
-    -------
-    data : pd.DataFrame
-        The samples dataframe.
-    &#34;&#34;&#34;
-    return self._df</code></pre>
-</details>
-</dd>
-<dt id="qpcr.Reader.n"><code class="name flex">
-<span>def <span class="ident">n</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
-<dd>The number of samples in the dataframe.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def n(self):
-    &#34;&#34;&#34;
-    Returns
-    -------
-    n : int
-        The number of samples in the dataframe.
-    &#34;&#34;&#34;
-    return len(self._df[&#34;Sample&#34;])</code></pre>
-</details>
-</dd>
-<dt id="qpcr.Reader.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Reads the given data file</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self):
-    &#34;&#34;&#34;
-    Reads the given data file
-    &#34;&#34;&#34;
-    self._df = pd.read_csv(
-                            self._src, 
-                            sep = self._delimiter, 
-                            header = self._has_header(), 
-                            names = RAW_COL_NAMES
-                        )
-    # self._df[&#34;_index&#34;] = list(self._df.index)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="qpcr.Results"><code class="flex name class">
 <span>class <span class="ident">Results</span></span>
@@ -3077,9 +3672,6 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
             `True` if NO data is yet stored, else `False`.
         &#34;&#34;&#34;
         return self._df is None
-
-# ah for whatever funcking reason it tries to add the HNRNPL_rel28fuck twice
-# dunno why, sucks big time... 
 
     def add(self, column:pd.Series):
         &#34;&#34;&#34;
@@ -3305,7 +3897,13 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
         all_cols = [g for g in group_subset.columns if g not in ignore]
         tmp = group_subset[all_cols]
         # compute stats based on func
-        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
+        stats = []
+        for col in tmp.columns:
+            try: 
+                stat = func(tmp[col], **kwargs)
+            except: 
+                stat = np.nan
+            stats.append(stat)
         return stats</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -3819,23 +4417,26 @@ Note</p>
         &#34;&#34;&#34;
         self._names = names
         
-    def read(self, filename):
+    def read(self, filename, **kwargs):
         &#34;&#34;&#34;
-        Reads one raw datafile (csv format).
+        Reads one raw datafile (csv or excel format).
 
         Parameters
         ----------
         filename : str
-            A filename to a csv containing Ct values. 
-            The file has to have two named columns; one for sample names, one for Ct values. 
-            Both csv (, spearated) and csv2 (; separated) are accepted.
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+            the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
 
         Returns
         -------
         Assay : qpcr.Assay
             A `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
-        self._Reader = Reader(filename)
+        self._Reader = Reader(filename, **kwargs)
         self._Reader.id(aux.fileID(filename))
 
         self._Assay = Assay(self._Reader)
@@ -3844,7 +4445,9 @@ Note</p>
         if self._replicates is not None:
             self._Assay.replicates(self._replicates)
             self._Assay.group()
-        
+        else: 
+            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
         if self._names is not None:
             self._Assay.rename(self._names)
 
@@ -3854,6 +4457,10 @@ Note</p>
 <ul class="hlist">
 <li><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></li>
 <li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li>qpcr._Qupid_SampleReader</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -3886,16 +4493,19 @@ Group names only need to be specified once, and are applied to all replicate ent
 </details>
 </dd>
 <dt id="qpcr.SampleReader.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self, filename)</span>
+<span>def <span class="ident">read</span></span>(<span>self, filename, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Reads one raw datafile (csv format).</p>
+<div class="desc"><p>Reads one raw datafile (csv or excel format).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
-<dd>A filename to a csv containing Ct values.
-The file has to have two named columns; one for sample names, one for Ct values.
-Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
+<dd>A filepath to a raw data file.
+If the file is a <code>csv</code> file, it has to have two named columns; one for replicate names, one for Ct values.
+Both csv (<code>,</code> spearated) and csv2 (<code>;</code> separated) are accepted.
+If the file is an <code>excel</code> file it the relevant sections of the spreadsheet are identified automatically.
+But they require identifying headers. By default <code>Name</code> and <code>Ct</code> are assumed but these can be changed using
+the <code>name_label</code> and <code>Ct_label</code> arguments that can be passed to <code>read()</code> as kwargs.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3906,23 +4516,26 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read(self, filename):
+<pre><code class="python">def read(self, filename, **kwargs):
     &#34;&#34;&#34;
-    Reads one raw datafile (csv format).
+    Reads one raw datafile (csv or excel format).
 
     Parameters
     ----------
     filename : str
-        A filename to a csv containing Ct values. 
-        The file has to have two named columns; one for sample names, one for Ct values. 
-        Both csv (, spearated) and csv2 (; separated) are accepted.
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
 
     Returns
     -------
     Assay : qpcr.Assay
         A `qpcr.Assay` object containing the grouped and renamed data.
     &#34;&#34;&#34;
-    self._Reader = Reader(filename)
+    self._Reader = Reader(filename, **kwargs)
     self._Reader.id(aux.fileID(filename))
 
     self._Assay = Assay(self._Reader)
@@ -3931,7 +4544,9 @@ Both csv (, spearated) and csv2 (; separated) are accepted.</dd>
     if self._replicates is not None:
         self._Assay.replicates(self._replicates)
         self._Assay.group()
-    
+    else: 
+        aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+
     if self._names is not None:
         self._Assay.rename(self._names)
 
@@ -3986,20 +4601,33 @@ or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the se
 </section>
 </article>
 <nav id="sidebar">
-
 <a href="https://github.com/NoahHenrikKleinschmidt/qpcr">
 <img src="./qpcr_light.svg" width = "100%" >
 </a>
-
 <h1>Index</h1>
-
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#terminology">Terminology</a><ul>
+<li><a href="#file-or-datafile">File (or "datafile")</a></li>
+<li><a href="#an-qpcrassay">An qpcr.Assay</a></li>
+<li><a href="#replicates">Replicates</a></li>
+<li><a href="#groups-of-replicates">Groups (of Replicates)</a></li>
+<li><a href="#sample">"Sample"</a></li>
+<li><a href="#delta-ct-vs-delta-delta-ct-vs-normalisation">Delta-Ct vs Delta-Delta-Ct vs normalisation ???</a></li>
+<li><a href="#the-anchor-and-the-reference-group">The anchor and the "reference group"</a></li>
+<li><a href="#assays-vs-normalisers">"assays" vs "normalisers"</a></li>
+<li><a href="#results-my-final-results">"Results" = my final results?</a></li>
+<li><a href="#getting-your-data">getting your data</a></li>
+<li><a href="#link-vs-add-vs-pipe">link vs add vs pipe</a></li>
+</ul>
+</li>
+</ul>
 </div>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></li>
+<li><code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code></li>
 <li><code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></li>
 <li><code><a title="qpcr.Plotters" href="Plotters.html">qpcr.Plotters</a></code></li>
 </ul>
@@ -4045,11 +4673,6 @@ or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the se
 </li>
 <li>
 <h4><code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code></h4>
-<ul class="">
-<li><code><a title="qpcr.Reader.get" href="#qpcr.Reader.get">get</a></code></li>
-<li><code><a title="qpcr.Reader.n" href="#qpcr.Reader.n">n</a></code></li>
-<li><code><a title="qpcr.Reader.read" href="#qpcr.Reader.read">read</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code></h4>

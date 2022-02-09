@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>qpcr.Parsers API documentation</title>
+<meta name="description" content="This module contains classes designed to work with irregularly structured datafiles.
+It provides `Parsers` that are able to extract the replicate and …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>qpcr.Parsers</code></h1>
+</header>
+<section id="section-intro">
+<p>This module contains classes designed to work with irregularly structured datafiles.
+It provides <code>Parsers</code> that are able to extract the replicate and Ct values as pandas DataFrames
+from irregular <code>csv</code> and <code>excel</code> files.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module contains classes designed to work with irregularly structured datafiles.
+It provides `Parsers` that are able to extract the replicate and Ct values as pandas DataFrames
+from irregular `csv` and `excel` files.
+&#34;&#34;&#34;
+
+import qpcr._auxiliary as aux
+import qpcr._auxiliary.warnings as aw
+import pandas as pd
+import numpy as np
+import re
+from io import StringIO
+from copy import deepcopy
+import os
+
+
+# this is the dictionary where we store pre-defined 
+# patterns of headers above assays within the datafiles
+# important here is that they must specify a capturing group for the assay name.
+
+assay_patterns = {
+                    &#34;Rotor-Gene&#34; : r&#34;Quantitative analysis of .+(?&lt;=\()([A-Za-z0-9.:, _\-/]+)&#34;,
+                }
+
+
+class _CORE_Parser:
+    &#34;&#34;&#34;
+    This is the functional core for the irregular multi-assay file-reader classes.
+    It handles the regex searching and numpy indexing of relevant column subsets of the datafiles.
+    &#34;&#34;&#34;
+    def __init__(self):
+        self._src = None
+        self._pattern = None
+        self._data = None
+
+        # the found assays, these will be arrays/lists that store the indices, 
+
+        self._assay_indices = None                  # indices of the assay identifiers
+        self._assay_names = None                    # names of the assays
+
+        self._assay_names_start_indices = None      # indices of the rep. id headers
+        self._assay_names_end_indices = None        # indices of the last entry of the rep. id columns
+
+        self._assay_ct_start_indices = None         # indices of the ct headers
+        self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
+        # a dictionary to store all assay dataframes
+        self._dfs = {}
+
+        # setup the labels for replicate ids and ct value column headers
+        self.labels()
+
+        # we must specify a maximum allowed length for the assay names before hand 
+        # (since we&#39;re using numpy arrays for storing the names, which require enough open slots to store the characters)
+        self._max_assay_name_length = 20
+    
+        # a folder into which the new assay-split datafiles should be stored
+        self._save_loc = None
+
+    def save_to(self, location : str = None):
+        &#34;&#34;&#34;
+        Sets the location into which the individual assay datafiles should be saved.
+        Parameters
+        ----------
+        location : str
+            The path to a directory where the newly generated assay datafiles shall be saved.
+            If this directory does not yet exist, it will be automatically made.
+        &#34;&#34;&#34;
+        if location is not None: 
+            self._save_loc = location
+            if not os.path.exists(self._save_loc):
+                os.mkdir(self._save_loc)
+        return self._save_loc
+    
+    def get(self, assay : str = None):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        assay : str
+            The name of an assay found in the datafile. Available assays can be assessed using the `self.assays` method.
+    
+        Returns
+        -------
+        data : pd.DataFrame or dict
+            Either a specific pandas dataframe of one of the assays (if an `assay` name was specified)
+            or the entire dictionary of all found dataframes from all assays.
+        &#34;&#34;&#34;
+        if assay is not None:
+            data = self._dfs[assay]
+        else: 
+            data = self._dfs
+        return data
+
+    def save(self):
+        &#34;&#34;&#34;
+        Saves the individual assays as separate csv files.
+        This requires that a saving directory has been set using `self.save_to`.
+        The files will simply be named according to the assay name (i.e. `ActinB.csv` for instance).
+        &#34;&#34;&#34;
+        if self._save_loc is None:
+            aw.SoftWarning(&#34;Parser:no_save_loc&#34;)
+        else:
+            for assay, df in self._dfs.items():
+                assay_path = os.path.join(self.save_to(), f&#34;{assay}.csv&#34;)
+                df.to_csv(assay_path, index = False)
+
+    def labels(self, sample_label : str = &#34;Name&#34;, ct_label : str = &#34;Ct&#34;):
+        &#34;&#34;&#34;
+        Sets the headers for the relevant data columns for each assay within the datafile.
+
+        Parameters
+        ----------
+        sample_label : str
+            The header above the column containing replicate identifiers. 
+        
+        ct_label : str
+            The header above the column containing the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        self._sample_label = sample_label
+        self._ct_label = ct_label
+
+    def assays(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        names : list
+            The names of the found assays of the datafile
+        &#34;&#34;&#34;        
+        return list(self._dfs.keys())
+
+    def assay_pattern(self, pattern : str = None, *flags):
+        &#34;&#34;&#34;
+        Sets up a regex pattern defining the assay declarations within the datafile.
+
+        Parameters
+        ----------
+        pattern : str
+            A string containing either the key to a predefined pattern from the `assay_patterns` dictionary, 
+            or directly regex pattern. 
+            If a regex pattern is directly provided, that pattern must contain a capturing group
+            for the assay name that can be extracted.
+        *flags 
+            Any additional flags to pass to `re.compile()` for the regex pattern
+
+        Returns
+        -------
+        pattern : re.Pattern
+            The currently used regex pattern to identify assays within the datafile.
+        &#34;&#34;&#34;
+        if pattern is not None: 
+            # try to get the pattern from the predefined patterns via key
+            _pattern = aux.from_kwargs(pattern, None, assay_patterns)
+            _pattern = pattern if _pattern is None else _pattern
+            self._pattern = re.compile(_pattern, *flags)
+        return self._pattern
+
+    def max_assay_name_length(self, length = 20):
+        &#34;&#34;&#34;
+        Sets the maximum allowed name length (number of characters) assay names.
+        
+        Parameters
+        ----------
+        length : int
+            The maximum number of characters to store for the assay name. 
+            Default is `length = 20` characters.
+        &#34;&#34;&#34;
+        self._max_assay_name_length = length
+    
+    def parse(self, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for find_assays+find_columns+make_dataframes
+        This is the functional core of the Parser&#39;s `pipe` method.
+
+        Parameters
+        -------
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        &#34;&#34;&#34;
+        self.find_assays(**kwargs)
+        self.find_columns()
+        self.make_dataframes(**kwargs)
+
+    def find_assays(self, col = 0, **kwargs):
+        &#34;&#34;&#34;
+        Parses through an the datafile and identifies all indices of cells that match the provided `assay_pattern``.
+        It stores these values internally and also returns the results as numpy arrays.
+
+        Parameters
+        -----------
+        col : int
+            The column in which to look for assay identifiers. 
+            By default the first column `col = 0`.
+
+        Returns
+        -------
+        names : np.ndarray
+            The extracted names of all assays found.
+        indices : np.ndarray
+            The indices (row, col) of all assays found.
+        &#34;&#34;&#34;
+
+        if self._pattern is None: 
+            aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
+
+        array = self._data
+        array = array[:, col]
+        array = array.astype(str)
+
+        indices = np.zeros(len(array))
+        names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
+        idx = 0
+        for entry in array:
+            # try: 
+            match = self._pattern.search(entry)
+            if match is not None: 
+                name = match.group(1)
+                names[idx] = name
+                indices[idx] = 1
+            # except: 
+            #     continue
+            idx += 1
+        indices = np.argwhere(indices == 1)
+
+        if indices.size == 0:
+            aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+
+        names = names[indices]
+        names = names.reshape(len(names))
+
+        self._assay_indices = indices
+        self._assay_names = names
+        
+        return indices, names
+    
+    def find_columns(self):
+        &#34;&#34;&#34;
+        Identifies the relevant data column belonging to each assay within the datafile.
+        &#34;&#34;&#34;
+        # search indices of the starts of id and ct columns
+        # these are now the row, col coordinates of each name_column header
+        name_col_starts = self._find_column_starts(
+                                                    label = self._sample_label, 
+                                                    ref_indices = self._assay_indices
+                                                )
+        # these are now the row, col coordinates of each ct_column header
+        ct_col_starts = self._find_column_starts(
+                                                    label = self._ct_label, 
+                                                    ref_indices = self._assay_indices
+                                                )
+        
+        # now we need to generate know also the end indices of the datacolumns
+        name_col_ends = self._find_column_ends(name_col_starts)
+        
+        # now that we know the end indices for the replicate id column we will adopt the end row indices
+        # onto the ct column as well (we don&#39;t parse through the Ct column because it might have missing 
+        # Ct values intersperced which would prematurely terminate the parsing...)
+
+        # (1) we transpose to have all row indices easily accessible in the first line
+        # (2) we adopt row indices from the transposed name col
+        # (3) and transpose back to get our final ct end indices
+        ct_col_ends = deepcopy( np.transpose(ct_col_starts) )
+        name_col_ends_t = np.transpose(name_col_ends)
+        ct_col_ends[0] = name_col_ends_t[0]
+        ct_col_ends = np.transpose(ct_col_ends)
+
+        # now store the data
+        self._assay_names_start_indices = name_col_starts
+        self._assay_names_end_indices = name_col_ends
+        self._assay_ct_start_indices = ct_col_starts
+        self._assay_ct_end_indices = ct_col_ends
+
+    def make_dataframes(self, allow_nan_ct : bool = True, default_to : float = None, **kwargs):
+        &#34;&#34;&#34;
+        Generates a set of `pandas DataFrame`s each containing two columns 
+        (one for the replicate identifiers, one for the Ct values)
+        for subsequent use with the main `qpcr` module.
+
+        Parameters
+        ------
+        allow_nan_Ct : bool
+            Allows Ct values to be NaN within the final dataframe (if `True`, default).
+            If no NaN Ct values should be maintained a default value for NaN Ct values must be specified
+            using `default_to`.
+        default_to : float
+            The default value to replace NaN Ct values with. 
+            This is ignored if `allow_nan_ct = True`.
+        &#34;&#34;&#34;  
+        adx = 0
+        # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
+        for assay in self._assay_names:
+            
+            # get the assay&#39;s indices of both replicate id and ct columns
+            names_start = self._assay_names_start_indices[adx]
+            names_end = self._assay_names_end_indices[adx]
+            ct_start = self._assay_ct_start_indices[adx]
+            ct_end = self._assay_ct_end_indices[adx]
+
+            # generate the final index slices from the total array
+            # of both replicate id (names) and ct columns
+            names_range, names_col = self._make_index_range(names_start, names_end, crop_first = True)
+            ct_range, ct_col = self._make_index_range(ct_start, ct_end, crop_first = True)
+
+            # get the assay data
+            assay_names = self._data[names_range, names_col]
+            assay_cts = self._data[ct_range, ct_col]
+
+            assay_df = pd.DataFrame(
+                                    dict(
+                                        Sample = assay_names, 
+                                        Ct = assay_cts,
+                                    )
+                                )
+
+            if not allow_nan_ct:
+                if not isinstance(default_to, (int, float)): 
+                    aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
+                
+                # apply defaulting lambda function
+                assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
+                                                        lambda x: x if x == x else default_to
+                                                    )
+            # and store dataframe
+            self._dfs.update(
+                                { assay : assay_df }
+                            )
+
+            adx += 1
+
+    def _make_index_range(self, start_indices, end_indices, crop_first = True):
+        &#34;&#34;&#34;
+        Generates an index range for a data column based on start and stop indices.
+        This assumes that the column entry (i.e. entry[1]) is always the same and only the rows are different.
+        
+        Parameters
+        ----------
+        start_indices : np.ndarray
+            Row, col indices of the header of the data column
+        end_indices : np.ndarray
+            Row, col indices of the last entry of the data column
+        crop_first : bool
+            If set to True it will offset the start row indices by +1 to exclude the header.
+        &#34;&#34;&#34;
+
+        start = start_indices[0] + 1 if crop_first else start_indices[0]
+        end = end_indices[0]
+
+        row_range = slice(  start, end  )
+        col = start_indices[1]
+        return row_range, col
+
+    def _find_column_starts(self, label, ref_indices):
+        &#34;&#34;&#34;
+        This function uses the assays&#39; found reference row indices to 
+        now search for the coordinates of the labeled cell so we know where a data column starts
+        &#34;&#34;&#34;
+        data = self._data
+        all_found = np.argwhere(data == label)
+        row_indices = np.transpose(all_found)[0]
+        ref_indices = ref_indices + 1 # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        matching_rows = np.where(np.isin(row_indices, ref_indices))
+        
+        # if no matches were found, try incrementing the index offset once more 
+        # (we&#39;ll allow for a single row between the header and the start of the data)
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            ref_indices = ref_indices + 1
+            matching_rows = np.where(np.isin(row_indices, ref_indices))
+
+        # check again, and raise Error if still no matches are found
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            aw.HardWarning(&#34;Parser:no_data_found&#34;, label = label)
+
+        matching_rows = all_found[matching_rows]
+        return matching_rows
+    
+    def _find_column_ends(self, indices):
+        &#34;&#34;&#34;
+        Determines the end index of a column within the datafile based on the starting indices of
+        its header label
+        &#34;&#34;&#34;
+        data = self._data
+        end_indices = np.zeros(indices.shape, dtype = int)
+        adx = 0
+        for i in indices:
+            row, col = i
+            idx = 0
+            value = 0
+            while True:
+                try: value = data[row + idx, col]
+                except: break
+                if value != value: 
+                    break
+                idx += 1
+            finals = np.array([row + idx, col], dtype = int)
+            end_indices[adx] += finals
+            adx += 1
+        return end_indices
+
+
+class CsvParser(_CORE_Parser):
+    &#34;&#34;&#34;
+    This class will handle reading and parsing irregular CSV files that contain multiple assays.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `CsvParser`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input csv file.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        &#34;&#34;&#34;
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.HardWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv&#34;)
+        
+        self.parse(**kwargs)
+        assays = self.get()
+        
+        if self._save_loc is not None: 
+            self.save()
+        
+        return assays
+
+    def read(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads an input csv file. 
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input csv file.
+        **kwargs 
+            Any additional keyword arguments to be passed to pandas&#39; `read_csv` function.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        contents = self._prepare_commas()
+        contents = StringIO(contents) # convert to StringIO for pandas to be able to read
+        
+        # now read the data and convert to numpy array
+        df = pd.read_csv(contents, header = None, **kwargs)
+        df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
+        data = df.to_numpy()
+
+        self._data = data
+
+    def _prepare_commas(self):
+        &#34;&#34;&#34;
+        This function reads the datafile and adjusts the number of commas 
+        within each line to ensure equal commas in the entire file.
+
+        Returns
+        -------
+        new_content : str
+            A string containing the entire file contents with adjusted commas.
+        &#34;&#34;&#34;
+
+        # check if quotes are in datafile and adjust comma-patterns to use
+        empty_comma_filler = &#39;,&#34;&#34;&#39; if self._has_quotes() else &#34;,&#34;
+        comma_sep = &#39;&#34;,&#34;&#39; if self._has_quotes() else &#34;,&#34;
+        comma_sep = re.compile(comma_sep)
+
+        with open(self._src, &#34;r&#34;) as f:
+            content = f.read()
+            lines = content.split(&#34;\n&#34;)
+            comma_counts = [len(comma_sep.findall(i)) for i in lines]
+            max_commas = max(comma_counts)
+            lines = [i + (max_commas - j) * empty_comma_filler for i, j in zip(lines, comma_counts)]
+        new_content = &#34;\n&#34;.join(lines)
+        return new_content
+
+    def _has_quotes(self):
+        &#34;&#34;&#34;
+        Checks if cells from the csv input file have quotes around them.
+        Essentially it checks if there are any &#34;,&#34; patterns in the file.
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as f:
+            content = f.read()
+        has_quotes = &#39;&#34;,&#34;&#39; in content
+        return has_quotes
+
+class ExcelParser(_CORE_Parser):
+    &#34;&#34;&#34;
+    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def read(self, filename : str, sheet_name : (str or int) = 0, **kwargs):
+        &#34;&#34;&#34;
+        Reads an input excel file. 
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        sheet_name : int or str
+            The name of a specific spreadsheet of the file to read.
+            If none is provided by default the first sheet will be read.
+            Only one single sheet can be read at a time. 
+            If an `integer` is provided the sheets will be accessed by their order, otherwise by their name (if a `string` is provided).
+        **kwargs
+            Any additional keyword arguments to be passed to pandas `read_excel` function.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        data = data.to_numpy()
+
+        self._data = data
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `ExcelParser`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        &#34;&#34;&#34;
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel&#34;)
+
+        self.parse(**kwargs)
+        assays = self.get()
+
+        if self._save_loc is not None: 
+            self.save()
+
+        return assays
+
+if __name__ == &#34;__main__&#34;:
+    
+    parser = CsvParser()
+    parser.assay_pattern(&#34;Rotor-Gene&#34;)
+    parser.save_to(&#34;__csvparser&#34;)
+    mycsv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv&#34;
+    parser.pipe(mycsv)
+
+    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n&#34;&#34;&#34;)
+
+    parser2 = ExcelParser()
+    parser2.assay_pattern(&#34;Rotor-Gene&#34;)
+    parser2.save_to(&#34;./__excelparser&#34;)
+    myexcel = &#34;./__parser_data/excel 3.9.19.xlsx&#34;
+    parser2.pipe(myexcel, sheet_name = 1)
+
+    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n&#34;&#34;&#34;)
+
+    parser3 = ExcelParser()
+    single_excel = &#34;/Users/NoahHK/OneDrive - Universitaet Bern/Bachelor/Bachelor Project/qPCR/Week 5/12.03.21/Brilliant III Ultra Fast SYBR Green 2021-03-12 (ActinB).xlsx&#34;
+    parser3.read(single_excel)
+    parser3.assay_pattern(&#34;Rotor-Gene&#34;)
+    parser3.find_assays()
+    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
+    parser3.find_columns()
+    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
+    # print(parser3._data)
+    i  = parser3.pipe(single_excel)
+    print(i)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="qpcr.Parsers.CsvParser"><code class="flex name class">
+<span>class <span class="ident">CsvParser</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class will handle reading and parsing irregular CSV files that contain multiple assays.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CsvParser(_CORE_Parser):
+    &#34;&#34;&#34;
+    This class will handle reading and parsing irregular CSV files that contain multiple assays.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `CsvParser`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input csv file.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        &#34;&#34;&#34;
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.HardWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv&#34;)
+        
+        self.parse(**kwargs)
+        assays = self.get()
+        
+        if self._save_loc is not None: 
+            self.save()
+        
+        return assays
+
+    def read(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads an input csv file. 
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input csv file.
+        **kwargs 
+            Any additional keyword arguments to be passed to pandas&#39; `read_csv` function.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        contents = self._prepare_commas()
+        contents = StringIO(contents) # convert to StringIO for pandas to be able to read
+        
+        # now read the data and convert to numpy array
+        df = pd.read_csv(contents, header = None, **kwargs)
+        df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
+        data = df.to_numpy()
+
+        self._data = data
+
+    def _prepare_commas(self):
+        &#34;&#34;&#34;
+        This function reads the datafile and adjusts the number of commas 
+        within each line to ensure equal commas in the entire file.
+
+        Returns
+        -------
+        new_content : str
+            A string containing the entire file contents with adjusted commas.
+        &#34;&#34;&#34;
+
+        # check if quotes are in datafile and adjust comma-patterns to use
+        empty_comma_filler = &#39;,&#34;&#34;&#39; if self._has_quotes() else &#34;,&#34;
+        comma_sep = &#39;&#34;,&#34;&#39; if self._has_quotes() else &#34;,&#34;
+        comma_sep = re.compile(comma_sep)
+
+        with open(self._src, &#34;r&#34;) as f:
+            content = f.read()
+            lines = content.split(&#34;\n&#34;)
+            comma_counts = [len(comma_sep.findall(i)) for i in lines]
+            max_commas = max(comma_counts)
+            lines = [i + (max_commas - j) * empty_comma_filler for i, j in zip(lines, comma_counts)]
+        new_content = &#34;\n&#34;.join(lines)
+        return new_content
+
+    def _has_quotes(self):
+        &#34;&#34;&#34;
+        Checks if cells from the csv input file have quotes around them.
+        Essentially it checks if there are any &#34;,&#34; patterns in the file.
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as f:
+            content = f.read()
+        has_quotes = &#39;&#34;,&#34;&#39; in content
+        return has_quotes</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr.Parsers._CORE_Parser</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Parsers.CsvParser.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A wrapper for read+parse</p>
+<h2 id="note">Note</h2>
+<p>This is the suggested use of <code><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></code>.
+If a directory has been specified into which the datafiles shall be saved,
+then saving will automatically be done.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to an input csv file.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword argument that will be passed to any of the wrapped methods.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>assays</code></strong> :&ensp;<code>dict</code></dt>
+<dd>A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+Individual assays can also be accessed using the <code>get</code> method.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(self, filename :str, **kwargs):
+    &#34;&#34;&#34;
+    A wrapper for read+parse
+
+    Note 
+    ----
+    This is the suggested use of `CsvParser`. 
+    If a directory has been specified into which the datafiles shall be saved, 
+    then saving will automatically be done.
+
+    Parameters
+    -------
+    filename : str
+        A filepath to an input csv file.
+    **kwargs
+        Any additional keyword argument that will be passed to any of the wrapped methods.
+    Returns
+    -------
+    assays : dict
+        A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+        Individual assays can also be accessed using the `get` method.
+    &#34;&#34;&#34;
+    try: 
+        self.read(filename, **kwargs)
+    except: 
+        self.read(filename)
+        aw.HardWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv&#34;)
+    
+    self.parse(**kwargs)
+    assays = self.get()
+    
+    if self._save_loc is not None: 
+        self.save()
+    
+    return assays</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers.CsvParser.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads an input csv file. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to an input csv file.</dd>
+</dl>
+<p>**kwargs
+Any additional keyword arguments to be passed to pandas' <code>read_csv</code> function.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, filename : str, **kwargs):
+    &#34;&#34;&#34;
+    Reads an input csv file. 
+
+    Parameters
+    -------
+    filename : str
+        A filepath to an input csv file.
+    **kwargs 
+        Any additional keyword arguments to be passed to pandas&#39; `read_csv` function.
+    &#34;&#34;&#34;
+    self._src = filename
+
+    contents = self._prepare_commas()
+    contents = StringIO(contents) # convert to StringIO for pandas to be able to read
+    
+    # now read the data and convert to numpy array
+    df = pd.read_csv(contents, header = None, **kwargs)
+    df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
+    data = df.to_numpy()
+
+    self._data = data</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="qpcr.Parsers.ExcelParser"><code class="flex name class">
+<span>class <span class="ident">ExcelParser</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class will handle reading and parsing irregular Excel files that contain multiple assays.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ExcelParser(_CORE_Parser):
+    &#34;&#34;&#34;
+    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def read(self, filename : str, sheet_name : (str or int) = 0, **kwargs):
+        &#34;&#34;&#34;
+        Reads an input excel file. 
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        sheet_name : int or str
+            The name of a specific spreadsheet of the file to read.
+            If none is provided by default the first sheet will be read.
+            Only one single sheet can be read at a time. 
+            If an `integer` is provided the sheets will be accessed by their order, otherwise by their name (if a `string` is provided).
+        **kwargs
+            Any additional keyword arguments to be passed to pandas `read_excel` function.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        data = data.to_numpy()
+
+        self._data = data
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `ExcelParser`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        &#34;&#34;&#34;
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel&#34;)
+
+        self.parse(**kwargs)
+        assays = self.get()
+
+        if self._save_loc is not None: 
+            self.save()
+
+        return assays</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr.Parsers._CORE_Parser</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Parsers.ExcelParser.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A wrapper for read+parse</p>
+<h2 id="note">Note</h2>
+<p>This is the suggested use of <code><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></code>.
+If a directory has been specified into which the datafiles shall be saved,
+then saving will automatically be done.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to an input excel file.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword argument that will be passed to any of the wrapped methods.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>assays</code></strong> :&ensp;<code>dict</code></dt>
+<dd>A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+Individual assays can also be accessed using the <code>get</code> method.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(self, filename :str, **kwargs):
+    &#34;&#34;&#34;
+    A wrapper for read+parse
+
+    Note 
+    ----
+    This is the suggested use of `ExcelParser`. 
+    If a directory has been specified into which the datafiles shall be saved, 
+    then saving will automatically be done.
+
+    Parameters
+    -------
+    filename : str
+        A filepath to an input excel file.
+    **kwargs
+        Any additional keyword argument that will be passed to any of the wrapped methods.
+    Returns
+    -------
+    assays : dict
+        A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+        Individual assays can also be accessed using the `get` method.
+    &#34;&#34;&#34;
+    try: 
+        self.read(filename, **kwargs)
+    except: 
+        self.read(filename)
+        aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel&#34;)
+
+    self.parse(**kwargs)
+    assays = self.get()
+
+    if self._save_loc is not None: 
+        self.save()
+
+    return assays</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers.ExcelParser.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, filename: str, sheet_name: str = 0, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads an input excel file. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to an input excel file.</dd>
+<dt><strong><code>sheet_name</code></strong> :&ensp;<code>int</code> or <code>str</code></dt>
+<dd>The name of a specific spreadsheet of the file to read.
+If none is provided by default the first sheet will be read.
+Only one single sheet can be read at a time.
+If an <code>integer</code> is provided the sheets will be accessed by their order, otherwise by their name (if a <code>string</code> is provided).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments to be passed to pandas <code>read_excel</code> function.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, filename : str, sheet_name : (str or int) = 0, **kwargs):
+    &#34;&#34;&#34;
+    Reads an input excel file. 
+
+    Parameters
+    -------
+    filename : str
+        A filepath to an input excel file.
+    sheet_name : int or str
+        The name of a specific spreadsheet of the file to read.
+        If none is provided by default the first sheet will be read.
+        Only one single sheet can be read at a time. 
+        If an `integer` is provided the sheets will be accessed by their order, otherwise by their name (if a `string` is provided).
+    **kwargs
+        Any additional keyword arguments to be passed to pandas `read_excel` function.
+    &#34;&#34;&#34;
+    self._src = filename
+
+    # read data and convert to numpy array
+    data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+    data = data.to_numpy()
+
+    self._data = data</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<a href="https://github.com/NoahHenrikKleinschmidt/qpcr">
+<img src="./qpcr_light.svg" width = "100%" >
+</a>
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="qpcr" href="index.html">qpcr</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Parsers.CsvParser.pipe" href="#qpcr.Parsers.CsvParser.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Parsers.CsvParser.read" href="#qpcr.Parsers.CsvParser.read">read</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Parsers.ExcelParser.pipe" href="#qpcr.Parsers.ExcelParser.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Parsers.ExcelParser.read" href="#qpcr.Parsers.ExcelParser.read">read</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
