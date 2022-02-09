@@ -220,6 +220,10 @@ class _CORE_Parser:
             #     continue
             idx += 1
         indices = np.argwhere(indices == 1)
+
+        if indices.size == 0:
+            aw.HardWarning("Parser:no_assays_found")
+
         names = names[indices]
         names = names.reshape(len(names))
 

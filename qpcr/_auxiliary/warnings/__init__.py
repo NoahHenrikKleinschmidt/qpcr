@@ -7,6 +7,7 @@ It also defines two classes, a SoftWarning (which only prints the warning string
 WARNINGS = {
 
 "Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the csv file adheres to the two column structure required of csv input files.",
+"Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.",
 
 "Analyser:newlinked" : "You have linked a new dataset to your Analyser, your previous results have been cleared!\nIf this was not intended, use .get() to get your results before using .link()",
 "Analyser:not_newlinked" : "You have precomputed results in your Analyser, no new dataset was linked!\n\If you want to link new data anyway (and clear your current results) use force=True.",
@@ -46,6 +47,7 @@ WARNINGS = {
 
 "Parser:no_save_loc" : "Cannot save data files because no target directory has been specified yet!\nMake sure to specify a directory using save_to()",
 "Parser:no_pattern_yet" : "Assays cannot be identified as no pattern has been specified yet!\nMake sure to specify a pattern using assay_pattern(). Either specify your own pattern or use a pre-defined one from the qpcr.Parser.assay_patterns dictionary (patterns from there can be specified by just providing their key to assay_pattern() ).",
+"Parser:no_assays_found" : "No assays could be be identified with the provided pattern!\nMake sure to specify an appropriate pattern for your datafile using assay_pattern(). Either specify your own pattern or use a pre-defined one from the qpcr.Parser.assay_patterns dictionary (patterns from there can be specified by just providing their key to assay_pattern() ).",
 "Parser:no_ct_nan_default" : "If allow_nan_ct = False is set then a numeric value must be specified for default_to! Currently default_to = {d}",
 "Parser:incompatible_read_kwargs" : "It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading...\nIf the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.",
 

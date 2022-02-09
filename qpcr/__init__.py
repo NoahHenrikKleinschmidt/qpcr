@@ -165,7 +165,7 @@ class _CORE_Reader(aux._ID):
 
                 if len(parser.assays()) > 1:
                     if assay_of_interest is None: 
-                        aw.HardWarning("Reader:cannot_read_multifile", file = file)
+                        aw.HardWarning("Reader:cannot_read_multifile", file = self._src)
                     self._df = parser.get(assay_of_interest)
                     self.id(assay_of_interest)
                 else:
@@ -174,6 +174,9 @@ class _CORE_Reader(aux._ID):
                     self.id(assay_of_interest)
 
         elif suffix == "xlsx":
+            parser = Parsers.ExcelParser()
+            assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
+
             self._excel_read(**kwargs)
 
     def _parse_read(self, data, name_label = "Name", Ct_label = "Ct", **kwargs):
