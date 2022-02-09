@@ -6,3 +6,5 @@ dist
 *.egg*
 *rex*
 build*
+test*ipynb
+html
