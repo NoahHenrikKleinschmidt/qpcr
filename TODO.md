@@ -8,11 +8,14 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 
 - 1.1 Make a new Qupid web-app
 - 1.2 Make functional Cores within `qpcr` for Qupid
+- 1.3 factor out _Qupid classes into _Qupid submodule
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    1.1   |  x    |            |       |
 |    1.2   |   x   |             |       |
+|    1.3   |      |             |       |
+
 
 ### 2. Anchor 
 - 2.1 This new release has fixed the "grouped" anchor default settings.
@@ -66,6 +69,37 @@ The formula is always `n:m` where `n` is the number of replicates in the group a
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    6.1   |    x  |            |       |
+
+### 8. Support irregular input files
+Support irregular csv files where the assay must actually be extracted through parsing. The core of this is already done but still has to be implemented into `qpcr` proper.
+
+- 8.1 implement `qpcr.Parsers` for irregular files
+- 8.2 integrate Parsers with `qpcr.Reader`
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    8.1   |      |            |       |
+|    8.2   |      |            |       |
+
+### 7. Support MULTI-ASSAY FILES
+We simply let people add a little decorator in the cell above the assay declaration
+of the excel / csv file that will tell the program if it's a assay of interest or a normaliser. We'll use something like `@qpcr:assay` and `@qpcr:normaliser`.
+
+- 7.1 make a decorator extraction method to add to the _CORE_Parser
+- 7.2 add decorator support for multi-assay csv files
+- 7.3 add decorator support for multi-assay excel files
+- 7.4 make a new `qpcr.MultiReader` class to read multi-assay files
+      this will probably be some kind of `SampleReader`-level class
+
+
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    7.1   |      |            |       |
+|    7.2   |      |            |       |
+|    7.3   |      |            |       |
+|    7.4  |      |            |       |
+
 
 # New features of *some future* release
 
