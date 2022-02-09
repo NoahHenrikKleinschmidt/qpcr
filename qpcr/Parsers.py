@@ -546,7 +546,7 @@ if __name__ == "__main__":
     parser2.assay_pattern("Rotor-Gene")
     parser2.save_to("./__excelparser")
     myexcel = "./__parser_data/excel 3.9.19.xlsx"
-    parser2.pipe(myexcel)
+    parser2.pipe(myexcel, mysuperarg= True)
     parser2.save()
 
 
