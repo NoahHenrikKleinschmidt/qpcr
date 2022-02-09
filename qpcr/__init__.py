@@ -1110,7 +1110,13 @@ class Results(aux._ID):
         all_cols = [g for g in group_subset.columns if g not in ignore]
         tmp = group_subset[all_cols]
         # compute stats based on func
-        stats = [func(tmp[col], **kwargs) for col in tmp.columns]
+        stats = []
+        for col in tmp.columns:
+            try: 
+                stat = func(tmp[col], **kwargs)
+            except: 
+                stat = np.nan
+            stats.append(stat)
         return stats
         
 
