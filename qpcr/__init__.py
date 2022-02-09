@@ -563,7 +563,7 @@ class Assay(aux._ID):
                 groups = self._infer_replicates()
                 group_names = [f"group{i}" for i in groups]
             except: 
-                aw.HardWarning("Assay:no_reps_yet")
+                aw.HardWarning("Assay:no_reps_inferred", assay = self.id())
         
         # add numeric group identifiers
         self._df["group"] = groups
