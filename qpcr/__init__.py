@@ -567,12 +567,12 @@ class Assay(aux._ID):
         
         # add numeric group identifiers
         self._df["group"] = groups
+        self._df["group_name"] = group_names
         
         if infer_names:
             # infer group names
             self._infer_names()
-        else: 
-            self._df["group_name"] = group_names
+            
             
 
     def rename(self, names:(list or dict)):
