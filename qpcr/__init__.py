@@ -550,7 +550,8 @@ class Assay(aux._ID):
             Note that this only works if all replicates have an identical sample name!
         """
         df = self._Reader.get()
-        
+        self._df = df
+
         # generate group and group_names columns
         if isinstance(self._replicates, int):
             samples = self._Reader.n()
@@ -558,14 +559,20 @@ class Assay(aux._ID):
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
         else:
-            aw.HardWarning("Assay:no_reps_yet")
+            try: 
+                groups = self._infer_replicates()
+                group_names = [f"group{i}" for i in groups]
+            except: 
+                aw.HardWarning("Assay:no_reps_yet")
         
-        df["group"], df["group_name"] = groups, group_names
-        self._df = df
+        # add numeric group identifiers
+        self._df["group"] = groups
         
         if infer_names:
             # infer group names
             self._infer_names()
+        else: 
+            self._df["group_name"] = group_names
             
 
     def rename(self, names:(list or dict)):
@@ -625,18 +632,45 @@ class Assay(aux._ID):
         
         return replicates
 
+    def _infer_replicates(self):
+        """
+        Infers the replicate groups based on the replicate ids in case all replicates of the same group have the same name.
+        """
+        if self._identically_named():
+            names = self._df["Sample"]
+            names_set = aux.sorted_set(names)
+            groups = [i for i in range(len(names_set))]
+            for name, group in zip(names_set, groups):
+                names = names.replace(name, group)
+            
+            indices = np.array(names, dtype = int)
+            return indices
+
     def _infer_names(self):
         """
         Infers replicate group names from the given sample identifier column
         """
-        # get the first group of replicates
-        group0 = self._df.query("group == 0")["Sample"]
-        all_identical = all(group0 == group0[0])
-        
-        if all_identical:
+        if self._identically_named():
             self._df["group_name"] = self._df["Sample"]
         else: 
             aw.SoftWarning("Assay:groupnames_not_inferred")
+
+    def _identically_named(self):
+        """
+        Checks if all replicates in the same group have the same name / id
+        It checks simply the first group, if that is identical then it's fine.
+        """
+        if "group" not in self._df.columns:
+            names = self._df["Sample"]
+            names_set = aux.sorted_set(names)
+            first_name = names_set[0]
+            group0 = self._df.query(f"Sample == '{first_name}'")["Sample"]
+            entries = len(group0)
+            all_identical = entries > 1                
+        else: 
+            group0 = self._df.query("group == 0")["Sample"]
+            all_identical = all(group0 == group0[0])
+        return all_identical
 
     def _rename_per_key(self, names):
         """
@@ -793,9 +827,11 @@ class SampleReader(Assay):
 
         if self._replicates is not None:
             self._Assay.replicates(self._replicates)
-            self._Assay.group()
         else: 
-            aw.HardWarning("SampleReader:no_reps_yet")
+            pass 
+            # VITAL CHANGE HERE
+            # aw.HardWarning("SampleReader:no_reps_yet")
+        self._Assay.group()
 
         if self._names is not None:
             self._Assay.rename(self._names)
