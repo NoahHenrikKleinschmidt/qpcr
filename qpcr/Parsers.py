@@ -380,7 +380,7 @@ class _CORE_Parser:
         return end_indices
 
 
-class MultiCsvParser(_CORE_Parser):
+class CsvParser(_CORE_Parser):
     """
     This class will handle reading and parsing irregular CSV files that contain multiple assays.
     """
@@ -393,7 +393,7 @@ class MultiCsvParser(_CORE_Parser):
 
         Note 
         ----
-        This is the suggested use of `MultiCsvReader`. 
+        This is the suggested use of `CsvParser`. 
         If a directory has been specified into which the datafiles shall be saved, 
         then saving will automatically be done.
 
@@ -481,7 +481,7 @@ class MultiCsvParser(_CORE_Parser):
         has_quotes = '","' in content
         return has_quotes
 
-class MultiExcelParser(_CORE_Parser):
+class ExcelParser(_CORE_Parser):
     """
     This class will handle reading and parsing irregular Excel files that contain multiple assays.
     """
@@ -518,7 +518,7 @@ class MultiExcelParser(_CORE_Parser):
 
         Note 
         ----
-        This is the suggested use of `MultiExcelReader`. 
+        This is the suggested use of `ExcelParser`. 
         If a directory has been specified into which the datafiles shall be saved, 
         then saving will automatically be done.
 
@@ -550,20 +550,18 @@ class MultiExcelParser(_CORE_Parser):
 
 if __name__ == "__main__":
     
-    parser = MultiCsvParser()
+    parser = CsvParser()
     parser.assay_pattern("Rotor-Gene")
     parser.save_to("__csvparser")
     mycsv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
     parser.pipe(mycsv)
-    parser.save()
 
-    print("""\n\n\n ========================= \n All good with MultiCsvParser \n ========================= \n\n\n""")
+    print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
 
-    parser2 = MultiExcelParser()
+    parser2 = ExcelParser()
     parser2.assay_pattern("Rotor-Gene")
     parser2.save_to("./__excelparser")
     myexcel = "./__parser_data/excel 3.9.19.xlsx"
-    parser2.pipe(myexcel)
-    parser2.save()
+    parser2.pipe(myexcel, sheet_name = 1)
 
-    print("""\n\n\n ========================= \n All good with MultiExcelParser \n ========================= \n\n\n""")
+    print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
