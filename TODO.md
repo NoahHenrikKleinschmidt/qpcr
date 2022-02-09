@@ -55,6 +55,18 @@ The qpcr.Reader will parse the excel sheet to find the replciates and their ct v
 |    5.1   |    x  |            |       |
 |    5.2   |    x (I think?)  |            |       |
 
+
+### 6. Formula for unequal group lengths
+If the replicate groups are of unequal size (i.e. we have both triplicates and duplicates or whatever) then so far each group had to be manually specified in a tuple. Now users can input a string formula to automatically generate the corresponding tuple.
+For example, if we have four triplicates, four unicates, three duplicates, and one nonaplicates, then our tuple would have to look like this: `(3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 9)`. Users can either enter this manually or they can use a comprehensive formula now to describe: `"3:4,1:4,2:3,9"` which will be translated into the above tuple. 
+The formula is always `n:m` where `n` is the number of replicates in the group and `m` is the number of times this kind of group size is repeated afterward. Another example with triplicates, interspersed with a duplicate, and then triplicates again: `"3:5,2,3:3` (you get the idea...)
+
+- 6.1 a string formula method to supply unequal group sizes
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    6.1   |    x  |            |       |
+
 # New features of *some future* release
 
 New planned features for any future release are:
