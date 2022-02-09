@@ -409,6 +409,7 @@ class MultiCsvParser(_CORE_Parser):
         try: 
             self.read(filename, **kwargs)
         except: 
+            self.read(filename)
             aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
         self._pipe(**kwargs)
         assays = self.get()
@@ -523,7 +524,9 @@ class MultiExcelParser(_CORE_Parser):
         try: 
             self.read(filename, **kwargs)
         except: 
-            aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel")
+            self.read(filename)
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel")
+
         self._pipe(**kwargs)
         assays = self.get()
         return assays
@@ -534,7 +537,7 @@ if __name__ == "__main__":
     parser.assay_pattern("Rotor-Gene")
     parser.save_to("__csvparser")
     mycsv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
-    parser.pipe(mycsv, mysuperarg = True)
+    parser.pipe(mycsv)
     parser.save()
 
     print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
@@ -543,7 +546,7 @@ if __name__ == "__main__":
     parser2.assay_pattern("Rotor-Gene")
     parser2.save_to("./__excelparser")
     myexcel = "./__parser_data/excel 3.9.19.xlsx"
-    parser2.pipe(myexcel, mysuperarg = True)
+    parser2.pipe(myexcel)
     parser2.save()
 
 
