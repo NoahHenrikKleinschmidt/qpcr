@@ -166,12 +166,10 @@ class _CORE_Parser:
         """
         self._max_assay_name_length = length
     
-    def _pipe(self, **kwargs):
+    def parse(self, **kwargs):
         """
-        This is the functional core of the Parser's pipe method. All that the 
-        individual parser's need to do is provide the data using their read() method.
-
-        A wrapper for read+find_assays+find_columns+make_dataframes
+        A wrapper for find_assays+find_columns+make_dataframes
+        This is the functional core of the Parser's `pipe` method.
 
         Parameters
         -------
@@ -411,7 +409,7 @@ class MultiCsvParser(_CORE_Parser):
         except: 
             self.read(filename)
             aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
-        self._pipe(**kwargs)
+        self.parse(**kwargs)
         assays = self.get()
         return assays
 
@@ -527,7 +525,7 @@ class MultiExcelParser(_CORE_Parser):
             self.read(filename)
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel")
 
-        self._pipe(**kwargs)
+        self.parse(**kwargs)
         assays = self.get()
         return assays
 
