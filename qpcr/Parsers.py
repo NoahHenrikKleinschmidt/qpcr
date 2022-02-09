@@ -389,8 +389,13 @@ class MultiCsvParser(_CORE_Parser):
 
     def pipe(self, filename :str, **kwargs):
         """
-        A wrapper for read+find_assays+find_columns+make_dataframes
-        This is the suggested use of `MultiCsvReader`.
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `MultiCsvReader`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
 
         Parameters
         -------
@@ -409,8 +414,13 @@ class MultiCsvParser(_CORE_Parser):
         except: 
             self.read(filename)
             aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
+        
         self.parse(**kwargs)
         assays = self.get()
+        
+        if self._save_loc is not None: 
+            self.save()
+        
         return assays
 
     def read(self, filename : str, **kwargs):
@@ -504,8 +514,13 @@ class MultiExcelParser(_CORE_Parser):
 
     def pipe(self, filename :str, **kwargs):
         """
-        A wrapper for read+find_assays+find_columns+make_dataframes
-        This is the suggested use of `MultiExcelReader`.
+        A wrapper for read+parse
+
+        Note 
+        ----
+        This is the suggested use of `MultiExcelReader`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
 
         Parameters
         -------
@@ -527,6 +542,10 @@ class MultiExcelParser(_CORE_Parser):
 
         self.parse(**kwargs)
         assays = self.get()
+
+        if self._save_loc is not None: 
+            self.save()
+
         return assays
 
 if __name__ == "__main__":
@@ -538,14 +557,13 @@ if __name__ == "__main__":
     parser.pipe(mycsv)
     parser.save()
 
-    print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
+    print("""\n\n\n ========================= \n All good with MultiCsvParser \n ========================= \n\n\n""")
 
     parser2 = MultiExcelParser()
     parser2.assay_pattern("Rotor-Gene")
     parser2.save_to("./__excelparser")
     myexcel = "./__parser_data/excel 3.9.19.xlsx"
-    parser2.pipe(myexcel, mysuperarg= True)
+    parser2.pipe(myexcel)
     parser2.save()
 
-
-    print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
+    print("""\n\n\n ========================= \n All good with MultiExcelParser \n ========================= \n\n\n""")
