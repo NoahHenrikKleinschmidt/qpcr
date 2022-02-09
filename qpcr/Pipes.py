@@ -83,7 +83,8 @@ class Pipeline(qpcr.SampleReader):
             return self._stats_df
         elif kind == "df":
             df = self._df
-            df = df.drop(columns = ["assay"])
+            if "assay" in df.columns: 
+                df = df.drop(columns = ["assay"])
             return df
         elif kind == "obj":
             return self._Results
