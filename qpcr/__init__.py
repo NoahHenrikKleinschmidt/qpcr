@@ -559,10 +559,10 @@ class Assay(aux._ID):
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
         else:
-            try: 
+            if self._identically_named():
                 groups = self._infer_replicates()
                 group_names = [f"group{i}" for i in groups]
-            except: 
+            else: 
                 aw.HardWarning("Assay:no_reps_inferred", assay = self.id())
         
         # add numeric group identifiers
@@ -636,15 +636,14 @@ class Assay(aux._ID):
         """
         Infers the replicate groups based on the replicate ids in case all replicates of the same group have the same name.
         """
-        if self._identically_named():
-            names = self._df["Sample"]
-            names_set = aux.sorted_set(names)
-            groups = [i for i in range(len(names_set))]
-            for name, group in zip(names_set, groups):
-                names = names.replace(name, group)
-            
-            indices = np.array(names, dtype = int)
-            return indices
+        names = self._df["Sample"]
+        names_set = aux.sorted_set(names)
+        groups = [i for i in range(len(names_set))]
+        for name, group in zip(names_set, groups):
+            names = names.replace(name, group)
+        
+        indices = np.array(names, dtype = int)
+        return indices
 
     def _infer_names(self):
         """
