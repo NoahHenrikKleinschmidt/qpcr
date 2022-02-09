@@ -677,7 +677,8 @@ class Assay(aux._ID):
         returns True if all samples are covered, False if not...
         """
         samples = self._Reader.n()
-
+        verdict = None
+        
         # for INT -> modulo will be 0 if all samples are covered
         # for TUPLE -> sum(replicates) should cover all samples...
 
@@ -685,6 +686,10 @@ class Assay(aux._ID):
             verdict = True if samples % replicates == 0 else False
         elif isinstance(replicates, tuple): 
             verdict = True if sum(replicates) == samples else False
+        
+        if verdict is None: 
+            aw.HardWarning("Assay:reps_could_not_vet", reps = replicates)
+
         return verdict
 
 class SampleReader(Assay):

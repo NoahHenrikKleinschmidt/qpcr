@@ -13,10 +13,12 @@ WARNINGS = {
 "Analyser:cannot_set_func" : "Only 'exponential'/'linear' or a defined function may be passed as .func()\nReceived func = {func}", 
 
 "Assay:reps_dont_cover" : "The replicates you provide do not cover all data entries!\nExpected: either reps % len(samples) == 0 (if reps is int) or sum(reps) == {n_samples} (if reps is tuple), received reps = {reps}",
+"Assay:reps_could_not_vet" : "The replicates could not be vetted! Replicates must either be integers or tuples of integers. Currently received replicates = {reps}",
 "Assay:no_reps_yet" : "No replicates have been defined so far!\nAdd replicates using .replicates()",
 "Assay:no_groupname_assignment" : "Could not establish new group names!\nGroup names can only be established based on a list (per index) or dictionary (per key)! New group names received = {names}",
 "Assay:groupnames_dont_colver" : "The new group names specified do not cover all current groups of replicates!\nRequired are new_names for all groups either as dictionary old_name : new_name or as list, replaced per index.\nCurrent group names \t = {current_groups}\nReceived new group names = {new_received}", 
 "Assay:groupnames_not_inferred" : "Could not infer group names based on the provided replicate sample names.\nPlease, specify group names directly.",
+
 
 "Results:cannot_link" : "Names could not be linked!\nIf names shall be added after results have been computed, use .add_names() instead! .link() is only allowed on empty Results!",
 "Results:cannot_add_names" : "Names could not be added! Dimensionality did not match...\nExpected length: {length}, but got {length_names}",
