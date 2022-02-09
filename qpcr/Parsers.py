@@ -19,7 +19,7 @@ import os
 # important here is that they must specify a capturing group for the assay name.
 
 assay_patterns = {
-                    "Rotor-Gene" : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:,_\-/]+)",
+                    "Rotor-Gene" : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
                 }
 
 
@@ -206,6 +206,7 @@ class _CORE_Parser:
 
         array = self._data
         array = array[:, col]
+        array = array.astype(str)
 
         indices = np.zeros(len(array))
         names = np.array(["-"*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders ('-')
@@ -405,12 +406,15 @@ class MultiCsvParser(_CORE_Parser):
             A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
             Individual assays can also be accessed using the `get` method.
         """
-        self.read(filename)
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
         self._pipe(**kwargs)
         assays = self.get()
         return assays
 
-    def read(self, filename : str):
+    def read(self, filename : str, **kwargs):
         """
         Reads an input csv file. 
 
@@ -418,6 +422,8 @@ class MultiCsvParser(_CORE_Parser):
         -------
         filename : str
             A filepath to an input csv file.
+        **kwargs 
+            Any additional keyword arguments to be passed to pandas' `read_csv` function.
         """
         self._src = filename
 
@@ -425,7 +431,7 @@ class MultiCsvParser(_CORE_Parser):
         contents = StringIO(contents) # convert to StringIO for pandas to be able to read
         
         # now read the data and convert to numpy array
-        df = pd.read_csv(contents, header = None)
+        df = pd.read_csv(contents, header = None, **kwargs)
         df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = df.to_numpy()
 
@@ -466,12 +472,79 @@ class MultiCsvParser(_CORE_Parser):
         has_quotes = '","' in content
         return has_quotes
 
+class MultiExcelParser(_CORE_Parser):
+    """
+    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def read(self, filename : str, sheet_name : (str or int) = 0, **kwargs):
+        """
+        Reads an input excel file. 
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        sheet_name : int or str
+            The name of a specific spreadsheet of the file to read.
+            If none is provided by default the first sheet will be read.
+            Only one single sheet can be read at a time. 
+            If an `integer` is provided the sheets will be accessed by their order, otherwise by their name (if a `string` is provided).
+        **kwargs
+            Any additional keyword arguments to be passed to pandas `read_excel` function.
+        """
+        self._src = filename
+
+        # read data and convert to numpy array
+        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        data = data.to_numpy()
+
+        self._data = data
+
+    def pipe(self, filename :str, **kwargs):
+        """
+        A wrapper for read+find_assays+find_columns+make_dataframes
+        This is the suggested use of `MultiExcelReader`.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input excel file.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        """
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel")
+        self._pipe(**kwargs)
+        assays = self.get()
+        return assays
 
 if __name__ == "__main__":
     
     parser = MultiCsvParser()
-
     parser.assay_pattern("Rotor-Gene")
-    myfile = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
-    assays = parser.pipe(myfile)
-    print(assays)
+    parser.save_to("__csvparser")
+    mycsv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
+    parser.pipe(mycsv, mysuperarg = True)
+    parser.save()
+
+    print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
+
+    parser2 = MultiExcelParser()
+    parser2.assay_pattern("Rotor-Gene")
+    parser2.save_to("./__excelparser")
+    myexcel = "./__parser_data/excel 3.9.19.xlsx"
+    parser2.pipe(myexcel, mysuperarg = True)
+    parser2.save()
+
+
+    print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")

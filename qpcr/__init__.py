@@ -590,7 +590,6 @@ class Assay(aux._ID):
         
         return replicates
 
-
     def _infer_names(self):
         """
         Infers replicate group names from the given sample identifier column
