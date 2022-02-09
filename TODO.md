@@ -9,12 +9,13 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 - 1.1 Make a new Qupid web-app
 - 1.2 Make functional Cores within `qpcr` for Qupid
 - 1.3 factor out _Qupid classes into _Qupid submodule
-
+- 1.4 Make Qupid work with Parsers (currently they don't like the StringIO as self._src, so we need to maybe some _QupidParser classes that will use similar hacks as the _Qupid_SampleReader...)
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    1.1   |  x    |            |       |
 |    1.2   |   x   |             |       |
 |    1.3   |      |             |       |
+|    1.4   |      |             |       |
 
 
 ### 2. Anchor 
@@ -80,8 +81,8 @@ Support irregular csv files where the assay must actually be extracted through p
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
-|    8.1   |      |            |       |
-|    8.2   |      |            |       |
+|    8.1   |   x   |            |       |
+|    8.2   |  x    |            |       |
 
 ### 7. Support MULTI-ASSAY FILES
 We simply let people add a little decorator in the cell above the assay declaration
