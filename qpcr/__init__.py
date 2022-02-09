@@ -475,20 +475,30 @@ class Assay(aux._ID):
         """
         return sorted(list(set(self._df["group"])))
 
-    def replicates(self, replicates : (int or tuple) = None):
+    def replicates(self, replicates : (int or tuple or str) = None):
         """
         Either sets or gets the replicates to be used for grouping the samples
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
 
         Parameters
         ----------
-        replicates : int or tuple
+        replicates : int or tuple or str
             Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
+            any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
         """
         if replicates is None:
             return self._replicates
         else: 
+            # convert a string formula to tuple if one was provided
+            if isinstance(replicates, str): 
+                replicates = self._reps_from_formula(replicates)
+            # vet replicate coverage
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
@@ -557,6 +567,29 @@ class Assay(aux._ID):
         """
         self._df = self._df.drop(index = list(entries))
     
+    def _reps_from_formula(self, replicates):
+        """
+        Generates a replicate tuple from a string formula. 
+        See the docstring of `replicates()` for more info on the formula.
+
+        Example:
+        "3:4,1:4,2:3,9" -> (3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 9)
+        """
+
+        # split the formula and adjust standard formatting
+        replicates = replicates.split(",")
+        replicates = [i + ":1" if ":" not in i else i for i in replicates]
+
+        # convert to numeric values and extend
+        replicates = [np.array(i.split(":"), dtype = int) for i in replicates]
+        replicates = [np.tile(i[0], i[1]) for i in replicates]
+        
+        # generate replicate tuple
+        replicates = np.concatenate(replicates)
+        replicates = tuple(replicates)
+        
+        return replicates
+
 
     def _infer_names(self):
         """
