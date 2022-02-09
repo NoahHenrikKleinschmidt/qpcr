@@ -1600,7 +1600,7 @@ if __name__ == "__main__":
     analysers = []
 
     reader = SampleReader()
-    reader.replicates(6)
+    reader.replicates("6:4")
     # reader.names(groupnames)
 
     analyser = Analyser()
