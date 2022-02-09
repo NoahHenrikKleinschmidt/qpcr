@@ -46,7 +46,7 @@ We add a method to the SampleReader which will adopt Replicate Group names based
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    4.1   |    x  |            |       |
-|    4.2   |      |            |       |
+|    4.2   |   x   |            |       |
 
 
 ### 5. Support Excel Files
