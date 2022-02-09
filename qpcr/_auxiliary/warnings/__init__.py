@@ -7,7 +7,7 @@ It also defines two classes, a SoftWarning (which only prints the warning string
 WARNINGS = {
 
 "Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the csv file adheres to the two column structure required of csv input files.",
-"Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.",
+"Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.\n\nAvailable assays from this file are: {assays}",
 
 "Analyser:newlinked" : "You have linked a new dataset to your Analyser, your previous results have been cleared!\nIf this was not intended, use .get() to get your results before using .link()",
 "Analyser:not_newlinked" : "You have precomputed results in your Analyser, no new dataset was linked!\n\If you want to link new data anyway (and clear your current results) use force=True.",
@@ -50,7 +50,7 @@ WARNINGS = {
 "Parser:no_assays_found" : "No assays could be be identified with the provided pattern!\nMake sure to specify an appropriate pattern for your datafile using assay_pattern(). Either specify your own pattern or use a pre-defined one from the qpcr.Parser.assay_patterns dictionary (patterns from there can be specified by just providing their key to assay_pattern() ).",
 "Parser:no_ct_nan_default" : "If allow_nan_ct = False is set then a numeric value must be specified for default_to! Currently default_to = {d}",
 "Parser:incompatible_read_kwargs" : "It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading...\nIf the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.",
-
+"Parser:no_data_found" : "No data could be found for at least one assay!\nThis could either be because different headers than the current ones are used above the data column (current header = '{label}'), or because there are too many rows between the header and the data.\nMax allowed rows between assay identifier and data are 2!",
 }
 
 class SoftWarning:

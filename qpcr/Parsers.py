@@ -286,6 +286,7 @@ class _CORE_Parser:
             This is ignored if `allow_nan_ct = True`.
         """  
         adx = 0
+        # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
         for assay in self._assay_names:
             
             # get the assay's indices of both replicate id and ct columns
@@ -357,6 +358,19 @@ class _CORE_Parser:
         row_indices = np.transpose(all_found)[0]
         ref_indices = ref_indices + 1 # adjust coordinates +1 as the headers would be in the row below the assay declaration
         matching_rows = np.where(np.isin(row_indices, ref_indices))
+        
+        # if no matches were found, try incrementing the index offset once more 
+        # (we'll allow for a single row between the header and the start of the data)
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            ref_indices = ref_indices + 1
+            matching_rows = np.where(np.isin(row_indices, ref_indices))
+
+        # check again, and raise Error if still no matches are found
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            aw.HardWarning("Parser:no_data_found", label = label)
+
         matching_rows = all_found[matching_rows]
         return matching_rows
     
@@ -569,3 +583,15 @@ if __name__ == "__main__":
     parser2.pipe(myexcel, sheet_name = 1)
 
     print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
+
+    parser3 = ExcelParser()
+    single_excel = "/Users/NoahHK/OneDrive - Universitaet Bern/Bachelor/Bachelor Project/qPCR/Week 5/12.03.21/Brilliant III Ultra Fast SYBR Green 2021-03-12 (ActinB).xlsx"
+    parser3.read(single_excel)
+    parser3.assay_pattern("Rotor-Gene")
+    parser3.find_assays()
+    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
+    parser3.find_columns()
+    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
+    # print(parser3._data)
+    i  = parser3.pipe(single_excel)
+    print(i)
