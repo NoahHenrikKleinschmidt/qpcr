@@ -41,7 +41,7 @@ WARNINGS = {
 "Plotter:no_fig_yet" : "No figure has been generated yet, nothing to save...",
 
 "Pipeline:no_reps" : "Pipeline requires at least one set of replicates!, Make sure to provide these using .replicates()!",
-"Pipeline:no_data" : "Pipeline requires at least one Normaliser and/or Sample Assay!, Make sure to provide these using .add_() or link() methods!",
+"Pipeline:no_data" : "Pipeline requires at least one Normaliser and Sample Assay!, Make sure to provide these using .add_() or link() methods!",
 "Pipeline:faulty_index" : "The index file does not appear to be properly constructed!\nMake sure to use a standard csv format with the following labeled columns: 'id', 'condition', 'normaliser', and 'path' (plus any additional columns of your own, which will be ignored)",
 
 "Filter:no_assay" : "Filtering requires a sample Assay! First link an Assay object before applying filter()",
