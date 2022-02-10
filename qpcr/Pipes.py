@@ -528,28 +528,31 @@ class MultiAssay(Blueprint):
     
     def link(self, filename : str, **kwargs):
         """
-        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+        Reads a datafile in csv or excel format containing 
+        multiple decorated datasets and extracts sample and normalisers assays. 
 
         Parameters
         ----------
         filename : str
             A filepath to a raw data file.
         **kwargs
-            Any additional keyword arguments to be passed to `qpcr.MultiReader`'s `pipe` method.
+            Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`'s `pipe` method.
         """
         self._src = filename
-        reader = qpcr.MultiReader()
+
+        # setup Reader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        reader = self.Reader()
+
+        # read the multi-assay datafile
         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
-    # add_assays is disabled
-    def add_assays(self):
-        print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
-
+        
     def _run(self, **kwargs):
         """
         The main workflow
         """
-        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        # setup Reader, Analyser, and Normaliser (if none were provided)
         self._setup_cores()
         
         analyser = self.Analyser()
@@ -603,6 +606,26 @@ class MultiAssay(Blueprint):
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
                 plotter.save(filename)
+
+    def _setup_cores(self):
+        """
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        """
+        if self.Reader() is None: 
+            self.Reader(qpcr.MultiReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
+
+    # add_assays is disabled
+    def add_assays(self):
+        print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
+
+    # add_normalisers is disabled
+    def add_assays(self):
+        print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
 
 
 
