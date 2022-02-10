@@ -1387,8 +1387,13 @@ class Results(aux._ID):
             aw.HardWarning("Results:save_need_dir")
 
         if df:
-            self._save_single(path, self._df, "_df")
+            # in case of raw results export we don't need the "assay" column as all 
+            # assays are stored as separate columns anyaway, so it doesn't store any useful data
+            _df = self._df
+            if "assay" in _df.columns: _df = self._df.drop( columns = ["assay"] )
+            self._save_single(path, _df, "_df")
         if stats:
+            # compute stats if none have been computed yet...
             if self._stats_df is None:
                 self.stats()
             self._save_single(path, self._stats_df, "_stats")
