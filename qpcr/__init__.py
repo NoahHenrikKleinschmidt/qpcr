@@ -1983,11 +1983,11 @@ class Normaliser(aux._ID):
         """
         if assays is not None:
             for sample in assays: 
-                if isinstance(sample, Results):
+                if aux.same_type(sample, Results()):
                     self._Assay.append(sample)
-                elif isinstance(sample, Analyser) and sample.has_results():
+                elif aux.same_type(sample, Analyser()) and sample.has_results():
                     self._Assay.append(sample.get())
-                elif isinstance(sample, Analyser) and not sample.has_results():
+                elif aux.same_type(sample, Analyser()) and not sample.has_results():
                     aw.SoftWarning("Normaliser:empty_data", s = sample)
                 else: 
                     aw.SoftWarning("Normaliser:unknown_data", s = sample)
@@ -1998,9 +1998,9 @@ class Normaliser(aux._ID):
         """
         if normalisers is not None:
             for normaliser in normalisers:
-                if isinstance(normaliser, Results):
+                if aux.same_type(normaliser, Results()):
                     self._Normalisers.append(normaliser)
-                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                elif aux.same_type(normaliser, Analyser()) and normaliser.has_results():
                     self._Normalisers.append(normaliser.get())
                 else: 
                     aw.SoftWarning("Normaliser:norm_unknown_data", s = normaliser)
