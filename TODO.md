@@ -48,7 +48,7 @@ The qpcr.Reader will parse the excel sheet to find the replciates and their ct v
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    5.1   |    x  |            |       |
-|    5.2   |    x (I think?)  |            |       |
+|    5.2   |      |   x (I think?)         |       |
 
 
 ### 6. Formula for unequal group lengths
