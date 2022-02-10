@@ -1,6 +1,6 @@
 """
 This submodule defines a number of filters that can be used to 
-remove faulty reads prior to deltact analysis. 
+remove faulty replicates from `qpcr.Assay`s before before passing them to an `qpcr.Analyser`.
 
 ## Available Filters
 --------
