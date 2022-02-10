@@ -19,9 +19,15 @@ import os
 # important here is that they must specify a capturing group for the assay name.
 
 assay_patterns = {
-                    "Rotor-Gene" : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
+                    "all"           : r"([A-Za-z0-9.:, ()_\-/]+)",
+                    "Rotor-Gene"    : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
                 }
 
+decorators = {
+                    "qpcr:all"          : "(@qpcr:|'@qpcr:)",
+                    "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
+                    "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",        
+            }
 
 class _CORE_Parser:
     """
@@ -180,9 +186,79 @@ class _CORE_Parser:
         self.find_columns()
         self.make_dataframes(**kwargs)
 
+    def find_by_decorators(self, decorator : str, col = 0, **kwargs):
+        """
+        Parses through a column of the datafile and finds all assays that are decorated with a specific decorator.
+        Note that this requires that the decorator is in the cell above the assay header. Also, make sure to specify
+        an `assay_pattern` to extract the assay name. If no `assay_pattern` is provided, it will simply take the entire cell content.
+        
+        Parameters
+        -----------
+        decorator : str
+            One of the available `qpcr-decorator`'s for irregular multi-assay files. 
+            Available decorators can be assessed via the `qpcr.Parsers.decorators` dictionary keys.
+        col : int
+            The column in which to look for assay identifiers. 
+            By default the first column `col = 0`.
+        
+        Returns
+        -------
+        assay_indices : np.ndarray
+            The indices (row, col) of all assays found.
+        names : np.ndarray
+            The extracted names of all assays found.
+        """
+        # get the pattern required (or raise error if invalid decorators are provided)
+        if decorator not in decorators.keys():
+            aw.HardWarning("Parser:invalid_decorator", d = decorator, all_d = list(decorators.keys()))
+
+        decorator_pattern = re.compile( decorators[decorator] )
+        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+
+        # check if decorators were identified
+        found_indices = decorator_indices.size > 0
+        if not found_indices:
+            aw.HardWarning("Parser:no_decorators_found")
+
+        # if no assay_pattern was specified then default to generic "all" to get full cell contents
+        if self.assay_pattern() is None:
+            aw.SoftWarning("Parser:decorators_but_no_pattern")
+            self.assay_pattern("all")
+
+        # get assay indices as the cells IMMEDIATELY BELOW the decorators
+        assay_indices = decorator_indices + 1
+        
+        # get all assay header cells into an array to extract their names
+        array = self._data[assay_indices, col]
+        array = array.astype(str)
+        array = array.reshape(array.size)
+
+        # adjust avaliable length of stored assay names
+        max_length = max(
+                            list(  map(len, array)  )
+                        )
+        self.max_assay_name_length(max_length)
+
+        names = np.array(["-"*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders ('-')
+        idx = 0
+        for entry in array:
+            # try:
+            match = self.assay_pattern().search(entry)
+            if match is not None: 
+                name = match.group(1)
+                names[idx] = name
+            # except: 
+            #     continue
+            idx += 1
+
+        self._assay_indices = assay_indices
+        self._assay_names = names
+        
+        return assay_indices, names
+
     def find_assays(self, col = 0, **kwargs):
         """
-        Parses through an the datafile and identifies all indices of cells that match the provided `assay_pattern``.
+        Parses through a column of the datafile and identifies all indices of cells that match the provided `assay_pattern``.
         It stores these values internally and also returns the results as numpy arrays.
 
         Parameters
@@ -193,14 +269,16 @@ class _CORE_Parser:
 
         Returns
         -------
-        names : np.ndarray
-            The extracted names of all assays found.
         indices : np.ndarray
             The indices (row, col) of all assays found.
+        names : np.ndarray
+            The extracted names of all assays found.
         """
-
-        if self._pattern is None: 
+        custom_pattern = aux.from_kwargs("pattern", None, kwargs, rm = True)
+        if self._pattern is None and custom_pattern is None: 
             aw.HardWarning("Parser:no_pattern_yet")
+
+        pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
 
         array = self._data
         array = array[:, col]
@@ -211,7 +289,7 @@ class _CORE_Parser:
         idx = 0
         for entry in array:
             # try: 
-            match = self._pattern.search(entry)
+            match = pattern_to_use.search(entry)
             if match is not None: 
                 name = match.group(1)
                 names[idx] = name
@@ -585,13 +663,27 @@ if __name__ == "__main__":
     print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
 
     parser3 = ExcelParser()
-    single_excel = "/Users/NoahHK/OneDrive - Universitaet Bern/Bachelor/Bachelor Project/qPCR/Week 5/12.03.21/Brilliant III Ultra Fast SYBR Green 2021-03-12 (ActinB).xlsx"
-    parser3.read(single_excel)
+    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    parser3.save_to("./__decorated_excelparser")
+    parser3.read(decorated_excel)
     parser3.assay_pattern("Rotor-Gene")
-    parser3.find_assays()
-    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
+    parser3.find_by_decorators(decorator = "qpcr:all")
     parser3.find_columns()
-    # print(parser3._assay_indices, parser3._assay_names, parser3._assay_names_start_indices)
-    # print(parser3._data)
-    i  = parser3.pipe(single_excel)
-    print(i)
+    parser3.make_dataframes()
+    parser3.save()
+    # print(parser3.get())
+
+    print("""\n\n\n ========================= \n All good with decorated ExcelParser \n ========================= \n\n\n""")
+
+    parser4 = CsvParser()
+    decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
+    parser4.save_to("./__decorated_csvparser")
+    parser4.read(decorated_csv)
+    parser4.assay_pattern("Rotor-Gene")
+    parser4.find_by_decorators(decorator = "qpcr:all")
+    parser4.find_columns()
+    parser4.make_dataframes()
+    parser4.save()
+    # print(parser4.get())
+
+    print("""\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n""")

@@ -52,6 +52,11 @@ WARNINGS = {
 "Parser:no_ct_nan_default" : "If allow_nan_ct = False is set then a numeric value must be specified for default_to! Currently default_to = {d}",
 "Parser:incompatible_read_kwargs" : "It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading...\nIf the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.",
 "Parser:no_data_found" : "No data could be found for at least one assay!\nThis could either be because different headers than the current ones are used above the data column (current header = '{label}'), or because there are too many rows between the header and the data.\nMax allowed rows between assay identifier and data are 2!",
+"Parser:invalid_decorator" : "Invalid decorator provided! The decorator '{d}' could not be understood. Available decorators are: {all_d}",
+"Parser:no_decorators_found" : "No decorators could be be identified with the provided pattern!\nMake sure to specify the right decorators at the appropriate cells within your datafile.",
+"Parser:decorators_but_no_pattern" : "No assay_pattern has been specified yet!\nWill default to just extracting the entire cell content below the decorators. To deal more properly with your assays, please, specify an assay_pattern.",
+
+
 }
 
 class SoftWarning:
