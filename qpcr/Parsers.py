@@ -4,6 +4,7 @@ It provides `Parsers` that are able to extract the replicate and Ct values as pa
 from irregular `csv` and `excel` files.
 """
 
+import qpcr.__init__ as qpcr
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 import pandas as pd
@@ -31,6 +32,11 @@ decorators = {
                     "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
                     "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",        
             }
+
+# get the standard column headers to use for the 
+# replicate id and Ct column of the finished dataframes
+standard_id_header = qpcr.raw_col_names[0]
+standard_ct_header = qpcr.raw_col_names[1]
 
 class _CORE_Parser:
     """
@@ -135,19 +141,19 @@ class _CORE_Parser:
                 assay_path = os.path.join(self.save_to(), f"{assay}.csv")
                 df.to_csv(assay_path, index = False)
 
-    def labels(self, sample_label : str = "Name", ct_label : str = "Ct"):
+    def labels(self, id_label : str = "Name", ct_label : str = "Ct"):
         """
         Sets the headers for the relevant data columns for each assay within the datafile.
 
         Parameters
         ----------
-        sample_label : str
+        id_label : str
             The header above the column containing replicate identifiers. 
         
         ct_label : str
             The header above the column containing the replicates' Ct values.
         """
-        self._sample_label = sample_label
+        self._id_label = id_label
         self._ct_label = ct_label
 
     def assays(self):
@@ -346,7 +352,7 @@ class _CORE_Parser:
         # search indices of the starts of id and ct columns
         # these are now the row, col coordinates of each name_column header
         name_col_starts = self._find_column_starts(
-                                                    label = self._sample_label, 
+                                                    label = self._id_label, 
                                                     ref_indices = self._assay_indices
                                                 )
         # these are now the row, col coordinates of each ct_column header
@@ -412,11 +418,12 @@ class _CORE_Parser:
             assay_cts = self._data[ct_range, ct_col]
             assay_cts = assay_cts.astype(float)
 
+            # assemble the assay dataframe 
             assay_df = pd.DataFrame(
-                                    dict(
-                                        Sample = assay_names, 
-                                        Ct = assay_cts,
-                                    )
+                                    {
+                                        standard_id_header : assay_names, 
+                                        standard_ct_header : assay_cts,
+                                    }
                                 )
 
             if not allow_nan_ct:
