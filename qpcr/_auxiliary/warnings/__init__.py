@@ -47,7 +47,7 @@ WARNINGS = {
 "Filter:no_assay" : "Filtering requires a sample Assay! First link an Assay object before applying filter()",
 
 "Parser:no_save_loc" : "Cannot save data files because no target directory has been specified yet!\nMake sure to specify a directory using save_to()",
-"Parser:no_pattern_yet" : "Assays cannot be identified as no pattern has been specified yet!\nMake sure to specify a pattern using assay_pattern(). Either specify your own pattern or use a pre-defined one from the qpcr.Parser.assay_patterns dictionary (patterns from there can be specified by just providing their key to assay_pattern() ).",
+"Parser:no_pattern_yet" : "Assays cannot be identified as no pattern has been specified yet!\nMake sure to specify a pattern using assay_pattern(). Either specify your own pattern, use a pre-defined pattern from the qpcr.Parser.assay_patterns dictionary, or add decorators to your datafile.",
 "Parser:no_assays_found" : "No assays could be be identified with the provided pattern!\nMake sure to specify an appropriate pattern for your datafile using assay_pattern(). Either specify your own pattern or use a pre-defined one from the qpcr.Parser.assay_patterns dictionary (patterns from there can be specified by just providing their key to assay_pattern() ).",
 "Parser:no_ct_nan_default" : "If allow_nan_ct = False is set then a numeric value must be specified for default_to! Currently default_to = {d}",
 "Parser:incompatible_read_kwargs" : "It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading...\nIf the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.",

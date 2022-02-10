@@ -182,11 +182,15 @@ class _CORE_Parser:
         **kwargs
             Any additional keyword argument that will be passed to any of the wrapped methods.
         """
-        self.find_assays(**kwargs)
+        decorator = aux.from_kwargs("decorator", None, kwargs, rm = True)
+        if decorator is not None:
+            self.find_by_decorator(decorator = decorator, **kwargs)
+        else: 
+            self.find_assays(**kwargs)
         self.find_columns()
         self.make_dataframes(**kwargs)
 
-    def find_by_decorators(self, decorator : str, col = 0, **kwargs):
+    def find_by_decorator(self, decorator : str, col = 0, **kwargs):
         """
         Parses through a column of the datafile and finds all assays that are decorated with a specific decorator.
         Note that this requires that the decorator is in the cell above the assay header. Also, make sure to specify
@@ -509,7 +513,7 @@ class CsvParser(_CORE_Parser):
             self.read(filename, **kwargs)
         except: 
             self.read(filename)
-            aw.HardWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
         
         self.parse(**kwargs)
         assays = self.get()
@@ -667,7 +671,7 @@ if __name__ == "__main__":
     parser3.save_to("./__decorated_excelparser")
     parser3.read(decorated_excel)
     parser3.assay_pattern("Rotor-Gene")
-    parser3.find_by_decorators(decorator = "qpcr:all")
+    parser3.find_by_decorator(decorator = "qpcr:all")
     parser3.find_columns()
     parser3.make_dataframes()
     parser3.save()
@@ -680,10 +684,29 @@ if __name__ == "__main__":
     parser4.save_to("./__decorated_csvparser")
     parser4.read(decorated_csv)
     parser4.assay_pattern("Rotor-Gene")
-    parser4.find_by_decorators(decorator = "qpcr:all")
+    parser4.find_by_decorator(decorator = "qpcr:all")
     parser4.find_columns()
     parser4.make_dataframes()
     parser4.save()
     # print(parser4.get())
 
     print("""\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n""")
+
+
+    parser4 = CsvParser()
+    decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
+    parser4.save_to("./__decorated_csvparser_pipe")
+    parser4.assay_pattern("Rotor-Gene")
+    parser4.pipe(decorated_csv, decorator = "qpcr:assay")
+    # print(parser4.get())
+
+    print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
+
+    parser3 = ExcelParser()
+    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    parser3.save_to("./__decorated_excelparser_pipe_nodec")
+    parser3.assay_pattern("Rotor-Gene")
+    parser3.pipe(decorated_excel)
+    # print(parser3.get())
+
+    print("""\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n""")
