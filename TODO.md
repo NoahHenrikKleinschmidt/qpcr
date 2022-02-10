@@ -103,7 +103,7 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 |    7.2   |   x   |            |       |
 |    7.3   |   x   |            |       |
 |    7.4  |   x   |            |       |
-|    7.5  |     |            |       |
+|    7.5  |  x   |            |       |
 
 
 # New features of *some future* release
