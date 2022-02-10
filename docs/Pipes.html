@@ -120,19 +120,19 @@ class Pipeline(qpcr.SampleReader):
         elif kind == &#34;obj&#34;:
             return self._Results
     
-    def link(self, samples:(list or str)):
+    def link(self, assays:(list or str)):
         &#34;&#34;&#34;
-        Links new sample assays to the pipline, either replacing old ones or keeping them, 
+        Links new assays-of-interest / sample assays to the pipline, either replacing old ones or keeping them, 
         depending on `softlink()` settings.
 
         Parameters
         ----------
-        samples : list or str
-            A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
+        assays : list or str
+            A `list` of filepaths to raw datafiles of assays-of-interest, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
         if self._softlink:
             self.prune()
-        self.add_assays(samples)
+        self.add_assays(assays)
 
     def prune(self, assays = True, results = True, normalisers = False):
         &#34;&#34;&#34;
@@ -170,15 +170,15 @@ class Pipeline(qpcr.SampleReader):
     
     def add_assays(self, assays):
         &#34;&#34;&#34;
-        Adds sample assays (filepaths) (keeping any already present)
+        Adds assays-of-interest / sample assays (filepaths) (keeping any already present)
 
         Parameters
         ----------
         assays : list or str
             A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
-        samples = self._from_directory(assays)
-        self._Assays.extend(samples)
+        assays = self._from_directory(assays)
+        self._Assays.extend(assays)
 
     def softlink(self, bool = None):
         &#34;&#34;&#34;
@@ -220,9 +220,10 @@ class Pipeline(qpcr.SampleReader):
 class Basic(Pipeline):
     &#34;&#34;&#34;
     Performs simple standardized DeltaDeltaCt analysis 
-    based on two lists of files, one for normalisers, one for Sample Assays...
-    This makes use of standard settings for qpcr.Analyser() and qpcr.Assay()
-    which cannot be customized! For customization generate your own pipeline!
+    based on two lists of files, one for normaliser assays and one for sample assays.
+    This makes use of standard settings for `qpcr.Analyser` and `qpcr.Normaliser`
+    which cannot be customized! 
+    For customization check out the `Blueprint` pipeline or generate your own.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -230,7 +231,7 @@ class Basic(Pipeline):
     def _run(self):
         &#34;&#34;&#34;
         The automated standard DeltaDeltaCt pipeline. 
-        Using default settings of qpcr.Analyser()
+        Using default settings of `qpcr.Analyser`
         &#34;&#34;&#34;
         reader = qpcr.SampleReader()
         reader.replicates(self._replicates)
@@ -393,7 +394,7 @@ class BasicPlus(Basic):
 class Blueprint(BasicPlus):
     &#34;&#34;&#34;
     Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
-    Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.
+    Optionally, `qpcr.SampleReader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -550,7 +551,7 @@ class MultiAssay(Blueprint):
     &#34;&#34;&#34;
     Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
     Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
-    Check out the documentation of `qpcr.Parser` for more information on decorators.
+    Check out the documentation of `qpcr.Parsers` for more information on decorators.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -571,7 +572,10 @@ class MultiAssay(Blueprint):
         reader = qpcr.MultiReader()
         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
-    
+    # add_assays is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
+
     def _run(self, **kwargs):
         &#34;&#34;&#34;
         The main workflow
@@ -720,9 +724,10 @@ if __name__ == &#34;__main__&#34;:
 </code></dt>
 <dd>
 <div class="desc"><p>Performs simple standardized DeltaDeltaCt analysis
-based on two lists of files, one for normalisers, one for Sample Assays&hellip;
-This makes use of standard settings for qpcr.Analyser() and qpcr.Assay()
-which cannot be customized! For customization generate your own pipeline!</p></div>
+based on two lists of files, one for normaliser assays and one for sample assays.
+This makes use of standard settings for <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code> and <code><a title="qpcr.Normaliser" href="index.html#qpcr.Normaliser">Normaliser</a></code>
+which cannot be customized!
+For customization check out the <code><a title="qpcr.Pipes.Blueprint" href="#qpcr.Pipes.Blueprint">Blueprint</a></code> pipeline or generate your own.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -730,9 +735,10 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 <pre><code class="python">class Basic(Pipeline):
     &#34;&#34;&#34;
     Performs simple standardized DeltaDeltaCt analysis 
-    based on two lists of files, one for normalisers, one for Sample Assays...
-    This makes use of standard settings for qpcr.Analyser() and qpcr.Assay()
-    which cannot be customized! For customization generate your own pipeline!
+    based on two lists of files, one for normaliser assays and one for sample assays.
+    This makes use of standard settings for `qpcr.Analyser` and `qpcr.Normaliser`
+    which cannot be customized! 
+    For customization check out the `Blueprint` pipeline or generate your own.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -740,7 +746,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
     def _run(self):
         &#34;&#34;&#34;
         The automated standard DeltaDeltaCt pipeline. 
-        Using default settings of qpcr.Analyser()
+        Using default settings of `qpcr.Analyser`
         &#34;&#34;&#34;
         reader = qpcr.SampleReader()
         reader.replicates(self._replicates)
@@ -1047,7 +1053,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 </code></dt>
 <dd>
 <div class="desc"><p>Performs simple Delta-Delta-Ct analysis based on the same workflow as the <code><a title="qpcr.Pipes.Basic" href="#qpcr.Pipes.Basic">Basic</a></code> pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
-Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.</p></div>
+Optionally, <code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code>, <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code>, and <code><a title="qpcr.Normaliser" href="index.html#qpcr.Normaliser">Normaliser</a></code> may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1055,7 +1061,7 @@ Optionally, SampleReader, Analyser, and Normaliser may be set up externally and 
 <pre><code class="python">class Blueprint(BasicPlus):
     &#34;&#34;&#34;
     Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
-    Optionally, SampleReader, Analyser, and Normaliser may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up as per default.
+    Optionally, `qpcr.SampleReader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -1310,7 +1316,7 @@ Optionally, SampleReader, Analyser, and Normaliser may be set up externally and 
 <dd>
 <div class="desc"><p>Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
 Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
-Check out the documentation of <code>qpcr.Parser</code> for more information on decorators.</p></div>
+Check out the documentation of <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> for more information on decorators.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1319,7 +1325,7 @@ Check out the documentation of <code>qpcr.Parser</code> for more information on 
     &#34;&#34;&#34;
     Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
     Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
-    Check out the documentation of `qpcr.Parser` for more information on decorators.
+    Check out the documentation of `qpcr.Parsers` for more information on decorators.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -1340,7 +1346,10 @@ Check out the documentation of <code>qpcr.Parser</code> for more information on 
         reader = qpcr.MultiReader()
         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
-    
+    # add_assays is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
+
     def _run(self, **kwargs):
         &#34;&#34;&#34;
         The main workflow
@@ -1553,19 +1562,19 @@ that ensure that elementary required inputs are provided.</p>
         elif kind == &#34;obj&#34;:
             return self._Results
     
-    def link(self, samples:(list or str)):
+    def link(self, assays:(list or str)):
         &#34;&#34;&#34;
-        Links new sample assays to the pipline, either replacing old ones or keeping them, 
+        Links new assays-of-interest / sample assays to the pipline, either replacing old ones or keeping them, 
         depending on `softlink()` settings.
 
         Parameters
         ----------
-        samples : list or str
-            A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
+        assays : list or str
+            A `list` of filepaths to raw datafiles of assays-of-interest, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
         if self._softlink:
             self.prune()
-        self.add_assays(samples)
+        self.add_assays(assays)
 
     def prune(self, assays = True, results = True, normalisers = False):
         &#34;&#34;&#34;
@@ -1603,15 +1612,15 @@ that ensure that elementary required inputs are provided.</p>
     
     def add_assays(self, assays):
         &#34;&#34;&#34;
-        Adds sample assays (filepaths) (keeping any already present)
+        Adds assays-of-interest / sample assays (filepaths) (keeping any already present)
 
         Parameters
         ----------
         assays : list or str
             A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
-        samples = self._from_directory(assays)
-        self._Assays.extend(samples)
+        assays = self._from_directory(assays)
+        self._Assays.extend(assays)
 
     def softlink(self, bool = None):
         &#34;&#34;&#34;
@@ -1665,7 +1674,7 @@ that ensure that elementary required inputs are provided.</p>
 <span>def <span class="ident">add_assays</span></span>(<span>self, assays)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Adds sample assays (filepaths) (keeping any already present)</p>
+<div class="desc"><p>Adds assays-of-interest / sample assays (filepaths) (keeping any already present)</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>assays</code></strong> :&ensp;<code>list</code> or <code>str</code></dt>
@@ -1677,15 +1686,15 @@ that ensure that elementary required inputs are provided.</p>
 </summary>
 <pre><code class="python">def add_assays(self, assays):
     &#34;&#34;&#34;
-    Adds sample assays (filepaths) (keeping any already present)
+    Adds assays-of-interest / sample assays (filepaths) (keeping any already present)
 
     Parameters
     ----------
     assays : list or str
         A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
     &#34;&#34;&#34;
-    samples = self._from_directory(assays)
-    self._Assays.extend(samples)</code></pre>
+    assays = self._from_directory(assays)
+    self._Assays.extend(assays)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Pipes.Pipeline.add_normalisers"><code class="name flex">
@@ -1751,33 +1760,33 @@ a qpcr.Results object can be returned using <code>kind="obj"</code>.</dd>
 </details>
 </dd>
 <dt id="qpcr.Pipes.Pipeline.link"><code class="name flex">
-<span>def <span class="ident">link</span></span>(<span>self, samples: list)</span>
+<span>def <span class="ident">link</span></span>(<span>self, assays: list)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Links new sample assays to the pipline, either replacing old ones or keeping them,
+<div class="desc"><p>Links new assays-of-interest / sample assays to the pipline, either replacing old ones or keeping them,
 depending on <code>softlink()</code> settings.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>samples</code></strong> :&ensp;<code>list</code> or <code>str</code></dt>
-<dd>A <code>list</code> of filepaths to raw datafiles of sample assays, or a directory (<code>str</code>) where these are stored.</dd>
+<dt><strong><code>assays</code></strong> :&ensp;<code>list</code> or <code>str</code></dt>
+<dd>A <code>list</code> of filepaths to raw datafiles of assays-of-interest, or a directory (<code>str</code>) where these are stored.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def link(self, samples:(list or str)):
+<pre><code class="python">def link(self, assays:(list or str)):
     &#34;&#34;&#34;
-    Links new sample assays to the pipline, either replacing old ones or keeping them, 
+    Links new assays-of-interest / sample assays to the pipline, either replacing old ones or keeping them, 
     depending on `softlink()` settings.
 
     Parameters
     ----------
-    samples : list or str
-        A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
+    assays : list or str
+        A `list` of filepaths to raw datafiles of assays-of-interest, or a directory (`str`) where these are stored.
     &#34;&#34;&#34;
     if self._softlink:
         self.prune()
-    self.add_assays(samples)</code></pre>
+    self.add_assays(assays)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Pipes.Pipeline.prune"><code class="name flex">

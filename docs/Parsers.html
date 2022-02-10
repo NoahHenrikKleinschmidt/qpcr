@@ -26,6 +26,61 @@ It provides `Parsers` that are able to extract the replicate and …" />
 <p>This module contains classes designed to work with irregularly structured datafiles.
 It provides <code>Parsers</code> that are able to extract the replicate and Ct values as pandas DataFrames
 from irregular <code>csv</code> and <code>excel</code> files.</p>
+<h2 id="working-with-irregular-files">Working with "irregular files"</h2>
+<hr>
+<p>Any datafile that does not only consist of a replicate identifer and Ct column is called "irregular".
+In fact, most excel sheets or csv exports from qPCR machines are actually irregular as they often contain some
+information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to <code><a title="qpcr" href="index.html">qpcr</a></code>, however,
+so we have extract the data we are intersted in. This is the job of the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code>. They read in an irregular datafile and use
+a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this. </p>
+<h3 id="finding-relevant-datasets-through-assay_patterns">"Finding" relevant datasets through <code>assay_patterns</code></h3>
+<p>The Parsers are quipped with a method called <code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">_CORE_Parser.find_assays()</a></code> which locates assays (or just "datasets") within the datafile
+using <code>regex</code>. Of course, in order to do that it needs to know the patterns it's supposed to look for. Some patterns are already pre-specified
+in the <code>qpcr.Parsers.assay_patterns</code> dictionary and can simply be specified using their key. If your own pattern is not yet pre-defined,
+<a href="https://github.com/NoahHenrikKleinschmidt/qpcr/issues">post an issue on github</a> and supply some samples of how your assays usually appear in your datafiles
+alongside with the name of the machine that produces your datafiles.
+Of course, you can also manually specify your own regex pattern. The only constraint is that is <em>must</em> have <em>one</em> capturing group for the assay name.</p>
+<p>Once the assays in your datafile are identified, the data columns belonging to them are searched for. The constraint here is that they must start either
+in the row exactly below the assay headers or have at most one single row in between them. Anything else is no good! The data columns <em>must</em> be labelled
+(i.e. have a header). By default <code>Name</code> and <code>Ct</code> are assumed as data column labels / headers, but this can be changed. </p>
+<p>If your datafiles contain multiple datasets / assays, the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> will be able to extract all of them and store their extracted data. </p>
+<h2 id="working-with-multi-assay-files">Working with <code>multi-assay</code> files</h2>
+<hr>
+<p>While working with datafiles that contain multiple assays you have essentially two options. First, you are only interested in one of the assays in your file,
+or you want to work with <em>all</em> assays in your file at the same time. There is two different methods to deal with either of these situations.</p>
+<h3 id="getting-a-single-assay-from-a-multi-assay-file">Getting a single assay from a multi-assay file</h3>
+<p>Parsers are actually implemented in the core of the <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code> but if you use a multi-assay file using the <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code>
+you will have to specify which assay you are specifically interested in using the <code>assay</code> argument. So you can simply read
+a multi-assay file as you would a regular file using the <code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code> (or <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code> manually) and add the <code>assay</code> argument as kwarg to the <code>read</code> method.</p>
+<h3 id="getting-all-assays-from-a-multi-assay-file">Getting all assays from a multi-assay file</h3>
+<p>Here it depends on what you want to do. Do you wish to extract the individual assays to make individual files from them or do you want to use them directly for an analysis?
+Both options are possible. </p>
+<h4 id="making-indivdual-assay-files-from-a-multi-assay-file">Making indivdual assay files from a multi-assay file</h4>
+<p>This is the core-business of the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code>. So you can simply set up a Parser, set a saving location using the
+Parser's <code>save_to</code> method and then <code>pipe</code> your file throuhg. All done at this point. Of course, you can also work with the dataframes directly
+using the Parser's <code>get</code> method.</p>
+<h4 id="using-a-multi-assay-file-directly-for-my-analysis">Using a multi-assay file directly for my analysis</h4>
+<p>So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
+Sure, no problem! You can easily read a multi-assay file using the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code> which allows you (after setup) to simply <code>pipe</code> through your datafile
+and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though?
+That's the super-important topic of the next paragraph.</p>
+<h4 id="decorators">Decorators</h4>
+<p>A <code>decorator</code> technically is a function that wraps another function when coding. Well, that's not quite the case for the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators but the idea is the same.
+Instead of wrapping functions the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators decorate assays in a multi-assay file. What does "decorate" mean? It means they provide meta-data about the assay
+in question. What does that mean? There are two implemented <code><a title="qpcr" href="index.html">qpcr</a></code> decorators <code>@qpcr:assay</code> and <code>@qpcr:normaliser</code> – now clear what they do? They are placed in the
+cell <em>exactly above</em> the cell where the assay header is located (seriously, anything else won't do!) and tell the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>
+if a specific assay is an "assay-of-interest" or a "normaliser-assay".</p>
+<p><code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> can identify assays either through <em>de novo</em> finding using <code>regex</code> patterns <em>or</em> through decorators. To tell a Parser to use a specific decorator
+for finding assays you can specify the <code>decorator</code> argument in <code>pipe</code> or <code>parse</code>. To specify a decorator like this you only write <code>qpcr:assay</code> <code>qpcr:normaliser</code> (no @).
+A third option is available only to <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> (not to the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>) and that is <code>qpcr:all</code> which will tell the Parser to extract <em>all</em> decorated assays.
+The implemented decorators are specified in the <code>qpcr.Parsers.decorators</code> dictionary and can be accessed via keys (you have seen the three keys already).</p>
+<blockquote>
+<h5 id="two-things-of-note">Two things of Note:</h5>
+<ul>
+<li>When specifying a decorator any non-decorated assay will be <em>ignored</em>!</li>
+<li>If you are using <code>excel</code> you may have to add a single tick <code>'</code> in front of your decorators.</li>
+</ul>
+</blockquote>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -34,8 +89,78 @@ from irregular <code>csv</code> and <code>excel</code> files.</p>
 This module contains classes designed to work with irregularly structured datafiles.
 It provides `Parsers` that are able to extract the replicate and Ct values as pandas DataFrames
 from irregular `csv` and `excel` files.
+
+
+## Working with &#34;irregular files&#34;
+----
+
+Any datafile that does not only consist of a replicate identifer and Ct column is called &#34;irregular&#34;. 
+In fact, most excel sheets or csv exports from qPCR machines are actually irregular as they often contain some
+information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to `qpcr`, however, 
+so we have extract the data we are intersted in. This is the job of the `qpcr.Parsers`. They read in an irregular datafile and use 
+a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this. 
+
+### &#34;Finding&#34; relevant datasets through `assay_patterns`
+The Parsers are quipped with a method called `_CORE_Parser.find_assays` which locates assays (or just &#34;datasets&#34;) within the datafile
+using `regex`. Of course, in order to do that it needs to know the patterns it&#39;s supposed to look for. Some patterns are already pre-specified
+in the `qpcr.Parsers.assay_patterns` dictionary and can simply be specified using their key. If your own pattern is not yet pre-defined, 
+[post an issue on github](https://github.com/NoahHenrikKleinschmidt/qpcr/issues) and supply some samples of how your assays usually appear in your datafiles 
+alongside with the name of the machine that produces your datafiles.
+Of course, you can also manually specify your own regex pattern. The only constraint is that is _must_ have *one* capturing group for the assay name.
+
+Once the assays in your datafile are identified, the data columns belonging to them are searched for. The constraint here is that they must start either
+in the row exactly below the assay headers or have at most one single row in between them. Anything else is no good! The data columns _must_ be labelled 
+(i.e. have a header). By default `Name` and `Ct` are assumed as data column labels / headers, but this can be changed. 
+
+If your datafiles contain multiple datasets / assays, the `qpcr.Parsers` will be able to extract all of them and store their extracted data. 
+
+
+## Working with `multi-assay` files
+----
+
+While working with datafiles that contain multiple assays you have essentially two options. First, you are only interested in one of the assays in your file,
+or you want to work with _all_ assays in your file at the same time. There is two different methods to deal with either of these situations.
+
+### Getting a single assay from a multi-assay file
+Parsers are actually implemented in the core of the `qpcr.Reader` but if you use a multi-assay file using the `qpcr.Reader` 
+you will have to specify which assay you are specifically interested in using the `assay` argument. So you can simply read 
+a multi-assay file as you would a regular file using the `qpcr.SampleReader` (or `qpcr.Reader` manually) and add the `assay` argument as kwarg to the `read` method.
+
+### Getting all assays from a multi-assay file
+Here it depends on what you want to do. Do you wish to extract the individual assays to make individual files from them or do you want to use them directly for an analysis?
+Both options are possible. 
+
+#### Making indivdual assay files from a multi-assay file
+This is the core-business of the `qpcr.Parsers`. So you can simply set up a Parser, set a saving location using the 
+Parser&#39;s `save_to` method and then `pipe` your file throuhg. All done at this point. Of course, you can also work with the dataframes directly
+using the Parser&#39;s `get` method.
+
+#### Using a multi-assay file directly for my analysis
+So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
+Sure, no problem! You can easily read a multi-assay file using the `qpcr.MultiReader` which allows you (after setup) to simply `pipe` through your datafile
+and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though? 
+That&#39;s the super-important topic of the next paragraph.
+
+#### Decorators
+A `decorator` technically is a function that wraps another function when coding. Well, that&#39;s not quite the case for the `qpcr` decorators but the idea is the same. 
+Instead of wrapping functions the `qpcr` decorators decorate assays in a multi-assay file. What does &#34;decorate&#34; mean? It means they provide meta-data about the assay
+in question. What does that mean? There are two implemented `qpcr` decorators `@qpcr:assay` and `@qpcr:normaliser` – now clear what they do? They are placed in the 
+cell _exactly above_ the cell where the assay header is located (seriously, anything else won&#39;t do!) and tell the `qpcr.MultiReader` 
+if a specific assay is an &#34;assay-of-interest&#34; or a &#34;normaliser-assay&#34;.
+
+
+`qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
+for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` (no @).
+A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
+The implemented decorators are specified in the `qpcr.Parsers.decorators` dictionary and can be accessed via keys (you have seen the three keys already).
+
+
+&gt; ##### Two things of Note: 
+&gt; - When specifying a decorator any non-decorated assay will be *ignored*!
+&gt; - If you are using `excel` you may have to add a single tick `&#39;` in front of your decorators.
 &#34;&#34;&#34;
 
+import qpcr.__init__ as qpcr
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 import pandas as pd
@@ -45,6 +170,9 @@ from io import StringIO
 from copy import deepcopy
 import os
 
+__pdoc__ = {
+    &#34;_CORE_Parser&#34; : True
+}
 
 # this is the dictionary where we store pre-defined 
 # patterns of headers above assays within the datafiles
@@ -60,6 +188,11 @@ decorators = {
                     &#34;qpcr:assay&#34;        : &#34;(@qpcr:assay\s{0,}|&#39;@qpcr:assay\s{0,})&#34;,
                     &#34;qpcr:normaliser&#34;   : &#34;(@qpcr:normaliser\s{0,}|&#39;@qpcr:normaliser\s{0,})&#34;,        
             }
+
+# get the standard column headers to use for the 
+# replicate id and Ct column of the finished dataframes
+standard_id_header = qpcr.raw_col_names[0]
+standard_ct_header = qpcr.raw_col_names[1]
 
 class _CORE_Parser:
     &#34;&#34;&#34;
@@ -164,19 +297,19 @@ class _CORE_Parser:
                 assay_path = os.path.join(self.save_to(), f&#34;{assay}.csv&#34;)
                 df.to_csv(assay_path, index = False)
 
-    def labels(self, sample_label : str = &#34;Name&#34;, ct_label : str = &#34;Ct&#34;):
+    def labels(self, id_label : str = &#34;Name&#34;, ct_label : str = &#34;Ct&#34;):
         &#34;&#34;&#34;
         Sets the headers for the relevant data columns for each assay within the datafile.
 
         Parameters
         ----------
-        sample_label : str
+        id_label : str
             The header above the column containing replicate identifiers. 
         
         ct_label : str
             The header above the column containing the replicates&#39; Ct values.
         &#34;&#34;&#34;
-        self._sample_label = sample_label
+        self._id_label = id_label
         self._ct_label = ct_label
 
     def assays(self):
@@ -375,7 +508,7 @@ class _CORE_Parser:
         # search indices of the starts of id and ct columns
         # these are now the row, col coordinates of each name_column header
         name_col_starts = self._find_column_starts(
-                                                    label = self._sample_label, 
+                                                    label = self._id_label, 
                                                     ref_indices = self._assay_indices
                                                 )
         # these are now the row, col coordinates of each ct_column header
@@ -440,12 +573,13 @@ class _CORE_Parser:
             assay_names = self._data[names_range, names_col]
             assay_cts = self._data[ct_range, ct_col]
             assay_cts = assay_cts.astype(float)
-            
+
+            # assemble the assay dataframe 
             assay_df = pd.DataFrame(
-                                    dict(
-                                        Sample = assay_names, 
-                                        Ct = assay_cts,
-                                    )
+                                    {
+                                        standard_id_header : assay_names, 
+                                        standard_ct_header : assay_cts,
+                                    }
                                 )
 
             if not allow_nan_ct:
@@ -537,7 +671,9 @@ class _CORE_Parser:
 
 class CsvParser(_CORE_Parser):
     &#34;&#34;&#34;
-    This class will handle reading and parsing irregular CSV files that contain multiple assays.
+    Handles reading and parsing irregular `csv` files that contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -658,7 +794,9 @@ class CsvParser(_CORE_Parser):
 
 class ExcelParser(_CORE_Parser):
     &#34;&#34;&#34;
-    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    Handles reading and parsing `excel` files that may contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -802,14 +940,18 @@ if __name__ == &#34;__main__&#34;:
 <span>class <span class="ident">CsvParser</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class will handle reading and parsing irregular CSV files that contain multiple assays.</p></div>
+<div class="desc"><p>Handles reading and parsing irregular <code>csv</code> files that contain multiple assays.
+It extracts datasets either through regex pattern matching or/and through provided
+decorators within the datafile.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CsvParser(_CORE_Parser):
     &#34;&#34;&#34;
-    This class will handle reading and parsing irregular CSV files that contain multiple assays.
+    Handles reading and parsing irregular `csv` files that contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -930,7 +1072,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>qpcr.Parsers._CORE_Parser</li>
+<li><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1041,19 +1183,44 @@ Any additional keyword arguments to be passed to pandas' <code>read_csv</code> f
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="qpcr.Parsers.ExcelParser"><code class="flex name class">
 <span>class <span class="ident">ExcelParser</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class will handle reading and parsing irregular Excel files that contain multiple assays.</p></div>
+<div class="desc"><p>Handles reading and parsing <code>excel</code> files that may contain multiple assays.
+It extracts datasets either through regex pattern matching or/and through provided
+decorators within the datafile.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ExcelParser(_CORE_Parser):
     &#34;&#34;&#34;
-    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    Handles reading and parsing `excel` files that may contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -1120,7 +1287,7 @@ Any additional keyword arguments to be passed to pandas' <code>read_csv</code> f
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>qpcr.Parsers._CORE_Parser</li>
+<li><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1234,6 +1401,1129 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser"><code class="flex name class">
+<span>class <span class="ident">_CORE_Parser</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is the functional core for the irregular multi-assay file-reader classes.
+It handles the regex searching and numpy indexing of relevant column subsets of the datafiles.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class _CORE_Parser:
+    &#34;&#34;&#34;
+    This is the functional core for the irregular multi-assay file-reader classes.
+    It handles the regex searching and numpy indexing of relevant column subsets of the datafiles.
+    &#34;&#34;&#34;
+    def __init__(self):
+        self._src = None
+        self._pattern = None
+        self._data = None
+
+        # the found assays, these will be arrays/lists that store the indices, 
+
+        self._assay_indices = None                  # indices of the assay identifiers
+        self._assay_names = None                    # names of the assays
+
+        self._assay_names_start_indices = None      # indices of the rep. id headers
+        self._assay_names_end_indices = None        # indices of the last entry of the rep. id columns
+
+        self._assay_ct_start_indices = None         # indices of the ct headers
+        self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
+        # a dictionary to store all assay dataframes
+        self._dfs = {}
+
+        # setup the labels for replicate ids and ct value column headers
+        self.labels()
+
+        # we must specify a maximum allowed length for the assay names before hand 
+        # (since we&#39;re using numpy arrays for storing the names, which require enough open slots to store the characters)
+        self._max_assay_name_length = 20
+    
+        # a folder into which the new assay-split datafiles should be stored
+        self._save_loc = None
+
+    def prune(self):
+        &#34;&#34;&#34;
+        Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
+        &#34;&#34;&#34;
+        self.__init__()
+
+    def clear(self):
+        &#34;&#34;&#34;
+        Clears all datasets that were extracted.
+        &#34;&#34;&#34;
+        self._dfs = {}
+
+        self._assay_indices = None                  # indices of the assay identifiers
+        self._assay_names = None                    # names of the assays
+
+        self._assay_names_start_indices = None      # indices of the rep. id headers
+        self._assay_names_end_indices = None        # indices of the last entry of the rep. id columns
+
+        self._assay_ct_start_indices = None         # indices of the ct headers
+        self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
+
+    def save_to(self, location : str = None):
+        &#34;&#34;&#34;
+        Sets the location into which the individual assay datafiles should be saved.
+        Parameters
+        ----------
+        location : str
+            The path to a directory where the newly generated assay datafiles shall be saved.
+            If this directory does not yet exist, it will be automatically made.
+        &#34;&#34;&#34;
+        if location is not None: 
+            self._save_loc = location
+            if not os.path.exists(self._save_loc):
+                os.mkdir(self._save_loc)
+        return self._save_loc
+    
+    def get(self, assay : str = None):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        assay : str
+            The name of an assay found in the datafile. Available assays can be assessed using the `self.assays` method.
+    
+        Returns
+        -------
+        data : pd.DataFrame or dict
+            Either a specific pandas dataframe of one of the assays (if an `assay` name was specified)
+            or the entire dictionary of all found dataframes from all assays.
+        &#34;&#34;&#34;
+        if assay is not None:
+            data = self._dfs[assay]
+        else: 
+            data = self._dfs
+        return data
+
+    def save(self):
+        &#34;&#34;&#34;
+        Saves the individual assays as separate csv files.
+        This requires that a saving directory has been set using `self.save_to`.
+        The files will simply be named according to the assay name (i.e. `ActinB.csv` for instance).
+        &#34;&#34;&#34;
+        if self._save_loc is None:
+            aw.SoftWarning(&#34;Parser:no_save_loc&#34;)
+        else:
+            for assay, df in self._dfs.items():
+                assay_path = os.path.join(self.save_to(), f&#34;{assay}.csv&#34;)
+                df.to_csv(assay_path, index = False)
+
+    def labels(self, id_label : str = &#34;Name&#34;, ct_label : str = &#34;Ct&#34;):
+        &#34;&#34;&#34;
+        Sets the headers for the relevant data columns for each assay within the datafile.
+
+        Parameters
+        ----------
+        id_label : str
+            The header above the column containing replicate identifiers. 
+        
+        ct_label : str
+            The header above the column containing the replicates&#39; Ct values.
+        &#34;&#34;&#34;
+        self._id_label = id_label
+        self._ct_label = ct_label
+
+    def assays(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        names : list
+            The names of the found assays of the datafile
+        &#34;&#34;&#34;        
+        return list(self._dfs.keys())
+
+    def assay_pattern(self, pattern : str = None, *flags):
+        &#34;&#34;&#34;
+        Sets up a regex pattern defining the assay declarations within the datafile.
+
+        Parameters
+        ----------
+        pattern : str
+            A string containing either the key to a predefined pattern from the `assay_patterns` dictionary, 
+            or directly regex pattern. 
+            If a regex pattern is directly provided, that pattern must contain a capturing group
+            for the assay name that can be extracted.
+        *flags 
+            Any additional flags to pass to `re.compile()` for the regex pattern
+
+        Returns
+        -------
+        pattern : re.Pattern
+            The currently used regex pattern to identify assays within the datafile.
+        &#34;&#34;&#34;
+        if pattern is not None: 
+            # try to get the pattern from the predefined patterns via key
+            _pattern = aux.from_kwargs(pattern, None, assay_patterns)
+            _pattern = pattern if _pattern is None else _pattern
+            self._pattern = re.compile(_pattern, *flags)
+        return self._pattern
+
+    def max_assay_name_length(self, length = 20):
+        &#34;&#34;&#34;
+        Sets the maximum allowed name length (number of characters) assay names.
+        
+        Parameters
+        ----------
+        length : int
+            The maximum number of characters to store for the assay name. 
+            Default is `length = 20` characters.
+        &#34;&#34;&#34;
+        self._max_assay_name_length = length
+    
+    def parse(self, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for find_assays+find_columns+make_dataframes
+        This is the functional core of the Parser&#39;s `pipe` method.
+
+        Parameters
+        -------
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        &#34;&#34;&#34;
+        decorator = aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
+        if decorator is not None:
+            self.find_by_decorator(decorator = decorator, **kwargs)
+        else: 
+            self.find_assays(**kwargs)
+        self.find_columns()
+        self.make_dataframes(**kwargs)
+
+    def find_by_decorator(self, decorator : str, col = 0, **kwargs):
+        &#34;&#34;&#34;
+        Parses through a column of the datafile and finds all assays that are decorated with a specific decorator.
+        Note that this requires that the decorator is in the cell above the assay header. Also, make sure to specify
+        an `assay_pattern` to extract the assay name. If no `assay_pattern` is provided, it will simply take the entire cell content.
+        
+        Parameters
+        -----------
+        decorator : str
+            One of the available `qpcr-decorator`&#39;s for irregular multi-assay files. 
+            Available decorators can be assessed via the `qpcr.Parsers.decorators` dictionary keys.
+        col : int
+            The column in which to look for assay identifiers. 
+            By default the first column `col = 0`.
+        
+        Returns
+        -------
+        assay_indices : np.ndarray
+            The indices (row, col) of all assays found.
+        names : np.ndarray
+            The extracted names of all assays found.
+        &#34;&#34;&#34;
+        # get the pattern required (or raise error if invalid decorators are provided)
+        if decorator not in decorators.keys():
+            aw.HardWarning(&#34;Parser:invalid_decorator&#34;, d = decorator, all_d = list(decorators.keys()))
+
+        decorator_pattern = re.compile( decorators[decorator] )
+        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+
+        # check if decorators were identified
+        found_indices = decorator_indices.size &gt; 0
+        if not found_indices:
+            aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+
+        # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
+        if self.assay_pattern() is None:
+            aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
+            self.assay_pattern(&#34;all&#34;)
+
+        # get assay indices as the cells IMMEDIATELY BELOW the decorators
+        assay_indices = decorator_indices + 1
+        
+        # get all assay header cells into an array to extract their names
+        array = self._data[assay_indices, col]
+        array = array.astype(str)
+        array = array.reshape(array.size)
+
+        # adjust avaliable length of stored assay names
+        max_length = max(
+                            list(  map(len, array)  )
+                        )
+        self.max_assay_name_length(max_length)
+
+        names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
+        idx = 0
+        for entry in array:
+            # try:
+            match = self.assay_pattern().search(entry)
+            if match is not None: 
+                name = match.group(1)
+                names[idx] = name
+            # except: 
+            #     continue
+            idx += 1
+
+        self._assay_indices = assay_indices
+        self._assay_names = names
+        
+        return assay_indices, names
+
+    def find_assays(self, col = 0, **kwargs):
+        &#34;&#34;&#34;
+        Parses through a column of the datafile and identifies all indices of cells that match the provided `assay_pattern``.
+        It stores these values internally and also returns the results as numpy arrays.
+
+        Parameters
+        -----------
+        col : int
+            The column in which to look for assay identifiers. 
+            By default the first column `col = 0`.
+
+        Returns
+        -------
+        indices : np.ndarray
+            The indices (row, col) of all assays found.
+        names : np.ndarray
+            The extracted names of all assays found.
+        &#34;&#34;&#34;
+        custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs, rm = True)
+        if self._pattern is None and custom_pattern is None: 
+            aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
+
+        pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
+
+        array = self._data
+        array = array[:, col]
+        array = array.astype(str)
+
+        indices = np.zeros(len(array))
+        names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
+        idx = 0
+        for entry in array:
+            # try: 
+            match = pattern_to_use.search(entry)
+            if match is not None: 
+                name = match.group(1)
+                names[idx] = name
+                indices[idx] = 1
+            # except: 
+            #     continue
+            idx += 1
+        indices = np.argwhere(indices == 1)
+
+        if indices.size == 0:
+            aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+
+        names = names[indices]
+        names = names.reshape(len(names))
+
+        self._assay_indices = indices
+        self._assay_names = names
+        
+        return indices, names
+    
+    def find_columns(self):
+        &#34;&#34;&#34;
+        Identifies the relevant data column belonging to each assay within the datafile.
+        &#34;&#34;&#34;
+        # search indices of the starts of id and ct columns
+        # these are now the row, col coordinates of each name_column header
+        name_col_starts = self._find_column_starts(
+                                                    label = self._id_label, 
+                                                    ref_indices = self._assay_indices
+                                                )
+        # these are now the row, col coordinates of each ct_column header
+        ct_col_starts = self._find_column_starts(
+                                                    label = self._ct_label, 
+                                                    ref_indices = self._assay_indices
+                                                )
+        
+        # now we need to generate know also the end indices of the datacolumns
+        name_col_ends = self._find_column_ends(name_col_starts)
+        
+        # now that we know the end indices for the replicate id column we will adopt the end row indices
+        # onto the ct column as well (we don&#39;t parse through the Ct column because it might have missing 
+        # Ct values intersperced which would prematurely terminate the parsing...)
+
+        # (1) we transpose to have all row indices easily accessible in the first line
+        # (2) we adopt row indices from the transposed name col
+        # (3) and transpose back to get our final ct end indices
+        ct_col_ends = deepcopy( np.transpose(ct_col_starts) )
+        name_col_ends_t = np.transpose(name_col_ends)
+        ct_col_ends[0] = name_col_ends_t[0]
+        ct_col_ends = np.transpose(ct_col_ends)
+
+        # now store the data
+        self._assay_names_start_indices = name_col_starts
+        self._assay_names_end_indices = name_col_ends
+        self._assay_ct_start_indices = ct_col_starts
+        self._assay_ct_end_indices = ct_col_ends
+
+    def make_dataframes(self, allow_nan_ct : bool = True, default_to : float = None, **kwargs):
+        &#34;&#34;&#34;
+        Generates a set of `pandas DataFrame`s each containing two columns 
+        (one for the replicate identifiers, one for the Ct values)
+        for subsequent use with the main `qpcr` module.
+
+        Parameters
+        ------
+        allow_nan_Ct : bool
+            Allows Ct values to be NaN within the final dataframe (if `True`, default).
+            If no NaN Ct values should be maintained a default value for NaN Ct values must be specified
+            using `default_to`.
+        default_to : float
+            The default value to replace NaN Ct values with. 
+            This is ignored if `allow_nan_ct = True`.
+        &#34;&#34;&#34;  
+        adx = 0
+        # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
+        for assay in self._assay_names:
+            
+            # get the assay&#39;s indices of both replicate id and ct columns
+            names_start = self._assay_names_start_indices[adx]
+            names_end = self._assay_names_end_indices[adx]
+            ct_start = self._assay_ct_start_indices[adx]
+            ct_end = self._assay_ct_end_indices[adx]
+
+            # generate the final index slices from the total array
+            # of both replicate id (names) and ct columns
+            names_range, names_col = self._make_index_range(names_start, names_end, crop_first = True)
+            ct_range, ct_col = self._make_index_range(ct_start, ct_end, crop_first = True)
+
+            # get the assay data
+            assay_names = self._data[names_range, names_col]
+            assay_cts = self._data[ct_range, ct_col]
+            assay_cts = assay_cts.astype(float)
+
+            # assemble the assay dataframe 
+            assay_df = pd.DataFrame(
+                                    {
+                                        standard_id_header : assay_names, 
+                                        standard_ct_header : assay_cts,
+                                    }
+                                )
+
+            if not allow_nan_ct:
+                if not isinstance(default_to, (int, float)): 
+                    aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
+                
+                # apply defaulting lambda function
+                assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
+                                                        lambda x: x if x == x else default_to
+                                                    )
+            # and store dataframe
+            self._dfs.update(
+                                { assay : assay_df }
+                            )
+
+            adx += 1
+
+    def _make_index_range(self, start_indices, end_indices, crop_first = True):
+        &#34;&#34;&#34;
+        Generates an index range for a data column based on start and stop indices.
+        This assumes that the column entry (i.e. entry[1]) is always the same and only the rows are different.
+        
+        Parameters
+        ----------
+        start_indices : np.ndarray
+            Row, col indices of the header of the data column
+        end_indices : np.ndarray
+            Row, col indices of the last entry of the data column
+        crop_first : bool
+            If set to True it will offset the start row indices by +1 to exclude the header.
+        &#34;&#34;&#34;
+
+        start = start_indices[0] + 1 if crop_first else start_indices[0]
+        end = end_indices[0]
+
+        row_range = slice(  start, end  )
+        col = start_indices[1]
+        return row_range, col
+
+    def _find_column_starts(self, label, ref_indices):
+        &#34;&#34;&#34;
+        This function uses the assays&#39; found reference row indices to 
+        now search for the coordinates of the labeled cell so we know where a data column starts
+        &#34;&#34;&#34;
+        data = self._data
+        all_found = np.argwhere(data == label)
+        row_indices = np.transpose(all_found)[0]
+        ref_indices = ref_indices + 1 # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        matching_rows = np.where(np.isin(row_indices, ref_indices))
+        
+        # if no matches were found, try incrementing the index offset once more 
+        # (we&#39;ll allow for a single row between the header and the start of the data)
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            ref_indices = ref_indices + 1
+            matching_rows = np.where(np.isin(row_indices, ref_indices))
+
+        # check again, and raise Error if still no matches are found
+        no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
+        if no_matches:
+            aw.HardWarning(&#34;Parser:no_data_found&#34;, label = label)
+
+        matching_rows = all_found[matching_rows]
+        return matching_rows
+    
+    def _find_column_ends(self, indices):
+        &#34;&#34;&#34;
+        Determines the end index of a column within the datafile based on the starting indices of
+        its header label
+        &#34;&#34;&#34;
+        data = self._data
+        end_indices = np.zeros(indices.shape, dtype = int)
+        adx = 0
+        for i in indices:
+            row, col = i
+            idx = 0
+            value = 0
+            while True:
+                try: value = data[row + idx, col]
+                except: break
+                if value != value: 
+                    break
+                idx += 1
+            finals = np.array([row + idx, col], dtype = int)
+            end_indices[adx] += finals
+            adx += 1
+        return end_indices</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></li>
+<li><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Parsers._CORE_Parser.assay_pattern"><code class="name flex">
+<span>def <span class="ident">assay_pattern</span></span>(<span>self, pattern: str = None, *flags)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets up a regex pattern defining the assay declarations within the datafile.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pattern</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string containing either the key to a predefined pattern from the <code>assay_patterns</code> dictionary,
+or directly regex pattern.
+If a regex pattern is directly provided, that pattern must contain a capturing group
+for the assay name that can be extracted.</dd>
+</dl>
+<p>*flags
+Any additional flags to pass to <code>re.compile()</code> for the regex pattern</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>pattern</code></strong> :&ensp;<code>re.Pattern</code></dt>
+<dd>The currently used regex pattern to identify assays within the datafile.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def assay_pattern(self, pattern : str = None, *flags):
+    &#34;&#34;&#34;
+    Sets up a regex pattern defining the assay declarations within the datafile.
+
+    Parameters
+    ----------
+    pattern : str
+        A string containing either the key to a predefined pattern from the `assay_patterns` dictionary, 
+        or directly regex pattern. 
+        If a regex pattern is directly provided, that pattern must contain a capturing group
+        for the assay name that can be extracted.
+    *flags 
+        Any additional flags to pass to `re.compile()` for the regex pattern
+
+    Returns
+    -------
+    pattern : re.Pattern
+        The currently used regex pattern to identify assays within the datafile.
+    &#34;&#34;&#34;
+    if pattern is not None: 
+        # try to get the pattern from the predefined patterns via key
+        _pattern = aux.from_kwargs(pattern, None, assay_patterns)
+        _pattern = pattern if _pattern is None else _pattern
+        self._pattern = re.compile(_pattern, *flags)
+    return self._pattern</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.assays"><code class="name flex">
+<span>def <span class="ident">assays</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code></dt>
+<dd>The names of the found assays of the datafile</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def assays(self):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    names : list
+        The names of the found assays of the datafile
+    &#34;&#34;&#34;        
+    return list(self._dfs.keys())</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.clear"><code class="name flex">
+<span>def <span class="ident">clear</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clears all datasets that were extracted.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear(self):
+    &#34;&#34;&#34;
+    Clears all datasets that were extracted.
+    &#34;&#34;&#34;
+    self._dfs = {}
+
+    self._assay_indices = None                  # indices of the assay identifiers
+    self._assay_names = None                    # names of the assays
+
+    self._assay_names_start_indices = None      # indices of the rep. id headers
+    self._assay_names_end_indices = None        # indices of the last entry of the rep. id columns
+
+    self._assay_ct_start_indices = None         # indices of the ct headers
+    self._assay_ct_end_indices = None           # indices of the last entry of the ct columns</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.find_assays"><code class="name flex">
+<span>def <span class="ident">find_assays</span></span>(<span>self, col=0, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parses through a column of the datafile and identifies all indices of cells that match the provided `assay_pattern``.
+It stores these values internally and also returns the results as numpy arrays.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column in which to look for assay identifiers.
+By default the first column <code>col = 0</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>indices</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The indices (row, col) of all assays found.</dd>
+<dt><strong><code>names</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The extracted names of all assays found.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_assays(self, col = 0, **kwargs):
+    &#34;&#34;&#34;
+    Parses through a column of the datafile and identifies all indices of cells that match the provided `assay_pattern``.
+    It stores these values internally and also returns the results as numpy arrays.
+
+    Parameters
+    -----------
+    col : int
+        The column in which to look for assay identifiers. 
+        By default the first column `col = 0`.
+
+    Returns
+    -------
+    indices : np.ndarray
+        The indices (row, col) of all assays found.
+    names : np.ndarray
+        The extracted names of all assays found.
+    &#34;&#34;&#34;
+    custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs, rm = True)
+    if self._pattern is None and custom_pattern is None: 
+        aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
+
+    pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
+
+    array = self._data
+    array = array[:, col]
+    array = array.astype(str)
+
+    indices = np.zeros(len(array))
+    names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
+    idx = 0
+    for entry in array:
+        # try: 
+        match = pattern_to_use.search(entry)
+        if match is not None: 
+            name = match.group(1)
+            names[idx] = name
+            indices[idx] = 1
+        # except: 
+        #     continue
+        idx += 1
+    indices = np.argwhere(indices == 1)
+
+    if indices.size == 0:
+        aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+
+    names = names[indices]
+    names = names.reshape(len(names))
+
+    self._assay_indices = indices
+    self._assay_names = names
+    
+    return indices, names</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.find_by_decorator"><code class="name flex">
+<span>def <span class="ident">find_by_decorator</span></span>(<span>self, decorator: str, col=0, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parses through a column of the datafile and finds all assays that are decorated with a specific decorator.
+Note that this requires that the decorator is in the cell above the assay header. Also, make sure to specify
+an <code>assay_pattern</code> to extract the assay name. If no <code>assay_pattern</code> is provided, it will simply take the entire cell content.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>decorator</code></strong> :&ensp;<code>str</code></dt>
+<dd>One of the available <code>qpcr-decorator</code>'s for irregular multi-assay files.
+Available decorators can be assessed via the <code>qpcr.Parsers.decorators</code> dictionary keys.</dd>
+<dt><strong><code>col</code></strong> :&ensp;<code>int</code></dt>
+<dd>The column in which to look for assay identifiers.
+By default the first column <code>col = 0</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>assay_indices</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The indices (row, col) of all assays found.</dd>
+<dt><strong><code>names</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The extracted names of all assays found.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_by_decorator(self, decorator : str, col = 0, **kwargs):
+    &#34;&#34;&#34;
+    Parses through a column of the datafile and finds all assays that are decorated with a specific decorator.
+    Note that this requires that the decorator is in the cell above the assay header. Also, make sure to specify
+    an `assay_pattern` to extract the assay name. If no `assay_pattern` is provided, it will simply take the entire cell content.
+    
+    Parameters
+    -----------
+    decorator : str
+        One of the available `qpcr-decorator`&#39;s for irregular multi-assay files. 
+        Available decorators can be assessed via the `qpcr.Parsers.decorators` dictionary keys.
+    col : int
+        The column in which to look for assay identifiers. 
+        By default the first column `col = 0`.
+    
+    Returns
+    -------
+    assay_indices : np.ndarray
+        The indices (row, col) of all assays found.
+    names : np.ndarray
+        The extracted names of all assays found.
+    &#34;&#34;&#34;
+    # get the pattern required (or raise error if invalid decorators are provided)
+    if decorator not in decorators.keys():
+        aw.HardWarning(&#34;Parser:invalid_decorator&#34;, d = decorator, all_d = list(decorators.keys()))
+
+    decorator_pattern = re.compile( decorators[decorator] )
+    decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+
+    # check if decorators were identified
+    found_indices = decorator_indices.size &gt; 0
+    if not found_indices:
+        aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+
+    # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
+    if self.assay_pattern() is None:
+        aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
+        self.assay_pattern(&#34;all&#34;)
+
+    # get assay indices as the cells IMMEDIATELY BELOW the decorators
+    assay_indices = decorator_indices + 1
+    
+    # get all assay header cells into an array to extract their names
+    array = self._data[assay_indices, col]
+    array = array.astype(str)
+    array = array.reshape(array.size)
+
+    # adjust avaliable length of stored assay names
+    max_length = max(
+                        list(  map(len, array)  )
+                    )
+    self.max_assay_name_length(max_length)
+
+    names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
+    idx = 0
+    for entry in array:
+        # try:
+        match = self.assay_pattern().search(entry)
+        if match is not None: 
+            name = match.group(1)
+            names[idx] = name
+        # except: 
+        #     continue
+        idx += 1
+
+    self._assay_indices = assay_indices
+    self._assay_names = names
+    
+    return assay_indices, names</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.find_columns"><code class="name flex">
+<span>def <span class="ident">find_columns</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Identifies the relevant data column belonging to each assay within the datafile.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_columns(self):
+    &#34;&#34;&#34;
+    Identifies the relevant data column belonging to each assay within the datafile.
+    &#34;&#34;&#34;
+    # search indices of the starts of id and ct columns
+    # these are now the row, col coordinates of each name_column header
+    name_col_starts = self._find_column_starts(
+                                                label = self._id_label, 
+                                                ref_indices = self._assay_indices
+                                            )
+    # these are now the row, col coordinates of each ct_column header
+    ct_col_starts = self._find_column_starts(
+                                                label = self._ct_label, 
+                                                ref_indices = self._assay_indices
+                                            )
+    
+    # now we need to generate know also the end indices of the datacolumns
+    name_col_ends = self._find_column_ends(name_col_starts)
+    
+    # now that we know the end indices for the replicate id column we will adopt the end row indices
+    # onto the ct column as well (we don&#39;t parse through the Ct column because it might have missing 
+    # Ct values intersperced which would prematurely terminate the parsing...)
+
+    # (1) we transpose to have all row indices easily accessible in the first line
+    # (2) we adopt row indices from the transposed name col
+    # (3) and transpose back to get our final ct end indices
+    ct_col_ends = deepcopy( np.transpose(ct_col_starts) )
+    name_col_ends_t = np.transpose(name_col_ends)
+    ct_col_ends[0] = name_col_ends_t[0]
+    ct_col_ends = np.transpose(ct_col_ends)
+
+    # now store the data
+    self._assay_names_start_indices = name_col_starts
+    self._assay_names_end_indices = name_col_ends
+    self._assay_ct_start_indices = ct_col_starts
+    self._assay_ct_end_indices = ct_col_ends</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, assay: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>assay</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of an assay found in the datafile. Available assays can be assessed using the <code>self.assays</code> method.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code> or <code>dict</code></dt>
+<dd>Either a specific pandas dataframe of one of the assays (if an <code>assay</code> name was specified)
+or the entire dictionary of all found dataframes from all assays.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, assay : str = None):
+    &#34;&#34;&#34;
+    Parameters
+    ----------
+    assay : str
+        The name of an assay found in the datafile. Available assays can be assessed using the `self.assays` method.
+
+    Returns
+    -------
+    data : pd.DataFrame or dict
+        Either a specific pandas dataframe of one of the assays (if an `assay` name was specified)
+        or the entire dictionary of all found dataframes from all assays.
+    &#34;&#34;&#34;
+    if assay is not None:
+        data = self._dfs[assay]
+    else: 
+        data = self._dfs
+    return data</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.labels"><code class="name flex">
+<span>def <span class="ident">labels</span></span>(<span>self, id_label: str = 'Name', ct_label: str = 'Ct')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the headers for the relevant data columns for each assay within the datafile.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>id_label</code></strong> :&ensp;<code>str</code></dt>
+<dd>The header above the column containing replicate identifiers.</dd>
+<dt><strong><code>ct_label</code></strong> :&ensp;<code>str</code></dt>
+<dd>The header above the column containing the replicates' Ct values.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def labels(self, id_label : str = &#34;Name&#34;, ct_label : str = &#34;Ct&#34;):
+    &#34;&#34;&#34;
+    Sets the headers for the relevant data columns for each assay within the datafile.
+
+    Parameters
+    ----------
+    id_label : str
+        The header above the column containing replicate identifiers. 
+    
+    ct_label : str
+        The header above the column containing the replicates&#39; Ct values.
+    &#34;&#34;&#34;
+    self._id_label = id_label
+    self._ct_label = ct_label</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.make_dataframes"><code class="name flex">
+<span>def <span class="ident">make_dataframes</span></span>(<span>self, allow_nan_ct: bool = True, default_to: float = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generates a set of <code>pandas DataFrame</code>s each containing two columns
+(one for the replicate identifiers, one for the Ct values)
+for subsequent use with the main <code><a title="qpcr" href="index.html">qpcr</a></code> module.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>allow_nan_Ct</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Allows Ct values to be NaN within the final dataframe (if <code>True</code>, default).
+If no NaN Ct values should be maintained a default value for NaN Ct values must be specified
+using <code>default_to</code>.</dd>
+<dt><strong><code>default_to</code></strong> :&ensp;<code>float</code></dt>
+<dd>The default value to replace NaN Ct values with.
+This is ignored if <code>allow_nan_ct = True</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_dataframes(self, allow_nan_ct : bool = True, default_to : float = None, **kwargs):
+    &#34;&#34;&#34;
+    Generates a set of `pandas DataFrame`s each containing two columns 
+    (one for the replicate identifiers, one for the Ct values)
+    for subsequent use with the main `qpcr` module.
+
+    Parameters
+    ------
+    allow_nan_Ct : bool
+        Allows Ct values to be NaN within the final dataframe (if `True`, default).
+        If no NaN Ct values should be maintained a default value for NaN Ct values must be specified
+        using `default_to`.
+    default_to : float
+        The default value to replace NaN Ct values with. 
+        This is ignored if `allow_nan_ct = True`.
+    &#34;&#34;&#34;  
+    adx = 0
+    # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
+    for assay in self._assay_names:
+        
+        # get the assay&#39;s indices of both replicate id and ct columns
+        names_start = self._assay_names_start_indices[adx]
+        names_end = self._assay_names_end_indices[adx]
+        ct_start = self._assay_ct_start_indices[adx]
+        ct_end = self._assay_ct_end_indices[adx]
+
+        # generate the final index slices from the total array
+        # of both replicate id (names) and ct columns
+        names_range, names_col = self._make_index_range(names_start, names_end, crop_first = True)
+        ct_range, ct_col = self._make_index_range(ct_start, ct_end, crop_first = True)
+
+        # get the assay data
+        assay_names = self._data[names_range, names_col]
+        assay_cts = self._data[ct_range, ct_col]
+        assay_cts = assay_cts.astype(float)
+
+        # assemble the assay dataframe 
+        assay_df = pd.DataFrame(
+                                {
+                                    standard_id_header : assay_names, 
+                                    standard_ct_header : assay_cts,
+                                }
+                            )
+
+        if not allow_nan_ct:
+            if not isinstance(default_to, (int, float)): 
+                aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
+            
+            # apply defaulting lambda function
+            assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
+                                                    lambda x: x if x == x else default_to
+                                                )
+        # and store dataframe
+        self._dfs.update(
+                            { assay : assay_df }
+                        )
+
+        adx += 1</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.max_assay_name_length"><code class="name flex">
+<span>def <span class="ident">max_assay_name_length</span></span>(<span>self, length=20)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the maximum allowed name length (number of characters) assay names.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code></dt>
+<dd>The maximum number of characters to store for the assay name.
+Default is <code>length = 20</code> characters.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_assay_name_length(self, length = 20):
+    &#34;&#34;&#34;
+    Sets the maximum allowed name length (number of characters) assay names.
+    
+    Parameters
+    ----------
+    length : int
+        The maximum number of characters to store for the assay name. 
+        Default is `length = 20` characters.
+    &#34;&#34;&#34;
+    self._max_assay_name_length = length</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A wrapper for find_assays+find_columns+make_dataframes
+This is the functional core of the Parser's <code>pipe</code> method.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword argument that will be passed to any of the wrapped methods.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(self, **kwargs):
+    &#34;&#34;&#34;
+    A wrapper for find_assays+find_columns+make_dataframes
+    This is the functional core of the Parser&#39;s `pipe` method.
+
+    Parameters
+    -------
+    **kwargs
+        Any additional keyword argument that will be passed to any of the wrapped methods.
+    &#34;&#34;&#34;
+    decorator = aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
+    if decorator is not None:
+        self.find_by_decorator(decorator = decorator, **kwargs)
+    else: 
+        self.find_assays(**kwargs)
+    self.find_columns()
+    self.make_dataframes(**kwargs)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.prune"><code class="name flex">
+<span>def <span class="ident">prune</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prune(self):
+    &#34;&#34;&#34;
+    Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
+    &#34;&#34;&#34;
+    self.__init__()</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves the individual assays as separate csv files.
+This requires that a saving directory has been set using <code>self.save_to</code>.
+The files will simply be named according to the assay name (i.e. <code>ActinB.csv</code> for instance).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self):
+    &#34;&#34;&#34;
+    Saves the individual assays as separate csv files.
+    This requires that a saving directory has been set using `self.save_to`.
+    The files will simply be named according to the assay name (i.e. `ActinB.csv` for instance).
+    &#34;&#34;&#34;
+    if self._save_loc is None:
+        aw.SoftWarning(&#34;Parser:no_save_loc&#34;)
+    else:
+        for assay, df in self._dfs.items():
+            assay_path = os.path.join(self.save_to(), f&#34;{assay}.csv&#34;)
+            df.to_csv(assay_path, index = False)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Parsers._CORE_Parser.save_to"><code class="name flex">
+<span>def <span class="ident">save_to</span></span>(<span>self, location: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the location into which the individual assay datafiles should be saved.
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code></dt>
+<dd>The path to a directory where the newly generated assay datafiles shall be saved.
+If this directory does not yet exist, it will be automatically made.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_to(self, location : str = None):
+    &#34;&#34;&#34;
+    Sets the location into which the individual assay datafiles should be saved.
+    Parameters
+    ----------
+    location : str
+        The path to a directory where the newly generated assay datafiles shall be saved.
+        If this directory does not yet exist, it will be automatically made.
+    &#34;&#34;&#34;
+    if location is not None: 
+        self._save_loc = location
+        if not os.path.exists(self._save_loc):
+            os.mkdir(self._save_loc)
+    return self._save_loc</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -1244,7 +2534,25 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
 </a>
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#working-with-irregular-files">Working with "irregular files"</a><ul>
+<li><a href="#finding-relevant-datasets-through-assay_patterns">"Finding" relevant datasets through assay_patterns</a></li>
+</ul>
+</li>
+<li><a href="#working-with-multi-assay-files">Working with multi-assay files</a><ul>
+<li><a href="#getting-a-single-assay-from-a-multi-assay-file">Getting a single assay from a multi-assay file</a></li>
+<li><a href="#getting-all-assays-from-a-multi-assay-file">Getting all assays from a multi-assay file</a><ul>
+<li><a href="#making-indivdual-assay-files-from-a-multi-assay-file">Making indivdual assay files from a multi-assay file</a></li>
+<li><a href="#using-a-multi-assay-file-directly-for-my-analysis">Using a multi-assay file directly for my analysis</a></li>
+<li><a href="#decorators">Decorators</a><ul>
+<li><a href="#two-things-of-note">Two things of Note:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
@@ -1266,6 +2574,25 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
 <ul class="">
 <li><code><a title="qpcr.Parsers.ExcelParser.pipe" href="#qpcr.Parsers.ExcelParser.pipe">pipe</a></code></li>
 <li><code><a title="qpcr.Parsers.ExcelParser.read" href="#qpcr.Parsers.ExcelParser.read">read</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
 </ul>
 </li>
 </ul>
