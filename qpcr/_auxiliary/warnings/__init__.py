@@ -20,7 +20,7 @@ WARNINGS = {
 "Assay:no_groupname_assignment" : "Could not establish new group names!\nGroup names can only be established based on a list (per index) or dictionary (per key)! New group names received = {names}",
 "Assay:groupnames_dont_colver" : "The new group names specified do not cover all current groups of replicates!\nRequired are new_names for all groups either as dictionary old_name : new_name or as list, replaced per index.\nCurrent group names \t = {current_groups}\nReceived new group names = {new_received}", 
 "Assay:groupnames_not_inferred" : "Could not infer group names based on the provided replicate sample names.\nPlease, specify group names directly.",
-
+"Assay:no_data_adopted" : "No data was adopted by the Assay!\nData is already stored by this Assay. If you wish to overwrite it use the force=True option.",
 
 "Results:cannot_link" : "Names could not be linked!\nIf names shall be added after results have been computed, use .add_names() instead! .link() is only allowed on empty Results!",
 "Results:cannot_add_names" : "Names could not be added! Dimensionality did not match...\nExpected length: {length}, but got {length_names}",
@@ -29,8 +29,8 @@ WARNINGS = {
 
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
-"Normaliser:empty_data" : "Sample {s} was not added because it did not contain any results data!", 
-"Normaliser:unknown_data" : "Sample {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
+"Normaliser:empty_data" : "Assay {s} was not added because it did not contain any results data!", 
+"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
@@ -56,6 +56,8 @@ WARNINGS = {
 "Parser:no_decorators_found" : "No decorators could be be identified with the provided pattern!\nMake sure to specify the right decorators at the appropriate cells within your datafile.",
 "Parser:decorators_but_no_pattern" : "No assay_pattern has been specified yet!\nWill default to just extracting the entire cell content below the decorators. To deal more properly with your assays, please, specify an assay_pattern.",
 
+"MultiReader:empty_data" : "No data is currently stored by the MultiReader!\nIf you already read a file then this could either be because the file did not contain valid decorators, or because it used different headers than the current ones above the data column, or because there are too many rows between the header and the data. Max allowed rows between assay identifier and data are 2! There must not be any rows between decorators and assay identifiers!",
+"MultiReader:unknown_datafile" : "Could not read file '{file}'!\nCurrently, only 'csv' and 'excel' files are supported. Make sure to provide either of those formats!",
 
 }
 
