@@ -2,13 +2,13 @@
 This module is designed to provide functions to analyse qPCR data. 
 It is designed for maximal user-friendliness and streamlined data-visualisation.
 
-Terminology
--------
+## Terminology
+---
 
 Let's talk some terminology first. There are a number of important terms that you will meet when using the `qpcr` module that you may feel have nothing to do with qPCR. 
 Read on to learn what these terms mean and why they are important. 
 
-#### File (or "datafile")
+### File (or "datafile")
 Let's start simple. A `file` is simply one of your input datafiles (shocker). For the `qpcr` module this means either a `csv` or an `excel` file. 
 Files are the at the very basis of our data pipeline. 
 However, we do not strictly assume that these files correspond to qPCR assays _per se_ (although this is the assumption underlying the default settings). 
@@ -17,15 +17,16 @@ However, if your experimental setup looks differently, there are ways to adapt `
 So, again, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
 The datafiles require at least two columns: one containing identifiers of your replicates (see below for the term "Replicates"), and one for their Ct values.
 `Regular` datafiles only contain these two columns and nothing else. `Irregular` datafiles also have to have these two columns, but they allow for more irregular stuff
-around these columns. All `excel` input files are irregular. Irregular files may contain multiple datasets (see below). 
+around these columns. All `excel` input files are irregular. Irregular files may contain multiple datasets (see below). Check out the documentation of the `qpcr.Parsers` for 
+details on how to work with irregular datafiles.
 
-#### An `qpcr.Assay` and a "dataset"
+### An `qpcr.Assay` and a "dataset"
 The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
 if this does not match your setup then this class will still handle the data of your datafiles. So, this is obviously the same as a "dataset", right? Correct. 
 A "dataset" is a set of replicate identifiers and their Ct values, period. 
 You will find the term "dataset" here and there in the documentation and this is all there is to it, it is a more formally correct way to talk about your "qPCR assays" which are probably (but not necessarily) what your input datafiles are all about. 
 
-#### Replicates
+### Replicates
 As far as the `qpcr` module is concerned, each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
 That means that `qpcr` does not terminologically distinguish between multiplets (i.e. "true replicates" as an experimentor would understand them) and unicates. 
 That's it for what "replicates" _are_. Now to how we deal with them. 
@@ -41,7 +42,7 @@ That's where the `tuple` or `string` input for `replicates` come in. With the `t
 If you have many groups of replicates then this would be a long tuple to make and a bit annoying. So you could also specify a string `formula` which is a "recipe" for the tuple such as `replicates = "6:4,1"`, which will generate the same tuple as specified above. 
 Check out the documentation of `qpcr.Assay.replicates` for more details here.
 
-#### Groups (of Replicates)
+### Groups (of Replicates)
 This is one of the most fundamental terms. In the previous paragraph we already started to talk about "groups of replicates". 
 Groups of replicates are, as their name already implies, well, a number of replicates that somehow belong together.
 For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions. 
@@ -52,15 +53,8 @@ However, they also come with a text label called the `group_name` (you can manua
 Some classes such as the `qpcr.SampleReader` class will actually just use the term `names` instead of the full `group_names`. 
 Whenever you see anything "names"-related it is (super-duper most likely) a reference to the `group_names`.
 
-#### "Samples"
-We described in the previous section how we use the term "group of replicates". 
-However, you may find that there is also a term "sample" within `qpcr`'s vocabulary. 
-As far as the `qpcr` module is concerned, the term "sample" is not very important in itself and usually appears in the context of "sample assays".
-In this setting it is used interchangeably with "assays-of-interest". 
-Actually, we try to phase out the term "sample" and it currently mainly appears in hidden auxiliary functions which have retained the term from earlier development versions.
 
-
-#### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
+### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
 Now it gets more technical (sorry).
 The default analysis workflow in $\Delta \Delta Ct$ analysis is to first calculate a $\Delta Ct$ using an intra-assay reference and then calculate the $\Delta \Delta Ct$ using a normaliser assay. 
 The first $\Delta Ct$ step is performed by a class called `qpcr.Analyser` using its native method `DeltaCt()`. 
@@ -69,14 +63,14 @@ We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser
 So, as far as the `qpcr` module is concerned there is only `DeltaCt()` which performs the first $\Delta Ct$, and `normalise()` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
-#### The `anchor` and the "reference group"
+### The `anchor` and the "reference group"
 Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in `qpcr` terms that would be your _reference group_.
 Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their mean for instance).
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 
-#### "assays" vs "normalisers"
+### "assays" vs "normalisers"
 You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the `qpcr.Normaliser`. 
 For all intents and purposes, an "assay" is simply one of your datasets (again, the name was chosen from the default assumption that your datafiles contain one assay each).
 In case of the `qpcr.Reader` "assay" specifies any dataset within an irregular datafile. 
@@ -87,25 +81,32 @@ You will also find that the term "assays" is used within the final results dataf
 In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
 In fact, this is a new "hybrid" assay identifier taht includes the names of all the normaliser-assays used during computation (check out what the final results look like and it'll be immediately clear).
 
+### "Samples"
+You may find that there is also a term "sample" within `qpcr`'s vocabulary. 
+As far as the `qpcr` module is concerned, the term "sample" is not very important in itself and usually appears in the context of "sample assays".
+In this setting it is used interchangeably with "assays-of-interest". 
+Actually, we try to phase out the term "sample" and it currently mainly appears in hidden auxiliary functions which have retained the term from earlier development versions.
 
-The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.
 
-#### `pipeline`s 
+## Some more basics 
+----
+
+### `pipeline`s 
 A `pipeline` is essentially any workflow that starts from one or multiple input datafiles and ultimately results in some results table you are happy with.
 Pipelines can be manually created by assembling the main `qpcr` classes, usually starting with a SampleReader, passing to an Analyser, to an Normaliser, and you're good to go.
 When manually assembling your workflow you can extract your data at any point and perform your own computations on it as you like. However, if you wish to "just do some good ol' Delta-Delta-Ct"
 there are pre-defined pipelines that will handle writing the workflow and only require a very basic setup. You can find these in the `qpcr.Pipes` submodule.
 
-#### "Results" = my final results?
+### "Results" = my final results?
 Yes and no. Anything that is computed through any of the `qpcr` classes is called a "result" of some kind.
 In practice as soon as you pass your data through an `qpcr.Analyser` or `qpcr.Normaliser` you generate some "results" which are actually stored in a separate class called `qpcr.Results` (that's not so important, though).
 The `qpcr.Results` that comes out of your `qpcr.Normaliser` will probably be what you would think of as your "final results", yes. The one from the `qpcr.Analyser` will probably not be.
 
-#### `get`ting your data
+### `get`ting your data
 Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` classes you can always use the `get()` method. 
 `get` is pretty universal in the `qpcr` module, so whenever you want to extract your data, there's a `get()` method to help you.
 
-#### `link` vs `add` vs `pipe`
+### `link` vs `add` vs `pipe`
 Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single `qpcr.Assay` object or a single filepath as `string`)
 usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an `qpcr.Analyser` would perform `DeltaCt()` for instance). 
 Some classes such as the `qpcr.Analyser` have a wrapper that will call both their `link()` as well as their actual core-functional method together in one go. This wrapper is called `pipe()`. 
@@ -115,6 +116,9 @@ Alright, we know about `link()` and `pipe()` now, what about `add`?  Classes tha
 `add`-methods are especially implemented within the pre-defined analysis pipelines of the `qpcr.Pipes` submodule. You will probably often use the methods `add_assays()` and `add_normalisers()` if you plan on using these predefined pipelines.
 However, these classes usually still have a `link()` method somewhere that you can use as well. For instance, the `qpcr.Normaliser` uses a `link` method to add both assays-of-interest and normaliser-assays simultaneously.
 
+## Working with "irregular" or "multi-assay" files
+---
+Check out the documentation of the `qpcr.Parsers` which explains in more detail how to work with irregular and multi-assay datafiles.
 
 """
 
