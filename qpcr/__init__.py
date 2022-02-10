@@ -19,16 +19,19 @@ The `qpcr.Assay` class is used to store the Ct values from a datafile. The class
 if this does not match your setup then this class will still handle the data of your datafiles.
 
 #### Replicates
-Each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
-That's it for what "replicates" _are_. Now to how we deal with them. The `qpcr.Assay` class has an attribute called `replicates` which must be set 
-if you want to read your data. `replicates` can be either an `integer` or a `tuple`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets. 
-Hence, we have different individual replicates that actually belong together (they form a "group", see the next paragraph!). To tell the `qpcr` module that your experiment was done as 
-triplicates for instance, you would specify `replicates = 3`. Of course, most qPCR machines already output averaged Ct values alongside the individual ones. If you wish to use these, 
-then you might specify `replicates = 1`, for instance (there is no strict contraint to have multipltets). On the other hand, if you did biological triplicates and technical duplicates you can choose
-if you would like keep the triplicates separately or merge them together. If you choose the latter then you would assign `replicates = 6` (2x3 = 6), otherwise you might keep to `replicates = 2`. 
-And so forth, you get the idea... Why then is a tuple also a valid input for `replicates`? Well, if you manually removed outliers from your data, then your groups of replicates would no longer all have the same length. 
-You can account for this by specifying the number of replicates in each group in a tuple. 
-However, at this point it must be mentioned that `qpcr` comes with `Filters` that will handle this for you automatically, so there is no need to tamper with your datafiles manually!
+As far as the `qpcr` module is concerned, each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
+That means that `qpcr` does not terminologically distinguish between multiplets (i.e. "replicates" as an experimentor would understand them) and unicates, a _replicate_ is just a data point. 
+That's it for what "replicates" _are_. Now to how we deal with them. 
+When reading data, the number of replicates within your data is automatically inferred, and you will get a notification if this fails. 
+If no replicates can be inferred then you will have to specify the replicates that underlie your data. The `qpcr.Assay` class has an attribute called `replicates` which where you can specify this information. 
+`replicates` can be either an `integer`, a `tuple`, or a `string`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets, but some assays might only be done in unicates (such as the diluent assay).
+In these cases your dataset does not have uniformly sized groups of replicates (see next paragraph for the term "group"). 
+Let's look at an example. Assume you did biological triplicates and technical duplicates. 
+Now you might choose to keep the triplicates separately or merge them together. To tell `qpcr` that you want to merge your biological and techincal replicates all together you would specify `replicates = 6` (2x3 = 6), otherwise you might specify `replicates = 2`. 
+You get the idea... If you now also had a diluent sample that is a unicate at the end of your dataset, then you have a problem as the program currently expects to find always three replicates together but you have only one.
+That's where the `tuple` or `string` input for `replicates` come in. With the `tuple` you can specify the number of replicates individually for each group such as `replicates = (6,6,6,6,1)`. 
+If you have many groups of replicates then this would be a long tuple to make and a bit annoying. So you could also specify a string `formula` which is a "recipe" for the tuple such as `replicates = "6:4,1"`, which will generate the same tuple as specified above. 
+Check out the documentation of `qpcr.Assay.replicates` for more details here.
 
 #### Groups (of Replicates)
 This is one of the most fundamental terms. In the previous paragraph we already started to talk about "groups of replicates". 
@@ -45,7 +48,11 @@ We described in the previous section how we use the term "group of replicates". 
 As far as the `qpcr` module is concerned, the term "Sample" is intercangable with the term "Replicate" (see above) but has nothing to do with qPCR samples or experimental conditions as a wet-lab biochemist would understand them. 
 You will find that your dataframes contain a "Sample" column that contains the original replicate identifiers from your datafiles. 
 Why is this? Essentially because the `qpcr` module does not make strict assumptions of what data is actually contained within the files, it simply considers all replicate values as its "sample data" to work on.
-So would another name have also worked here? Sure, it would have.
+So, would another name have also worked here? Sure, it would have. 
+At this point it should be mentioned that the term "samples" is sometimes used interchangeably with the term "assays-of-interest" within the code framework. 
+This is mostly the case for hidden auxiliary functions whose terminology was no reset to be uniform was the user-interface functions. 
+That's a legacy from earlier development versions of the code but does not affect performance in any way. In case you are ever checking out the source code, now you know why some functions work with "samples" variables etc.
+
 
 #### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
 Now it gets even more technical (sorry).
@@ -126,7 +133,7 @@ class _CORE_Reader(aux._ID):
         Returns
         -------
         data : pd.DataFrame
-            The samples dataframe.
+            The assays dataframe.
         """
         return self._df
 
@@ -135,7 +142,7 @@ class _CORE_Reader(aux._ID):
         Returns
         -------
         n : int
-            The number of samples in the dataframe.
+            The number of replicates (entries) in the dataframe.
         """
         return len(self._df["Sample"])
 
@@ -427,7 +434,7 @@ class _Qupid_Reader(_CORE_Reader):
 
 class Assay(aux._ID):
     """
-    Places a set of samples into groups of replicates as specified by the user.
+    Places a set of replicates into groups of replicates as specified by the user.
     Also adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
     Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
 
@@ -512,7 +519,7 @@ class Assay(aux._ID):
 
     def replicates(self, replicates : (int or tuple or str) = None):
         """
-        Either sets or gets the replicates to be used for grouping the samples
+        Either sets or gets the replicates settings to be used for grouping
         Before they are assigned, replicates are vetted to ensure they cover all data entries.
 
         Parameters
@@ -541,7 +548,7 @@ class Assay(aux._ID):
 
     def group(self, infer_names = True):
         """
-        Groups the samples according to replicates specified.
+        Groups the data according to replicates-settings specified.
 
         Parameters
         ----------
@@ -554,8 +561,8 @@ class Assay(aux._ID):
 
         # generate group and group_names columns
         if isinstance(self._replicates, int):
-            samples = self._Reader.n()
-            groups, group_names = self._make_equal_groups(samples)            
+            assays = self._Reader.n()
+            groups, group_names = self._make_equal_groups(assays)            
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
         else:
@@ -722,7 +729,7 @@ class Assay(aux._ID):
             group_names.extend([f"Group{idx}"] * rep)
         return groups, group_names
 
-    def _make_equal_groups(self, samples):
+    def _make_equal_groups(self, assays):
         """
         Returns two lists of [0,0,0,1,1,1] and 
         [Group0, Group0, Group0, Group1,...] 
@@ -732,7 +739,7 @@ class Assay(aux._ID):
         """
         groups = []
         group_names = []
-        slices = range(int(samples / self._replicates))
+        slices = range(int(assays / self._replicates))
         for i in slices:
             groups.extend([i] * self._replicates)
             group_names.extend([f"Group{i}"] * self._replicates)
@@ -777,7 +784,7 @@ class SampleReader(Assay):
 
     def replicates(self, replicates:(int or tuple)):
         """
-        Set the replicates to group samples.
+        Set the replicates specifics to use for grouping.
 
         Parameters
         ----------
@@ -1476,22 +1483,22 @@ class Normaliser(aux._ID):
             return deepcopy(self._Results)
         return self._Results
     
-    def link(self, samples:(list or tuple) = None, normalisers:(list or tuple) = None):
+    def link(self, assays:(list or tuple) = None, normalisers:(list or tuple) = None):
         """
         Links either normaliser- or sample-data-containing `qpcr.Results` objects coming from the same `qpcr.Analyser`.
 
         Parameters
         ----------
-        samples : list or tuple
+        assays : list or tuple
             A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
         
         normalisers : list or tuple
             A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
-            combined into one single pseudo-normaliser which will then be used to normalise the samples. The method of 
+            combined into one single pseudo-normaliser which will then be used to normalise the assays. The method of 
             combining the normalisers can be specified using the `prep_func()` method.
         """
         self._link_normaliser(normalisers)
-        self._link_samples(samples)
+        self._link_assays(assays)
     
     def prep_func(self, f = None):
         """
@@ -1514,7 +1521,7 @@ class Normaliser(aux._ID):
 
     def norm_func(self, f = None):
         """
-        Sets any defined function to perform normalisation of samples against normalisers.
+        Sets any defined function to perform normalisation of assays against normalisers.
         If no `f` is provided, it returns the current `norm_func`.
 
         Parameters
@@ -1532,7 +1539,7 @@ class Normaliser(aux._ID):
 
     def normalise(self, **kwargs):
         """
-        Normalises all linked samples against the combined pseudo-normaliser, and stores the results in a new Results object.
+        Normalises all linked assays against the combined pseudo-normaliser, and stores the results in a new Results object.
 
         Parameters
         ----------
@@ -1553,7 +1560,7 @@ class Normaliser(aux._ID):
         self._Results.drop_cols()
         # print(self._Results.get())
 
-        # combine normalised samples into unified dataframe
+        # combine normalised assays into unified dataframe
         for S in self._Assay:
             S_df = S.get()
             column_name = f"{S.id()}_rel_{self._normaliser.id()}"
@@ -1597,12 +1604,12 @@ class Normaliser(aux._ID):
         s, n = df[dCt_col], df[norm_col]
         return s / n
 
-    def _link_samples(self, samples):
+    def _link_assays(self, assays):
         """
-        Links any provided samples and checks their datatype in the process...
+        Links any provided assays and checks their datatype in the process...
         """
-        if samples is not None:
-            for sample in samples: 
+        if assays is not None:
+            for sample in assays: 
                 if isinstance(sample, Results):
                     self._Assay.append(sample)
                 elif isinstance(sample, Analyser) and sample.has_results():
@@ -1715,7 +1722,7 @@ if __name__ == "__main__":
 
     normaliser = Normaliser()
     normaliser.link(normalisers = analysers[:2])
-    normaliser.link(samples = analysers[2:])
+    normaliser.link(assays = analysers[2:])
 
     normaliser.normalise()
     
@@ -1736,7 +1743,7 @@ if __name__ == "__main__":
     sn = Normaliser()
 
     sn.link(
-        samples = [splitted[0]], 
+        assays = [splitted[0]], 
         normalisers = [splitted[1]],
     )
     

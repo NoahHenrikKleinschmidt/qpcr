@@ -224,7 +224,7 @@ class Basic(Pipeline):
             _sample = reader.read(sample)
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -314,7 +314,7 @@ class BasicPlus(Basic):
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -459,7 +459,7 @@ class Blueprint(BasicPlus):
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     analysis = Blueprint()
     
     grouped_analyser = qpcr.Analyser()
-    grouped_analyser.anchor("grouped")
+    grouped_analyser.anchor("first")
     analysis.Analyser(grouped_analyser)
 
     analysis.save_to("Example Data 2")
