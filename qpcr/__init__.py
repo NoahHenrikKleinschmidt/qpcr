@@ -1002,8 +1002,7 @@ class MultiReader(Assay, Reader, aux._ID):
         if self._filesuffix() not in supported_filetypes:
             aw.HardWarning("MultiReader:empty_data", file = self._src)
 
-        if self._Parser is None:
-            self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
+        self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
 
         # setup assay_patterns if they were provided
         assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
@@ -1065,6 +1064,43 @@ class MultiReader(Assay, Reader, aux._ID):
             new_assay = self._make_new_Assay(name, df)
             new_normalisers.append(new_assay)
         self._normalisers = new_normalisers
+
+    def pipe(self, filename :str, **kwargs):
+        """
+        A wrapper for read+parse+make_Assays
+
+        Note 
+        ----
+        This is the suggested use of `MultiReader`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input datafile.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        data : tuple
+            A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).
+        """
+
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = f"{self._Parser.__name__}'s read method")
+        
+        self.parse(**kwargs)
+        self.make_Assays()
+
+        assays = self.get( which = "assays" )
+        normalisers = self.get( which = "normalisers" )
+        return assays, normalisers
+
+
 
     def save_to(self, location : str = None):
         """
