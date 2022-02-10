@@ -31,6 +31,11 @@ class Filter(aux._ID):
         self._report_loc = None
         self._id = type(self).__name__
         
+        # by default we ignore groups with NaN anchors
+        # like this we avoid Errors and don't filter out 
+        # any unicate groups like the diluent sample...
+        self._ignore_nan = True
+
         self._boxplot_mode = "interactive"
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -50,6 +55,15 @@ class Filter(aux._ID):
             The filtering statistics dataframe (a summary of filtering parameters used)
         """
         return self._filter_stats
+
+    def ignore_nan(self, bool):
+        """
+        Set a policy for how to deal with groups that have a `NaN` anchor.
+        If set to `True` such groups will be ignored and filtering will proceed.
+        If set to `False` the Filter will raise an Error!
+        """
+        self._ignore_nan = bool
+
 
     def plotmode(self, mode = "interactive"):
         """
@@ -278,7 +292,6 @@ class RangeFilter(Filter):
     def _filter(self, **kwargs):
         """
         Filters out any replicates that are out of range and updates the Assay's dataframe.
-        It stores the original in a new attribute called _orig_df.
         """
     
         df = self._Assay.get()
@@ -287,13 +300,22 @@ class RangeFilter(Filter):
         faulty_indices = []
         for group in groups:
             tmp = df.query(f"group == {group}")
+
+            # get anchor and check if its nan
             anchor = self._get_anchor(kwargs, group, tmp)
+            if self._ignore_nan and anchor != anchor: 
+                continue 
+
+            # generate inclusion range boundries
             upper, lower = self._set_bounds(anchor)
+
+            # get faulty indices
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
-
+        
+        # remove faulty indices
         self._filter_out(faulty_indices)
 
         if self._report_loc is not None: 
@@ -337,7 +359,7 @@ class IQRFilter(Filter):
         self._upper = 1.5
         self._lower = 1.5
 
-    def _filter(self):
+    def _filter(self, **kwargs):
         """
         Gets IQR for each group and finds outliers based on self._upper / lower
         """
@@ -349,10 +371,17 @@ class IQRFilter(Filter):
         for group in groups:
             tmp = df.query(f"group == {group}")
 
+            # get anchor
             anchor = np.nanmedian(tmp["Ct"])
+            # ignore Nan if so specified
+            if self._ignore_nan and anchor != anchor: 
+                continue
+
+            # generate inclusion range boundries
             first, third = np.nanquantile(tmp["Ct"], 0.26), np.nanquantile(tmp["Ct"], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
+            # get faulty replicates
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
@@ -413,7 +442,7 @@ if __name__ == "__main__":
 
     normaliser = qpcr.Normaliser()
     normaliser.link(normalisers = analysers[:2])
-    normaliser.link(samples = analysers[2:])
+    normaliser.link(assays = analysers[2:])
 
     normaliser.normalise()
     
@@ -454,7 +483,7 @@ if __name__ == "__main__":
 
     second_normaliser = qpcr.Normaliser()
     second_normaliser.link(normalisers = [prot])
-    second_normaliser.link(samples = [nmd, prot])
+    second_normaliser.link(assays = [nmd, prot])
 
     second_normaliser.normalise()
     
