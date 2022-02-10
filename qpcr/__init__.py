@@ -953,6 +953,7 @@ class MultiReader(Assay, Reader, aux._ID):
         self._replicates = None
         self._names = None
         self._Parser = None
+        self._assay_pattern = None
         self._assays = {}
         self._normalisers = {}
         if self._src is not None: 
@@ -1025,6 +1026,10 @@ class MultiReader(Assay, Reader, aux._ID):
         """
         # remove any decorator argument that the user may have tried to pass...  
         aux.from_kwargs("decorator", None, kwargs, rm = True)
+
+        # setup assay_patterns if they were provided
+        assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
+        self._Parser.assay_pattern(assay_pattern)
 
         # get assays-of-interest
         self._Parser.parse( decorator = "qpcr:assay", **kwargs )
@@ -1124,7 +1129,7 @@ class MultiReader(Assay, Reader, aux._ID):
         return new_assay
 class Results(aux._ID):
     """
-    Handles a pandas dataframe for the results from qpcr.Analyser.
+    Handles a pandas dataframe for the results from `qpcr.Analyser` and `qpcr.Normaliser`.
     """
     def __init__(self):
         super().__init__()
