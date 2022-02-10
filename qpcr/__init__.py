@@ -120,6 +120,10 @@ However, these classes usually still have a `link()` method somewhere that you c
 ---
 Check out the documentation of the `qpcr.Parsers` which explains in more detail how to work with irregular and multi-assay datafiles.
 
+## Getting started
+----
+You can find useful tutorials and applied examples as `jupyter notebooks` [on GitHub](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples).
+
 """
 
 import pandas as pd
