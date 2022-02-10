@@ -1441,7 +1441,7 @@ class Results(aux._ID):
         (path can be either filename or directory)
         """
         filename = path if not os.path.isdir(path) else os.path.join(path, f"rel_{self.id()}{suffix}.csv")
-        src.to_csv(filename)
+        src.to_csv(filename, index = False)
         
     def _drop_setup_cols(self):
         """
