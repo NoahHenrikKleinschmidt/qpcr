@@ -144,6 +144,7 @@ __pdoc__ = {
 raw_col_names = ["id", "Ct"]
 
 supported_filetypes = ["csv", "xlsx"]
+
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -346,7 +347,8 @@ class _CORE_Reader(aux._ID):
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
         # check if a valid Ct column was found
-        full_valid_Ct_col = len(  df[ df["Ct"] == df["Ct"] ]  ) == len(df)
+        Ct = raw_col_names[1]
+        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
         if not full_valid_Ct_col:
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
@@ -1445,7 +1447,10 @@ class Results(aux._ID):
         """
         Removes unnnecessary columns from the df during self._df setup with link()
         """
-        self.drop_cols("Ct")
+        # drop the Ct column
+        self.drop_cols(
+                        raw_col_names[1]
+                    )
 
 
     def _add_stats_names(self, samples):
@@ -1510,6 +1515,9 @@ class Analyser(aux._ID):
 
         # default settings
         self._anchor = "first"
+        self._ref_group = 0
+        self._ref_group_col = "group" # used in case of "mean" anchor where the ref_group must be located either from a numeric (group) or string (group_name) id
+        
         self._efficiency = 2
         self._deltaCt_function = self._get_deltaCt_function(exp = True)
 
@@ -1614,22 +1622,45 @@ class Analyser(aux._ID):
         elif e is None: 
             return self._efficiency
 
-    def anchor(self, anchor):
+    def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
         """
         Sets the anchor for DeltaCt for internal normalisation.
 
         Parameters
         ----------
-        anchor : str or float
+        anchor : str or float or function
             The internal anchor for normalisation.
             This can be either `"first"` (default, the very first dataset entry),
+            `"mean"` (mean of the reference group), 
             `"grouped"` (first entry for each replicate group), 
             any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
             If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
             `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
             `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+        group : int or str
+            The reference group identifier. This can be either the numeric identifier or the `group_name`. This is only used for `anchor = "mean"`. 
+            By default the first group is assumed. 
+        
+        Returns
+        -------
+        anchor 
+            The currently selected `anchor`.
+        ref_group
+            The current reference group.
         """
-        self._anchor = anchor
+        if anchor is not None:
+            self._anchor = anchor
+        if group != self._ref_group:
+            self._ref_group = group
+        
+        # update column where to search for ref_group identifier
+        if isinstance(group, str):
+            self._ref_group_col = "group_name"
+        else: 
+            self._ref_group_col = "group"
+        
+        return self._anchor, self._ref_group
+
 
     def func(self, f:(str or function)):
         """
@@ -1664,13 +1695,32 @@ class Analyser(aux._ID):
             Any additional keyword arguments that a custom DeltaCt function may require.
         """
         if self._anchor == "first":
-            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_first_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif self._anchor == "grouped":
-            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_grouped_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
+        elif self._anchor == "mean":
+            self._DeltaCt_mean_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif isinstance(self._anchor, (float, int)): 
-            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_externally_anchored(
+                                                self._anchor, 
+                                                self._deltaCt_function, 
+                                                **kwargs
+                                            )
         elif type(self._anchor) == type(aux.fileID):
-            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_function_anchor(
+                                            self._anchor, 
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
 
     def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
         """
@@ -1685,14 +1735,36 @@ class Analyser(aux._ID):
         df["dCt"] = df["Ct"].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df["dCt"])
 
+    def _DeltaCt_mean_anchored(self, deltaCt_function, **kwargs):
+        """
+        Performs DeltaCt using the mean of the reference group as anchor
+        """
+        df = self._Assay.get()
+
+        # get  reference group
+        ref_query = "{} == {}" if isinstance(self._ref_group, int) else "{} == '{}'" 
+        ref = df.query(
+                        ref_query.format(  self._ref_group_col, self._ref_group  )
+                    )
+        # get Ct values from ref group and make anchor
+        ref = ref[raw_col_names[1]]
+        anchor = ref.mean()
+        
+        # apply DeltaCt function
+        Ct = raw_col_names[1]
+        df["dCt"] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df["dCt"])
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
         """
         Performs DeltaCt using a specified anchor
         """
+        # get Ct column label 
+        Ct = raw_col_names[1]
         df = self._Assay.get()
-        df["dCt"] = df["Ct"].apply(deltaCt_function, ref = anchor, **kwargs)
+
+        df["dCt"] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df["dCt"])
 
 
@@ -1704,11 +1776,14 @@ class Analyser(aux._ID):
         groups = self._Assay.groups()
         df = self._Assay.get()
 
+        # get Ct column label
+        Ct = raw_col_names[1]
+
         dCt = pd.Series()
         for group in groups: 
             group_subset = df.query(f"group == {group}").reset_index(drop = True)
-            anchor = group_subset["Ct"][0]
-            delta_cts = group_subset["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
+            anchor = group_subset[Ct][0]
+            delta_cts = group_subset[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
             dCt = dCt.append(delta_cts).reset_index(drop = True)
         dCt.name = "dCt"
         self._Results.add(dCt)
@@ -1717,9 +1792,13 @@ class Analyser(aux._ID):
         """
         Performs DeltaCt using the very first entry of the dataset as anchor
         """
+        # get Ct column label
+        Ct = raw_col_names[1]
+        
         df = self._Assay.get()
-        anchor = df["Ct"][0]
-        df["dCt"] = df["Ct"].apply(deltaCt_function, ref=anchor, **kwargs)
+
+        anchor = df[Ct][0]
+        df["dCt"] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df["dCt"])
 
     def _exp_DCt(self, sample, ref, **kwargs):
@@ -1993,7 +2072,8 @@ if __name__ == "__main__":
         df = data.query("group == 0")["Ct"].reset_index(drop=True)
         return df.mean()
 
-    analyser.anchor(myanchor)
+    # analyser.anchor(myanchor)
+    analyser.anchor("mean")
 
     for file in files: 
 
