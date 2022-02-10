@@ -13,6 +13,9 @@ from io import StringIO
 from copy import deepcopy
 import os
 
+__pdoc__ = {
+    "_CORE_Parser" : True
+}
 
 # this is the dictionary where we store pre-defined 
 # patterns of headers above assays within the datafiles
