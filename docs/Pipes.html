@@ -80,9 +80,9 @@ class Pipeline(qpcr.SampleReader):
         **kwargs
             Any additional keyword arguments that will be passed to the actual `_run()` method.
         &#34;&#34;&#34;
-        if self._replicates is None:
-            wa.HardWarning(&#34;Pipeline:no_reps&#34;)
-        elif self._Normalisers == [] or self._Assays == []:
+        # if self._replicates is None:
+        #     wa.HardWarning(&#34;Pipeline:no_reps&#34;)
+        if self._Normalisers == [] or self._Assays == []:
             wa.HardWarning(&#34;Pipeline:no_data&#34;)
 
         self._run(**kwargs)
@@ -168,16 +168,16 @@ class Pipeline(qpcr.SampleReader):
         normalisers = self._from_directory(normalisers)
         self._Normalisers.extend(normalisers)
     
-    def add_assays(self, samples):
+    def add_assays(self, assays):
         &#34;&#34;&#34;
         Adds sample assays (filepaths) (keeping any already present)
 
         Parameters
         ----------
-        samples : list or str
+        assays : list or str
             A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
-        samples = self._from_directory(samples)
+        samples = self._from_directory(assays)
         self._Assays.extend(samples)
 
     def softlink(self, bool = None):
@@ -255,7 +255,7 @@ class Basic(Pipeline):
             _sample = reader.read(sample)
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -345,7 +345,7 @@ class BasicPlus(Basic):
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -490,7 +490,7 @@ class Blueprint(BasicPlus):
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -544,6 +544,96 @@ class _Qupid_Blueprint(Blueprint):
             self.Normaliser(qpcr.Normaliser())
 
 
+
+
+class MultiAssay(Blueprint):
+    &#34;&#34;&#34;
+    Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
+    Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
+    Check out the documentation of `qpcr.Parser` for more information on decorators.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._src = None
+    
+    def link(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file.
+        **kwargs
+            Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+        &#34;&#34;&#34;
+        self._src = filename
+        reader = qpcr.MultiReader()
+        self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
+        
+    
+    def _run(self, **kwargs):
+        &#34;&#34;&#34;
+        The main workflow
+        &#34;&#34;&#34;
+        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for norm in self._Normalisers:
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            for filter in self._Filters:
+                sample = filter.pipe(sample)
+            sample = analyser.pipe(sample)
+            samples.append(sample)
+        normaliser.link(assays = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)
+
+
+
+
 if __name__ == &#34;__main__&#34;:
 
     norm_files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;]
@@ -557,15 +647,16 @@ if __name__ == &#34;__main__&#34;:
     analysis = Blueprint()
     
     grouped_analyser = qpcr.Analyser()
-    grouped_analyser.anchor(&#34;grouped&#34;)
+    grouped_analyser.anchor(&#34;first&#34;)
     analysis.Analyser(grouped_analyser)
 
     analysis.save_to(&#34;Example Data 2&#34;)
     analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
     analysis.add_normalisers(norm_files)
     
-    analysis.replicates(6)
-    analysis.names(groupnames)
+    print(&#34;No Reps specified, all inferred!&#34;)
+    # analysis.replicates(6)
+    # analysis.names(groupnames)
 
     iqr_filter = Filters.RangeFilter()
     # iqr_filter.report(&#34;Example Data 2&#34;)
@@ -674,7 +765,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
             _sample = reader.read(sample)
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -800,7 +891,7 @@ which cannot be customized! For customization generate your own pipeline!</p></d
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -1061,7 +1152,7 @@ Optionally, SampleReader, Analyser, and Normaliser may be set up externally and 
 
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
-        normaliser.link(samples = samples)
+        normaliser.link(assays = samples)
 
         normaliser.normalise()
         results = normaliser.get()
@@ -1104,6 +1195,7 @@ Optionally, SampleReader, Analyser, and Normaliser may be set up externally and 
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="qpcr.Pipes.MultiAssay" href="#qpcr.Pipes.MultiAssay">MultiAssay</a></li>
 <li>qpcr.Pipes._Qupid_Blueprint</li>
 </ul>
 <h3>Methods</h3>
@@ -1212,6 +1304,168 @@ Optionally, SampleReader, Analyser, and Normaliser may be set up externally and 
 </li>
 </ul>
 </dd>
+<dt id="qpcr.Pipes.MultiAssay"><code class="flex name class">
+<span>class <span class="ident">MultiAssay</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
+Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
+Check out the documentation of <code>qpcr.Parser</code> for more information on decorators.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiAssay(Blueprint):
+    &#34;&#34;&#34;
+    Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
+    Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
+    Check out the documentation of `qpcr.Parser` for more information on decorators.
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._src = None
+    
+    def link(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file.
+        **kwargs
+            Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+        &#34;&#34;&#34;
+        self._src = filename
+        reader = qpcr.MultiReader()
+        self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
+        
+    
+    def _run(self, **kwargs):
+        &#34;&#34;&#34;
+        The main workflow
+        &#34;&#34;&#34;
+        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for norm in self._Normalisers:
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            for filter in self._Filters:
+                sample = filter.pipe(sample)
+            sample = analyser.pipe(sample)
+            samples.append(sample)
+        normaliser.link(assays = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="qpcr.Pipes.Blueprint" href="#qpcr.Pipes.Blueprint">Blueprint</a></li>
+<li><a title="qpcr.Pipes.BasicPlus" href="#qpcr.Pipes.BasicPlus">BasicPlus</a></li>
+<li><a title="qpcr.Pipes.Basic" href="#qpcr.Pipes.Basic">Basic</a></li>
+<li><a title="qpcr.Pipes.Pipeline" href="#qpcr.Pipes.Pipeline">Pipeline</a></li>
+<li>qpcr.__init__.SampleReader</li>
+<li>qpcr.__init__.Assay</li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Pipes.MultiAssay.link"><code class="name flex">
+<span>def <span class="ident">link</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments to be passed to <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>'s <code>pipe</code> method.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def link(self, filename : str, **kwargs):
+    &#34;&#34;&#34;
+    Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+    **kwargs
+        Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+    &#34;&#34;&#34;
+    self._src = filename
+    reader = qpcr.MultiReader()
+    self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Pipes.Blueprint" href="#qpcr.Pipes.Blueprint">Blueprint</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Pipes.Blueprint.Analyser" href="#qpcr.Pipes.Blueprint.Analyser">Analyser</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.Figures" href="#qpcr.Pipes.BasicPlus.Figures">Figures</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.Normaliser" href="#qpcr.Pipes.Blueprint.Normaliser">Normaliser</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.Reader" href="#qpcr.Pipes.Blueprint.Reader">Reader</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.add_assays" href="#qpcr.Pipes.Pipeline.add_assays">add_assays</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.add_filters" href="#qpcr.Pipes.BasicPlus.add_filters">add_filters</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.add_normalisers" href="#qpcr.Pipes.Pipeline.add_normalisers">add_normalisers</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.add_plotters" href="#qpcr.Pipes.BasicPlus.add_plotters">add_plotters</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.get" href="#qpcr.Pipes.Pipeline.get">get</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.prune" href="#qpcr.Pipes.Pipeline.prune">prune</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.run" href="#qpcr.Pipes.Pipeline.run">run</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.save_to" href="#qpcr.Pipes.Pipeline.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Pipes.Blueprint.softlink" href="#qpcr.Pipes.Pipeline.softlink">softlink</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="qpcr.Pipes.Pipeline"><code class="flex name class">
 <span>class <span class="ident">Pipeline</span></span>
 </code></dt>
@@ -1259,9 +1513,9 @@ that ensure that elementary required inputs are provided.</p>
         **kwargs
             Any additional keyword arguments that will be passed to the actual `_run()` method.
         &#34;&#34;&#34;
-        if self._replicates is None:
-            wa.HardWarning(&#34;Pipeline:no_reps&#34;)
-        elif self._Normalisers == [] or self._Assays == []:
+        # if self._replicates is None:
+        #     wa.HardWarning(&#34;Pipeline:no_reps&#34;)
+        if self._Normalisers == [] or self._Assays == []:
             wa.HardWarning(&#34;Pipeline:no_data&#34;)
 
         self._run(**kwargs)
@@ -1347,16 +1601,16 @@ that ensure that elementary required inputs are provided.</p>
         normalisers = self._from_directory(normalisers)
         self._Normalisers.extend(normalisers)
     
-    def add_assays(self, samples):
+    def add_assays(self, assays):
         &#34;&#34;&#34;
         Adds sample assays (filepaths) (keeping any already present)
 
         Parameters
         ----------
-        samples : list or str
+        assays : list or str
             A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         &#34;&#34;&#34;
-        samples = self._from_directory(samples)
+        samples = self._from_directory(assays)
         self._Assays.extend(samples)
 
     def softlink(self, bool = None):
@@ -1408,29 +1662,29 @@ that ensure that elementary required inputs are provided.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="qpcr.Pipes.Pipeline.add_assays"><code class="name flex">
-<span>def <span class="ident">add_assays</span></span>(<span>self, samples)</span>
+<span>def <span class="ident">add_assays</span></span>(<span>self, assays)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds sample assays (filepaths) (keeping any already present)</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>samples</code></strong> :&ensp;<code>list</code> or <code>str</code></dt>
+<dt><strong><code>assays</code></strong> :&ensp;<code>list</code> or <code>str</code></dt>
 <dd>A <code>list</code> of filepaths to raw datafiles of sample assays, or a directory (<code>str</code>) where these are stored.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_assays(self, samples):
+<pre><code class="python">def add_assays(self, assays):
     &#34;&#34;&#34;
     Adds sample assays (filepaths) (keeping any already present)
 
     Parameters
     ----------
-    samples : list or str
+    assays : list or str
         A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
     &#34;&#34;&#34;
-    samples = self._from_directory(samples)
+    samples = self._from_directory(assays)
     self._Assays.extend(samples)</code></pre>
 </details>
 </dd>
@@ -1596,9 +1850,9 @@ as you require.</p>
     **kwargs
         Any additional keyword arguments that will be passed to the actual `_run()` method.
     &#34;&#34;&#34;
-    if self._replicates is None:
-        wa.HardWarning(&#34;Pipeline:no_reps&#34;)
-    elif self._Normalisers == [] or self._Assays == []:
+    # if self._replicates is None:
+    #     wa.HardWarning(&#34;Pipeline:no_reps&#34;)
+    if self._Normalisers == [] or self._Assays == []:
         wa.HardWarning(&#34;Pipeline:no_data&#34;)
 
     self._run(**kwargs)</code></pre>
@@ -1704,6 +1958,12 @@ add new ones and keep old ones.</p>
 <li><code><a title="qpcr.Pipes.Blueprint.Analyser" href="#qpcr.Pipes.Blueprint.Analyser">Analyser</a></code></li>
 <li><code><a title="qpcr.Pipes.Blueprint.Normaliser" href="#qpcr.Pipes.Blueprint.Normaliser">Normaliser</a></code></li>
 <li><code><a title="qpcr.Pipes.Blueprint.Reader" href="#qpcr.Pipes.Blueprint.Reader">Reader</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Pipes.MultiAssay" href="#qpcr.Pipes.MultiAssay">MultiAssay</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Pipes.MultiAssay.link" href="#qpcr.Pipes.MultiAssay.link">link</a></code></li>
 </ul>
 </li>
 <li>
