@@ -494,6 +494,13 @@ class PreviewResults(Plotter):
                         },
                     )
 
+            # set default axes labels
+            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
+            fig.update_xaxes(title_text = xlabel)
+            
+            ylabel = aux.from_kwargs("ylabel", "DeltaDeltaCt", kwargs, rm = True) 
+            fig.update_yaxes(title_text = ylabel)
+
             idx = 0
             for assay in headings:
                 row, col = Coords.get()
