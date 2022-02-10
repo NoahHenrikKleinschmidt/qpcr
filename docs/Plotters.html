@@ -384,6 +384,8 @@ class PreviewResults(Plotter):
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
     | title : `str`   |  The overall figure title   | `title = &#34;Today&#39;s results&#34;    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = &#34;My super qPCR samples&#34;    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = &#34;Mean of ddCt&#34;    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = &#34;plotly_dark&#34;`    |
@@ -524,6 +526,13 @@ class PreviewResults(Plotter):
                         legend = {&#34;title&#34; : aux.from_kwargs(&#34;legend_title&#34;, ref_col, kwargs, rm = True),
                         },
                     )
+
+            # set default axes labels
+            xlabel = aux.from_kwargs(&#34;xlabel&#34;, &#34;&#34;, kwargs, rm = True) 
+            fig.update_xaxes(title_text = xlabel)
+            
+            ylabel = aux.from_kwargs(&#34;ylabel&#34;, &#34;DeltaDeltaCt&#34;, kwargs, rm = True) 
+            fig.update_yaxes(title_text = ylabel)
 
             idx = 0
             for assay in headings:
@@ -1625,6 +1634,16 @@ or keep old ones (supersede = False).</dd>
 <td>`title = "Today's results"</td>
 </tr>
 <tr>
+<td>xlabel : <code>str</code></td>
+<td>The x axis label</td>
+<td>`xlabel = "My super qPCR samples"</td>
+</tr>
+<tr>
+<td>ylabel : <code>str</code></td>
+<td>The y axis label</td>
+<td>`ylabel = "Mean of ddCt"</td>
+</tr>
+<tr>
 <td>height : <code>int</code></td>
 <td>Height of the figure</td>
 <td><code>height = 50</code></td>
@@ -1706,6 +1725,8 @@ or keep old ones (supersede = False).</dd>
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
     | title : `str`   |  The overall figure title   | `title = &#34;Today&#39;s results&#34;    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = &#34;My super qPCR samples&#34;    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = &#34;Mean of ddCt&#34;    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = &#34;plotly_dark&#34;`    |
@@ -1846,6 +1867,13 @@ or keep old ones (supersede = False).</dd>
                         legend = {&#34;title&#34; : aux.from_kwargs(&#34;legend_title&#34;, ref_col, kwargs, rm = True),
                         },
                     )
+
+            # set default axes labels
+            xlabel = aux.from_kwargs(&#34;xlabel&#34;, &#34;&#34;, kwargs, rm = True) 
+            fig.update_xaxes(title_text = xlabel)
+            
+            ylabel = aux.from_kwargs(&#34;ylabel&#34;, &#34;DeltaDeltaCt&#34;, kwargs, rm = True) 
+            fig.update_yaxes(title_text = ylabel)
 
             idx = 0
             for assay in headings:

@@ -1521,8 +1521,13 @@ class Results(aux._ID):
             aw.HardWarning(&#34;Results:save_need_dir&#34;)
 
         if df:
-            self._save_single(path, self._df, &#34;_df&#34;)
+            # in case of raw results export we don&#39;t need the &#34;assay&#34; column as all 
+            # assays are stored as separate columns anyaway, so it doesn&#39;t store any useful data
+            _df = self._df
+            if &#34;assay&#34; in _df.columns: _df = self._df.drop( columns = [&#34;assay&#34;] )
+            self._save_single(path, _df, &#34;_df&#34;)
         if stats:
+            # compute stats if none have been computed yet...
             if self._stats_df is None:
                 self.stats()
             self._save_single(path, self._stats_df, &#34;_stats&#34;)
@@ -1575,7 +1580,7 @@ class Results(aux._ID):
         (path can be either filename or directory)
         &#34;&#34;&#34;
         filename = path if not os.path.isdir(path) else os.path.join(path, f&#34;rel_{self.id()}{suffix}.csv&#34;)
-        src.to_csv(filename)
+        src.to_csv(filename, index = False)
         
     def _drop_setup_cols(self):
         &#34;&#34;&#34;
@@ -1929,9 +1934,17 @@ class Analyser(aux._ID):
         # get Ct column label
         Ct = raw_col_names[1]
         
+        # get first available entry
+        # we do this instead of just 0 
+        # because the truly first entry 
+        # might have been filtered out 
+        first = list(df.index)[0]
+
         df = self._Assay.get()
 
-        anchor = df[Ct][0]
+        # get anchor
+        anchor = df[Ct][ first ]
+
         df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
@@ -2620,9 +2633,17 @@ Note</p>
         # get Ct column label
         Ct = raw_col_names[1]
         
+        # get first available entry
+        # we do this instead of just 0 
+        # because the truly first entry 
+        # might have been filtered out 
+        first = list(df.index)[0]
+
         df = self._Assay.get()
 
-        anchor = df[Ct][0]
+        # get anchor
+        anchor = df[Ct][ first ]
+
         df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
@@ -5061,8 +5082,13 @@ the <code>name_label</code> and <code>Ct_label</code> arguments that can be pass
             aw.HardWarning(&#34;Results:save_need_dir&#34;)
 
         if df:
-            self._save_single(path, self._df, &#34;_df&#34;)
+            # in case of raw results export we don&#39;t need the &#34;assay&#34; column as all 
+            # assays are stored as separate columns anyaway, so it doesn&#39;t store any useful data
+            _df = self._df
+            if &#34;assay&#34; in _df.columns: _df = self._df.drop( columns = [&#34;assay&#34;] )
+            self._save_single(path, _df, &#34;_df&#34;)
         if stats:
+            # compute stats if none have been computed yet...
             if self._stats_df is None:
                 self.stats()
             self._save_single(path, self._stats_df, &#34;_stats&#34;)
@@ -5115,7 +5141,7 @@ the <code>name_label</code> and <code>Ct_label</code> arguments that can be pass
         (path can be either filename or directory)
         &#34;&#34;&#34;
         filename = path if not os.path.isdir(path) else os.path.join(path, f&#34;rel_{self.id()}{suffix}.csv&#34;)
-        src.to_csv(filename)
+        src.to_csv(filename, index = False)
         
     def _drop_setup_cols(self):
         &#34;&#34;&#34;
@@ -5501,8 +5527,13 @@ Default is <code>stats = True</code>.</dd>
         aw.HardWarning(&#34;Results:save_need_dir&#34;)
 
     if df:
-        self._save_single(path, self._df, &#34;_df&#34;)
+        # in case of raw results export we don&#39;t need the &#34;assay&#34; column as all 
+        # assays are stored as separate columns anyaway, so it doesn&#39;t store any useful data
+        _df = self._df
+        if &#34;assay&#34; in _df.columns: _df = self._df.drop( columns = [&#34;assay&#34;] )
+        self._save_single(path, _df, &#34;_df&#34;)
     if stats:
+        # compute stats if none have been computed yet...
         if self._stats_df is None:
             self.stats()
         self._save_single(path, self._stats_df, &#34;_stats&#34;)</code></pre>
