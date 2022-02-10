@@ -49,9 +49,9 @@ class Pipeline(qpcr.SampleReader):
         **kwargs
             Any additional keyword arguments that will be passed to the actual `_run()` method.
         """
-        if self._replicates is None:
-            wa.HardWarning("Pipeline:no_reps")
-        elif self._Normalisers == [] or self._Assays == []:
+        # if self._replicates is None:
+        #     wa.HardWarning("Pipeline:no_reps")
+        if self._Normalisers == [] or self._Assays == []:
             wa.HardWarning("Pipeline:no_data")
 
         self._run(**kwargs)
@@ -137,16 +137,16 @@ class Pipeline(qpcr.SampleReader):
         normalisers = self._from_directory(normalisers)
         self._Normalisers.extend(normalisers)
     
-    def add_assays(self, samples):
+    def add_assays(self, assays):
         """
         Adds sample assays (filepaths) (keeping any already present)
 
         Parameters
         ----------
-        samples : list or str
+        assays : list or str
             A `list` of filepaths to raw datafiles of sample assays, or a directory (`str`) where these are stored.
         """
-        samples = self._from_directory(samples)
+        samples = self._from_directory(assays)
         self._Assays.extend(samples)
 
     def softlink(self, bool = None):
@@ -513,6 +513,96 @@ class _Qupid_Blueprint(Blueprint):
             self.Normaliser(qpcr.Normaliser())
 
 
+
+
+class MultiAssay(Blueprint):
+    """
+    Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
+    Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
+    Check out the documentation of `qpcr.Parser` for more information on decorators.
+    """
+    def __init__(self):
+        super().__init__()
+        self._src = None
+    
+    def link(self, filename : str, **kwargs):
+        """
+        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file.
+        **kwargs
+            Any additional keyword arguments to be passed to `qpcr.MultiReader`'s `pipe` method.
+        """
+        self._src = filename
+        reader = qpcr.MultiReader()
+        self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
+        
+    
+    def _run(self, **kwargs):
+        """
+        The main workflow
+        """
+        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for norm in self._Normalisers:
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            for filter in self._Filters:
+                sample = filter.pipe(sample)
+            sample = analyser.pipe(sample)
+            samples.append(sample)
+        normaliser.link(assays = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)
+
+
+
+
 if __name__ == "__main__":
 
     norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
@@ -533,8 +623,9 @@ if __name__ == "__main__":
     analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
     analysis.add_normalisers(norm_files)
     
-    analysis.replicates(6)
-    analysis.names(groupnames)
+    print("No Reps specified, all inferred!")
+    # analysis.replicates(6)
+    # analysis.names(groupnames)
 
     iqr_filter = Filters.RangeFilter()
     # iqr_filter.report("Example Data 2")
