@@ -3,30 +3,20 @@
 
 New planned features for this next release are: 
 
-### 1. Qupid 
-New Qupid web-app for easy access to the analysis pipeline for non-experienced users. 
-
-- 1.1 Make a new Qupid web-app
-- 1.2 Make functional Cores within `qpcr` for Qupid
-- 1.3 factor out _Qupid classes into _Qupid submodule
-- 1.4 Make Qupid work with Parsers (currently they don't like the StringIO as self._src, so we need to maybe some _QupidParser classes that will use similar hacks as the _Qupid_SampleReader...)
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    1.1   |      |     x       |       |
-|    1.2   |      |    x (currently broken, haven't looked at it yet)         |       |
-|    1.3   |   dropped   |             |       |
-|    1.4   |      |             |       |
-
-
 ### 2. Anchor 
 - 2.1 This new release has fixed the "grouped" anchor default settings.
 - 2.2 Also it added a new feature that allows linking a custom `function` as anchor instead of an externally computed value or the default "first" or "grouped" arguments.
+- 2.3 Implement "mean" anchor 
+- 2.4 add `group` argument to to .anchor() to specify which group is supposed to be anchor...
+
+
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    2.1   |  x    |            |       |
 |    2.2   |   x   |             |       |
+|    2.3   |      |             |       |
+|    2.4   |      |             |       |
 
 
 ### 3. Blueprint pipeline
@@ -135,6 +125,22 @@ Two new pipelines are supposed to join the current Basic ones: The `Blueprint` p
 There are some nice papers describing how they estimated qPCR amiplification efficiency based on linreg around the linear window (which we use currently just to get the optimal threshold through R^2). The slope of the optimal window should also be the corresponding efficiency. Let's test this out and add a method to replace the default `efficiency = 2` with a properly computed one. Let's try to get the slopes of our window ranges as well during the optimal threshold search, and check if we can truly use these. In the paper they keep using a log-scale to do things, so, maybe we'll have to do the same. Let's see...
 
 
-### 7. Multi-Assay Excel support
+### 7. Multi-Assay Excel support << CHECK ^^
 We want to be able to read and split multi-assay containing excel files into individual csv files that adhere to the structure of input files for the `qpcr` module. We want to make 
 a stand-alone web-app for this as well... 
+
+### 1. Qupid 
+New Qupid web-app for easy access to the analysis pipeline for non-experienced users. 
+
+- 1.1 Make a new Qupid web-app
+- 1.2 Make functional Cores within `qpcr` for Qupid
+- 1.3 factor out _Qupid classes into _Qupid submodule
+- 1.4 Make Qupid work with Parsers (currently they don't like the StringIO as self._src, so we need to maybe some _QupidParser classes that will use similar hacks as the _Qupid_SampleReader...)
+
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    1.1   |      |     x       |       |
+|    1.2   |      |    x (currently broken, haven't looked at it yet)         |       |
+|    1.3   |   dropped   |             |       |
+|    1.4   |      |             |       |
+
