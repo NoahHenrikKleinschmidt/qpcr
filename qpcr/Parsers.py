@@ -407,7 +407,8 @@ class _CORE_Parser:
             # get the assay data
             assay_names = self._data[names_range, names_col]
             assay_cts = self._data[ct_range, ct_col]
-
+            assay_cts = assay_cts.astype(float)
+            
             assay_df = pd.DataFrame(
                                     dict(
                                         Sample = assay_names, 
