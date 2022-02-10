@@ -207,105 +207,107 @@ class _CORE_Reader(aux._ID):
 
             # self._excel_read(**kwargs)
 
-    def _parse_read(self, data, name_label = "Name", Ct_label = "Ct", **kwargs):
-        """
-        Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
-        This is the funtional core of the _excel_read() method, but also works as a backup read method
-        in case a csv converted input file is provided that does not conform to the default two-column structure
-        requirements. 
+    # this entire functionality was moved to qpcr.Parsers and is now fully implemented there
+    # --------------------------------------------------------------------------------------
+    # def _parse_read(self, data, name_label = "Name", Ct_label = "Ct", **kwargs):
+    #     """
+    #     Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
+    #     This is the funtional core of the _excel_read() method, but also works as a backup read method
+    #     in case a csv converted input file is provided that does not conform to the default two-column structure
+    #     requirements. 
 
-        Parameters
-        ----------
-        data : np.ndarray
-            A numpy array of the raw data file.
-        name_label : str
-            The header above the replicate sample ids.
-        Ct_label : str
-            The header above the replicates' Ct values.
-        """
-        # locate name_label and Ct_label
-        names_loc = np.argwhere(data == name_label)
-        cts_loc = np.argwhere(data == Ct_label)
+    #     Parameters
+    #     ----------
+    #     data : np.ndarray
+    #         A numpy array of the raw data file.
+    #     name_label : str
+    #         The header above the replicate sample ids.
+    #     Ct_label : str
+    #         The header above the replicates' Ct values.
+    #     """
+    #     # locate name_label and Ct_label
+    #     names_loc = np.argwhere(data == name_label)
+    #     cts_loc = np.argwhere(data == Ct_label)
 
-        # check if locations match, if not, get the one where both share the same row
-        names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
+    #     # check if locations match, if not, get the one where both share the same row
+    #     names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
 
-        # get the values from the excel sheet array
-        sample_ids = self._get_values_from_range(data, names_loc)
-        ct_values = self._get_values_from_range(data, cts_loc)
+    #     # get the values from the excel sheet array
+    #     sample_ids = self._get_values_from_range(data, names_loc)
+    #     ct_values = self._get_values_from_range(data, cts_loc)
 
-        # assemble the dataframe
-        df = pd.DataFrame(
-                            dict(
-                                    Sample = sample_ids, 
-                                    Ct = ct_values
-                                )
-                        )
-        return df
+    #     # assemble the dataframe
+    #     df = pd.DataFrame(
+    #                         dict(
+    #                                 Sample = sample_ids, 
+    #                                 Ct = ct_values
+    #                             )
+    #                     )
+    #     return df
 
-    def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
-        """
-        Reads the given data file if it's an excel file
+    # def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
+    #     """
+    #     Reads the given data file if it's an excel file
 
-        Parameters
-        ----------
-        name_label : str
-            The header above the replicate sample ids.
-        Ct_label : str
-            The header above the replicates' Ct values.
-        """
-        # read data and convert to numpy array
-        data = pd.read_excel(self._src)
-        data = data.to_numpy()
+    #     Parameters
+    #     ----------
+    #     name_label : str
+    #         The header above the replicate sample ids.
+    #     Ct_label : str
+    #         The header above the replicates' Ct values.
+    #     """
+    #     # read data and convert to numpy array
+    #     data = pd.read_excel(self._src)
+    #     data = data.to_numpy()
 
-        # parse file and get data
-        df = self._parse_read(data, name_label, Ct_label)
-        self._df = df
+    #     # parse file and get data
+    #     df = self._parse_read(data, name_label, Ct_label)
+    #     self._df = df
         
 
-    def _get_values_from_range(self, data, indices):
-        """
-        Gets values from an excel spreadhseet as numpy ndarray starting from the indices
-        provided until the cells are filled with np.nan
-        """
-        row, col = indices
-        idx = 0
-        value = 0
-        while True:
-            idx += 1
-            try: value = data[row + idx, col]
-            except: break
-            if value == np.nan: 
-                break
+    # def _get_values_from_range(self, data, indices):
+    #     """
+    #     Gets values from an excel spreadhseet as numpy ndarray starting from the indices
+    #     provided until the cells are filled with np.nan
+    #     """
+    #     row, col = indices
+    #     idx = 0
+    #     value = 0
+    #     while True:
+    #         idx += 1
+    #         try: value = data[row + idx, col]
+    #         except: break
+    #         if value == np.nan: 
+    #             break
         
-        values = data[  # we start at row+1 to exclude the header
-                        slice(row+1, row + idx+1), 
-                        col
-                    ]
-        return values
+    #     values = data[  # we start at row+1 to exclude the header
+    #                     slice(row+1, row + idx+1), 
+    #                     col
+    #                 ]
+    #     return values
 
-    def _adjust_loc_shapes(self, names_loc, cts_loc):
-        """
-        Adjusts the location indices of the start of sample ids and ct values,
-        in case the headers were identified multiple times in the spreadsheet.
+    # def _adjust_loc_shapes(self, names_loc, cts_loc):
+    #     """
+    #     Adjusts the location indices of the start of sample ids and ct values,
+    #     in case the headers were identified multiple times in the spreadsheet.
 
-        It returns the location indices for both names (ids) and ct values that are 
-        on the same row.
-        """
-        trans_names = np.transpose(names_loc)
-        trans_cts = np.transpose(cts_loc)
+    #     It returns the location indices for both names (ids) and ct values that are 
+    #     on the same row.
+    #     """
+    #     trans_names = np.transpose(names_loc)
+    #     trans_cts = np.transpose(cts_loc)
 
-        # get common index for the row, first apply to names
-        common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
-        names_loc = names_loc[common_row_index]
-        # now also apply to cts
-        common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
-        cts_loc = cts_loc[common_row_index]
+    #     # get common index for the row, first apply to names
+    #     common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
+    #     names_loc = names_loc[common_row_index]
+    #     # now also apply to cts
+    #     common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
+    #     cts_loc = cts_loc[common_row_index]
 
-        # now reduce shape back to 1D
-        names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
+    #     # now reduce shape back to 1D
+    #     names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
 
-        return names_loc, cts_loc
+    #     return names_loc, cts_loc
             
         
     def _csv_read(self, **kwargs):
@@ -845,11 +847,13 @@ class SampleReader(Assay):
             pass 
             # VITAL CHANGE HERE
             # aw.HardWarning("SampleReader:no_reps_yet")
-        self._Assay.group()
 
         if self._names is not None:
+            self._Assay.group(infer_names = False)
             self._Assay.rename(self._names)
-
+        else:
+            self._Assay.group()
+            
         return self._Assay
 
 class _Qupid_SampleReader(SampleReader):
