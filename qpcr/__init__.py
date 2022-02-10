@@ -124,6 +124,7 @@ from io import StringIO
 # default column names for raw Ct data files (don't change this!)
 RAW_COL_NAMES = ["Sample", "Ct"]
 
+supported_filetypes = ["csv", "xlsx"]
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -463,11 +464,12 @@ class Assay(aux._ID):
     def __init__(self, Reader:Reader = None) -> dict:
         super().__init__()
         self._Reader = Reader
-        if Reader is not None:
-            self.adopt_id(Reader)
         self._df = None
+        self._length = None
         self._replicates = None
         self._renamed = False
+        if Reader is not None:
+            self.link(Reader)
 
     def get(self):
         """
@@ -489,6 +491,31 @@ class Assay(aux._ID):
         """
         self._Reader = Reader
         self.adopt_id(Reader)
+        df = self._Reader.get()
+        self._df = df
+        self._length = self._Reader.n()
+        
+    def adopt(self, df : pd.DataFrame, force = False):
+        """
+        Adopts an externally computed dataframe as its own.
+        This is supposed to be used when setting up new `qpcr.Assay` objects that do not 
+        inherit from a `qpcr.Reader`. If you wish to alter an existing `qpcr.Assay` use `force = True`.
+        When doing this, please, make sure to retain the proper data structure!
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            A pandas DataFrame.
+        force : bool
+            If a dataframe is already stored the new dataframe will only be stored if `force = True`.
+        """
+        if self._df is None: 
+            self._df = df
+        elif force:
+            self._df = df
+        else:
+            aw.HardWarning("Assay:no_data_adopted")
+        self._length = len(self._df)
 
     def names(self, as_set = True):
         """
@@ -559,7 +586,7 @@ class Assay(aux._ID):
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
-                aw.HardWarning("Assay:reps_dont_cover", n_samples = self._Reader.n(), reps = replicates)
+                aw.HardWarning("Assay:reps_dont_cover", n_samples = self._length, reps = replicates)
 
     def group(self, infer_names = True):
         """
@@ -571,12 +598,10 @@ class Assay(aux._ID):
             Try to infer names of replicate groups based on the individual replicate sample identifiers.
             Note that this only works if all replicates have an identical sample name!
         """
-        df = self._Reader.get()
-        self._df = df
-
+        
         # generate group and group_names columns
         if isinstance(self._replicates, int):
-            assays = self._Reader.n()
+            assays = self._length
             groups, group_names = self._make_equal_groups(assays)            
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
@@ -765,9 +790,9 @@ class Assay(aux._ID):
         Checks if provided replicates will place all sample entries into a group
         returns True if all samples are covered, False if not...
         """
-        samples = self._Reader.n()
+        samples = self._length
         verdict = None
-        
+
         # for INT -> modulo will be 0 if all samples are covered
         # for TUPLE -> sum(replicates) should cover all samples...
 
@@ -834,6 +859,8 @@ class SampleReader(Assay):
             If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
             But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
             the `name_label` and `Ct_label` arguments that can be passed to `read()` as kwargs.
+        **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Reader`.
 
         Returns
         -------
@@ -905,6 +932,196 @@ class _Qupid_SampleReader(SampleReader):
 
         return self._Assay
 
+
+
+class MultiReader(Assay, Reader, aux._ID):
+    """
+    Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
+    
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+    **kwargs
+            Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
+    """
+    def __init__(self, filename : str = None, **kwargs):
+        super(aux._ID, self).__init__()
+        self._src = filename
+        self._save_loc = None
+        self._replicates = None
+        self._names = None
+        self._Parser = None
+        self._assays = {}
+        self._normalisers = {}
+        if self._src is not None: 
+            self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
+            self.read(filename = self._src, **kwargs)
+
+    def get(self, which : str):
+        """
+        Returns the stored assays or normalisers.
+
+        Parameters
+        ----------
+        which : str
+            Can be either `"assays"` or `"normalisers"`.
+
+        Returns
+        -------
+        data : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if `self.make_Assays` has not been run yet)
+            or a list of `qpcr.Assay` objects.
+        """
+        data = None
+        if which == "assays":
+            data = self._assays
+        elif which == "normalisers":
+            data = self._normalisers
+        return data
+
+    def read(self, filename : str, **kwargs):
+        """
+        Reads a multi-assay datafile with decorated assays. 
+        Any non-decorated assays are ignored!
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+        **kwargs
+                Any additional keyword arguments that should be passed to the `qpcr.Parser`'s `read` method that extracts the datasets.
+        """
+        self._src = filename
+
+        # check for a valid input file
+        if self._filesuffix() not in supported_filetypes:
+            aw.HardWarning("MultiReader:empty_data", file = self._src)
+
+        if self._Parser is None:
+            self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
+
+        # setup assay_patterns if they were provided
+        assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
+        self._Parser.assay_pattern(assay_pattern)
+
+        # setup a saving location if it was provided
+        if self.save_to() is not None: 
+            self._Parser.save_to(self.save_to())
+
+        self._Parser.read(self._src, **kwargs)
+
+    def parse(self, **kwargs):
+        """
+        Extracts the decorated datasets (assays) from the read datafile.
+        
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Parser`'s `parse` method that extracts the datasets.
+        """
+        # remove any decorator argument that the user may have tried to pass...  
+        aux.from_kwargs("decorator", None, kwargs, rm = True)
+
+        # get assays-of-interest
+        self._Parser.parse( decorator = "qpcr:assay", **kwargs )
+        assays = self._Parser.get()
+        self._assays = assays
+
+        # save extracted files if so desired...
+        if self.save_to() is not None: self._Parser.save()
+
+        # clear results and run again for normalisers
+        self._Parser.clear()
+
+        # get normaliser-assays
+        self._Parser.parse( decorator = "qpcr:normaliser", **kwargs )
+        normalisers = self._Parser.get()
+        self._normalisers = normalisers
+        if self.save_to() is not None: self._Parser.save()
+
+    def make_Assays(self):
+        """
+        Convert all found assays and normalisers into `qpcr.Assay` objects.
+        """
+        # convert assays to qpcr.Assay and overwrite current dict by new list
+        new_assays = []
+        for name, df in self._assays.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_assays.append(new_assay)
+        self._assays = new_assays
+
+        # do the same for normalisers
+        new_normalisers = []
+        for name, df in self._normalisers.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_normalisers.append(new_assay)
+        self._normalisers = new_normalisers
+
+    def save_to(self, location : str = None):
+        """
+        Sets the location into which the individual assay datafiles should be saved.
+        Parameters
+        ----------
+        location : str
+            The path to a directory where the newly generated assay datafiles shall be saved.
+            If this directory does not yet exist, it will be automatically made.
+        """
+        if location is not None: 
+            self._save_loc = location
+            if not os.path.exists(self._save_loc):
+                os.mkdir(self._save_loc)
+        return self._save_loc
+
+    
+    def names(self, names:(list or dict)):
+        """
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        """
+        self._names = names
+
+    def replicates(self, replicates : (int or tuple or str) = None):
+        """
+        Either sets or gets the replicates settings to be used for grouping
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple or str
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
+            any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+        """
+        if replicates is not None:
+            self._replicates = replicates
+        return self._replicates
+
+    def _make_new_Assay(self, name, df):
+        """
+        Makes a new Assay object and performs group() already...
+        """
+        new_assay = Assay()
+        new_assay.adopt(df)
+        new_assay.id(name)
+        new_assay.replicates(self._replicates)
+        new_assay.group()
+        if self._names is not None:
+            new_assay.rename(self._names)
+        return new_assay
 class Results(aux._ID):
     """
     Handles a pandas dataframe for the results from qpcr.Analyser.
