@@ -1800,9 +1800,17 @@ class Analyser(aux._ID):
         # get Ct column label
         Ct = raw_col_names[1]
         
+        # get first available entry
+        # we do this instead of just 0 
+        # because the truly first entry 
+        # might have been filtered out 
+        first = list(df.index)[0]
+
         df = self._Assay.get()
 
-        anchor = df[Ct][0]
+        # get anchor
+        anchor = df[Ct][ first ]
+
         df["dCt"] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df["dCt"])
 
