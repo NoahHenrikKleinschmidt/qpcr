@@ -31,13 +31,13 @@ That means that `qpcr` does not terminologically distinguish between multiplets 
 That's it for what "replicates" _are_. Now to how we deal with them. 
 
 Here's the best part: usually, we don't necessarily need to do anything as `qpcr.Assay` objects are able to infer the replicates of your data automatically from the replicate identifiers in your datafile (yeah!). You will be asked to manually provide replicate settings in case this fails. 
-In case you want to / have to manually specify replicate settings, the `qpcr.Assay` class has an attribute called `replicates` which where you can specify this information. 
+In case you want to / have to manually specify replicate settings, the `qpcr.Assay` class has an attribute called `replicates` which is where you can specify this information. 
 `replicates` can be either an `integer`, a `tuple`, or a `string`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets, but some assays might only be done in unicates (such as the diluent assay).
 In these cases your dataset does not have uniformly sized groups of replicates (see next paragraph for the term "group"). 
 Let's look at an example. Assume you did biological triplicates and technical duplicates. 
 Now you might choose to keep the triplicates separately or merge them together. To tell `qpcr` that you want to merge your biological and techincal replicates all together you would specify `replicates = 6` (2x3 = 6), otherwise you might specify `replicates = 2`. 
-You get the idea... If you now also had a diluent sample that is a unicate at the end of your dataset, then you have a problem as the program currently expects to find always three replicates together but you have only one.
-That's where the `tuple` or `string` input for `replicates` come in. With the `tuple` you can specify the number of replicates individually for each group such as `replicates = (6,6,6,6,1)`. 
+You get the idea... If you now also had a diluent sample that is a unicate at the end of your dataset, then you have a problem as the program currently expects to always find either 6 or 2 replicates belonging together but you have only one.
+That's where the `tuple` or `string` input for `replicates` come in. With the `tuple` you can specify the number of replicates individually for each group such as `replicates = (6,6,6,6,1)` if you had four separeate qPCR samples, all of which are hexaplicates. 
 If you have many groups of replicates then this would be a long tuple to make and a bit annoying. So you could also specify a string `formula` which is a "recipe" for the tuple such as `replicates = "6:4,1"`, which will generate the same tuple as specified above. 
 Check out the documentation of `qpcr.Assay.replicates` for more details here.
 
