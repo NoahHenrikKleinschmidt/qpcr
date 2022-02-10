@@ -15,7 +15,7 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 | ----- | ---- | ----------- | ----- |
 |    1.1   |      |     x       |       |
 |    1.2   |   x   |             |       |
-|    1.3   |      |             |       |
+|    1.3   |   dropped   |             |       |
 |    1.4   |      |             |       |
 
 
@@ -94,15 +94,16 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 - 7.3 add decorator support for multi-assay excel files
 - 7.4 make a new `qpcr.MultiReader` class to read multi-assay files
       this will probably be some kind of `SampleReader`-level class
-
+- 7.5 make a new `MultiAssay` pipeline
 
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
-|    7.1   |      |            |       |
-|    7.2   |      |            |       |
-|    7.3   |      |            |       |
-|    7.4  |      |            |       |
+|    7.1   |   x   |            |       |
+|    7.2   |   x   |            |       |
+|    7.3   |   x   |            |       |
+|    7.4  |   x   |            |       |
+|    7.5  |     |            |       |
 
 
 # New features of *some future* release
