@@ -6,7 +6,7 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>qpcr.Filters API documentation</title>
 <meta name="description" content="This submodule defines a number of filters that can be used to
-remove faulty reads prior to deltact analysis …" />
+remove faulty replicates from `qpcr.Assay`s before before passing them to an …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,29 +24,30 @@ remove faulty reads prior to deltact analysis …" />
 </header>
 <section id="section-intro">
 <p>This submodule defines a number of filters that can be used to
-remove faulty reads prior to deltact analysis. </p>
-<h2 id="filters-implemented-are-currently">Filters Implemented Are Currently</h2>
-<p>RangeFilter
-Filters out all raw Ct values that do not comply to a user-specified range (default is <code>+/-1</code> around replicate group median)
+remove faulty replicates from <code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code>s before before passing them to an <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code>.</p>
+<h2 id="available-filters">Available Filters</h2>
+<hr>
+<h3 id="rangefilter">RangeFilter</h3>
+<p>Filters out all raw Ct values that do not comply to a user-specified range (default is <code>+/-1</code> around replicate group median)
 The user has the option of specifying another anchor and limits for the inclusion range.</p>
-<p>IQRFilter
-Filters out any outliers by <code>n x IQR</code>, where <code>n</code> is a scaling factor (default <code>n = 1.5</code>) around the replicate group median (anchor).</p>
+<h3 id="iqrfilter">IQRFilter</h3>
+<p>Filters out any outliers by <code>n x IQR</code>, where <code>n</code> is a scaling factor (default <code>n = 1.5</code>) around the replicate group median (anchor).</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 This submodule defines a number of filters that can be used to 
-remove faulty reads prior to deltact analysis. 
+remove faulty replicates from `qpcr.Assay`s before before passing them to an `qpcr.Analyser`.
 
-Filters implemented are currently
----------------------------------
-RangeFilter 
-    Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
-    The user has the option of specifying another anchor and limits for the inclusion range.
+## Available Filters
+--------
+### RangeFilter 
+Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
+The user has the option of specifying another anchor and limits for the inclusion range.
 
-IQRFilter
-    Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
+### IQRFilter
+Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
 &#34;&#34;&#34;
 
 from re import L
@@ -68,6 +69,11 @@ class Filter(aux._ID):
         self._report_loc = None
         self._id = type(self).__name__
         
+        # by default we ignore groups with NaN anchors
+        # like this we avoid Errors and don&#39;t filter out 
+        # any unicate groups like the diluent sample...
+        self._ignore_nan = True
+
         self._boxplot_mode = &#34;interactive&#34;
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -87,6 +93,15 @@ class Filter(aux._ID):
             The filtering statistics dataframe (a summary of filtering parameters used)
         &#34;&#34;&#34;
         return self._filter_stats
+
+    def ignore_nan(self, bool):
+        &#34;&#34;&#34;
+        Set a policy for how to deal with groups that have a `NaN` anchor.
+        If set to `True` such groups will be ignored and filtering will proceed.
+        If set to `False` the Filter will raise an Error!
+        &#34;&#34;&#34;
+        self._ignore_nan = bool
+
 
     def plotmode(self, mode = &#34;interactive&#34;):
         &#34;&#34;&#34;
@@ -315,7 +330,6 @@ class RangeFilter(Filter):
     def _filter(self, **kwargs):
         &#34;&#34;&#34;
         Filters out any replicates that are out of range and updates the Assay&#39;s dataframe.
-        It stores the original in a new attribute called _orig_df.
         &#34;&#34;&#34;
     
         df = self._Assay.get()
@@ -324,13 +338,22 @@ class RangeFilter(Filter):
         faulty_indices = []
         for group in groups:
             tmp = df.query(f&#34;group == {group}&#34;)
+
+            # get anchor and check if its nan
             anchor = self._get_anchor(kwargs, group, tmp)
+            if self._ignore_nan and anchor != anchor: 
+                continue 
+
+            # generate inclusion range boundries
             upper, lower = self._set_bounds(anchor)
+
+            # get faulty indices
             faulty_replicates = tmp.query(f&#34;Ct &lt; {lower} or Ct &gt; {upper}&#34;)
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
-
+        
+        # remove faulty indices
         self._filter_out(faulty_indices)
 
         if self._report_loc is not None: 
@@ -374,7 +397,7 @@ class IQRFilter(Filter):
         self._upper = 1.5
         self._lower = 1.5
 
-    def _filter(self):
+    def _filter(self, **kwargs):
         &#34;&#34;&#34;
         Gets IQR for each group and finds outliers based on self._upper / lower
         &#34;&#34;&#34;
@@ -386,10 +409,17 @@ class IQRFilter(Filter):
         for group in groups:
             tmp = df.query(f&#34;group == {group}&#34;)
 
+            # get anchor
             anchor = np.nanmedian(tmp[&#34;Ct&#34;])
+            # ignore Nan if so specified
+            if self._ignore_nan and anchor != anchor: 
+                continue
+
+            # generate inclusion range boundries
             first, third = np.nanquantile(tmp[&#34;Ct&#34;], 0.26), np.nanquantile(tmp[&#34;Ct&#34;], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
+            # get faulty replicates
             faulty_replicates = tmp.query(f&#34;Ct &lt; {lower} or Ct &gt; {upper}&#34;)
             faulty_indices.extend(list(faulty_replicates.index))
 
@@ -450,7 +480,7 @@ if __name__ == &#34;__main__&#34;:
 
     normaliser = qpcr.Normaliser()
     normaliser.link(normalisers = analysers[:2])
-    normaliser.link(samples = analysers[2:])
+    normaliser.link(assays = analysers[2:])
 
     normaliser.normalise()
     
@@ -491,7 +521,7 @@ if __name__ == &#34;__main__&#34;:
 
     second_normaliser = qpcr.Normaliser()
     second_normaliser.link(normalisers = [prot])
-    second_normaliser.link(samples = [nmd, prot])
+    second_normaliser.link(assays = [nmd, prot])
 
     second_normaliser.normalise()
     
@@ -545,6 +575,11 @@ if __name__ == &#34;__main__&#34;:
         self._report_loc = None
         self._id = type(self).__name__
         
+        # by default we ignore groups with NaN anchors
+        # like this we avoid Errors and don&#39;t filter out 
+        # any unicate groups like the diluent sample...
+        self._ignore_nan = True
+
         self._boxplot_mode = &#34;interactive&#34;
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -564,6 +599,15 @@ if __name__ == &#34;__main__&#34;:
             The filtering statistics dataframe (a summary of filtering parameters used)
         &#34;&#34;&#34;
         return self._filter_stats
+
+    def ignore_nan(self, bool):
+        &#34;&#34;&#34;
+        Set a policy for how to deal with groups that have a `NaN` anchor.
+        If set to `True` such groups will be ignored and filtering will proceed.
+        If set to `False` the Filter will raise an Error!
+        &#34;&#34;&#34;
+        self._ignore_nan = bool
+
 
     def plotmode(self, mode = &#34;interactive&#34;):
         &#34;&#34;&#34;
@@ -835,6 +879,26 @@ The filtering statistics dataframe (a summary of filtering parameters used)</p><
     return self._filter_stats</code></pre>
 </details>
 </dd>
+<dt id="qpcr.Filters.Filter.ignore_nan"><code class="name flex">
+<span>def <span class="ident">ignore_nan</span></span>(<span>self, bool)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set a policy for how to deal with groups that have a <code>NaN</code> anchor.
+If set to <code>True</code> such groups will be ignored and filtering will proceed.
+If set to <code>False</code> the Filter will raise an Error!</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ignore_nan(self, bool):
+    &#34;&#34;&#34;
+    Set a policy for how to deal with groups that have a `NaN` anchor.
+    If set to `True` such groups will be ignored and filtering will proceed.
+    If set to `False` the Filter will raise an Error!
+    &#34;&#34;&#34;
+    self._ignore_nan = bool</code></pre>
+</details>
+</dd>
 <dt id="qpcr.Filters.Filter.link"><code class="name flex">
 <span>def <span class="ident">link</span></span>(<span>self, Assay: qpcr.__init__.Assay)</span>
 </code></dt>
@@ -1096,7 +1160,7 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
         self._upper = 1.5
         self._lower = 1.5
 
-    def _filter(self):
+    def _filter(self, **kwargs):
         &#34;&#34;&#34;
         Gets IQR for each group and finds outliers based on self._upper / lower
         &#34;&#34;&#34;
@@ -1108,10 +1172,17 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
         for group in groups:
             tmp = df.query(f&#34;group == {group}&#34;)
 
+            # get anchor
             anchor = np.nanmedian(tmp[&#34;Ct&#34;])
+            # ignore Nan if so specified
+            if self._ignore_nan and anchor != anchor: 
+                continue
+
+            # generate inclusion range boundries
             first, third = np.nanquantile(tmp[&#34;Ct&#34;], 0.26), np.nanquantile(tmp[&#34;Ct&#34;], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
+            # get faulty replicates
             faulty_replicates = tmp.query(f&#34;Ct &lt; {lower} or Ct &gt; {upper}&#34;)
             faulty_indices.extend(list(faulty_replicates.index))
 
@@ -1147,6 +1218,7 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
 <ul class="hlist">
 <li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>
@@ -1198,7 +1270,6 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
     def _filter(self, **kwargs):
         &#34;&#34;&#34;
         Filters out any replicates that are out of range and updates the Assay&#39;s dataframe.
-        It stores the original in a new attribute called _orig_df.
         &#34;&#34;&#34;
     
         df = self._Assay.get()
@@ -1207,13 +1278,22 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
         faulty_indices = []
         for group in groups:
             tmp = df.query(f&#34;group == {group}&#34;)
+
+            # get anchor and check if its nan
             anchor = self._get_anchor(kwargs, group, tmp)
+            if self._ignore_nan and anchor != anchor: 
+                continue 
+
+            # generate inclusion range boundries
             upper, lower = self._set_bounds(anchor)
+
+            # get faulty indices
             faulty_replicates = tmp.query(f&#34;Ct &lt; {lower} or Ct &gt; {upper}&#34;)
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
-
+        
+        # remove faulty indices
         self._filter_out(faulty_indices)
 
         if self._report_loc is not None: 
@@ -1294,6 +1374,7 @@ which must return a single numeric value for the anchor (it will be applied to r
 <ul class="hlist">
 <li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>
@@ -1315,7 +1396,11 @@ which must return a single numeric value for the anchor (it will be applied to r
 <h1>Index</h1>
 <div class="toc">
 <ul>
-<li><a href="#filters-implemented-are-currently">Filters implemented are currently</a></li>
+<li><a href="#available-filters">Available Filters</a><ul>
+<li><a href="#rangefilter">RangeFilter</a></li>
+<li><a href="#iqrfilter">IQRFilter</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <ul id="index">
@@ -1331,6 +1416,7 @@ which must return a single numeric value for the anchor (it will be applied to r
 <ul class="two-column">
 <li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
 <li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>

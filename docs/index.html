@@ -125,6 +125,9 @@ However, these classes usually still have a <code>link()</code> method somewhere
 <h2 id="working-with-irregular-or-multi-assay-files">Working with "irregular" or "multi-assay" files</h2>
 <hr>
 <p>Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> which explains in more detail how to work with irregular and multi-assay datafiles.</p>
+<h2 id="getting-started">Getting started</h2>
+<hr>
+<p>You can find useful tutorials and applied examples as <code>jupyter notebooks</code> <a href="https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples">on GitHub</a>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -251,6 +254,10 @@ However, these classes usually still have a `link()` method somewhere that you c
 ---
 Check out the documentation of the `qpcr.Parsers` which explains in more detail how to work with irregular and multi-assay datafiles.
 
+## Getting started
+----
+You can find useful tutorials and applied examples as `jupyter notebooks` [on GitHub](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples).
+
 &#34;&#34;&#34;
 
 import pandas as pd
@@ -271,6 +278,7 @@ __pdoc__ = {
 raw_col_names = [&#34;id&#34;, &#34;Ct&#34;]
 
 supported_filetypes = [&#34;csv&#34;, &#34;xlsx&#34;]
+
 class _CORE_Reader(aux._ID):
     &#34;&#34;&#34;
     The class handling the core functions of the Reader class. 
@@ -473,7 +481,8 @@ class _CORE_Reader(aux._ID):
             aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
 
         # check if a valid Ct column was found
-        full_valid_Ct_col = len(  df[ df[&#34;Ct&#34;] == df[&#34;Ct&#34;] ]  ) == len(df)
+        Ct = raw_col_names[1]
+        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
         if not full_valid_Ct_col:
             aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
 
@@ -1572,7 +1581,10 @@ class Results(aux._ID):
         &#34;&#34;&#34;
         Removes unnnecessary columns from the df during self._df setup with link()
         &#34;&#34;&#34;
-        self.drop_cols(&#34;Ct&#34;)
+        # drop the Ct column
+        self.drop_cols(
+                        raw_col_names[1]
+                    )
 
 
     def _add_stats_names(self, samples):
@@ -1637,6 +1649,9 @@ class Analyser(aux._ID):
 
         # default settings
         self._anchor = &#34;first&#34;
+        self._ref_group = 0
+        self._ref_group_col = &#34;group&#34; # used in case of &#34;mean&#34; anchor where the ref_group must be located either from a numeric (group) or string (group_name) id
+        
         self._efficiency = 2
         self._deltaCt_function = self._get_deltaCt_function(exp = True)
 
@@ -1741,22 +1756,45 @@ class Analyser(aux._ID):
         elif e is None: 
             return self._efficiency
 
-    def anchor(self, anchor):
+    def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
         &#34;&#34;&#34;
         Sets the anchor for DeltaCt for internal normalisation.
 
         Parameters
         ----------
-        anchor : str or float
+        anchor : str or float or function
             The internal anchor for normalisation.
             This can be either `&#34;first&#34;` (default, the very first dataset entry),
+            `&#34;mean&#34;` (mean of the reference group), 
             `&#34;grouped&#34;` (first entry for each replicate group), 
             any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
             If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
             `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
             `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+        group : int or str
+            The reference group identifier. This can be either the numeric identifier or the `group_name`. This is only used for `anchor = &#34;mean&#34;`. 
+            By default the first group is assumed. 
+        
+        Returns
+        -------
+        anchor 
+            The currently selected `anchor`.
+        ref_group
+            The current reference group.
         &#34;&#34;&#34;
-        self._anchor = anchor
+        if anchor is not None:
+            self._anchor = anchor
+        if group != self._ref_group:
+            self._ref_group = group
+        
+        # update column where to search for ref_group identifier
+        if isinstance(group, str):
+            self._ref_group_col = &#34;group_name&#34;
+        else: 
+            self._ref_group_col = &#34;group&#34;
+        
+        return self._anchor, self._ref_group
+
 
     def func(self, f:(str or function)):
         &#34;&#34;&#34;
@@ -1791,13 +1829,32 @@ class Analyser(aux._ID):
             Any additional keyword arguments that a custom DeltaCt function may require.
         &#34;&#34;&#34;
         if self._anchor == &#34;first&#34;:
-            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_first_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif self._anchor == &#34;grouped&#34;:
-            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_grouped_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
+        elif self._anchor == &#34;mean&#34;:
+            self._DeltaCt_mean_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif isinstance(self._anchor, (float, int)): 
-            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_externally_anchored(
+                                                self._anchor, 
+                                                self._deltaCt_function, 
+                                                **kwargs
+                                            )
         elif type(self._anchor) == type(aux.fileID):
-            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_function_anchor(
+                                            self._anchor, 
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
 
     def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
         &#34;&#34;&#34;
@@ -1812,14 +1869,36 @@ class Analyser(aux._ID):
         df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
+    def _DeltaCt_mean_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the mean of the reference group as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+
+        # get  reference group
+        ref_query = &#34;{} == {}&#34; if isinstance(self._ref_group, int) else &#34;{} == &#39;{}&#39;&#34; 
+        ref = df.query(
+                        ref_query.format(  self._ref_group_col, self._ref_group  )
+                    )
+        # get Ct values from ref group and make anchor
+        ref = ref[raw_col_names[1]]
+        anchor = ref.mean()
+        
+        # apply DeltaCt function
+        Ct = raw_col_names[1]
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
         &#34;&#34;&#34;
         Performs DeltaCt using a specified anchor
         &#34;&#34;&#34;
+        # get Ct column label 
+        Ct = raw_col_names[1]
         df = self._Assay.get()
-        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
 
@@ -1831,11 +1910,14 @@ class Analyser(aux._ID):
         groups = self._Assay.groups()
         df = self._Assay.get()
 
+        # get Ct column label
+        Ct = raw_col_names[1]
+
         dCt = pd.Series()
         for group in groups: 
             group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
-            anchor = group_subset[&#34;Ct&#34;][0]
-            delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+            anchor = group_subset[Ct][0]
+            delta_cts = group_subset[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
             dCt = dCt.append(delta_cts).reset_index(drop = True)
         dCt.name = &#34;dCt&#34;
         self._Results.add(dCt)
@@ -1844,9 +1926,13 @@ class Analyser(aux._ID):
         &#34;&#34;&#34;
         Performs DeltaCt using the very first entry of the dataset as anchor
         &#34;&#34;&#34;
+        # get Ct column label
+        Ct = raw_col_names[1]
+        
         df = self._Assay.get()
-        anchor = df[&#34;Ct&#34;][0]
-        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+
+        anchor = df[Ct][0]
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
     def _exp_DCt(self, sample, ref, **kwargs):
@@ -2031,11 +2117,11 @@ class Normaliser(aux._ID):
         &#34;&#34;&#34;
         if assays is not None:
             for sample in assays: 
-                if isinstance(sample, Results):
+                if aux.same_type(sample, Results()):
                     self._Assay.append(sample)
-                elif isinstance(sample, Analyser) and sample.has_results():
+                elif aux.same_type(sample, Analyser()) and sample.has_results():
                     self._Assay.append(sample.get())
-                elif isinstance(sample, Analyser) and not sample.has_results():
+                elif aux.same_type(sample, Analyser()) and not sample.has_results():
                     aw.SoftWarning(&#34;Normaliser:empty_data&#34;, s = sample)
                 else: 
                     aw.SoftWarning(&#34;Normaliser:unknown_data&#34;, s = sample)
@@ -2046,9 +2132,9 @@ class Normaliser(aux._ID):
         &#34;&#34;&#34;
         if normalisers is not None:
             for normaliser in normalisers:
-                if isinstance(normaliser, Results):
+                if aux.same_type(normaliser, Results()):
                     self._Normalisers.append(normaliser)
-                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                elif aux.same_type(normaliser, Analyser()) and normaliser.has_results():
                     self._Normalisers.append(normaliser.get())
                 else: 
                     aw.SoftWarning(&#34;Normaliser:norm_unknown_data&#34;, s = normaliser)
@@ -2120,7 +2206,8 @@ if __name__ == &#34;__main__&#34;:
         df = data.query(&#34;group == 0&#34;)[&#34;Ct&#34;].reset_index(drop=True)
         return df.mean()
 
-    analyser.anchor(myanchor)
+    # analyser.anchor(myanchor)
+    analyser.anchor(&#34;mean&#34;)
 
     for file in files: 
 
@@ -2188,7 +2275,7 @@ if __name__ == &#34;__main__&#34;:
 <dt><code class="name"><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></dt>
 <dd>
 <div class="desc"><p>This submodule defines a number of filters that can be used to
-remove faulty reads prior to deltact analysis …</p></div>
+remove faulty replicates from <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code>s before before passing them to an …</p></div>
 </dd>
 <dt><code class="name"><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code></dt>
 <dd>
@@ -2253,6 +2340,9 @@ Note</p>
 
         # default settings
         self._anchor = &#34;first&#34;
+        self._ref_group = 0
+        self._ref_group_col = &#34;group&#34; # used in case of &#34;mean&#34; anchor where the ref_group must be located either from a numeric (group) or string (group_name) id
+        
         self._efficiency = 2
         self._deltaCt_function = self._get_deltaCt_function(exp = True)
 
@@ -2357,22 +2447,45 @@ Note</p>
         elif e is None: 
             return self._efficiency
 
-    def anchor(self, anchor):
+    def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
         &#34;&#34;&#34;
         Sets the anchor for DeltaCt for internal normalisation.
 
         Parameters
         ----------
-        anchor : str or float
+        anchor : str or float or function
             The internal anchor for normalisation.
             This can be either `&#34;first&#34;` (default, the very first dataset entry),
+            `&#34;mean&#34;` (mean of the reference group), 
             `&#34;grouped&#34;` (first entry for each replicate group), 
             any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
             If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
             `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
             `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+        group : int or str
+            The reference group identifier. This can be either the numeric identifier or the `group_name`. This is only used for `anchor = &#34;mean&#34;`. 
+            By default the first group is assumed. 
+        
+        Returns
+        -------
+        anchor 
+            The currently selected `anchor`.
+        ref_group
+            The current reference group.
         &#34;&#34;&#34;
-        self._anchor = anchor
+        if anchor is not None:
+            self._anchor = anchor
+        if group != self._ref_group:
+            self._ref_group = group
+        
+        # update column where to search for ref_group identifier
+        if isinstance(group, str):
+            self._ref_group_col = &#34;group_name&#34;
+        else: 
+            self._ref_group_col = &#34;group&#34;
+        
+        return self._anchor, self._ref_group
+
 
     def func(self, f:(str or function)):
         &#34;&#34;&#34;
@@ -2407,13 +2520,32 @@ Note</p>
             Any additional keyword arguments that a custom DeltaCt function may require.
         &#34;&#34;&#34;
         if self._anchor == &#34;first&#34;:
-            self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_first_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif self._anchor == &#34;grouped&#34;:
-            self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+            self._DeltaCt_grouped_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
+        elif self._anchor == &#34;mean&#34;:
+            self._DeltaCt_mean_anchored(
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                    )
         elif isinstance(self._anchor, (float, int)): 
-            self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_externally_anchored(
+                                                self._anchor, 
+                                                self._deltaCt_function, 
+                                                **kwargs
+                                            )
         elif type(self._anchor) == type(aux.fileID):
-            self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)
+            self._DeltaCt_function_anchor(
+                                            self._anchor, 
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
 
     def _DeltaCt_function_anchor(self, anchor_function, deltaCt_function, **kwargs):
         &#34;&#34;&#34;
@@ -2428,14 +2560,36 @@ Note</p>
         df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
+    def _DeltaCt_mean_anchored(self, deltaCt_function, **kwargs):
+        &#34;&#34;&#34;
+        Performs DeltaCt using the mean of the reference group as anchor
+        &#34;&#34;&#34;
+        df = self._Assay.get()
+
+        # get  reference group
+        ref_query = &#34;{} == {}&#34; if isinstance(self._ref_group, int) else &#34;{} == &#39;{}&#39;&#34; 
+        ref = df.query(
+                        ref_query.format(  self._ref_group_col, self._ref_group  )
+                    )
+        # get Ct values from ref group and make anchor
+        ref = ref[raw_col_names[1]]
+        anchor = ref.mean()
+        
+        # apply DeltaCt function
+        Ct = raw_col_names[1]
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        self._Results.add(df[&#34;dCt&#34;])
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
         &#34;&#34;&#34;
         Performs DeltaCt using a specified anchor
         &#34;&#34;&#34;
+        # get Ct column label 
+        Ct = raw_col_names[1]
         df = self._Assay.get()
-        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref = anchor, **kwargs)
+
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
 
@@ -2447,11 +2601,14 @@ Note</p>
         groups = self._Assay.groups()
         df = self._Assay.get()
 
+        # get Ct column label
+        Ct = raw_col_names[1]
+
         dCt = pd.Series()
         for group in groups: 
             group_subset = df.query(f&#34;group == {group}&#34;).reset_index(drop = True)
-            anchor = group_subset[&#34;Ct&#34;][0]
-            delta_cts = group_subset[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+            anchor = group_subset[Ct][0]
+            delta_cts = group_subset[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
             dCt = dCt.append(delta_cts).reset_index(drop = True)
         dCt.name = &#34;dCt&#34;
         self._Results.add(dCt)
@@ -2460,9 +2617,13 @@ Note</p>
         &#34;&#34;&#34;
         Performs DeltaCt using the very first entry of the dataset as anchor
         &#34;&#34;&#34;
+        # get Ct column label
+        Ct = raw_col_names[1]
+        
         df = self._Assay.get()
-        anchor = df[&#34;Ct&#34;][0]
-        df[&#34;dCt&#34;] = df[&#34;Ct&#34;].apply(deltaCt_function, ref=anchor, **kwargs)
+
+        anchor = df[Ct][0]
+        df[&#34;dCt&#34;] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
         self._Results.add(df[&#34;dCt&#34;])
 
     def _exp_DCt(self, sample, ref, **kwargs):
@@ -2523,51 +2684,103 @@ set using the respective methods prior to calling <code>DeltaCt()</code>!</p>
         Any additional keyword arguments that a custom DeltaCt function may require.
     &#34;&#34;&#34;
     if self._anchor == &#34;first&#34;:
-        self._DeltaCt_first_anchored(self._deltaCt_function, **kwargs)
+        self._DeltaCt_first_anchored(
+                                        self._deltaCt_function, 
+                                        **kwargs
+                                )
     elif self._anchor == &#34;grouped&#34;:
-        self._DeltaCt_grouped_anchored(self._deltaCt_function, **kwargs)
+        self._DeltaCt_grouped_anchored(
+                                        self._deltaCt_function, 
+                                        **kwargs
+                                    )
+    elif self._anchor == &#34;mean&#34;:
+        self._DeltaCt_mean_anchored(
+                                        self._deltaCt_function, 
+                                        **kwargs
+                                )
     elif isinstance(self._anchor, (float, int)): 
-        self._DeltaCt_externally_anchored(self._anchor, self._deltaCt_function, **kwargs)
+        self._DeltaCt_externally_anchored(
+                                            self._anchor, 
+                                            self._deltaCt_function, 
+                                            **kwargs
+                                        )
     elif type(self._anchor) == type(aux.fileID):
-        self._DeltaCt_function_anchor(self._anchor, self._deltaCt_function, **kwargs)</code></pre>
+        self._DeltaCt_function_anchor(
+                                        self._anchor, 
+                                        self._deltaCt_function, 
+                                        **kwargs
+                                    )</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Analyser.anchor"><code class="name flex">
-<span>def <span class="ident">anchor</span></span>(<span>self, anchor)</span>
+<span>def <span class="ident">anchor</span></span>(<span>self, anchor: str = None, group: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Sets the anchor for DeltaCt for internal normalisation.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>anchor</code></strong> :&ensp;<code>str</code> or <code>float</code></dt>
+<dt><strong><code>anchor</code></strong> :&ensp;<code>str</code> or <code>float</code> or <code>function</code></dt>
 <dd>The internal anchor for normalisation.
 This can be either <code>"first"</code> (default, the very first dataset entry),
+<code>"mean"</code> (mean of the reference group),
 <code>"grouped"</code> (first entry for each replicate group),
 any specified numeric value (as <code>float</code>), or a <code>function</code> that will calculate the anchor and returns a single numeric value.
 If you wish to use a function to compute the anchor, you can access the dataframe stored by the <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> that is being analysed through the
 <code>data</code> argument. <code>data</code> will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
 <code>**kwargs</code> because any kwargs supplied during <code>DeltaCt()</code>-calling will be passed per default to both the anchor-function and DeltaCt-function.</dd>
+<dt><strong><code>group</code></strong> :&ensp;<code>int</code> or <code>str</code></dt>
+<dd>The reference group identifier. This can be either the numeric identifier or the <code>group_name</code>. This is only used for <code>anchor = "mean"</code>.
+By default the first group is assumed.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>anchor </code></dt>
+<dd>The currently selected <code>anchor</code>.</dd>
+<dt><code>ref_group</code></dt>
+<dd>The current reference group.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def anchor(self, anchor):
+<pre><code class="python">def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
     &#34;&#34;&#34;
     Sets the anchor for DeltaCt for internal normalisation.
 
     Parameters
     ----------
-    anchor : str or float
+    anchor : str or float or function
         The internal anchor for normalisation.
         This can be either `&#34;first&#34;` (default, the very first dataset entry),
+        `&#34;mean&#34;` (mean of the reference group), 
         `&#34;grouped&#34;` (first entry for each replicate group), 
         any specified numeric value (as `float`), or a `function` that will calculate the anchor and returns a single numeric value. 
         If you wish to use a function to compute the anchor, you can access the dataframe stored by the `qpcr.Assay` that is being analysed through the 
         `data` argument. `data` will be automatically forwarded to your custom anchor-function, unless you specify it directly. Please, make sure your function can handle
         `**kwargs` because any kwargs supplied during `DeltaCt()`-calling will be passed per default to both the anchor-function and DeltaCt-function. 
+    group : int or str
+        The reference group identifier. This can be either the numeric identifier or the `group_name`. This is only used for `anchor = &#34;mean&#34;`. 
+        By default the first group is assumed. 
+    
+    Returns
+    -------
+    anchor 
+        The currently selected `anchor`.
+    ref_group
+        The current reference group.
     &#34;&#34;&#34;
-    self._anchor = anchor</code></pre>
+    if anchor is not None:
+        self._anchor = anchor
+    if group != self._ref_group:
+        self._ref_group = group
+    
+    # update column where to search for ref_group identifier
+    if isinstance(group, str):
+        self._ref_group_col = &#34;group_name&#34;
+    else: 
+        self._ref_group_col = &#34;group&#34;
+    
+    return self._anchor, self._ref_group</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Analyser.efficiency"><code class="name flex">
@@ -4280,11 +4493,11 @@ This requires that all have been analysed in the same way before!</p></div>
         &#34;&#34;&#34;
         if assays is not None:
             for sample in assays: 
-                if isinstance(sample, Results):
+                if aux.same_type(sample, Results()):
                     self._Assay.append(sample)
-                elif isinstance(sample, Analyser) and sample.has_results():
+                elif aux.same_type(sample, Analyser()) and sample.has_results():
                     self._Assay.append(sample.get())
-                elif isinstance(sample, Analyser) and not sample.has_results():
+                elif aux.same_type(sample, Analyser()) and not sample.has_results():
                     aw.SoftWarning(&#34;Normaliser:empty_data&#34;, s = sample)
                 else: 
                     aw.SoftWarning(&#34;Normaliser:unknown_data&#34;, s = sample)
@@ -4295,9 +4508,9 @@ This requires that all have been analysed in the same way before!</p></div>
         &#34;&#34;&#34;
         if normalisers is not None:
             for normaliser in normalisers:
-                if isinstance(normaliser, Results):
+                if aux.same_type(normaliser, Results()):
                     self._Normalisers.append(normaliser)
-                elif isinstance(normaliser, Analyser) and normaliser.has_results():
+                elif aux.same_type(normaliser, Analyser()) and normaliser.has_results():
                     self._Normalisers.append(normaliser.get())
                 else: 
                     aw.SoftWarning(&#34;Normaliser:norm_unknown_data&#34;, s = normaliser)
@@ -4908,7 +5121,10 @@ the <code>name_label</code> and <code>Ct_label</code> arguments that can be pass
         &#34;&#34;&#34;
         Removes unnnecessary columns from the df during self._df setup with link()
         &#34;&#34;&#34;
-        self.drop_cols(&#34;Ct&#34;)
+        # drop the Ct column
+        self.drop_cols(
+                        raw_col_names[1]
+                    )
 
 
     def _add_stats_names(self, samples):
@@ -5871,7 +6087,8 @@ inherit from this.</p></div>
             aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
 
         # check if a valid Ct column was found
-        full_valid_Ct_col = len(  df[ df[&#34;Ct&#34;] == df[&#34;Ct&#34;] ]  ) == len(df)
+        Ct = raw_col_names[1]
+        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
         if not full_valid_Ct_col:
             aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
 
@@ -6040,6 +6257,7 @@ specify <code>name_label</code> and <code>Ct_label</code> as additional argument
 </ul>
 </li>
 <li><a href="#working-with-irregular-or-multi-assay-files">Working with "irregular" or "multi-assay" files</a></li>
+<li><a href="#getting-started">Getting started</a></li>
 </ul>
 </div>
 <ul id="index">

@@ -559,28 +559,31 @@ class MultiAssay(Blueprint):
     
     def link(self, filename : str, **kwargs):
         &#34;&#34;&#34;
-        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+        Reads a datafile in csv or excel format containing 
+        multiple decorated datasets and extracts sample and normalisers assays. 
 
         Parameters
         ----------
         filename : str
             A filepath to a raw data file.
         **kwargs
-            Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+            Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`&#39;s `pipe` method.
         &#34;&#34;&#34;
         self._src = filename
-        reader = qpcr.MultiReader()
+
+        # setup Reader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        reader = self.Reader()
+
+        # read the multi-assay datafile
         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
-    # add_assays is disabled
-    def add_assays(self):
-        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
-
+        
     def _run(self, **kwargs):
         &#34;&#34;&#34;
         The main workflow
         &#34;&#34;&#34;
-        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        # setup Reader, Analyser, and Normaliser (if none were provided)
         self._setup_cores()
         
         analyser = self.Analyser()
@@ -634,6 +637,26 @@ class MultiAssay(Blueprint):
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
                 plotter.save(filename)
+
+    def _setup_cores(self):
+        &#34;&#34;&#34;
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        &#34;&#34;&#34;
+        if self.Reader() is None: 
+            self.Reader(qpcr.MultiReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
+
+    # add_assays is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
+
+    # add_normalisers is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
 
 
 
@@ -1333,28 +1356,31 @@ Check out the documentation of <code><a title="qpcr.Parsers" href="Parsers.html"
     
     def link(self, filename : str, **kwargs):
         &#34;&#34;&#34;
-        Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+        Reads a datafile in csv or excel format containing 
+        multiple decorated datasets and extracts sample and normalisers assays. 
 
         Parameters
         ----------
         filename : str
             A filepath to a raw data file.
         **kwargs
-            Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+            Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`&#39;s `pipe` method.
         &#34;&#34;&#34;
         self._src = filename
-        reader = qpcr.MultiReader()
+
+        # setup Reader, Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        reader = self.Reader()
+
+        # read the multi-assay datafile
         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
-    # add_assays is disabled
-    def add_assays(self):
-        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
-
+        
     def _run(self, **kwargs):
         &#34;&#34;&#34;
         The main workflow
         &#34;&#34;&#34;
-        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        # setup Reader, Analyser, and Normaliser (if none were provided)
         self._setup_cores()
         
         analyser = self.Analyser()
@@ -1407,7 +1433,27 @@ Check out the documentation of <code><a title="qpcr.Parsers" href="Parsers.html"
 
             if self._save_to is not None:
                 filename = self._make_figure_filename(plotter)
-                plotter.save(filename)</code></pre>
+                plotter.save(filename)
+
+    def _setup_cores(self):
+        &#34;&#34;&#34;
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        &#34;&#34;&#34;
+        if self.Reader() is None: 
+            self.Reader(qpcr.MultiReader())
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
+
+
+    # add_assays is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)
+
+    # add_normalisers is disabled
+    def add_assays(self):
+        print(&#34;To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1425,13 +1471,14 @@ Check out the documentation of <code><a title="qpcr.Parsers" href="Parsers.html"
 <span>def <span class="ident">link</span></span>(<span>self, filename: str, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. </p>
+<div class="desc"><p>Reads a datafile in csv or excel format containing
+multiple decorated datasets and extracts sample and normalisers assays. </p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
 <dd>A filepath to a raw data file.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Any additional keyword arguments to be passed to <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>'s <code>pipe</code> method.</dd>
+<dd>Any additional keyword arguments that shall be passed to the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>'s <code>pipe</code> method.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1439,17 +1486,23 @@ Check out the documentation of <code><a title="qpcr.Parsers" href="Parsers.html"
 </summary>
 <pre><code class="python">def link(self, filename : str, **kwargs):
     &#34;&#34;&#34;
-    Links a datafile in csv or excel format containing multiple decorated datasets to the pipeline. 
+    Reads a datafile in csv or excel format containing 
+    multiple decorated datasets and extracts sample and normalisers assays. 
 
     Parameters
     ----------
     filename : str
         A filepath to a raw data file.
     **kwargs
-        Any additional keyword arguments to be passed to `qpcr.MultiReader`&#39;s `pipe` method.
+        Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`&#39;s `pipe` method.
     &#34;&#34;&#34;
     self._src = filename
-    reader = qpcr.MultiReader()
+
+    # setup Reader, Analyser, and Normaliser (if none were provided)
+    self._setup_cores()
+    reader = self.Reader()
+
+    # read the multi-assay datafile
     self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)</code></pre>
 </details>
 </dd>
