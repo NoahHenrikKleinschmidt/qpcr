@@ -10,14 +10,12 @@ New planned features for this next release are:
 - 2.4 add `group` argument to to .anchor() to specify which group is supposed to be anchor...
 
 
-
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    2.1   |  x    |            |       |
 |    2.2   |   x   |             |       |
-|    2.3   |      |             |       |
-|    2.4   |      |             |       |
-
+|    2.3   |    x  |             |       |
+|    2.4   |    x  |             |       |
 
 ### 3. Blueprint pipeline
 We added a new pipeline `Blueprint` which allows customization of Analyser, Normaliser, and SampleReader
@@ -94,6 +92,15 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 |    7.3   |   x   |            |       |
 |    7.4  |   x   |            |       |
 |    7.5  |  x   |            |       |
+
+
+### 9. Filter nan policy
+Filters now by default ignore groups that have a nan median, since otherwise they would raise an Error...
+
+- 9.1 allow `ignore_nan` for Filters
+| Point | Done | In progress | Stuck |
+| ----- | ---- | ----------- | ----- |
+|    9.1   |   x   |            |       |
 
 
 # New features of *some future* release
