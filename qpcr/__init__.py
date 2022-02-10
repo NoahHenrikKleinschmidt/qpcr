@@ -14,9 +14,11 @@ However, we do not strictly assume that these files correspond to qPCR assays pe
 datafiles that contain Ct values of _one single qPCR assay_. However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
 However, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
 
-#### An `qpcr.Assay`
+#### An `qpcr.Assay` and a "dataset"
 The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
-if this does not match your setup then this class will still handle the data of your datafiles.
+if this does not match your setup then this class will still handle the data of your datafiles. So, this is obviously the same as a "dataset", right? Correct. 
+A "dataset" is a set of replicate identifiers and their Ct values, period. 
+You will find the term "dataset" here and there in the documentation and this is all there is to it, it is a more formally correct way to talk about your "qPCR assays" which are probably (but not necessarily) what your input datafiles are all about. 
 
 #### Replicates
 As far as the `qpcr` module is concerned, each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
@@ -73,12 +75,18 @@ So, again, the `anchor` is the dataset-internal reference value used for the fir
 #### "assays" vs "normalisers"
 You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the `qpcr.Normaliser`. 
 For all intents and purposes, these terms simply refer to datasets stored as `qpcr.Assay` or `qpcr.Results` objects (ultimately they refer to your datafiles). 
-"Assays" are the short notation for assays-of-interest. 
-"Normalisers" on the other hand are your normaliser-assays (from housekeeping genes like ActinB for instance). 
+So, an "assay" is simply one of your datasets.
+In case of the `qpcr.Normaliser` and the pipelines from `qpcr.Pipes` "assays" are the short notation for specifically assays-of-interest (or more formally "datasets-of-interest"), while 
+"normalisers" refer to your normaliser-assays (from housekeeping genes like ActinB for instance). 
+But again, if your datafiles do not conform to standard data arrangements, do not be distracted from the terminology here.
 You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode). 
 In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
-In fact, the entries within the "assay" column of the final results are a combined ID of all the assays (-of-interest AND -normaliser) that were involved in computing the results (check out what the final tables look like and it'll be immediately clear).
-Please, do not confuse these with the `qpcr.Assay` or `qpcr.Normaliser` classes (these are always referenced in singular never in plural and are technical terms while the others are conceptual terms)!
+In fact, this is a new "hybrid" assay identifier taht includes the names of all the normaliser-assays used during computation (check out what the final tables look like and it'll be immediately clear).
+It should be mentioned here that from a legacy version of the code the term "samples" is sometimes used interchangeably with the term "assays-of-interest". 
+This was overhauled and should have been replaced uniformly with "assay" but in case you still find a "samples" or "sample" term somewhere, it is to be understood as 
+"assay-of-interest".
+
+
 
 The most crucial terms have now been discussed. There are some more important terms that are discussed below, but they should not pose problems if you refer to the API documentation.
 
