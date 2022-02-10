@@ -63,6 +63,28 @@ class _CORE_Parser:
         # a folder into which the new assay-split datafiles should be stored
         self._save_loc = None
 
+    def prune(self):
+        """
+        Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
+        """
+        self.__init__()
+
+    def clear(self):
+        """
+        Clears all datasets that were extracted.
+        """
+        self._dfs = {}
+
+        self._assay_indices = None                  # indices of the assay identifiers
+        self._assay_names = None                    # names of the assays
+
+        self._assay_names_start_indices = None      # indices of the rep. id headers
+        self._assay_names_end_indices = None        # indices of the last entry of the rep. id columns
+
+        self._assay_ct_start_indices = None         # indices of the ct headers
+        self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
+
     def save_to(self, location : str = None):
         """
         Sets the location into which the individual assay datafiles should be saved.
