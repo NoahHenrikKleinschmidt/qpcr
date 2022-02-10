@@ -325,6 +325,11 @@ class _CORE_Reader(aux._ID):
         except: 
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
+        # check if a valid Ct column was found
+        full_valid_Ct_col = len(  df[ df["Ct"] == df["Ct"] ]  ) == len(df)
+        if not full_valid_Ct_col:
+            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
+
         self._df = df
 
     def _filesuffix(self):

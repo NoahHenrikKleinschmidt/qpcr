@@ -539,17 +539,34 @@ class CsvParser(_CORE_Parser):
         contents = self._prepare_commas()
         contents = StringIO(contents) # convert to StringIO for pandas to be able to read
         
+        delimiter = ";" if self._is_csv2() else ","
+        delimiter = aux.from_kwargs("sep", delimiter, kwargs, rm = True)
+
         # now read the data and convert to numpy array
-        df = pd.read_csv(contents, header = None, **kwargs)
+        df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
         df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = df.to_numpy()
 
         self._data = data
 
+    def _is_csv2(self):
+        """
+        Tests if csv file is ; delimited (True) or common , (False)
+        """
+        with open(self._src, "r") as openfile: 
+            content = openfile.read()
+        if ";" in content: 
+            return True
+        return False
+
     def _prepare_commas(self):
         """
         This function reads the datafile and adjusts the number of commas 
         within each line to ensure equal commas in the entire file.
+
+        Note
+        -------
+        Although the method uses the term "commas" it also works with semicolons for csv2
 
         Returns
         -------
@@ -557,9 +574,11 @@ class CsvParser(_CORE_Parser):
             A string containing the entire file contents with adjusted commas.
         """
 
+        delimiter = ";" if self._is_csv2() else ","
+
         # check if quotes are in datafile and adjust comma-patterns to use
-        empty_comma_filler = ',""' if self._has_quotes() else ","
-        comma_sep = '","' if self._has_quotes() else ","
+        empty_comma_filler = f'{delimiter}""' if self._has_quotes() else f"{delimiter}"
+        comma_sep = f'"{delimiter}"' if self._has_quotes() else f"{delimiter}"
         comma_sep = re.compile(comma_sep)
 
         with open(self._src, "r") as f:
@@ -576,9 +595,10 @@ class CsvParser(_CORE_Parser):
         Checks if cells from the csv input file have quotes around them.
         Essentially it checks if there are any "," patterns in the file.
         """
+        delimiter = ";" if self._is_csv2() else ","
         with open(self._src, "r") as f:
             content = f.read()
-        has_quotes = '","' in content
+        has_quotes = f'"{delimiter}"' in content
         return has_quotes
 
 class ExcelParser(_CORE_Parser):
@@ -697,8 +717,10 @@ if __name__ == "__main__":
     decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
     parser4.save_to("./__decorated_csvparser_pipe")
     parser4.assay_pattern("Rotor-Gene")
-    parser4.pipe(decorated_csv, decorator = "qpcr:assay")
+    # parser4.pipe(decorated_csv, decorator = "qpcr:assay")
     # print(parser4.get())
+
+    parser4.pipe("./__parser_data/manual_decorated.csv")
 
     print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
 
