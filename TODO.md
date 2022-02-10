@@ -14,7 +14,7 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    1.1   |      |     x       |       |
-|    1.2   |   x   |             |       |
+|    1.2   |      |    x (currently broken, haven't looked at it yet)         |       |
 |    1.3   |   dropped   |             |       |
 |    1.4   |      |             |       |
 
