@@ -1063,7 +1063,7 @@ class MultiReader(Assay, Reader, aux._ID):
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
     **kwargs
             Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
     &#34;&#34;&#34;
@@ -1094,7 +1094,7 @@ class MultiReader(Assay, Reader, aux._ID):
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `self.make_Assays` has not been run yet)
+            (if `make_Assays` has not been run yet)
             or a list of `qpcr.Assay` objects.
         &#34;&#34;&#34;
         data = None
@@ -1113,9 +1113,9 @@ class MultiReader(Assay, Reader, aux._ID):
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
         **kwargs
-                Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `read` method that extracts the datasets.
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
         &#34;&#34;&#34;
         self._src = filename
 
@@ -1142,7 +1142,7 @@ class MultiReader(Assay, Reader, aux._ID):
         Parameters
         ----------
         **kwargs
-            Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `parse` method that extracts the datasets.
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
         &#34;&#34;&#34;
         # remove any decorator argument that the user may have tried to pass...  
         aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
@@ -3527,7 +3527,7 @@ any arbitrary setting such as <code>"3:5,2:5,10,3:12"</code> (which specifies fi
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
 <dd>A filepath to a raw data file, containing multiple assays that were decorated.
-Check out the documentation of the <code>qpcr.Parser</code>s to learn more about decorators.</dd>
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>Any additional keyword arguments that should be passed to the <code>read</code> method which is immediately called during init if a filename is provided.</dd>
 </dl></div>
@@ -3543,7 +3543,7 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
     **kwargs
             Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
     &#34;&#34;&#34;
@@ -3574,7 +3574,7 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `self.make_Assays` has not been run yet)
+            (if `make_Assays` has not been run yet)
             or a list of `qpcr.Assay` objects.
         &#34;&#34;&#34;
         data = None
@@ -3593,9 +3593,9 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
         **kwargs
-                Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `read` method that extracts the datasets.
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
         &#34;&#34;&#34;
         self._src = filename
 
@@ -3622,7 +3622,7 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
         Parameters
         ----------
         **kwargs
-            Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `parse` method that extracts the datasets.
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
         &#34;&#34;&#34;
         # remove any decorator argument that the user may have tried to pass...  
         aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
@@ -3788,7 +3788,7 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
 <dl>
 <dt><strong><code>data</code></strong> :&ensp;<code>dict</code> or <code>list</code></dt>
 <dd>Returns either the raw dictionary of dataframes returned by the Parser
-(if <code>self.make_Assays</code> has not been run yet)
+(if <code>make_Assays</code> has not been run yet)
 or a list of <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects.</dd>
 </dl></div>
 <details class="source">
@@ -3808,7 +3808,7 @@ or a list of <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> obj
     -------
     data : dict or list
         Returns either the raw dictionary of dataframes returned by the Parser 
-        (if `self.make_Assays` has not been run yet)
+        (if `make_Assays` has not been run yet)
         or a list of `qpcr.Assay` objects.
     &#34;&#34;&#34;
     data = None
@@ -3883,7 +3883,7 @@ Group names only need to be specified once, and are applied to all replicate ent
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Any additional keyword arguments that should be passed to the <code>qpcr.Parser</code>'s <code>parse</code> method that extracts the datasets.</dd>
+<dd>Any additional keyword arguments that should be passed to the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>''s <code>parse</code> method that extracts the datasets.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -3896,7 +3896,7 @@ Group names only need to be specified once, and are applied to all replicate ent
     Parameters
     ----------
     **kwargs
-        Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `parse` method that extracts the datasets.
+        Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
     &#34;&#34;&#34;
     # remove any decorator argument that the user may have tried to pass...  
     aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
@@ -3994,9 +3994,9 @@ Any non-decorated assays are ignored!</p>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
 <dd>A filepath to a raw data file, containing multiple assays that were decorated.
-Check out the documentation of the <code>qpcr.Parser</code>s to learn more about decorators.</dd>
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
-<dd>Any additional keyword arguments that should be passed to the <code>qpcr.Parser</code>'s <code>read</code> method that extracts the datasets.</dd>
+<dd>Any additional keyword arguments that should be passed to the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>''s <code>read</code> method that extracts the datasets.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4011,9 +4011,9 @@ Check out the documentation of the <code>qpcr.Parser</code>s to learn more about
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
     **kwargs
-            Any additional keyword arguments that should be passed to the `qpcr.Parser`&#39;s `read` method that extracts the datasets.
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
     &#34;&#34;&#34;
     self._src = filename
 

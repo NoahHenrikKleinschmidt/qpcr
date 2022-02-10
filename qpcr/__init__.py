@@ -942,7 +942,7 @@ class MultiReader(Assay, Reader, aux._ID):
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+        Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
     **kwargs
             Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
     """
@@ -973,7 +973,7 @@ class MultiReader(Assay, Reader, aux._ID):
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `self.make_Assays` has not been run yet)
+            (if `make_Assays` has not been run yet)
             or a list of `qpcr.Assay` objects.
         """
         data = None
@@ -992,9 +992,9 @@ class MultiReader(Assay, Reader, aux._ID):
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parser`s to learn more about decorators.
+            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
         **kwargs
-                Any additional keyword arguments that should be passed to the `qpcr.Parser`'s `read` method that extracts the datasets.
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `read` method that extracts the datasets.
         """
         self._src = filename
 
@@ -1021,7 +1021,7 @@ class MultiReader(Assay, Reader, aux._ID):
         Parameters
         ----------
         **kwargs
-            Any additional keyword arguments that should be passed to the `qpcr.Parser`'s `parse` method that extracts the datasets.
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `parse` method that extracts the datasets.
         """
         # remove any decorator argument that the user may have tried to pass...  
         aux.from_kwargs("decorator", None, kwargs, rm = True)

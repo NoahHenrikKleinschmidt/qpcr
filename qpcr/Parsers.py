@@ -408,7 +408,7 @@ class _CORE_Parser:
             assay_names = self._data[names_range, names_col]
             assay_cts = self._data[ct_range, ct_col]
             assay_cts = assay_cts.astype(float)
-            
+
             assay_df = pd.DataFrame(
                                     dict(
                                         Sample = assay_names, 
@@ -505,7 +505,9 @@ class _CORE_Parser:
 
 class CsvParser(_CORE_Parser):
     """
-    This class will handle reading and parsing irregular CSV files that contain multiple assays.
+    Handles reading and parsing irregular `csv` files that contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     """
     def __init__(self):
         super().__init__()
@@ -626,7 +628,9 @@ class CsvParser(_CORE_Parser):
 
 class ExcelParser(_CORE_Parser):
     """
-    This class will handle reading and parsing irregular Excel files that contain multiple assays.
+    Handles reading and parsing `excel` files that may contain multiple assays.
+    It extracts datasets either through regex pattern matching or/and through provided
+    decorators within the datafile.
     """
     def __init__(self):
         super().__init__()
