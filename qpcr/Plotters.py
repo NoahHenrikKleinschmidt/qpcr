@@ -89,8 +89,8 @@ class Plotter:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         """
-
-        if type(Results).__name__ == type(qpcr.Results()).__name__:
+        
+        if aux.same_type(Results, qpcr.Results()):
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
@@ -611,10 +611,7 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         """
-        # somehow isinstance would not work...
-        # future TODO: check out why isinstance didn't work here...
-        example = qpcr.Assay()
-        if type(Assay).__name__ == type(example).__name__:
+        if aux.same_type(Assay, qpcr.Assay()):
             self._Results = Assay
             data = self._Results.get()
         else:
