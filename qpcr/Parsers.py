@@ -927,6 +927,11 @@ if __name__ == "__main__":
     parser5.find_columns()
     parser5.make_dataframes()
     r = parser5.get()
-    print(r)
+    
+    parser5.clear()
 
+    parser5.read(same_row_assays, sheet_name = 1)
+    parser5.parse(decorator = "qpcr:all")
+    r = parser5.get()
+    print(r)
     parser5.save()
