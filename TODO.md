@@ -17,14 +17,18 @@ New planned features for this next release are:
 |    2.3   |    x  |             |       |
 |    2.4   |    x  |             |       |
 
-### 3. Blueprint pipeline
-We added a new pipeline `Blueprint` which allows customization of Analyser, Normaliser, and SampleReader
+### 3. New pipelines
+We added a new pipeline `Blueprint` which allows customization of Analyser, Normaliser, and SampleReader. Also the `ddCt` pipeline will simply compute 
+delta-delta-ct but expect `qpcr.Assay` objects as input and will NOT read files 
+directly.
 
 - 3.1 New Blueprint Pipeline
+- 3.2 New ddCt Pipeline 
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    3.1   |  x    |            |       |
+|    3.2   |      |            |       |
 
 ### 4. Infer group names
 We add a method to the SampleReader which will adopt Replicate Group names based on their given sample column.  We will start with a simple inference which will only adopt group names if all replicates share the same name.
@@ -83,7 +87,9 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 - 7.4 make a new `qpcr.MultiReader` class to read multi-assay files
       this will probably be some kind of `SampleReader`-level class
 - 7.5 make a new `MultiAssay` pipeline
-
+- 7.6 allow assays both per-column or per-row (transpose option to Parsers)
+- 7.7 integrate transpose reading option to qpcr.Reader
+- 7.8 Make a tutorial on how to use MULTI-ASSAY files !!!
 
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
@@ -92,7 +98,9 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 |    7.3   |   x   |            |       |
 |    7.4  |   x   |            |       |
 |    7.5  |  x   |            |       |
-
+|    7.6  |   x  |            |       |
+|    7.7  |  x   |            |       |
+|    7.8  |     |            |       |
 
 ### 9. Filter nan policy
 Filters now by default ignore groups that have a nan median, since otherwise they would raise an Error...
@@ -151,3 +159,5 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 |    1.3   |   dropped   |             |       |
 |    1.4   |      |             |       |
 
+### 8. __str__ methods 
+At some point we should add some `__str__` methdos to all classes ...
