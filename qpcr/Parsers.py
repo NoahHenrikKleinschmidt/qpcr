@@ -342,7 +342,6 @@ class _CORE_Parser:
         """
         # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
         ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
-
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
             aw.HardWarning("Parser:invalid_decorator", d = decorator, all_d = list(decorators.keys()))
@@ -445,7 +444,7 @@ class _CORE_Parser:
             ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
             if not ignore_empty:
                 aw.HardWarning("Parser:no_assays_found", traceback = False)
-            
+
         names = names[indices]
         names = names.reshape(len(names))
 
