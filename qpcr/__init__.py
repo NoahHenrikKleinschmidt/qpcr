@@ -1112,7 +1112,7 @@ class MultiReader(Assay, Reader, aux._ID):
             self.read(filename, **kwargs)
         except: 
             self.read(filename)
-            aw.SoftWarning("Parser:incompatible_read_kwargs", func = f"{self._Parser.__name__}'s read method")
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = f"{type(self._Parser).__name__}'s read method")
         
         self.parse(**kwargs)
         self.make_Assays()
