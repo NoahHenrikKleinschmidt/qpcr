@@ -193,10 +193,24 @@ class _CORE_Reader(aux._ID):
             try: 
                 self._csv_read()
             except:
+                # setup parser
                 parser = Parsers.CsvParser()
+                # check it file should be read transposed
+                transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+                if transpose:
+                    parser.transpose()
+                
+                # setup patterns and store assay-of-interest
                 assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
                 assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
                 parser.assay_pattern(assay_pattern)
+                
+                # get data column labels
+                id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
+                ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
+                parser.labels(id_label,ct_label)
+                
+                # pipe the datafile through the parser
                 parser.pipe(self._src, **kwargs)
 
                 if len(parser.assays()) > 1:
@@ -210,15 +224,33 @@ class _CORE_Reader(aux._ID):
                     self.id(assay_of_interest)
 
         elif suffix == "xlsx":
+            # setup parser
             parser = Parsers.ExcelParser()
+            # check it file should be read transposed
+            transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+            if transpose:
+                parser.transpose()
+            
+            # check for sheet_name
+            sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+
+            # setup patterns and store assay-of-interest
             assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
             assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
             parser.assay_pattern(assay_pattern)
-            parser.pipe(self._src, **kwargs)
+            
+            # get data column labels
+            id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
+            ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
+            parser.labels(id_label,ct_label)
+
+            # pipe the datafile through the parser
+            parser.read(self._src, sheet_name = sheet_name)
+            parser.parse(**kwargs)
 
             if len(parser.assays()) > 1:
                 if assay_of_interest is None: 
-                    aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays())
+                    aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
                 self._df = parser.get(assay_of_interest)
                 self.id(assay_of_interest)
             else:
@@ -899,6 +931,8 @@ class SampleReader(Assay):
         else: 
             pass 
             # VITAL CHANGE HERE
+            # since Assays can now infer replicates we 
+            # don't raise an Error if no replicates are specified manually...
             # aw.HardWarning("SampleReader:no_reps_yet")
 
         if self._names is not None:
