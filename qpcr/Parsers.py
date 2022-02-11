@@ -305,8 +305,18 @@ class _CORE_Parser:
             self.find_by_decorator(decorator = decorator, **kwargs)
         else: 
             self.find_assays(**kwargs)
-        self.find_columns()
-        self.make_dataframes(**kwargs)
+        
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
+        if ignore_empty:
+            try: 
+                self.find_columns()
+                self.make_dataframes(**kwargs)
+            except: 
+                pass
+        else: 
+            self.find_columns()
+            self.make_dataframes(**kwargs)
 
     def find_by_decorator(self, decorator : str, col = 0, **kwargs):
         """
@@ -330,17 +340,23 @@ class _CORE_Parser:
         names : np.ndarray
             The extracted names of all assays found.
         """
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
+
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
             aw.HardWarning("Parser:invalid_decorator", d = decorator, all_d = list(decorators.keys()))
 
         decorator_pattern = re.compile( decorators[decorator] )
-        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern, **kwargs )
 
         # check if decorators were identified
         found_indices = decorator_indices.size > 0
         if not found_indices:
-            aw.HardWarning("Parser:no_decorators_found")
+            if not ignore_empty: # if none were found either raise error or ignore
+                aw.HardWarning("Parser:no_decorators_found")
+            else: 
+                return
 
         # if no assay_pattern was specified then default to generic "all" to get full cell contents
         if self.assay_pattern() is None:
@@ -399,7 +415,8 @@ class _CORE_Parser:
         names : np.ndarray
             The extracted names of all assays found.
         """
-        custom_pattern = aux.from_kwargs("pattern", None, kwargs, rm = True)
+        
+        custom_pattern = aux.from_kwargs("pattern", None, kwargs)
         if self._pattern is None and custom_pattern is None: 
             aw.HardWarning("Parser:no_pattern_yet")
 
@@ -423,8 +440,12 @@ class _CORE_Parser:
         indices = np.argwhere(indices == 1)
 
         if indices.size == 0:
-            aw.HardWarning("Parser:no_assays_found")
-
+            # ignore if no assays were found (default is false, 
+            # unless we use multi-assay multi-sheet files)
+            ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
+            if not ignore_empty:
+                aw.HardWarning("Parser:no_assays_found", traceback = False)
+            
         names = names[indices]
         names = names.reshape(len(names))
 
