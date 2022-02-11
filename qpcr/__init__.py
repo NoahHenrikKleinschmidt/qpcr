@@ -142,9 +142,9 @@ __pdoc__ = {
 }
 
 # default column names for raw Ct data files (don't change this!)
-raw_col_names = ["id", "Ct"]
+raw_col_names = aux.defaults.raw_col_names
 
-supported_filetypes = ["csv", "xlsx"]
+supported_filetypes = aux.defaults.supported_filetypes
 
 class _CORE_Reader(aux._ID):
     """

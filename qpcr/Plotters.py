@@ -15,33 +15,13 @@ from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
 
-# setup some default settings for charts
+# setup default settings for charts
 
-_default_static_PreviewResults = dict(
-                                        color = "Lightgray",
-                                        rot = 0,
-                                        legend = False, 
-                                        frame = False,
-                                        title = "Preview of Results"
-                                    )
+_default_static_PreviewResults = aux.defaults.static_PreviewResults
+_default_interactive_PreviewResults = aux.defaults.interactive_PreviewResults
 
-_default_interactive_PreviewResults = dict(
-                                            template = "plotly_white",
-                                            title = "Preview of Results"
-                                        )
-
-
-_default_static_ReplicateBoxPlot = dict(
-                                        title = "Summary of Replicates",
-                                        linewidth = 0.8,
-                                        frame = False,
-                                        palette = "Blues"
-                                    )
-
-_default_interactive_ReplicateBoxPlot = dict(
-                                            template = "plotly_white",
-                                            title = "Summary of Replicates"
-                                        )
+_default_static_ReplicateBoxPlot = aux.defaults.static_ReplicateBoxPlot
+_default_interactive_ReplicateBoxPlot = aux.defaults.interactive_ReplicateBoxPlot
 
 
 # Concept: 
