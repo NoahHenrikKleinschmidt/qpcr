@@ -107,6 +107,12 @@ decorators = {
 standard_id_header = qpcr.raw_col_names[0]
 standard_ct_header = qpcr.raw_col_names[1]
 
+# set a dummy default value for any np.nan values
+# in the column storing the assay headers
+# we do this in case the "all" assay_pattern is used without decorators
+# in this case any cell would be selected as "nan" also matches the pattern
+dummy_blank = "$"
+
 class _CORE_Parser:
     """
     This is the functional core for the irregular multi-assay file-reader classes.
@@ -335,6 +341,7 @@ class _CORE_Parser:
         # get all assay header cells into an array to extract their names
         array = self._data[assay_indices, col]
         array = array.astype(str)
+        array[ np.argwhere(array == "nan") ] = dummy_blank
         array = array.reshape(array.size)
 
         # adjust avaliable length of stored assay names
@@ -387,6 +394,7 @@ class _CORE_Parser:
         array = self._data
         array = array[:, col]
         array = array.astype(str)
+        array[ np.argwhere(array == "nan") ] = dummy_blank
 
         indices = np.zeros(len(array))
         names = np.array(["-"*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders ('-')
