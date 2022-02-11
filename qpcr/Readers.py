@@ -320,10 +320,6 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
 
         self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
 
-        # setup assay_patterns if they were provided
-        assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
-        self._Parser.assay_pattern(assay_pattern)
-
         # check if file should be read transposed
         transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
         if transpose:
@@ -362,7 +358,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         self._Parser.assay_pattern(assay_pattern)
 
         # get assays-of-interest
-        self._Parser.parse( decorator = "qpcr:assay", **kwargs )
+        self._Parser.parse( decorator = "qpcr:assay", ignore_empty = True, **kwargs )
         assays = self._Parser.get()
         self._assays = assays
 
@@ -373,7 +369,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         self._Parser.clear()
 
         # get normaliser-assays
-        self._Parser.parse( decorator = "qpcr:normaliser", **kwargs )
+        self._Parser.parse( decorator = "qpcr:normaliser", ignore_empty = True, **kwargs )
         normalisers = self._Parser.get()
         self._normalisers = normalisers
         if self.save_to() is not None: self._Parser.save()
@@ -518,8 +514,6 @@ class MultiSheetReader(MultiReader):
     """
     def __init__(self):
         super().__init__()
-        self._all_assays = []
-        self._all_normalisers = []
 
     def pipe(self, filename : str, **kwargs):
         """
@@ -537,36 +531,69 @@ class MultiSheetReader(MultiReader):
         self._src = filename
 
         # read file to get all sheets
-        sheets = pd.read_excel(self._src, sheet_name = None)
-        sheets = sheets.keys()
+        sheets = pd.read_excel(filename, sheet_name = None)
 
+        all_assays = {}
+        all_normalisers = {}
+        
         # now repetitively read all sheets and extract data
-        for sheet in sheets:
+        reader = MultiReader()
+        for sheet in sheets.keys():
             try: 
-                super().read(self._src, sheet_name = sheet)
-                self.parse(**kwargs)
-                self.make_Assays()
-                
-                assays = self.get( which = "assays" )
-                normalisers = self.get( which = "normalisers" )
-                
-                self._all_assays.extend(assays)
-                self._all_normalisers.extend(normalisers)
+                # read file and parse data
+                kws = deepcopy(kwargs)
+                reader.read(filename, sheet_name = sheet)
+                reader.parse(**kws)
 
-            except: 
+                # get assays
+                assays, normalisers = reader.get("assays"), reader.get("normalisers")
+                all_assays.update(assays)
+                all_normalisers.update(normalisers)
+
+            except Exception as e: 
                 # ERROR HERE
-                print("sheet : ", sheet, " could not be read")
+                print("Sheet : ", sheet)
+                print(e)
+
+        # store data
+        self._assays = all_assays
+        self._normalisers = all_normalisers
+
 
 if __name__ == "__main__":
 
-    multisheetreader = MultiSheetReader()
+    # try: 
+    #     multisheetreader = MultiSheetReader()
 
     multisheet_file = "/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx"
-    multisheetreader.read(
-                            multisheet_file,
-                            assay_pattern = "Rotor-Gene",
-                            
-                        )
-    
-    r = multisheetreader._all_normalisers
-    print(r)
+    #     multisheetreader.pipe(
+    #                             filename = multisheet_file,
+    #                             assay_pattern = "Rotor-Gene",
+                                
+    #                         )
+        
+    #     r = multisheetreader._all_assays
+    #     print(r)
+    # except: 
+    #     pass
+
+    # data = pd.read_excel(multisheet_file, sheet_name = 0)
+    # data = data.to_numpy()
+
+    # parser = Parsers.ExcelParser()
+    # parser._data = data
+    # parser.assay_pattern("Rotor-Gene")
+    # parser.find_assays()
+    # parser.find_columns()
+    # parser.make_dataframes()
+    # r = parser.get()
+    # print(r)
+
+    # multisheet_file = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    reader = MultiSheetReader()
+    reader.pipe(multisheet_file, assay_pattern = "Rotor-Gene")
+    # reader._Parser.parse( decorator = "qpcr:assay", ignore_empty = True)
+    # print(reader._Parser.get())
+    # reader._Parser.parse( decorator = "qpcr:normaliser", ignore_empty = True)
+    # print(reader._Parser.get())
+    print(reader.get("assays"))
