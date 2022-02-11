@@ -618,7 +618,6 @@ class MultiAssay(Blueprint):
         if self.Normaliser() is None:
             self.Normaliser(qpcr.Normaliser())
 
-
     # add_assays is disabled
     def add_assays(self):
         print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
@@ -627,6 +626,86 @@ class MultiAssay(Blueprint):
     def add_assays(self):
         print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
 
+    
+class ddCt(Blueprint):
+    """
+    Performs only Delta-Delta-Ct and requires `qpcr.Assay` objects as inputs.
+    Hence, this pipeline does NOT read any files!
+
+    Note
+    ----
+    As the pipeline inherits from the `Blueprint` pipeline it does have a `Reader` method (which won't do anything though!). 
+    """
+    def __init__(self):
+        super().__init__()
+        
+    def _run(self, **kwargs):
+        """
+        The main workflow
+        """
+        # setup Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
+
+        normalisers = []
+        samples = []
+
+        # analyse normalisers:
+        for norm in self._Normalisers:
+            for filter in self._Filters:
+                norm = filter.pipe(norm)
+            norm = analyser.pipe(norm)
+            normalisers.append(norm)
+        normaliser.link(normalisers = normalisers)
+
+        # analyse sample assays
+        for sample in self._Assays:
+            for filter in self._Filters:
+                sample = filter.pipe(sample)
+            sample = analyser.pipe(sample)
+            samples.append(sample)
+        normaliser.link(assays = samples)
+
+        normaliser.normalise()
+        results = normaliser.get()
+
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        for filter in self._Filters:
+            if self._save_to is not None or filter.report() is not None:
+                # add report location if none was specified...
+                if filter.report() is None: 
+                    filter.report(self._save_to)
+
+            figs = filter.plot()
+            self._Figures.extend(figs)
+
+        # plot results
+        for plotter in self._Plotters:
+            plotter.link(self._Results)
+            fig = plotter.plot()
+            self._Figures.append(fig)
+
+            if self._save_to is not None:
+                filename = self._make_figure_filename(plotter)
+                plotter.save(filename)
+    
+    def _setup_cores(self):
+        """
+        Sets Analyser, and Normaliser to defaults, if no external ones were provided...
+        """
+        if self.Analyser() is None: 
+            self.Analyser(qpcr.Analyser())
+        if self.Normaliser() is None:
+            self.Normaliser(qpcr.Normaliser())
 
 
 
