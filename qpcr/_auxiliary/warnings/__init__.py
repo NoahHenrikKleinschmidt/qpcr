@@ -55,7 +55,8 @@ WARNINGS = {
 "Parser:invalid_decorator" : "Invalid decorator provided! The decorator '{d}' could not be understood. Available decorators are: {all_d}",
 "Parser:no_decorators_found" : "No decorators could be be identified with the provided pattern!\nMake sure to specify the right decorators at the appropriate cells within your datafile.",
 "Parser:decorators_but_no_pattern" : "No assay_pattern has been specified yet!\nWill default to just extracting the entire cell content below the decorators. To deal more properly with your assays, please, specify an assay_pattern.",
-
+"Parser:invalid_range" : "No data range could be generated from provided inputs!",
+"Parser:found_non_readable_cts" : "Assay: '{assay}'\nAt least one Ct value of this assay could not be read and was set to NaN!\nThe value responsible for this warning was {bad_value}",
 "MultiReader:empty_data" : "No data is currently stored by the MultiReader!\nIf you already read a file then this could either be because the file did not contain valid decorators, or because it used different headers than the current ones above the data column, or because there are too many rows between the header and the data. Max allowed rows between assay identifier and data are 2! There must not be any rows between decorators and assay identifiers!",
 "MultiReader:unknown_datafile" : "Could not read file '{file}'!\nCurrently, only 'csv' and 'excel' files are supported. Make sure to provide either of those formats!",
 
