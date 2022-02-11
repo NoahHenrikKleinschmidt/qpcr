@@ -1063,6 +1063,11 @@ class MultiReader(Assay, Reader, aux._ID):
         assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
         self._Parser.assay_pattern(assay_pattern)
 
+        # check if file should be read transposed
+        transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+        
         # setup a saving location if it was provided
         if self.save_to() is not None: 
             self._Parser.save_to(self.save_to())
@@ -1080,6 +1085,16 @@ class MultiReader(Assay, Reader, aux._ID):
         """
         # remove any decorator argument that the user may have tried to pass...  
         aux.from_kwargs("decorator", None, kwargs, rm = True)
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+
+        # get data column labels
+        id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
+        ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
+        self._Parser.labels(id_label,ct_label)
 
         # setup assay_patterns if they were provided
         assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
