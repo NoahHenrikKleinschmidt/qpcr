@@ -28,7 +28,7 @@ directly.
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    3.1   |  x    |            |       |
-|    3.2   |      |            |       |
+|    3.2   |   x   |            |       |
 
 ### 4. Infer group names
 We add a method to the SampleReader which will adopt Replicate Group names based on their given sample column.  We will start with a simple inference which will only adopt group names if all replicates share the same name.
@@ -161,3 +161,7 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 
 ### 8. __str__ methods 
 At some point we should add some `__str__` methdos to all classes ...
+
+### 9. BigTableReader
+A reader class that is able to work with multi-assay files that contain a single big table of assays with all ct values from all samples. We already have the algorithm
+for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
