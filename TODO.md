@@ -165,3 +165,7 @@ At some point we should add some `__str__` methdos to all classes ...
 ### 9. BigTableReader
 A reader class that is able to work with multi-assay files that contain a single big table of assays with all ct values from all samples. We already have the algorithm
 for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
+
+
+### 10. Factor out Readers into their own submodule
+The files are soo diverse we make a new submodule just for the Readers...

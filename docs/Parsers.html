@@ -61,18 +61,18 @@ Parser's <code>save_to</code> method and then <code>pipe</code> your file throuh
 using the Parser's <code>get</code> method.</p>
 <h4 id="using-a-multi-assay-file-directly-for-my-analysis">Using a multi-assay file directly for my analysis</h4>
 <p>So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
-Sure, no problem! You can easily read a multi-assay file using the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code> which allows you (after setup) to simply <code>pipe</code> through your datafile
+Sure, no problem! You can easily read a multi-assay file using the <code>qpcr.MultiReader</code> which allows you (after setup) to simply <code>pipe</code> through your datafile
 and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though?
 That's the super-important topic of the next paragraph.</p>
 <h4 id="decorators">Decorators</h4>
 <p>A <code>decorator</code> technically is a function that wraps another function when coding. Well, that's not quite the case for the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators but the idea is the same.
 Instead of wrapping functions the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators decorate assays in a multi-assay file. What does "decorate" mean? It means they provide meta-data about the assay
 in question. What does that mean? There are two implemented <code><a title="qpcr" href="index.html">qpcr</a></code> decorators <code>@qpcr:assay</code> and <code>@qpcr:normaliser</code> – now clear what they do? They are placed in the
-cell <em>exactly above</em> the cell where the assay header is located (seriously, anything else won't do!) and tell the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>
+cell <em>exactly above</em> the cell where the assay header is located (seriously, anything else won't do!) and tell the <code>qpcr.MultiReader</code>
 if a specific assay is an "assay-of-interest" or a "normaliser-assay".</p>
 <p><code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> can identify assays either through <em>de novo</em> finding using <code>regex</code> patterns <em>or</em> through decorators. To tell a Parser to use a specific decorator
 for finding assays you can specify the <code>decorator</code> argument in <code>pipe</code> or <code>parse</code>. To specify a decorator like this you only write <code>qpcr:assay</code> <code>qpcr:normaliser</code> (no @).
-A third option is available only to <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> (not to the <code><a title="qpcr.MultiReader" href="index.html#qpcr.MultiReader">MultiReader</a></code>) and that is <code>qpcr:all</code> which will tell the Parser to extract <em>all</em> decorated assays.
+A third option is available only to <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> (not to the <code>qpcr.MultiReader</code>) and that is <code>qpcr:all</code> which will tell the Parser to extract <em>all</em> decorated assays.
 The implemented decorators are specified in the <code>qpcr.Parsers.decorators</code> dictionary and can be accessed via keys (you have seen the three keys already).</p>
 <blockquote>
 <h5 id="two-things-of-note">Two things of Note:</h5>
@@ -162,6 +162,7 @@ The implemented decorators are specified in the `qpcr.Parsers.decorators` dictio
 
 import qpcr.__init__ as qpcr
 import qpcr._auxiliary as aux
+import qpcr._auxiliary.defaults as defaults
 import qpcr._auxiliary.warnings as aw
 import pandas as pd
 import numpy as np
@@ -191,8 +192,14 @@ decorators = {
 
 # get the standard column headers to use for the 
 # replicate id and Ct column of the finished dataframes
-standard_id_header = qpcr.raw_col_names[0]
-standard_ct_header = qpcr.raw_col_names[1]
+standard_id_header = defaults.raw_col_names[0]
+standard_ct_header = defaults.raw_col_names[1]
+
+# set a dummy default value for any np.nan values
+# in the column storing the assay headers
+# we do this in case the &#34;all&#34; assay_pattern is used without decorators
+# in this case any cell would be selected as &#34;nan&#34; also matches the pattern
+dummy_blank = &#34;$&#34;
 
 class _CORE_Parser:
     &#34;&#34;&#34;
@@ -228,6 +235,9 @@ class _CORE_Parser:
         # a folder into which the new assay-split datafiles should be stored
         self._save_loc = None
 
+        # set transpose option in case datasets are stored not on separate row ranges but separate column ranges
+        self._transpose = False
+
     def prune(self):
         &#34;&#34;&#34;
         Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
@@ -249,6 +259,15 @@ class _CORE_Parser:
         self._assay_ct_start_indices = None         # indices of the ct headers
         self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
 
+    def transpose(self):
+        &#34;&#34;&#34;
+        Inverts the `col` index used by `qpcr.Parsers._CORE_Parser.find_assays` and `qpcr.Parsers._CORE_Parser.find_by_decorator`.
+        By default the `col` refers to a column. After using `transpose` it will be interpreted as a `row`.
+        Note
+        ----
+        This is method is dynamic, so repeated calling of `transpose` will keep reverting the interpretation from row to col, back to row, etc.
+        &#34;&#34;&#34;
+        self._transpose = not self._transpose
 
     def save_to(self, location : str = None):
         &#34;&#34;&#34;
@@ -374,8 +393,18 @@ class _CORE_Parser:
             self.find_by_decorator(decorator = decorator, **kwargs)
         else: 
             self.find_assays(**kwargs)
-        self.find_columns()
-        self.make_dataframes(**kwargs)
+        
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+        if ignore_empty:
+            try: 
+                self.find_columns()
+                self.make_dataframes(**kwargs)
+            except: 
+                pass
+        else: 
+            self.find_columns()
+            self.make_dataframes(**kwargs)
 
     def find_by_decorator(self, decorator : str, col = 0, **kwargs):
         &#34;&#34;&#34;
@@ -399,30 +428,38 @@ class _CORE_Parser:
         names : np.ndarray
             The extracted names of all assays found.
         &#34;&#34;&#34;
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
             aw.HardWarning(&#34;Parser:invalid_decorator&#34;, d = decorator, all_d = list(decorators.keys()))
 
         decorator_pattern = re.compile( decorators[decorator] )
-        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern, **kwargs )
 
         # check if decorators were identified
         found_indices = decorator_indices.size &gt; 0
         if not found_indices:
-            aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+            if not ignore_empty: # if none were found either raise error or ignore
+                aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+            else: 
+                return
 
         # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
         if self.assay_pattern() is None:
             aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
             self.assay_pattern(&#34;all&#34;)
 
+        assay_indices = decorator_indices
         # get assay indices as the cells IMMEDIATELY BELOW the decorators
-        assay_indices = decorator_indices + 1
-        
+        # we adjust either col or the row indices depending on the transposition
+        if self._transpose:
+            col = col + 1
+        else:
+            assay_indices = assay_indices + 1
+      
         # get all assay header cells into an array to extract their names
-        array = self._data[assay_indices, col]
-        array = array.astype(str)
-        array = array.reshape(array.size)
+        array = self._prep_header_array(col, assay_indices)
 
         # adjust avaliable length of stored assay names
         max_length = max(
@@ -465,15 +502,14 @@ class _CORE_Parser:
         names : np.ndarray
             The extracted names of all assays found.
         &#34;&#34;&#34;
-        custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs, rm = True)
+        
+        custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs)
         if self._pattern is None and custom_pattern is None: 
             aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
 
         pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
 
-        array = self._data
-        array = array[:, col]
-        array = array.astype(str)
+        array = self._prep_header_array(col = col)
 
         indices = np.zeros(len(array))
         names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
@@ -491,7 +527,11 @@ class _CORE_Parser:
         indices = np.argwhere(indices == 1)
 
         if indices.size == 0:
-            aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+            # ignore if no assays were found (default is false, 
+            # unless we use multi-assay multi-sheet files)
+            ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+            if not ignore_empty:
+                aw.HardWarning(&#34;Parser:no_assays_found&#34;, traceback = False)
 
         names = names[indices]
         names = names.reshape(len(names))
@@ -516,7 +556,7 @@ class _CORE_Parser:
                                                     label = self._ct_label, 
                                                     ref_indices = self._assay_indices
                                                 )
-        
+
         # now we need to generate know also the end indices of the datacolumns
         name_col_ends = self._find_column_ends(name_col_starts)
         
@@ -554,6 +594,7 @@ class _CORE_Parser:
             The default value to replace NaN Ct values with. 
             This is ignored if `allow_nan_ct = True`.
         &#34;&#34;&#34;  
+
         adx = 0
         # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
         for assay in self._assay_names:
@@ -572,7 +613,14 @@ class _CORE_Parser:
             # get the assay data
             assay_names = self._data[names_range, names_col]
             assay_cts = self._data[ct_range, ct_col]
-            assay_cts = assay_cts.astype(float)
+
+            # and convert to numeric data
+            try: 
+                assay_cts = assay_cts.astype(float)
+            except ValueError as e:
+                assay_cts = np.genfromtxt(  np.array(assay_cts, dtype=str)  )
+                bad_value = e.__str__().split(&#34;: &#34;)[1]
+                aw.SoftWarning(&#34;Parser:found_non_readable_cts&#34;, assay = assay, bad_value = bad_value)
 
             # assemble the assay dataframe 
             assay_df = pd.DataFrame(
@@ -587,15 +635,36 @@ class _CORE_Parser:
                     aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
                 
                 # apply defaulting lambda function
-                assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
-                                                        lambda x: x if x == x else default_to
-                                                    )
+                assay_df[ standard_ct_header ] = assay_df[ standard_ct_header ].apply(
+                                                                                        lambda x: x if x == x else default_to
+                                                                                    )
             # and store dataframe
             self._dfs.update(
                                 { assay : assay_df }
                             )
 
             adx += 1
+
+    def _prep_header_array(self, col = None, row = None):
+        &#34;&#34;&#34;
+        Generates the array in which header entries should be searched for
+        &#34;&#34;&#34;
+        
+        if row is None and col is not None: 
+            array = self._data[:, col] if not self._transpose else self._data[col, :]
+        elif row is not None and col is None:
+            array = self._data[row, :] if not self._transpose else self._data[:, row]
+        elif row is not None and col is not None:
+            array = self._data[row, col] if not self._transpose else self._data[col, row]
+        else:
+            aw.HardWarning(&#34;Parser:invalid_range&#34;)
+
+        # re-format to str and reset &#34;nan&#34; to dummy_blank
+        array = array.astype(str)
+        array[ np.argwhere(array == &#34;nan&#34;) ] = dummy_blank
+        array = array.reshape(array.size)
+        return array
+
 
     def _make_index_range(self, start_indices, end_indices, crop_first = True):
         &#34;&#34;&#34;
@@ -624,12 +693,23 @@ class _CORE_Parser:
         This function uses the assays&#39; found reference row indices to 
         now search for the coordinates of the labeled cell so we know where a data column starts
         &#34;&#34;&#34;
+
+        # get index to match to ref_indices
+        idx_to_match = 0 if not self._transpose else 1
+
         data = self._data
         all_found = np.argwhere(data == label)
-        row_indices = np.transpose(all_found)[0]
-        ref_indices = ref_indices + 1 # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        row_indices = np.transpose(all_found)[ idx_to_match ]
+
+    
+        # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        # we only have to do this if we use the default setting of assays in the same column
+        if not self._transpose:
+            ref_indices = ref_indices + 1
+
+        # ref_indices = ref_indices + 1 
         matching_rows = np.where(np.isin(row_indices, ref_indices))
-        
+                
         # if no matches were found, try incrementing the index offset once more 
         # (we&#39;ll allow for a single row between the header and the start of the data)
         no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
@@ -644,7 +724,7 @@ class _CORE_Parser:
 
         matching_rows = all_found[matching_rows]
         return matching_rows
-    
+
     def _find_column_ends(self, indices):
         &#34;&#34;&#34;
         Determines the end index of a column within the datafile based on the starting indices of
@@ -924,7 +1004,45 @@ if __name__ == &#34;__main__&#34;:
     parser3.pipe(decorated_excel)
     # print(parser3.get())
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n&#34;&#34;&#34;)</code></pre>
+    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n&#34;&#34;&#34;)
+
+
+    same_row_assays = &#34;/Users/NoahHK/Downloads/qPCR cytokines upon treatment_decorated.xlsx&#34;
+
+    parser5 = ExcelParser()
+    parser5.transpose()
+    parser5.read(same_row_assays, sheet_name = 1)
+    parser5.save_to(&#34;./__transposed_parser&#34;)
+    parser5.assay_pattern(&#34;all&#34;)
+    parser5.labels(  id_label = &#34;Sample Name&#34;, ct_label = &#34;CT&#34;  )
+
+    print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (FIND)\n ========================= \n\n\n&#34;&#34;&#34;)
+
+    parser5.find_assays(col = 1)
+    parser5.find_columns()
+    parser5.make_dataframes()
+    r = parser5.get()
+    print(r)
+
+    # assert parser5._assay_indices is not None, &#34;(find_assays) No assay_indices could be found!!!&#34;
+    parser5.clear()
+
+    print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (DECO)\n ========================= \n\n\n&#34;&#34;&#34;)
+
+
+    parser5.find_by_decorator(&#34;qpcr:all&#34;)
+    # assert parser5._assay_indices is not None, &#34;(find_by_decorator) No assay_indices could be found!!!&#34;
+    parser5.find_columns()
+    parser5.make_dataframes()
+    r = parser5.get()
+    
+    parser5.clear()
+
+    parser5.read(same_row_assays, sheet_name = 1)
+    parser5.parse(decorator = &#34;qpcr:all&#34;)
+    r = parser5.get()
+    print(r)
+    parser5.save()</code></pre>
 </details>
 </section>
 <section>
@@ -1201,6 +1319,7 @@ Any additional keyword arguments to be passed to pandas' <code>read_csv</code> f
 <li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1419,6 +1538,7 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
 <li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1467,6 +1587,9 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         # a folder into which the new assay-split datafiles should be stored
         self._save_loc = None
 
+        # set transpose option in case datasets are stored not on separate row ranges but separate column ranges
+        self._transpose = False
+
     def prune(self):
         &#34;&#34;&#34;
         Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
@@ -1488,6 +1611,15 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         self._assay_ct_start_indices = None         # indices of the ct headers
         self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
 
+    def transpose(self):
+        &#34;&#34;&#34;
+        Inverts the `col` index used by `qpcr.Parsers._CORE_Parser.find_assays` and `qpcr.Parsers._CORE_Parser.find_by_decorator`.
+        By default the `col` refers to a column. After using `transpose` it will be interpreted as a `row`.
+        Note
+        ----
+        This is method is dynamic, so repeated calling of `transpose` will keep reverting the interpretation from row to col, back to row, etc.
+        &#34;&#34;&#34;
+        self._transpose = not self._transpose
 
     def save_to(self, location : str = None):
         &#34;&#34;&#34;
@@ -1613,8 +1745,18 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
             self.find_by_decorator(decorator = decorator, **kwargs)
         else: 
             self.find_assays(**kwargs)
-        self.find_columns()
-        self.make_dataframes(**kwargs)
+        
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+        if ignore_empty:
+            try: 
+                self.find_columns()
+                self.make_dataframes(**kwargs)
+            except: 
+                pass
+        else: 
+            self.find_columns()
+            self.make_dataframes(**kwargs)
 
     def find_by_decorator(self, decorator : str, col = 0, **kwargs):
         &#34;&#34;&#34;
@@ -1638,30 +1780,38 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         names : np.ndarray
             The extracted names of all assays found.
         &#34;&#34;&#34;
+        # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
             aw.HardWarning(&#34;Parser:invalid_decorator&#34;, d = decorator, all_d = list(decorators.keys()))
 
         decorator_pattern = re.compile( decorators[decorator] )
-        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+        decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern, **kwargs )
 
         # check if decorators were identified
         found_indices = decorator_indices.size &gt; 0
         if not found_indices:
-            aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+            if not ignore_empty: # if none were found either raise error or ignore
+                aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+            else: 
+                return
 
         # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
         if self.assay_pattern() is None:
             aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
             self.assay_pattern(&#34;all&#34;)
 
+        assay_indices = decorator_indices
         # get assay indices as the cells IMMEDIATELY BELOW the decorators
-        assay_indices = decorator_indices + 1
-        
+        # we adjust either col or the row indices depending on the transposition
+        if self._transpose:
+            col = col + 1
+        else:
+            assay_indices = assay_indices + 1
+      
         # get all assay header cells into an array to extract their names
-        array = self._data[assay_indices, col]
-        array = array.astype(str)
-        array = array.reshape(array.size)
+        array = self._prep_header_array(col, assay_indices)
 
         # adjust avaliable length of stored assay names
         max_length = max(
@@ -1704,15 +1854,14 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         names : np.ndarray
             The extracted names of all assays found.
         &#34;&#34;&#34;
-        custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs, rm = True)
+        
+        custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs)
         if self._pattern is None and custom_pattern is None: 
             aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
 
         pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
 
-        array = self._data
-        array = array[:, col]
-        array = array.astype(str)
+        array = self._prep_header_array(col = col)
 
         indices = np.zeros(len(array))
         names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
@@ -1730,7 +1879,11 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         indices = np.argwhere(indices == 1)
 
         if indices.size == 0:
-            aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+            # ignore if no assays were found (default is false, 
+            # unless we use multi-assay multi-sheet files)
+            ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+            if not ignore_empty:
+                aw.HardWarning(&#34;Parser:no_assays_found&#34;, traceback = False)
 
         names = names[indices]
         names = names.reshape(len(names))
@@ -1755,7 +1908,7 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
                                                     label = self._ct_label, 
                                                     ref_indices = self._assay_indices
                                                 )
-        
+
         # now we need to generate know also the end indices of the datacolumns
         name_col_ends = self._find_column_ends(name_col_starts)
         
@@ -1793,6 +1946,7 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
             The default value to replace NaN Ct values with. 
             This is ignored if `allow_nan_ct = True`.
         &#34;&#34;&#34;  
+
         adx = 0
         # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
         for assay in self._assay_names:
@@ -1811,7 +1965,14 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
             # get the assay data
             assay_names = self._data[names_range, names_col]
             assay_cts = self._data[ct_range, ct_col]
-            assay_cts = assay_cts.astype(float)
+
+            # and convert to numeric data
+            try: 
+                assay_cts = assay_cts.astype(float)
+            except ValueError as e:
+                assay_cts = np.genfromtxt(  np.array(assay_cts, dtype=str)  )
+                bad_value = e.__str__().split(&#34;: &#34;)[1]
+                aw.SoftWarning(&#34;Parser:found_non_readable_cts&#34;, assay = assay, bad_value = bad_value)
 
             # assemble the assay dataframe 
             assay_df = pd.DataFrame(
@@ -1826,15 +1987,36 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
                     aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
                 
                 # apply defaulting lambda function
-                assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
-                                                        lambda x: x if x == x else default_to
-                                                    )
+                assay_df[ standard_ct_header ] = assay_df[ standard_ct_header ].apply(
+                                                                                        lambda x: x if x == x else default_to
+                                                                                    )
             # and store dataframe
             self._dfs.update(
                                 { assay : assay_df }
                             )
 
             adx += 1
+
+    def _prep_header_array(self, col = None, row = None):
+        &#34;&#34;&#34;
+        Generates the array in which header entries should be searched for
+        &#34;&#34;&#34;
+        
+        if row is None and col is not None: 
+            array = self._data[:, col] if not self._transpose else self._data[col, :]
+        elif row is not None and col is None:
+            array = self._data[row, :] if not self._transpose else self._data[:, row]
+        elif row is not None and col is not None:
+            array = self._data[row, col] if not self._transpose else self._data[col, row]
+        else:
+            aw.HardWarning(&#34;Parser:invalid_range&#34;)
+
+        # re-format to str and reset &#34;nan&#34; to dummy_blank
+        array = array.astype(str)
+        array[ np.argwhere(array == &#34;nan&#34;) ] = dummy_blank
+        array = array.reshape(array.size)
+        return array
+
 
     def _make_index_range(self, start_indices, end_indices, crop_first = True):
         &#34;&#34;&#34;
@@ -1863,12 +2045,23 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
         This function uses the assays&#39; found reference row indices to 
         now search for the coordinates of the labeled cell so we know where a data column starts
         &#34;&#34;&#34;
+
+        # get index to match to ref_indices
+        idx_to_match = 0 if not self._transpose else 1
+
         data = self._data
         all_found = np.argwhere(data == label)
-        row_indices = np.transpose(all_found)[0]
-        ref_indices = ref_indices + 1 # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        row_indices = np.transpose(all_found)[ idx_to_match ]
+
+    
+        # adjust coordinates +1 as the headers would be in the row below the assay declaration
+        # we only have to do this if we use the default setting of assays in the same column
+        if not self._transpose:
+            ref_indices = ref_indices + 1
+
+        # ref_indices = ref_indices + 1 
         matching_rows = np.where(np.isin(row_indices, ref_indices))
-        
+                
         # if no matches were found, try incrementing the index offset once more 
         # (we&#39;ll allow for a single row between the header and the start of the data)
         no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
@@ -1883,7 +2076,7 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
 
         matching_rows = all_found[matching_rows]
         return matching_rows
-    
+
     def _find_column_ends(self, indices):
         &#34;&#34;&#34;
         Determines the end index of a column within the datafile based on the starting indices of
@@ -2054,15 +2247,14 @@ By default the first column <code>col = 0</code>.</dd>
     names : np.ndarray
         The extracted names of all assays found.
     &#34;&#34;&#34;
-    custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs, rm = True)
+    
+    custom_pattern = aux.from_kwargs(&#34;pattern&#34;, None, kwargs)
     if self._pattern is None and custom_pattern is None: 
         aw.HardWarning(&#34;Parser:no_pattern_yet&#34;)
 
     pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
 
-    array = self._data
-    array = array[:, col]
-    array = array.astype(str)
+    array = self._prep_header_array(col = col)
 
     indices = np.zeros(len(array))
     names = np.array([&#34;-&#34;*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders (&#39;-&#39;)
@@ -2080,7 +2272,11 @@ By default the first column <code>col = 0</code>.</dd>
     indices = np.argwhere(indices == 1)
 
     if indices.size == 0:
-        aw.HardWarning(&#34;Parser:no_assays_found&#34;)
+        # ignore if no assays were found (default is false, 
+        # unless we use multi-assay multi-sheet files)
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+        if not ignore_empty:
+            aw.HardWarning(&#34;Parser:no_assays_found&#34;, traceback = False)
 
     names = names[indices]
     names = names.reshape(len(names))
@@ -2140,30 +2336,38 @@ By default the first column <code>col = 0</code>.</dd>
     names : np.ndarray
         The extracted names of all assays found.
     &#34;&#34;&#34;
+    # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+    ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
     # get the pattern required (or raise error if invalid decorators are provided)
     if decorator not in decorators.keys():
         aw.HardWarning(&#34;Parser:invalid_decorator&#34;, d = decorator, all_d = list(decorators.keys()))
 
     decorator_pattern = re.compile( decorators[decorator] )
-    decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern )
+    decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern, **kwargs )
 
     # check if decorators were identified
     found_indices = decorator_indices.size &gt; 0
     if not found_indices:
-        aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+        if not ignore_empty: # if none were found either raise error or ignore
+            aw.HardWarning(&#34;Parser:no_decorators_found&#34;)
+        else: 
+            return
 
     # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
     if self.assay_pattern() is None:
         aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
         self.assay_pattern(&#34;all&#34;)
 
+    assay_indices = decorator_indices
     # get assay indices as the cells IMMEDIATELY BELOW the decorators
-    assay_indices = decorator_indices + 1
-    
+    # we adjust either col or the row indices depending on the transposition
+    if self._transpose:
+        col = col + 1
+    else:
+        assay_indices = assay_indices + 1
+  
     # get all assay header cells into an array to extract their names
-    array = self._data[assay_indices, col]
-    array = array.astype(str)
-    array = array.reshape(array.size)
+    array = self._prep_header_array(col, assay_indices)
 
     # adjust avaliable length of stored assay names
     max_length = max(
@@ -2213,7 +2417,7 @@ By default the first column <code>col = 0</code>.</dd>
                                                 label = self._ct_label, 
                                                 ref_indices = self._assay_indices
                                             )
-    
+
     # now we need to generate know also the end indices of the datacolumns
     name_col_ends = self._find_column_ends(name_col_starts)
     
@@ -2344,6 +2548,7 @@ This is ignored if <code>allow_nan_ct = True</code>.</dd>
         The default value to replace NaN Ct values with. 
         This is ignored if `allow_nan_ct = True`.
     &#34;&#34;&#34;  
+
     adx = 0
     # print(self._assay_names, self._assay_indices, self._assay_names_start_indices, self._assay_names_end_indices)
     for assay in self._assay_names:
@@ -2362,7 +2567,14 @@ This is ignored if <code>allow_nan_ct = True</code>.</dd>
         # get the assay data
         assay_names = self._data[names_range, names_col]
         assay_cts = self._data[ct_range, ct_col]
-        assay_cts = assay_cts.astype(float)
+
+        # and convert to numeric data
+        try: 
+            assay_cts = assay_cts.astype(float)
+        except ValueError as e:
+            assay_cts = np.genfromtxt(  np.array(assay_cts, dtype=str)  )
+            bad_value = e.__str__().split(&#34;: &#34;)[1]
+            aw.SoftWarning(&#34;Parser:found_non_readable_cts&#34;, assay = assay, bad_value = bad_value)
 
         # assemble the assay dataframe 
         assay_df = pd.DataFrame(
@@ -2377,9 +2589,9 @@ This is ignored if <code>allow_nan_ct = True</code>.</dd>
                 aw.HardWarning(&#34;Parser:no_ct_nan_default&#34;, d = default_to)
             
             # apply defaulting lambda function
-            assay_df[&#34;Ct&#34;] = assay_df[&#34;Ct&#34;].apply(
-                                                    lambda x: x if x == x else default_to
-                                                )
+            assay_df[ standard_ct_header ] = assay_df[ standard_ct_header ].apply(
+                                                                                    lambda x: x if x == x else default_to
+                                                                                )
         # and store dataframe
         self._dfs.update(
                             { assay : assay_df }
@@ -2446,8 +2658,18 @@ This is the functional core of the Parser's <code>pipe</code> method.</p>
         self.find_by_decorator(decorator = decorator, **kwargs)
     else: 
         self.find_assays(**kwargs)
-    self.find_columns()
-    self.make_dataframes(**kwargs)</code></pre>
+    
+    # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
+    ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;, False, kwargs)
+    if ignore_empty:
+        try: 
+            self.find_columns()
+            self.make_dataframes(**kwargs)
+        except: 
+            pass
+    else: 
+        self.find_columns()
+        self.make_dataframes(**kwargs)</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Parsers._CORE_Parser.prune"><code class="name flex">
@@ -2523,6 +2745,30 @@ If this directory does not yet exist, it will be automatically made.</dd>
     return self._save_loc</code></pre>
 </details>
 </dd>
+<dt id="qpcr.Parsers._CORE_Parser.transpose"><code class="name flex">
+<span>def <span class="ident">transpose</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Inverts the <code>col</code> index used by <code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">_CORE_Parser.find_assays()</a></code> and <code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">_CORE_Parser.find_by_decorator()</a></code>.
+By default the <code>col</code> refers to a column. After using <code>transpose</code> it will be interpreted as a <code>row</code>.
+Note</p>
+<hr>
+<p>This is method is dynamic, so repeated calling of <code>transpose</code> will keep reverting the interpretation from row to col, back to row, etc.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transpose(self):
+    &#34;&#34;&#34;
+    Inverts the `col` index used by `qpcr.Parsers._CORE_Parser.find_assays` and `qpcr.Parsers._CORE_Parser.find_by_decorator`.
+    By default the `col` refers to a column. After using `transpose` it will be interpreted as a `row`.
+    Note
+    ----
+    This is method is dynamic, so repeated calling of `transpose` will keep reverting the interpretation from row to col, back to row, etc.
+    &#34;&#34;&#34;
+    self._transpose = not self._transpose</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -2593,6 +2839,7 @@ If this directory does not yet exist, it will be automatically made.</dd>
 <li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
 <li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>

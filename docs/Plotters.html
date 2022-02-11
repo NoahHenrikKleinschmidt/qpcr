@@ -120,8 +120,8 @@ class Plotter:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         &#34;&#34;&#34;
-
-        if type(Results).__name__ == type(qpcr.Results()).__name__:
+        
+        if aux.same_type(Results, qpcr.Results()):
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
@@ -642,10 +642,7 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         &#34;&#34;&#34;
-        # somehow isinstance would not work...
-        # future TODO: check out why isinstance didn&#39;t work here...
-        example = qpcr.Assay()
-        if type(Assay).__name__ == type(example).__name__:
+        if aux.same_type(Assay, qpcr.Assay()):
             self._Results = Assay
             data = self._Results.get()
         else:
@@ -977,8 +974,8 @@ if __name__ == &#39;__main__&#39;:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         &#34;&#34;&#34;
-
-        if type(Results).__name__ == type(qpcr.Results()).__name__:
+        
+        if aux.same_type(Results, qpcr.Results()):
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
@@ -1299,8 +1296,8 @@ Note, that this will replace any previously linked data!</p>
     Results : qpcr.Results or pd.DataFrame
         A qpcr.Results Object or a pandas DataFrame of the same architecture.
     &#34;&#34;&#34;
-
-    if type(Results).__name__ == type(qpcr.Results()).__name__:
+    
+    if aux.same_type(Results, qpcr.Results()):
         self._Results = Results
         self._data = self._Results.stats()
     elif isinstance(Results, pd.DataFrame):
@@ -2102,10 +2099,7 @@ or keep old ones (supersede = False).</dd>
         Assay : qpcr.Assay
             A qpcr.Assay object.
         &#34;&#34;&#34;
-        # somehow isinstance would not work...
-        # future TODO: check out why isinstance didn&#39;t work here...
-        example = qpcr.Assay()
-        if type(Assay).__name__ == type(example).__name__:
+        if aux.same_type(Assay, qpcr.Assay()):
             self._Results = Assay
             data = self._Results.get()
         else:
@@ -2291,10 +2285,7 @@ This will simply add the Ct column to the current overall data!</p>
     Assay : qpcr.Assay
         A qpcr.Assay object.
     &#34;&#34;&#34;
-    # somehow isinstance would not work...
-    # future TODO: check out why isinstance didn&#39;t work here...
-    example = qpcr.Assay()
-    if type(Assay).__name__ == type(example).__name__:
+    if aux.same_type(Assay, qpcr.Assay()):
         self._Results = Assay
         data = self._Results.get()
     else:

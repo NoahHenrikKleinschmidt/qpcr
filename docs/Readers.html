@@ -1,0 +1,1932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>qpcr.Readers API documentation</title>
+<meta name="description" content="This module provides different `Reader` classes that allow reading simple and complex datafiles
+of various architectures …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>qpcr.Readers</code></h1>
+</header>
+<section id="section-intro">
+<p>This module provides different <code>Reader</code> classes that allow reading simple and complex datafiles
+of various architectures.</p>
+<h2 id="available-data-readers">Available Data Readers</h2>
+<hr>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module provides different `Reader` classes that allow reading simple and complex datafiles
+of various architectures.
+
+## Available Data Readers
+---
+
+
+&#34;&#34;&#34;
+
+import pandas as pd
+import qpcr.__init__ as qpcr
+import qpcr._auxiliary as aux
+from qpcr._auxiliary import warnings as aw
+import qpcr._auxiliary.defaults as defaults
+import qpcr.Parsers as Parsers
+import os
+import numpy as np 
+from copy import deepcopy 
+from io import StringIO
+
+
+__pdoc__ = {
+    &#34;_CORE_Reader&#34; : True
+}
+
+# migrate default settings from __init__
+raw_col_names = defaults.raw_col_names
+supported_filetypes = defaults.supported_filetypes
+
+class _CORE_Reader(aux._ID):
+    &#34;&#34;&#34;
+    The class handling the core functions of the Reader class. 
+    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+    inherit from this. 
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._src = None
+        self._delimiter = None
+        self._df = None
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        data : pd.DataFrame
+            The dataframe from the datafile.
+        &#34;&#34;&#34;
+        return self._df
+
+    def n(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        n : int
+            The number of replicates (entries) in the dataframe.
+        &#34;&#34;&#34;
+        return len(self._df[raw_col_names[0]])
+
+
+    def read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file.
+
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file. Note, this assumes by default
+        that the replicates are headed by the label `&#34;Name&#34;` and the corresponding Ct values
+        are headed by the label `&#34;Ct&#34;`. Both labels have to be on the same row. 
+
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
+        &#34;&#34;&#34;
+        suffix = self._filesuffix()
+        if suffix == &#34;csv&#34;:
+            try: 
+                self._csv_read()
+            except:
+                # setup parser
+                parser = Parsers.CsvParser()
+                # check it file should be read transposed
+                transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+                if transpose:
+                    parser.transpose()
+                
+                # setup patterns and store assay-of-interest
+                assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+                assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+                parser.assay_pattern(assay_pattern)
+                
+                # get data column labels
+                id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+                ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+                parser.labels(id_label,ct_label)
+                
+                # pipe the datafile through the parser
+                parser.pipe(self._src, **kwargs)
+
+                if len(parser.assays()) &gt; 1:
+                    if assay_of_interest is None: 
+                        aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays())
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+                else:
+                    assay_of_interest = parser.assays()[0]
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+
+        elif suffix == &#34;xlsx&#34;:
+            # setup parser
+            parser = Parsers.ExcelParser()
+            # check it file should be read transposed
+            transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+            if transpose:
+                parser.transpose()
+            
+            # check for sheet_name
+            sheet_name = aux.from_kwargs(&#34;sheet_name&#34;, 0, kwargs, rm = True)
+
+            # setup patterns and store assay-of-interest
+            assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+            assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+            parser.assay_pattern(assay_pattern)
+            
+            # get data column labels
+            id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+            ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+            parser.labels(id_label,ct_label)
+
+            # pipe the datafile through the parser
+            parser.read(self._src, sheet_name = sheet_name)
+            parser.parse(**kwargs)
+
+            if len(parser.assays()) &gt; 1:
+                if assay_of_interest is None: 
+                    aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays(), traceback = False)
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+            else:
+                assay_of_interest = parser.assays()[0]
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+  
+    def _csv_read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s a csv file
+
+        This is the basic default reading method for 
+        regular csv files.
+        &#34;&#34;&#34;
+        df = None
+        try: 
+            df = pd.read_csv(
+                                self._src, 
+                                sep = self._delimiter, 
+                                header = self._has_header(), 
+                                names = raw_col_names
+                            )
+        except: 
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        # check if a valid Ct column was found
+        Ct = raw_col_names[1]
+        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
+        if not full_valid_Ct_col:
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        self._df = df
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._src.split(&#34;.&#34;)[-1]
+        return suffix
+
+
+class SingleReader(_CORE_Reader):
+    &#34;&#34;&#34;
+    Reads qpcr raw data files in csv or excel format to get a single dataset. 
+
+    Input Data Files
+    ----------------
+    Valid input files are either regular `csv` files, or  irregular `csv` or `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Irregular input files may specify multiple assays as separate tables, 
+    one assay has to be selected using the `assay` argument. 
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`).
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
+    &#34;&#34;&#34;
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read()
+        if &#34;;&#34; in content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read().split(&#34;\n&#34;)[0]
+            content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers
+
+
+
+class MultiReader(qpcr.Assay, SingleReader, aux._ID):
+    &#34;&#34;&#34;
+    Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
+    
+    Input Data Files
+    ----------------
+    Valid input files are multi-assay irregular `csv` or `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
+
+    Assays of interest and normaliser assays *must* be marked using `decorators`.
+
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+            Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
+    &#34;&#34;&#34;
+    def __init__(self, filename : str = None, **kwargs):
+        super(aux._ID, self).__init__()
+        self._src = filename
+        self._save_loc = None
+        self._replicates = None
+        self._names = None
+        self._Parser = None
+        self._assay_pattern = None
+        self._assays = {}
+        self._normalisers = {}
+        if self._src is not None: 
+            self._Parser = Parsers.CsvParser() if self._filesuffix() == &#34;csv&#34; else Parsers.ExcelParser()
+            self.read(filename = self._src, **kwargs)
+
+    def get(self, which : str):
+        &#34;&#34;&#34;
+        Returns the stored assays or normalisers.
+
+        Parameters
+        ----------
+        which : str
+            Can be either `&#34;assays&#34;` or `&#34;normalisers&#34;`.
+
+        Returns
+        -------
+        data : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if `make_Assays` has not been run yet)
+            or a list of `qpcr.Assay` objects.
+        &#34;&#34;&#34;
+        data = None
+        if which == &#34;assays&#34;:
+            data = self._assays
+        elif which == &#34;normalisers&#34;:
+            data = self._normalisers
+        return data
+
+    def read(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads a multi-assay datafile with decorated assays. 
+        Any non-decorated assays are ignored!
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+        **kwargs
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # check for a valid input file
+        if self._filesuffix() not in supported_filetypes:
+            aw.HardWarning(&#34;MultiReader:empty_data&#34;, file = self._src)
+
+        self._Parser = Parsers.CsvParser() if self._filesuffix() == &#34;csv&#34; else Parsers.ExcelParser()
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+        
+        # setup a saving location if it was provided
+        if self.save_to() is not None: 
+            self._Parser.save_to(self.save_to())
+
+        self._Parser.read(self._src, **kwargs)
+
+    def parse(self, **kwargs):
+        &#34;&#34;&#34;
+        Extracts the decorated datasets (assays) from the read datafile.
+        
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
+        &#34;&#34;&#34;
+        # remove any decorator argument that the user may have tried to pass...  
+        aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+
+        # get data column labels
+        id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+        ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+        self._Parser.labels(id_label,ct_label)
+
+        # setup assay_patterns if they were provided
+        assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, None, kwargs, rm = True)
+        self._Parser.assay_pattern(assay_pattern)
+
+        # get assays-of-interest
+        self._Parser.parse( decorator = &#34;qpcr:assay&#34;, **kwargs )
+        assays = self._Parser.get()       
+        self._assays = assays
+
+        # save extracted files if so desired...
+        if self.save_to() is not None: self._Parser.save()
+
+        # clear results and run again for normalisers
+        self._Parser.clear()
+
+        # get normaliser-assays
+        self._Parser.parse( decorator = &#34;qpcr:normaliser&#34;, **kwargs )
+        normalisers = self._Parser.get()
+        self._normalisers = normalisers
+        if self.save_to() is not None: self._Parser.save()
+
+    def make_Assays(self):
+        &#34;&#34;&#34;
+        Convert all found assays and normalisers into `qpcr.Assay` objects.
+        &#34;&#34;&#34;
+        # convert assays to qpcr.Assay and overwrite current dict by new list
+        new_assays = []
+        for name, df in self._assays.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_assays.append(new_assay)
+        self._assays = new_assays
+
+        # do the same for normalisers
+        new_normalisers = []
+        for name, df in self._normalisers.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_normalisers.append(new_assay)
+        self._normalisers = new_normalisers
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse+make_Assays
+
+        Note 
+        ----
+        This is the suggested use of `MultiReader`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input datafile.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        data : tuple
+            A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).
+        &#34;&#34;&#34;
+
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = f&#34;{type(self._Parser).__name__}&#39;s read method&#34;)
+        
+        self.parse(**kwargs)
+        self.make_Assays()
+
+        assays = self.get( which = &#34;assays&#34; )
+        normalisers = self.get( which = &#34;normalisers&#34; )
+        return assays, normalisers
+
+    def save_to(self, location : str = None):
+        &#34;&#34;&#34;
+        Sets the location into which the individual assay datafiles should be saved.
+        Parameters
+        ----------
+        location : str
+            The path to a directory where the newly generated assay datafiles shall be saved.
+            If this directory does not yet exist, it will be automatically made.
+        &#34;&#34;&#34;
+        if location is not None: 
+            self._save_loc = location
+            if not os.path.exists(self._save_loc):
+                os.mkdir(self._save_loc)
+        return self._save_loc
+
+    
+    def names(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        self._names = names
+
+    def replicates(self, replicates : (int or tuple or str) = None):
+        &#34;&#34;&#34;
+        Either sets or gets the replicates settings to be used for grouping
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple or str
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+            any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+        &#34;&#34;&#34;
+        if replicates is not None:
+            self._replicates = replicates
+        return self._replicates
+
+    def _make_new_Assay(self, name, df):
+        &#34;&#34;&#34;
+        Makes a new Assay object and performs group() already...
+        &#34;&#34;&#34;
+        new_assay = qpcr.Assay()
+        new_assay.adopt(df)
+        new_assay.id(name)
+        new_assay.replicates(self._replicates)
+        new_assay.group()
+        if self._names is not None:
+            new_assay.rename(self._names)
+        return new_assay
+
+class MultiSheetReader(MultiReader):
+    &#34;&#34;&#34;
+    Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
+    
+    Input Data Files
+    ----------------
+    Valid input files are multi-assay irregular `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`), but may be in DIFFERENT sheets.
+    All assays from all sheets will be read!
+
+    Assays of interest and normaliser assays *must* be marked using `decorators`.
+
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def pipe(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads a multi-assay and multi-sheet datafile with decorated assays. 
+        Any non-decorated assays are ignored!
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+        **kwargs
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # read file to get all sheets
+        sheets = pd.read_excel(filename, sheet_name = None)
+
+        all_assays = {}
+        all_normalisers = {}
+        
+        # now repetitively read all sheets and extract data
+        reader = MultiReader()
+        for sheet in sheets.keys():
+            try: 
+                # read file and parse data
+                kws = deepcopy(kwargs)
+                reader.read(filename, sheet_name = sheet)
+                reader.parse(ignore_empty = True, **kws)
+
+                # get assays
+                assays, normalisers = reader.get(&#34;assays&#34;), reader.get(&#34;normalisers&#34;)
+                all_assays.update(assays)
+                all_normalisers.update(normalisers)
+
+            except Exception as e: 
+                # ERROR HERE
+                print(&#34;Sheet : &#34;, sheet)
+                print(e)
+
+        # store data
+        self._assays = all_assays
+        self._normalisers = all_normalisers
+
+
+if __name__ == &#34;__main__&#34;:
+
+    multisheet_file = &#34;/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx&#34;
+    
+    # reader = MultiReader()
+    # reader.read(multisheet_file, sheet_name = 1)
+    # reader.parse(decorator = &#34;qpcr:assay&#34;)
+    # r = reader.get(&#34;assays&#34;)
+    # print(r)
+    # exit(1) 
+
+    reader = MultiSheetReader()
+    reader.pipe(multisheet_file, assay_pattern = &#34;Rotor-Gene&#34;)
+    print(reader.get(&#34;assays&#34;))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="qpcr.Readers.MultiReader"><code class="flex name class">
+<span>class <span class="ident">MultiReader</span></span>
+<span>(</span><span>filename: str = None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.</p>
+<h2 id="input-data-files">Input Data Files</h2>
+<p>Valid input files are multi-assay irregular <code>csv</code> or <code>excel</code> files,
+that specify assays by one replicate identifier column and one Ct value column.</p>
+<p>Separate assay tables may be either below one another (separated by blank lines!)
+or besides one another (requires <code>transpose = True</code>), but ALL in the SAME sheet!</p>
+<p>Assays of interest and normaliser assays <em>must</em> be marked using <code>decorators</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file, containing multiple assays that were decorated.
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that should be passed to the <code>read</code> method which is immediately called during init if a filename is provided.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiReader(qpcr.Assay, SingleReader, aux._ID):
+    &#34;&#34;&#34;
+    Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
+    
+    Input Data Files
+    ----------------
+    Valid input files are multi-assay irregular `csv` or `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
+
+    Assays of interest and normaliser assays *must* be marked using `decorators`.
+
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+            Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
+    &#34;&#34;&#34;
+    def __init__(self, filename : str = None, **kwargs):
+        super(aux._ID, self).__init__()
+        self._src = filename
+        self._save_loc = None
+        self._replicates = None
+        self._names = None
+        self._Parser = None
+        self._assay_pattern = None
+        self._assays = {}
+        self._normalisers = {}
+        if self._src is not None: 
+            self._Parser = Parsers.CsvParser() if self._filesuffix() == &#34;csv&#34; else Parsers.ExcelParser()
+            self.read(filename = self._src, **kwargs)
+
+    def get(self, which : str):
+        &#34;&#34;&#34;
+        Returns the stored assays or normalisers.
+
+        Parameters
+        ----------
+        which : str
+            Can be either `&#34;assays&#34;` or `&#34;normalisers&#34;`.
+
+        Returns
+        -------
+        data : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if `make_Assays` has not been run yet)
+            or a list of `qpcr.Assay` objects.
+        &#34;&#34;&#34;
+        data = None
+        if which == &#34;assays&#34;:
+            data = self._assays
+        elif which == &#34;normalisers&#34;:
+            data = self._normalisers
+        return data
+
+    def read(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads a multi-assay datafile with decorated assays. 
+        Any non-decorated assays are ignored!
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+        **kwargs
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # check for a valid input file
+        if self._filesuffix() not in supported_filetypes:
+            aw.HardWarning(&#34;MultiReader:empty_data&#34;, file = self._src)
+
+        self._Parser = Parsers.CsvParser() if self._filesuffix() == &#34;csv&#34; else Parsers.ExcelParser()
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+        
+        # setup a saving location if it was provided
+        if self.save_to() is not None: 
+            self._Parser.save_to(self.save_to())
+
+        self._Parser.read(self._src, **kwargs)
+
+    def parse(self, **kwargs):
+        &#34;&#34;&#34;
+        Extracts the decorated datasets (assays) from the read datafile.
+        
+        Parameters
+        ----------
+        **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
+        &#34;&#34;&#34;
+        # remove any decorator argument that the user may have tried to pass...  
+        aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+
+        # get data column labels
+        id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+        ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+        self._Parser.labels(id_label,ct_label)
+
+        # setup assay_patterns if they were provided
+        assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, None, kwargs, rm = True)
+        self._Parser.assay_pattern(assay_pattern)
+
+        # get assays-of-interest
+        self._Parser.parse( decorator = &#34;qpcr:assay&#34;, **kwargs )
+        assays = self._Parser.get()       
+        self._assays = assays
+
+        # save extracted files if so desired...
+        if self.save_to() is not None: self._Parser.save()
+
+        # clear results and run again for normalisers
+        self._Parser.clear()
+
+        # get normaliser-assays
+        self._Parser.parse( decorator = &#34;qpcr:normaliser&#34;, **kwargs )
+        normalisers = self._Parser.get()
+        self._normalisers = normalisers
+        if self.save_to() is not None: self._Parser.save()
+
+    def make_Assays(self):
+        &#34;&#34;&#34;
+        Convert all found assays and normalisers into `qpcr.Assay` objects.
+        &#34;&#34;&#34;
+        # convert assays to qpcr.Assay and overwrite current dict by new list
+        new_assays = []
+        for name, df in self._assays.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_assays.append(new_assay)
+        self._assays = new_assays
+
+        # do the same for normalisers
+        new_normalisers = []
+        for name, df in self._normalisers.items():
+            new_assay = self._make_new_Assay(name, df)
+            new_normalisers.append(new_assay)
+        self._normalisers = new_normalisers
+
+    def pipe(self, filename :str, **kwargs):
+        &#34;&#34;&#34;
+        A wrapper for read+parse+make_Assays
+
+        Note 
+        ----
+        This is the suggested use of `MultiReader`. 
+        If a directory has been specified into which the datafiles shall be saved, 
+        then saving will automatically be done.
+
+        Parameters
+        -------
+        filename : str
+            A filepath to an input datafile.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        data : tuple
+            A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).
+        &#34;&#34;&#34;
+
+        try: 
+            self.read(filename, **kwargs)
+        except: 
+            self.read(filename)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = f&#34;{type(self._Parser).__name__}&#39;s read method&#34;)
+        
+        self.parse(**kwargs)
+        self.make_Assays()
+
+        assays = self.get( which = &#34;assays&#34; )
+        normalisers = self.get( which = &#34;normalisers&#34; )
+        return assays, normalisers
+
+    def save_to(self, location : str = None):
+        &#34;&#34;&#34;
+        Sets the location into which the individual assay datafiles should be saved.
+        Parameters
+        ----------
+        location : str
+            The path to a directory where the newly generated assay datafiles shall be saved.
+            If this directory does not yet exist, it will be automatically made.
+        &#34;&#34;&#34;
+        if location is not None: 
+            self._save_loc = location
+            if not os.path.exists(self._save_loc):
+                os.mkdir(self._save_loc)
+        return self._save_loc
+
+    
+    def names(self, names:(list or dict)):
+        &#34;&#34;&#34;
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        &#34;&#34;&#34;
+        self._names = names
+
+    def replicates(self, replicates : (int or tuple or str) = None):
+        &#34;&#34;&#34;
+        Either sets or gets the replicates settings to be used for grouping
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple or str
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+            any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+        &#34;&#34;&#34;
+        if replicates is not None:
+            self._replicates = replicates
+        return self._replicates
+
+    def _make_new_Assay(self, name, df):
+        &#34;&#34;&#34;
+        Makes a new Assay object and performs group() already...
+        &#34;&#34;&#34;
+        new_assay = qpcr.Assay()
+        new_assay.adopt(df)
+        new_assay.id(name)
+        new_assay.replicates(self._replicates)
+        new_assay.group()
+        if self._names is not None:
+            new_assay.rename(self._names)
+        return new_assay</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr.__init__.Assay</li>
+<li><a title="qpcr.Readers.SingleReader" href="#qpcr.Readers.SingleReader">SingleReader</a></li>
+<li><a title="qpcr.Readers._CORE_Reader" href="#qpcr.Readers._CORE_Reader">_CORE_Reader</a></li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.Readers.MultiSheetReader" href="#qpcr.Readers.MultiSheetReader">MultiSheetReader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Readers.MultiReader.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, which: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the stored assays or normalisers.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>which</code></strong> :&ensp;<code>str</code></dt>
+<dd>Can be either <code>"assays"</code> or <code>"normalisers"</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code> or <code>list</code></dt>
+<dd>Returns either the raw dictionary of dataframes returned by the Parser
+(if <code>make_Assays</code> has not been run yet)
+or a list of <code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code> objects.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, which : str):
+    &#34;&#34;&#34;
+    Returns the stored assays or normalisers.
+
+    Parameters
+    ----------
+    which : str
+        Can be either `&#34;assays&#34;` or `&#34;normalisers&#34;`.
+
+    Returns
+    -------
+    data : dict or list
+        Returns either the raw dictionary of dataframes returned by the Parser 
+        (if `make_Assays` has not been run yet)
+        or a list of `qpcr.Assay` objects.
+    &#34;&#34;&#34;
+    data = None
+    if which == &#34;assays&#34;:
+        data = self._assays
+    elif which == &#34;normalisers&#34;:
+        data = self._normalisers
+    return data</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.make_Assays"><code class="name flex">
+<span>def <span class="ident">make_Assays</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert all found assays and normalisers into <code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code> objects.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_Assays(self):
+    &#34;&#34;&#34;
+    Convert all found assays and normalisers into `qpcr.Assay` objects.
+    &#34;&#34;&#34;
+    # convert assays to qpcr.Assay and overwrite current dict by new list
+    new_assays = []
+    for name, df in self._assays.items():
+        new_assay = self._make_new_Assay(name, df)
+        new_assays.append(new_assay)
+    self._assays = new_assays
+
+    # do the same for normalisers
+    new_normalisers = []
+    for name, df in self._normalisers.items():
+        new_assay = self._make_new_Assay(name, df)
+        new_normalisers.append(new_assay)
+    self._normalisers = new_normalisers</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.names"><code class="name flex">
+<span>def <span class="ident">names</span></span>(<span>self, names: list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set names for replicates groups.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>names</code></strong> :&ensp;<code>list</code> or <code>dict</code></dt>
+<dd>Either a <code>list</code> (new names without repetitions) or <code>dict</code> (key = old name, value = new name) specifying new group names.
+Group names only need to be specified once, and are applied to all replicate entries.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def names(self, names:(list or dict)):
+    &#34;&#34;&#34;
+    Set names for replicates groups.
+
+    Parameters
+    ----------
+    names : list or dict
+        Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+        Group names only need to be specified once, and are applied to all replicate entries.
+    &#34;&#34;&#34;
+    self._names = names</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extracts the decorated datasets (assays) from the read datafile.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that should be passed to the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>''s <code>parse</code> method that extracts the datasets.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(self, **kwargs):
+    &#34;&#34;&#34;
+    Extracts the decorated datasets (assays) from the read datafile.
+    
+    Parameters
+    ----------
+    **kwargs
+        Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `parse` method that extracts the datasets.
+    &#34;&#34;&#34;
+    # remove any decorator argument that the user may have tried to pass...  
+    aux.from_kwargs(&#34;decorator&#34;, None, kwargs, rm = True)
+
+    # check if file should be read transposed
+    transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+    if transpose:
+        self._Parser.transpose()
+
+    # get data column labels
+    id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+    ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+    self._Parser.labels(id_label,ct_label)
+
+    # setup assay_patterns if they were provided
+    assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, None, kwargs, rm = True)
+    self._Parser.assay_pattern(assay_pattern)
+
+    # get assays-of-interest
+    self._Parser.parse( decorator = &#34;qpcr:assay&#34;, **kwargs )
+    assays = self._Parser.get()       
+    self._assays = assays
+
+    # save extracted files if so desired...
+    if self.save_to() is not None: self._Parser.save()
+
+    # clear results and run again for normalisers
+    self._Parser.clear()
+
+    # get normaliser-assays
+    self._Parser.parse( decorator = &#34;qpcr:normaliser&#34;, **kwargs )
+    normalisers = self._Parser.get()
+    self._normalisers = normalisers
+    if self.save_to() is not None: self._Parser.save()</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A wrapper for read+parse+make_Assays</p>
+<h2 id="note">Note</h2>
+<p>This is the suggested use of <code><a title="qpcr.Readers.MultiReader" href="#qpcr.Readers.MultiReader">MultiReader</a></code>.
+If a directory has been specified into which the datafiles shall be saved,
+then saving will automatically be done.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to an input datafile.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword argument that will be passed to any of the wrapped methods.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(self, filename :str, **kwargs):
+    &#34;&#34;&#34;
+    A wrapper for read+parse+make_Assays
+
+    Note 
+    ----
+    This is the suggested use of `MultiReader`. 
+    If a directory has been specified into which the datafiles shall be saved, 
+    then saving will automatically be done.
+
+    Parameters
+    -------
+    filename : str
+        A filepath to an input datafile.
+    **kwargs
+        Any additional keyword argument that will be passed to any of the wrapped methods.
+    Returns
+    -------
+    data : tuple
+        A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).
+    &#34;&#34;&#34;
+
+    try: 
+        self.read(filename, **kwargs)
+    except: 
+        self.read(filename)
+        aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = f&#34;{type(self._Parser).__name__}&#39;s read method&#34;)
+    
+    self.parse(**kwargs)
+    self.make_Assays()
+
+    assays = self.get( which = &#34;assays&#34; )
+    normalisers = self.get( which = &#34;normalisers&#34; )
+    return assays, normalisers</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads a multi-assay datafile with decorated assays.
+Any non-decorated assays are ignored!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file, containing multiple assays that were decorated.
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that should be passed to the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>''s <code>read</code> method that extracts the datasets.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, filename : str, **kwargs):
+    &#34;&#34;&#34;
+    Reads a multi-assay datafile with decorated assays. 
+    Any non-decorated assays are ignored!
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+    &#34;&#34;&#34;
+    self._src = filename
+
+    # check for a valid input file
+    if self._filesuffix() not in supported_filetypes:
+        aw.HardWarning(&#34;MultiReader:empty_data&#34;, file = self._src)
+
+    self._Parser = Parsers.CsvParser() if self._filesuffix() == &#34;csv&#34; else Parsers.ExcelParser()
+
+    # check if file should be read transposed
+    transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+    if transpose:
+        self._Parser.transpose()
+    
+    # setup a saving location if it was provided
+    if self.save_to() is not None: 
+        self._Parser.save_to(self.save_to())
+
+    self._Parser.read(self._src, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.replicates"><code class="name flex">
+<span>def <span class="ident">replicates</span></span>(<span>self, replicates: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Either sets or gets the replicates settings to be used for grouping
+Before they are assigned, replicates are vetted to ensure they cover all data entries.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>replicates</code></strong> :&ensp;<code>int</code> or <code>tuple</code> or <code>str</code></dt>
+<dd>Can be an <code>integer</code> (equal group sizes, e.g. <code>3</code> for triplicates),
+or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the second group is only a duplicate).
+Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+The allowed structure of such a formula is <code>n:m,</code> where <code>n</code> is the number of replicates in a group and <code>m</code> is the number of times
+this pattern is repeated (if no <code>:m</code> is specified <code>:1</code> is assumed). So, as an example, if there are 12 groups which are triplicates, but
+at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+individually as <code>replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)</code> or we use the formula to specify <code>replicates = "3:12,1"</code>. Of course, this works for
+any arbitrary setting such as <code>"3:5,2:5,10,3:12"</code> (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)&hellip;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replicates(self, replicates : (int or tuple or str) = None):
+    &#34;&#34;&#34;
+    Either sets or gets the replicates settings to be used for grouping
+    Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+    Parameters
+    ----------
+    replicates : int or tuple or str
+        Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+        or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        Another method to achieve the same thing is to specify a &#34;formula&#34; as a string of how to create a replicate tuple.
+        The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+        this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+        at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+        individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = &#34;3:12,1&#34;`. Of course, this works for
+        any arbitrary setting such as `&#34;3:5,2:5,10,3:12&#34;` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+    &#34;&#34;&#34;
+    if replicates is not None:
+        self._replicates = replicates
+    return self._replicates</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers.MultiReader.save_to"><code class="name flex">
+<span>def <span class="ident">save_to</span></span>(<span>self, location: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets the location into which the individual assay datafiles should be saved.
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code></dt>
+<dd>The path to a directory where the newly generated assay datafiles shall be saved.
+If this directory does not yet exist, it will be automatically made.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_to(self, location : str = None):
+    &#34;&#34;&#34;
+    Sets the location into which the individual assay datafiles should be saved.
+    Parameters
+    ----------
+    location : str
+        The path to a directory where the newly generated assay datafiles shall be saved.
+        If this directory does not yet exist, it will be automatically made.
+    &#34;&#34;&#34;
+    if location is not None: 
+        self._save_loc = location
+        if not os.path.exists(self._save_loc):
+            os.mkdir(self._save_loc)
+    return self._save_loc</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Readers.SingleReader" href="#qpcr.Readers.SingleReader">SingleReader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Readers.SingleReader.n" href="#qpcr.Readers._CORE_Reader.n">n</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="qpcr.Readers.MultiSheetReader"><code class="flex name class">
+<span>class <span class="ident">MultiSheetReader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.</p>
+<h2 id="input-data-files">Input Data Files</h2>
+<p>Valid input files are multi-assay irregular <code>excel</code> files,
+that specify assays by one replicate identifier column and one Ct value column.</p>
+<p>Separate assay tables may be either below one another (separated by blank lines!)
+or besides one another (requires <code>transpose = True</code>), but may be in DIFFERENT sheets.
+All assays from all sheets will be read!</p>
+<p>Assays of interest and normaliser assays <em>must</em> be marked using <code>decorators</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file, containing multiple assays that were decorated.
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiSheetReader(MultiReader):
+    &#34;&#34;&#34;
+    Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
+    
+    Input Data Files
+    ----------------
+    Valid input files are multi-assay irregular `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`), but may be in DIFFERENT sheets.
+    All assays from all sheets will be read!
+
+    Assays of interest and normaliser assays *must* be marked using `decorators`.
+
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+
+    def pipe(self, filename : str, **kwargs):
+        &#34;&#34;&#34;
+        Reads a multi-assay and multi-sheet datafile with decorated assays. 
+        Any non-decorated assays are ignored!
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+        **kwargs
+                Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+        &#34;&#34;&#34;
+        self._src = filename
+
+        # read file to get all sheets
+        sheets = pd.read_excel(filename, sheet_name = None)
+
+        all_assays = {}
+        all_normalisers = {}
+        
+        # now repetitively read all sheets and extract data
+        reader = MultiReader()
+        for sheet in sheets.keys():
+            try: 
+                # read file and parse data
+                kws = deepcopy(kwargs)
+                reader.read(filename, sheet_name = sheet)
+                reader.parse(ignore_empty = True, **kws)
+
+                # get assays
+                assays, normalisers = reader.get(&#34;assays&#34;), reader.get(&#34;normalisers&#34;)
+                all_assays.update(assays)
+                all_normalisers.update(normalisers)
+
+            except Exception as e: 
+                # ERROR HERE
+                print(&#34;Sheet : &#34;, sheet)
+                print(e)
+
+        # store data
+        self._assays = all_assays
+        self._normalisers = all_normalisers</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="qpcr.Readers.MultiReader" href="#qpcr.Readers.MultiReader">MultiReader</a></li>
+<li>qpcr.__init__.Assay</li>
+<li><a title="qpcr.Readers.SingleReader" href="#qpcr.Readers.SingleReader">SingleReader</a></li>
+<li><a title="qpcr.Readers._CORE_Reader" href="#qpcr.Readers._CORE_Reader">_CORE_Reader</a></li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Readers.MultiSheetReader.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads a multi-assay and multi-sheet datafile with decorated assays.
+Any non-decorated assays are ignored!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file, containing multiple assays that were decorated.
+Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>'s to learn more about decorators.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that should be passed to the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code>''s <code>read</code> method that extracts the datasets.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(self, filename : str, **kwargs):
+    &#34;&#34;&#34;
+    Reads a multi-assay and multi-sheet datafile with decorated assays. 
+    Any non-decorated assays are ignored!
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file, containing multiple assays that were decorated. 
+        Check out the documentation of the `qpcr.Parsers`&#39;s to learn more about decorators.
+    **kwargs
+            Any additional keyword arguments that should be passed to the `qpcr.Parsers`&#39;&#39;s `read` method that extracts the datasets.
+    &#34;&#34;&#34;
+    self._src = filename
+
+    # read file to get all sheets
+    sheets = pd.read_excel(filename, sheet_name = None)
+
+    all_assays = {}
+    all_normalisers = {}
+    
+    # now repetitively read all sheets and extract data
+    reader = MultiReader()
+    for sheet in sheets.keys():
+        try: 
+            # read file and parse data
+            kws = deepcopy(kwargs)
+            reader.read(filename, sheet_name = sheet)
+            reader.parse(ignore_empty = True, **kws)
+
+            # get assays
+            assays, normalisers = reader.get(&#34;assays&#34;), reader.get(&#34;normalisers&#34;)
+            all_assays.update(assays)
+            all_normalisers.update(normalisers)
+
+        except Exception as e: 
+            # ERROR HERE
+            print(&#34;Sheet : &#34;, sheet)
+            print(e)
+
+    # store data
+    self._assays = all_assays
+    self._normalisers = all_normalisers</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Readers.MultiReader" href="#qpcr.Readers.MultiReader">MultiReader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Readers.MultiReader.get" href="#qpcr.Readers.MultiReader.get">get</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.make_Assays" href="#qpcr.Readers.MultiReader.make_Assays">make_Assays</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.n" href="#qpcr.Readers._CORE_Reader.n">n</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.names" href="#qpcr.Readers.MultiReader.names">names</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.parse" href="#qpcr.Readers.MultiReader.parse">parse</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.read" href="#qpcr.Readers.MultiReader.read">read</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.replicates" href="#qpcr.Readers.MultiReader.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.save_to" href="#qpcr.Readers.MultiReader.save_to">save_to</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="qpcr.Readers.SingleReader"><code class="flex name class">
+<span>class <span class="ident">SingleReader</span></span>
+<span>(</span><span>filename: str, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads qpcr raw data files in csv or excel format to get a single dataset. </p>
+<h2 id="input-data-files">Input Data Files</h2>
+<p>Valid input files are either regular <code>csv</code> files, or
+irregular <code>csv</code> or <code>excel</code> files,
+that specify assays by one replicate identifier column and one Ct value column.</p>
+<p>Irregular input files may specify multiple assays as separate tables,
+one assay has to be selected using the <code>assay</code> argument.
+Separate assay tables may be either below one another (separated by blank lines!)
+or besides one another (requires <code>transpose = True</code>).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>A filepath to a raw data file.
+If the file is a <code>csv</code> file, it has to have two named columns; one for replicate names, one for Ct values.
+Both csv (<code>,</code> spearated) and csv2 (<code>;</code> separated) are accepted.
+If the file is an <code>excel</code> file it the relevant sections of the spreadsheet are identified automatically.
+But they require identifying headers. By default <code>Name</code> and <code>Ct</code> are assumed but these can be changed using
+the <code>name_label</code> and <code>Ct_label</code> arguments that can be passed as kwargs (they will be forwarded to the <code>.read()</code> method).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any additional keyword arguments that shall be passed to the <code>read()</code> method which is immediately called during init.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SingleReader(_CORE_Reader):
+    &#34;&#34;&#34;
+    Reads qpcr raw data files in csv or excel format to get a single dataset. 
+
+    Input Data Files
+    ----------------
+    Valid input files are either regular `csv` files, or  irregular `csv` or `excel` files, 
+    that specify assays by one replicate identifier column and one Ct value column.
+
+    Irregular input files may specify multiple assays as separate tables, 
+    one assay has to be selected using the `assay` argument. 
+    Separate assay tables may be either below one another (separated by blank lines!)
+    or besides one another (requires `transpose = True`).
+
+    Parameters
+    ----------
+    filename : str
+        A filepath to a raw data file.
+        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
+        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+
+    **kwargs
+        Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
+    &#34;&#34;&#34;
+    def __init__(self, filename:str, **kwargs) -&gt; pd.DataFrame: 
+        super().__init__()
+        self._src = filename
+        if self._filesuffix() == &#34;csv&#34;:
+            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+        self.read(**kwargs)
+
+    def _is_csv2(self):
+        &#34;&#34;&#34;
+        Tests if csv file is ; delimited (True) or common , (False)
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read()
+        if &#34;;&#34; in content: 
+            return True
+        return False
+
+    def _has_header(self):
+        &#34;&#34;&#34;
+        Checks if column headers are provided in the data file
+        It does so by checking if the second element in the first row is numeric
+        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+        it returns 0 (as in first row has headers)...
+        &#34;&#34;&#34;
+        with open(self._src, &#34;r&#34;) as openfile: 
+            content = openfile.read().split(&#34;\n&#34;)[0]
+            content = content.split(self._delimiter)
+        try: 
+            second_col = content[1]
+            second_col = float(second_col)
+        except ValueError:
+            return 0 # Headers in row 0
+        return None  # no headers</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="qpcr.Readers._CORE_Reader" href="#qpcr.Readers._CORE_Reader">_CORE_Reader</a></li>
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.Readers.MultiReader" href="#qpcr.Readers.MultiReader">MultiReader</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="qpcr.Readers._CORE_Reader" href="#qpcr.Readers._CORE_Reader">_CORE_Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="qpcr.Readers._CORE_Reader.get" href="#qpcr.Readers._CORE_Reader.get">get</a></code></li>
+<li><code><a title="qpcr.Readers._CORE_Reader.n" href="#qpcr.Readers._CORE_Reader.n">n</a></code></li>
+<li><code><a title="qpcr.Readers._CORE_Reader.read" href="#qpcr.Readers._CORE_Reader.read">read</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="qpcr.Readers._CORE_Reader"><code class="flex name class">
+<span>class <span class="ident">_CORE_Reader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>The class handling the core functions of the Reader class.
+Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+inherit from this.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class _CORE_Reader(aux._ID):
+    &#34;&#34;&#34;
+    The class handling the core functions of the Reader class. 
+    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
+    inherit from this. 
+    &#34;&#34;&#34;
+    def __init__(self):
+        super().__init__()
+        self._src = None
+        self._delimiter = None
+        self._df = None
+
+    def get(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        data : pd.DataFrame
+            The dataframe from the datafile.
+        &#34;&#34;&#34;
+        return self._df
+
+    def n(self):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        n : int
+            The number of replicates (entries) in the dataframe.
+        &#34;&#34;&#34;
+        return len(self._df[raw_col_names[0]])
+
+
+    def read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file.
+
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file. Note, this assumes by default
+        that the replicates are headed by the label `&#34;Name&#34;` and the corresponding Ct values
+        are headed by the label `&#34;Ct&#34;`. Both labels have to be on the same row. 
+
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
+        &#34;&#34;&#34;
+        suffix = self._filesuffix()
+        if suffix == &#34;csv&#34;:
+            try: 
+                self._csv_read()
+            except:
+                # setup parser
+                parser = Parsers.CsvParser()
+                # check it file should be read transposed
+                transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+                if transpose:
+                    parser.transpose()
+                
+                # setup patterns and store assay-of-interest
+                assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+                assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+                parser.assay_pattern(assay_pattern)
+                
+                # get data column labels
+                id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+                ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+                parser.labels(id_label,ct_label)
+                
+                # pipe the datafile through the parser
+                parser.pipe(self._src, **kwargs)
+
+                if len(parser.assays()) &gt; 1:
+                    if assay_of_interest is None: 
+                        aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays())
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+                else:
+                    assay_of_interest = parser.assays()[0]
+                    self._df = parser.get(assay_of_interest)
+                    self.id(assay_of_interest)
+
+        elif suffix == &#34;xlsx&#34;:
+            # setup parser
+            parser = Parsers.ExcelParser()
+            # check it file should be read transposed
+            transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+            if transpose:
+                parser.transpose()
+            
+            # check for sheet_name
+            sheet_name = aux.from_kwargs(&#34;sheet_name&#34;, 0, kwargs, rm = True)
+
+            # setup patterns and store assay-of-interest
+            assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+            assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+            parser.assay_pattern(assay_pattern)
+            
+            # get data column labels
+            id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+            ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+            parser.labels(id_label,ct_label)
+
+            # pipe the datafile through the parser
+            parser.read(self._src, sheet_name = sheet_name)
+            parser.parse(**kwargs)
+
+            if len(parser.assays()) &gt; 1:
+                if assay_of_interest is None: 
+                    aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays(), traceback = False)
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+            else:
+                assay_of_interest = parser.assays()[0]
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+  
+    def _csv_read(self, **kwargs):
+        &#34;&#34;&#34;
+        Reads the given data file if it&#39;s a csv file
+
+        This is the basic default reading method for 
+        regular csv files.
+        &#34;&#34;&#34;
+        df = None
+        try: 
+            df = pd.read_csv(
+                                self._src, 
+                                sep = self._delimiter, 
+                                header = self._has_header(), 
+                                names = raw_col_names
+                            )
+        except: 
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        # check if a valid Ct column was found
+        Ct = raw_col_names[1]
+        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
+        if not full_valid_Ct_col:
+            aw.HardWarning(&#34;Reader:cannot_read_csv&#34;, file = self._src)
+
+        self._df = df
+
+    def _filesuffix(self):
+        &#34;&#34;&#34;
+        Returns the file-suffix of the provided file
+        &#34;&#34;&#34;
+        suffix = self._src.split(&#34;.&#34;)[-1]
+        return suffix</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>qpcr._auxiliary._ID</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="qpcr.Readers.SingleReader" href="#qpcr.Readers.SingleReader">SingleReader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="qpcr.Readers._CORE_Reader.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>The dataframe from the datafile.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    data : pd.DataFrame
+        The dataframe from the datafile.
+    &#34;&#34;&#34;
+    return self._df</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers._CORE_Reader.n"><code class="name flex">
+<span>def <span class="ident">n</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of replicates (entries) in the dataframe.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def n(self):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    n : int
+        The number of replicates (entries) in the dataframe.
+    &#34;&#34;&#34;
+    return len(self._df[raw_col_names[0]])</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Readers._CORE_Reader.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads the given data file.</p>
+<p>If the data file is an Excel file replicates and their Ct values will be
+extracted from the first excel sheet of the file. Note, this assumes by default
+that the replicates are headed by the label <code>"Name"</code> and the corresponding Ct values
+are headed by the label <code>"Ct"</code>. Both labels have to be on the same row. </p>
+<p>If these labels do not match your excel file, you may
+specify <code>name_label</code> and <code>Ct_label</code> as additional arguments.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, **kwargs):
+    &#34;&#34;&#34;
+    Reads the given data file.
+
+    If the data file is an Excel file replicates and their Ct values will be 
+    extracted from the first excel sheet of the file. Note, this assumes by default
+    that the replicates are headed by the label `&#34;Name&#34;` and the corresponding Ct values
+    are headed by the label `&#34;Ct&#34;`. Both labels have to be on the same row. 
+
+    If these labels do not match your excel file, you may
+    specify `name_label` and `Ct_label` as additional arguments.
+    &#34;&#34;&#34;
+    suffix = self._filesuffix()
+    if suffix == &#34;csv&#34;:
+        try: 
+            self._csv_read()
+        except:
+            # setup parser
+            parser = Parsers.CsvParser()
+            # check it file should be read transposed
+            transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+            if transpose:
+                parser.transpose()
+            
+            # setup patterns and store assay-of-interest
+            assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+            assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+            parser.assay_pattern(assay_pattern)
+            
+            # get data column labels
+            id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+            ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+            parser.labels(id_label,ct_label)
+            
+            # pipe the datafile through the parser
+            parser.pipe(self._src, **kwargs)
+
+            if len(parser.assays()) &gt; 1:
+                if assay_of_interest is None: 
+                    aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays())
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+            else:
+                assay_of_interest = parser.assays()[0]
+                self._df = parser.get(assay_of_interest)
+                self.id(assay_of_interest)
+
+    elif suffix == &#34;xlsx&#34;:
+        # setup parser
+        parser = Parsers.ExcelParser()
+        # check it file should be read transposed
+        transpose = aux.from_kwargs(&#34;transpose&#34;, False, kwargs, rm = True)
+        if transpose:
+            parser.transpose()
+        
+        # check for sheet_name
+        sheet_name = aux.from_kwargs(&#34;sheet_name&#34;, 0, kwargs, rm = True)
+
+        # setup patterns and store assay-of-interest
+        assay_pattern = aux.from_kwargs(&#34;assay_pattern&#34;, &#34;Rotor-Gene&#34;, kwargs)
+        assay_of_interest = aux.from_kwargs(&#34;assay&#34;, None, kwargs, rm=True)
+        parser.assay_pattern(assay_pattern)
+        
+        # get data column labels
+        id_label = aux.from_kwargs(&#34;id_label&#34;, &#34;Name&#34;, kwargs, rm = True)
+        ct_label = aux.from_kwargs(&#34;ct_label&#34;, &#34;Ct&#34;, kwargs, rm = True)
+        parser.labels(id_label,ct_label)
+
+        # pipe the datafile through the parser
+        parser.read(self._src, sheet_name = sheet_name)
+        parser.parse(**kwargs)
+
+        if len(parser.assays()) &gt; 1:
+            if assay_of_interest is None: 
+                aw.HardWarning(&#34;Reader:cannot_read_multifile&#34;, file = self._src, assays = parser.assays(), traceback = False)
+            self._df = parser.get(assay_of_interest)
+            self.id(assay_of_interest)
+        else:
+            assay_of_interest = parser.assays()[0]
+            self._df = parser.get(assay_of_interest)
+            self.id(assay_of_interest)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<a href="https://github.com/NoahHenrikKleinschmidt/qpcr">
+<img src="./qpcr_light.svg" width = "100%" >
+</a>
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#available-data-readers">Available Data Readers</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="qpcr" href="index.html">qpcr</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="qpcr.Readers.MultiReader" href="#qpcr.Readers.MultiReader">MultiReader</a></code></h4>
+<ul class="two-column">
+<li><code><a title="qpcr.Readers.MultiReader.get" href="#qpcr.Readers.MultiReader.get">get</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.make_Assays" href="#qpcr.Readers.MultiReader.make_Assays">make_Assays</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.names" href="#qpcr.Readers.MultiReader.names">names</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.parse" href="#qpcr.Readers.MultiReader.parse">parse</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.pipe" href="#qpcr.Readers.MultiReader.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.read" href="#qpcr.Readers.MultiReader.read">read</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.replicates" href="#qpcr.Readers.MultiReader.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Readers.MultiReader.save_to" href="#qpcr.Readers.MultiReader.save_to">save_to</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Readers.MultiSheetReader" href="#qpcr.Readers.MultiSheetReader">MultiSheetReader</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Readers.MultiSheetReader.pipe" href="#qpcr.Readers.MultiSheetReader.pipe">pipe</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="qpcr.Readers.SingleReader" href="#qpcr.Readers.SingleReader">SingleReader</a></code></h4>
+</li>
+<li>
+<h4><code><a title="qpcr.Readers._CORE_Reader" href="#qpcr.Readers._CORE_Reader">_CORE_Reader</a></code></h4>
+<ul class="">
+<li><code><a title="qpcr.Readers._CORE_Reader.get" href="#qpcr.Readers._CORE_Reader.get">get</a></code></li>
+<li><code><a title="qpcr.Readers._CORE_Reader.n" href="#qpcr.Readers._CORE_Reader.n">n</a></code></li>
+<li><code><a title="qpcr.Readers._CORE_Reader.read" href="#qpcr.Readers._CORE_Reader.read">read</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
