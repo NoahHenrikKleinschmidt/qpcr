@@ -1864,9 +1864,8 @@ class Analyser(aux._ID):
         # we do this instead of just 0 
         # because the truly first entry 
         # might have been filtered out 
-        first = list(df.index)[0]
-
         df = self._Assay.get()
+        first = list(df.index)[0]
 
         # get anchor
         anchor = df[Ct][ first ]
