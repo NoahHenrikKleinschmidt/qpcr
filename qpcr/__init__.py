@@ -875,6 +875,17 @@ class SampleReader(Assay):
         self._Reader = None
         self._Assay = None
 
+    def __str__(self):
+        header = f"qpcr.SampleReader ({self._id})"
+        reps = f"Replicate settings:\t{self._replicates}"
+        names = f"Name settings:\t\t{self._names}"
+
+        header_line = max([len(i) for i in [header, reps, names]])
+        header_line = "-" * header_line
+
+        string = f"{header_line}\n{header}\n{header_line}\n\n{reps}\n{names}\n\n{header_line}"
+        return string
+
     def replicates(self, replicates:(int or tuple)):
         """
         Set the replicates specifics to use for grouping.
