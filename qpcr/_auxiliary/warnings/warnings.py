@@ -57,13 +57,17 @@ WARNINGS = {
 "Parser:decorators_but_no_pattern" : "No assay_pattern has been specified yet!\nWill default to just extracting the entire cell content below the decorators. To deal more properly with your assays, please, specify an assay_pattern.",
 "Parser:invalid_range" : "No data range could be generated from provided inputs!",
 "Parser:found_non_readable_cts" : "Assay: '{assay}'\nAt least one Ct value of this assay could not be read and was set to NaN!\nThe value responsible for this warning was {bad_value}",
-
+"Parser:bigtable_no_replicates" : "No replicates have been specified!\nCannot infer a horizontal Big Table without replicate information!",
+"Parser:no_bigtable_header" : "The provided Big Table anchor: '{header}' could not be identified within the data!\nMake sure to provide a valid column header as id_label using labels().",
 
 "MultiReader:empty_data" : "No data is currently stored by the MultiReader!\nIf you already read a file then this could either be because the file did not contain valid decorators, or because it used different headers than the current ones above the data column, or because there are too many rows between the header and the data. Max allowed rows between assay identifier and data are 2! There must not be any rows between decorators and assay identifiers!",
 "MultiReader:unknown_datafile" : "Could not read file '{file}'!\nCurrently, only 'csv' and 'excel' files are supported. Make sure to provide either of those formats!",
 "MultiReader:no_decorator_or_pattern" : "No assays could be identified!\nMake sure to either specify a valid assay_pattern or decorate your assays in your file.",
 
 "MultiSheetReader:sheet_unreadable" : "Sheet: {sheet}\n{e}",
+
+"BigTableReader:no_cols" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nMake sure to specify valid columns to your data for these inputs! Currently ct_col = {ct_col} and assay_col = {assay_col}",
+"BigTableReader:cols_no_good" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nHowever, the currently specified columns cannot be found! Currently ct_col = {ct_col} and assay_col = {assay_col}",
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
 
