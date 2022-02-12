@@ -826,12 +826,17 @@ class BigTableReader(MultiReader):
     """
     def __init__(self):
         super().__init__()
+
+        self._assays = {}
+        self._normalisers = {}
+
         self._Parser = None
         self._kind = None  # horizontal or vertical 
         self._id_col = None
         self._ct_col = None
         self._assay_col = None
-
+        self._is_regular = False    # store if the datafile was regular and does not 
+                                    # have to be converted to a dataframe based on a numpy array...
     
     def read(self, filename : str, kind : str, id_col : str, **kwargs):
         """
@@ -866,7 +871,8 @@ class BigTableReader(MultiReader):
 
             # check if we got data, and abort if so
             if self._data is not None: 
-                print(self._data)
+                self._df = self._data
+                self._is_regular = True
                 return
 
         # if haven't got data, then we go to parsing...
@@ -876,9 +882,150 @@ class BigTableReader(MultiReader):
 
         self._Parser.read(self._src)
         self._Parser.labels(id_label = self._id_col)
-        print(self._Parser._data)
         self._Parser._make_BigTable_range(is_horizontal = is_horizontal)
         print(self._Parser._bigtable_range)
+
+
+    def parse(self, **kwargs):
+        """
+        Parses the big table and extracts the individual assays.
+        """
+        
+        if self._kind == "vertical":
+            self._parse_vertical(**kwargs)
+
+    def _parse_vertical(self, **kwargs):
+        """
+        Extracts assay datasets for vertical big tables
+        """
+        
+        self._ct_col = aux.from_kwargs("ct_col", None, kwargs, rm = True)
+        self._assay_col = aux.from_kwargs("assay_col", None, kwargs, rm = True)
+
+        # in case of vertical tables, check if we got ct_col and assay_col
+        got_no_cols = (self._ct_col is None or self._assay_col is None)
+        if self._kind == "vertical" and got_no_cols:
+            aw.HardWarning("BigTableReader:no_cols", ct_col = self._ct_col, assay_col = self._assay_col)
+            
+            # and test if the ones we have are good
+        if not self._test_cols_are_good():
+            aw.HardWarning("BigTableReader:cols_no_good", ct_col = self._ct_col, assay_col = self._assay_col)
+
+        # convert to pandas dataframe in case 
+        # the data had to be parsed
+        if not self._is_regular:
+            self._make_vertical_range_df()
+
+        df = self._data
+        assay_col_header = self._assay_col
+        ct_col_header = self._ct_col
+        id_col_header = self._id_col
+
+        # get columns to include 
+        cols_to_use = [id_col_header, ct_col_header]
+
+        # now read the separate assays and store in assays and normalisers
+        if self._vertical_decorated(): 
+            cols_to_use.append("@qpcr")
+            self._get_vertical_assays_decorated(
+                                                    df, 
+                                                    assay_col_header, 
+                                                    ct_col_header, 
+                                                    cols_to_use
+                                                )
+        else:
+            self._get_vertical_assays_not_decorated(
+                                                        df, 
+                                                        assay_col_header, 
+                                                        ct_col_header, 
+                                                        cols_to_use,
+                                                        self._assays
+                                                    )
+
+
+    def _get_vertical_assays_decorated(self, df, assay_col_header, ct_col_header, cols_to_use):
+        """
+        Gets assays based on decorators, storing them in _assays and _normalisers
+        """
+
+        # get assays 
+        tmp = df.query("@qpcr == 'assay'")
+        self._get_vertical_assays_not_decorated(
+                                                        df, 
+                                                        assay_col_header, 
+                                                        ct_col_header, 
+                                                        cols_to_use,
+                                                        self._assays
+                                                    )
+
+        # get normalisers
+        tmp = df.query("@qpcr == 'normaliser'")
+        self._get_vertical_assays_not_decorated(
+                                                        df, 
+                                                        assay_col_header, 
+                                                        ct_col_header, 
+                                                        cols_to_use,
+                                                        self._normalisers
+                                                    )
+
+    def _get_vertical_assays_not_decorated(self, df, assay_col_header, ct_col_header, cols_to_use, store_in):
+        """
+        Gets assays without a decorator, storing them all in self._assays...
+        """
+
+        # get default names for the id and ct columns
+        to_defaults = { 
+                            _from : _to for _from, _to in 
+
+                            zip(
+                                    [self._id_col, self._ct_col], 
+                                    raw_col_names
+                                )
+                    }
+
+        # iterate over all assays
+        assays = set(df[assay_col_header])
+        for assay in assays:
+            # get the assay subset
+            subset = df.query(f"`{assay_col_header}` == '{assay}'")
+            subset = subset[cols_to_use]
+
+            # make Cts numeric
+            cts = subset[ct_col_header].to_numpy()
+            cts = np.genfromtxt(  np.array(cts, dtype=str)  )
+            subset[ct_col_header] = cts
+            
+            subset = subset.reset_index(drop = True)
+            # rename to defaults
+            subset = subset.rename(columns = to_defaults)
+
+            # save assay
+            store_in.update({ assay : subset })
+
+    def _vertical_decorated(self):
+        """
+        Checks if a vertical bigtable is decorated
+        """
+        return "@qpcr" in self._data.columns
+
+    def _make_vertical_range_df(self):
+        """
+        Converts the numpy array from the Parser 
+        to a pandas dataframe in case of irregular vertical big tables.
+        """
+        data = self._data
+        headers = data[0, :]
+        data = data[ 1: ,: ]
+        df = pd.DataFrame(data, columns = headers)
+        self._data = df
+
+    def _test_cols_are_good(self):
+        """
+        Tests if specified ct and assay cols are valid
+        """
+        cols = self._data.columns
+        all_good = self._ct_col in cols and self._assay_col in cols
+        return all_good
 
     def _try_simple_read(self, kwargs):
         """
@@ -927,5 +1074,12 @@ if __name__ == "__main__":
     bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
 
     reader = BigTableReader()
+
+
     reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
+    reader.parse(ct_col = "Ct", assay_col = "Gene")
+
+    print(reader._assays)
+
+
     reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
