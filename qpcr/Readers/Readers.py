@@ -778,10 +778,11 @@ class BigTableReader(MultiReader):
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
-    Input Data Files
+    ### Input Data Files
     ----------------
     Valid input files are multi-assay irregular `csv` or `excel` files, 
     that specify assays as one big table containing all information together.
+    Note that this implies that the entire data is stored in a single sheet (if using `excel` files).
 
     Two possible data architectures are allowed:
     
@@ -822,17 +823,83 @@ class BigTableReader(MultiReader):
     | kd   | 7.86 | 7.57 | 7.67 | 11.43 | 11.56 | ...  |
     | ...  | ...  | ...  | ...  | …     | ...   | ...  |
 
-
-    Parameters
-    ----------
-    filename : str
-        A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
-    **kwargs
     """
     def __init__(self):
         super().__init__()
+        self._Parser = None
+        self._kind = None  # horizontal or vertical 
+        self._id_col = None
+        self._ct_col = None
+        self._assay_col = None
+
     
+    def read(self, filename : str, kind : str, id_col : str, **kwargs):
+        """
+        Reads a regular or irregular `csv` or `excel` datafile that contains data stored 
+        in a single big table. Files are first tried to be read regularly, if this fails, 
+        the Reader resorts to parsing to identify the relevant sections of the data. 
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+        kind : str
+            Specifies the kind of Big Table from the file. 
+            This may either be `"horizontal"` or `"vertical"`.
+        id_col : str
+            The column header specifying the replicate identifiers 
+            (or "group names" in case of `horizontal` big tables).
+        **kwargs
+            Any additional columns or keyword arguments.
+        """
+        self._src = filename
+        self._kind = kind
+        is_horizontal = self._kind == "horizontal"
+        self._id_col = id_col
+        self._ct_col = aux.from_kwargs("ct_col", None, kwargs, rm = True)
+        self._assay_col = aux.from_kwargs("assay_col", None, kwargs, rm = True)
+
+        if not is_horizontal:
+            # first try default pd.read_csv or read_excel
+            self._try_simple_read(kwargs)
+
+            # check if we got data, and abort if so
+            if self._data is not None: 
+                print(self._data)
+                return
+
+        # if haven't got data, then we go to parsing...
+
+        # setup Parser to get data
+        self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
+
+        self._Parser.read(self._src)
+        self._Parser.labels(id_label = self._id_col)
+        print(self._Parser._data)
+        self._Parser._make_BigTable_range(is_horizontal = is_horizontal)
+        print(self._Parser._bigtable_range)
+
+    def _try_simple_read(self, kwargs):
+        """
+        Try default readings without parsing in case the file is a regular
+        csv or excel file (only works in case of vertical big tables).
+        """
+        if self._filesuffix() == "csv":
+            
+            delimiter = ";" if self._is_csv2() else ","
+            data = pd.read_csv(self._src, delimiter = delimiter)
+        
+        else:
+            
+            sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+            data = pd.read_excel(self._src, sheet_name = sheet_name)
+        
+        # check if we got the data we looked for...
+        got_regular_data = self._id_col in data.columns
+        if got_regular_data:
+            self._data = data
+        
 
 
 if __name__ == "__main__":
@@ -855,3 +922,10 @@ if __name__ == "__main__":
             )
     print(reader.get("Actin"))
 
+    # not decorated yet!
+    bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
+    bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
+
+    reader = BigTableReader()
+    reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
+    reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
