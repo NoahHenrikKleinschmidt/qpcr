@@ -47,6 +47,8 @@ class _CORE_Reader(aux._ID):
         self._src = None
         self._delimiter = None
         self._df = None
+        self._replicates = None
+        self._names = None
 
     def get(self):
         """
@@ -66,6 +68,16 @@ class _CORE_Reader(aux._ID):
         """
         return len(self._df[raw_col_names[0]])
 
+    def make_Assay(self):
+        """
+        Converts the extracted dataset into an `qpcr.Assay`.
+        Returns
+        --------
+        Assay : qpcr.Assay
+            The `qpcr.Assay` from the extracted dataset.
+        """
+        assay = self._make_new_Assay(self.id(), self._df)
+        return assay
 
     def read(self, **kwargs):
         """
