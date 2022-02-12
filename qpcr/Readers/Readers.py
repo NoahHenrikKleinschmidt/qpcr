@@ -939,6 +939,7 @@ class BigTableReader(MultiReader):
             self._make_vertical_range_df()
 
         df = self._data
+        print(df)
         assay_col_header = self._assay_col
         ct_col_header = self._ct_col
         id_col_header = self._id_col
@@ -948,7 +949,7 @@ class BigTableReader(MultiReader):
 
         # now read the separate assays and store in assays and normalisers
         if self._vertical_decorated(): 
-            cols_to_use.append("@qpcr")
+            # cols_to_use.append("@qpcr")
             self._get_vertical_assays_decorated(
                                                     df, 
                                                     assay_col_header, 
@@ -971,7 +972,7 @@ class BigTableReader(MultiReader):
         """
 
         # get assays 
-        tmp = df.query("@qpcr == 'assay'")
+        tmp = df.query("`@qpcr` == 'assay'")
         self._get_vertical_assays_not_decorated(
                                                         tmp, 
                                                         assay_col_header, 
@@ -981,7 +982,7 @@ class BigTableReader(MultiReader):
                                                     )
 
         # get normalisers
-        tmp = df.query("@qpcr == 'normaliser'")
+        tmp = df.query("`@qpcr` == 'normaliser'")
         self._get_vertical_assays_not_decorated(
                                                         tmp, 
                                                         assay_col_header, 
@@ -1104,5 +1105,6 @@ if __name__ == "__main__":
 
 
     reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
-    reader.parse(replicates = 3)
-    print(reader._assays)
+    reader.parse(replicates = (3, 4))
+    reader.make_Assays()
+    print(reader._assays[3].get(), reader._assays[3].id())
