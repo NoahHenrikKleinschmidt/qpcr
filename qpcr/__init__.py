@@ -147,6 +147,8 @@ raw_col_names = defaults.raw_col_names
 
 supported_filetypes = defaults.supported_filetypes
 
+default_group_name = defaults.group_name
+
 # At some future point we will remove the _CORE_Reader from the 
 # __init__ as it's now part of the Readers submodule...
 class _CORE_Reader(aux._ID):
@@ -675,7 +677,7 @@ class Assay(aux._ID):
         else:
             if self._identically_named():
                 groups = self._infer_replicates()
-                group_names = [f"group{i}" for i in groups]
+                group_names = [default_group_name.format(i) for i in groups]
             else: 
                 aw.HardWarning("Assay:no_reps_inferred", assay = self.id())
         
@@ -833,7 +835,7 @@ class Assay(aux._ID):
         group_names = []
         for rep, idx in zip(self._replicates, range(len(self._replicates))): 
             groups.extend([idx] * rep)
-            group_names.extend([f"Group{idx}"] * rep)
+            group_names.extend([ default_group_name.format(idx) ] * rep)
         return groups, group_names
 
     def _make_equal_groups(self, assays):
@@ -849,7 +851,7 @@ class Assay(aux._ID):
         slices = range(int(assays / self._replicates))
         for i in slices:
             groups.extend([i] * self._replicates)
-            group_names.extend([f"Group{i}"] * self._replicates)
+            group_names.extend([ default_group_name.format(i) ] * self._replicates)
         return groups, group_names
 
     def _vet_replicates(self, replicates : (int or tuple)):
