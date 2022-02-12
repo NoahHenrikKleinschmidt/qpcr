@@ -274,8 +274,8 @@ class SingleReader(_CORE_Reader):
         return None  # no headers
 
 
-
-class MultiReader(qpcr.Assay, SingleReader, aux._ID):
+# removed qpcr.Assay from inheritance here...
+class MultiReader(SingleReader, aux._ID):
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
@@ -726,7 +726,7 @@ class MultiSheetReader(MultiReader):
 
         assays, normalisers = self._assays, self._normalisers
         return assays, normalisers
-class BigTableReader(qpcr.Assay):
+class BigTableReader:
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
