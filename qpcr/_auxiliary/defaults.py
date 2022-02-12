@@ -29,7 +29,7 @@ default_group_name = "group{}"
 # --------------------------------
 static_PreviewResults = dict(
                                 color = "white",
-                                edgecolor = "navy",
+                                edgecolor = "xkcd:pure blue",
                                 edgewidth = 1,
                                 rot = 0,
                                 legend = False, 
