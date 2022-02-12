@@ -784,7 +784,7 @@ class _CORE_Parser:
                 aw.HardWarning("Assay:reps_dont_cover", n_samples = groups, reps = replicates, traceback = False)
             
         # get names for assays
-        group_names = aux.from_kwargs("names", [  i for i in range( len(replicates) )  ], kwargs)
+        group_names = aux.from_kwargs("names", [ default_group_name.format(i) for i in range( len(replicates) )  ], kwargs)
 
         # vet that names cover
         if len(group_names) != len(replicates):
