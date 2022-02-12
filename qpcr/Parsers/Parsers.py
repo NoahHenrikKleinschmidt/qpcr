@@ -788,7 +788,7 @@ class _CORE_Parser:
 
         # vet that names cover
         if len(group_names) != len(replicates):
-            aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = assay_names)
+            aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = group_names)
         
         # return tranformed replicates
         return replicates, group_names
