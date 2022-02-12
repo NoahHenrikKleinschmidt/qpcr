@@ -1132,10 +1132,11 @@ class DataReader(_CORE_Reader, Assay):
             else:
                 reader = Readers.MultiReader()
         elif suffix == "xlsx":
+
             use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
             multi_sheet = "sheet_name" not in kwargs
-            print(kwargs, multi_sheet)
-            if multi_sheet:
+
+            if use_multi and multi_sheet:
                 reader = Readers.MultiSheetReader()
             elif use_multi and not multi_sheet:
                 reader = Readers.MultiReader()
