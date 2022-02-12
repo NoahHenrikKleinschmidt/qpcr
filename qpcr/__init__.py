@@ -1114,7 +1114,7 @@ class DataReader(_CORE_Reader, Assay):
             Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
             Check out the documentation of the `qpcr.Parsers` for more information on decorators.
-            
+
         reset : bool
             If multiple input files should be read but they do not all 
             adhere to the same filetype / datastructure, use `reset = True` 
@@ -1132,10 +1132,13 @@ class DataReader(_CORE_Reader, Assay):
         if suffix not in supported_filetypes:
             aw.HardWarning("MultiReader:unknown_datafile", file = self._src)
         
-        use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
         if reset or self._Reader is None: 
             self.reset()
-            self._setup_Reader(multi_assay = use_multi, **kwargs)
+            self._setup_Reader(
+                                multi_assay = multi_assay, 
+                                big_table = big_table,
+                                **kwargs
+                            )
         
         # read file and return data
         data = self._Reader._DataReader(filename = self._src, **kwargs)

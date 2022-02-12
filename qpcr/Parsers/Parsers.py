@@ -68,6 +68,7 @@ for finding assays you can specify the `decorator` argument in `pipe` or `parse`
 A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
 For Big Table files there are yet again two additional decorators available., checkout the documentation of the `qpcr.Readers` for more details.
 
+
 | Decorator | Code-reference | Filetype                                 | Available for / Used by                                      |
 | --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
 | @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
