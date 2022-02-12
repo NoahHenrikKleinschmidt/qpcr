@@ -883,7 +883,7 @@ class SampleReader(Assay):
     def __init__(self):
         super().__init__()
         
-        aw.SoftWarning("Versions:Deprecation", old = self.__name__, new = DataReader().__name__)
+        aw.SoftWarning("Versions:Deprecation", old = type(self).__name__, new = type(DataReader()).__name__)
 
         self._replicates = None
         self._names = None
