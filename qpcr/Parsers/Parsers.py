@@ -102,6 +102,8 @@ decorators = {
                     "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
                     "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
                     "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
+                    "qpcr:column"       : "(@qpcr|'@qpcr)",
+
             }
 
 plain_decorators = {
@@ -109,6 +111,7 @@ plain_decorators = {
                     "qpcr:assay"        : "@qpcr:assay",
                     "qpcr:normaliser"   : "@qpcr:normaliser",
                     "qpcr:group"        : "@qpcr:group",
+                    "qpcr:column"       : "@qpcr",
             }
 
 # get the standard column headers to use for the 
@@ -712,19 +715,44 @@ class _CORE_Parser:
         # repeat dataset ids to match stacked new data column
         ids_tiled = np.repeat(  id_col , groups.size  )
 
+        # assemble all data
+        total_data = [ids_tiled, groups_tiled, data_array]
+        headers = [ default_dataset_header, standard_id_header, standard_ct_header ]  
+
+        # check for qpcr column and if present, get and adjust shape
+        self._BigTable_horizontal_qpcr_col(array, maxrows, groups, total_data, headers)
+
+
         # combine the three columns (dataset id, groups, and Ct (actual data_array))
-        data_array = np.stack( (ids_tiled, groups_tiled, data_array), axis = 1 )
+        data_array = np.stack( total_data, axis = 1 )
 
         # add default names into the first row
         data_array = np.concatenate(
                                         ( 
-                                            [[ default_dataset_header, standard_id_header, standard_ct_header ]],
+                                            [headers],
                                             data_array
                                        ),   axis = 0
                                 )
         
         # actually return the finished array
         return data_array
+
+    def _BigTable_horizontal_qpcr_col(self, array, maxrows, groups, total_data, headers):
+        """
+        Checks if a "@qpcr" column is present in the data and if so, adjusts its shape and 
+        adds it to the data to be assembled for the assays.
+        """
+        column_decorator = plain_decorators["qpcr:column"]
+        qpcr_col = np.where(array == column_decorator)
+        if len(qpcr_col) != 0:
+            qpcr_row, qpcr_col = qpcr_col
+            
+            qpcr_rows = slice( int(qpcr_row + 1), maxrows )
+            qpcr_col = array[  qpcr_rows, qpcr_col  ]
+
+            qpcr_tiled = np.repeat(  qpcr_col , groups.size  )
+            total_data.append(qpcr_tiled)
+            headers.append("@qpcr")
 
     def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
         """
@@ -1183,4 +1211,5 @@ if __name__ == "__main__":
 
     parser_bigtable.labels( id_label = "tissue_number" )
     parser_bigtable._make_BigTable_range(is_horizontal = True)
-    parser_bigtable._infer_BigTable_groups( replicates = 3 )
+    r = parser_bigtable._infer_BigTable_groups( replicates = (3, 2) )
+    print(r)

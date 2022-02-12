@@ -35,7 +35,7 @@ __pdoc__ = {
 # migrate default settings from __init__
 raw_col_names = defaults.raw_col_names
 supported_filetypes = defaults.supported_filetypes
-
+default_dataset_header = defaults.default_dataset_header
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -795,14 +795,14 @@ class BigTableReader(MultiReader):
 
     | assay | id   | Ct    | @qpcr |
     | ----- | ---- | ----- | ---- |
-    | 28S   | ctrl | 7.65  | normaliser | 
-    | 28S   | ctrl | 7.74  | normaliser | 
-    | 28S   | ctrl | 7.54  | normaliser | 
-    | 28S   | kd   | 7.86  | normaliser | 
-    | 28S   | kd   | 7.57  | normaliser | 
-    | 28S   | kd   | 7.67  | normaliser | 
-    | Actin | ctrl | 11.67 | normaliser | 
-    | Actin | ctrl | 11.54  | normaliser | 
+    | assay 1   | group0 | 7.65  | normaliser | 
+    | assay 1   | group0 | 7.74  | normaliser | 
+    | assay 1   | group0 | 7.54  | normaliser | 
+    | assay 1   | group1   | 7.86  | normaliser | 
+    | assay 1   | group1   | 7.57  | normaliser | 
+    | assay 1   | group1   | 7.67  | normaliser | 
+    | assay 2 | group0 | 16.67 | assay | 
+    | assay 2 | group0 | 16.54  | assay | 
     | ...   | ...  | ...   | ... | 
 
 
@@ -816,12 +816,12 @@ class BigTableReader(MultiReader):
 
     Example:
 
-    |      | @qpcr:normaliser |      |      | @qpcr:normaliser |      |      |
-    | ---- | ---------------- | ---- | ---- | ---------------- | ---- | ---- |
-    | id   | 28S1  | 28S2  | 28S3  | Actin1 | Actin2 | ...  |
-    | ctrl | 7.74 | 7.65 | 7.54 | 11.54 | 11.67 | ...  |
-    | kd   | 7.86 | 7.57 | 7.67 | 11.43 | 11.56 | ...  |
-    | ...  | ...  | ...  | ...  | …     | ...   | ...  |
+    |      | @qpcr:group |      |      | @qpcr:group |      |      |    |
+    | ---- | ---------------- | ---- | ---- | ---------------- | ---- | ---- | ---- |
+    | id   | group0_1  | group0_2  | group0_3  | group1_1 | group1_2 | ...  | @qpcr   |
+    | assay1 | 7.74 | 7.65 | 7.54 | 11.54 | 11.67 | ...  |  normaliser  |
+    | assay 2   | 16.67 | 16.54 | 16.97 |  16.43 |  16.56 | ...  | assay   |
+    | ...  | ...  | ...  | ...  | …     | ...   | ...  |  ...  |
 
     """
     def __init__(self):
@@ -883,8 +883,7 @@ class BigTableReader(MultiReader):
         self._Parser.read(self._src)
         self._Parser.labels(id_label = self._id_col)
         self._Parser._make_BigTable_range(is_horizontal = is_horizontal)
-        print(self._Parser._bigtable_range)
-
+        self._data = self._Parser._bigtable_range
 
     def parse(self, **kwargs):
         """
@@ -893,6 +892,29 @@ class BigTableReader(MultiReader):
         
         if self._kind == "vertical":
             self._parse_vertical(**kwargs)
+        else: 
+            self._parse_horizontal(**kwargs)
+
+    
+    def _parse_horizontal(self, **kwargs):
+        """
+        Extracts assay datasets for a horizontal big table
+        by first transforming it to a vertical one and then using 
+        the vertical parse
+        """
+        # transform data into vertical
+        self._data = self._Parser._infer_BigTable_groups(**kwargs)
+        
+        # transform array into df
+        self._make_vertical_range_df()
+        
+        # and parse_vertical to get assays
+        ct_col = raw_col_names[1]
+        assay_col = default_dataset_header
+        self._id_col = raw_col_names[0]
+        self._parse_vertical(ct_col = ct_col, assay_col = assay_col, **kwargs)
+
+
 
     def _parse_vertical(self, **kwargs):
         """
@@ -951,7 +973,7 @@ class BigTableReader(MultiReader):
         # get assays 
         tmp = df.query("@qpcr == 'assay'")
         self._get_vertical_assays_not_decorated(
-                                                        df, 
+                                                        tmp, 
                                                         assay_col_header, 
                                                         ct_col_header, 
                                                         cols_to_use,
@@ -961,7 +983,7 @@ class BigTableReader(MultiReader):
         # get normalisers
         tmp = df.query("@qpcr == 'normaliser'")
         self._get_vertical_assays_not_decorated(
-                                                        df, 
+                                                        tmp, 
                                                         assay_col_header, 
                                                         ct_col_header, 
                                                         cols_to_use,
@@ -1069,7 +1091,6 @@ if __name__ == "__main__":
             )
     print(reader.get("Actin"))
 
-    # not decorated yet!
     bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
     bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
 
@@ -1079,7 +1100,9 @@ if __name__ == "__main__":
     reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
     reader.parse(ct_col = "Ct", assay_col = "Gene")
 
-    print(reader._assays)
+    # print(reader._assays)
 
 
     reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
+    reader.parse(replicates = 3)
+    print(reader._assays)
