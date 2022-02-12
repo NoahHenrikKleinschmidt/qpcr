@@ -1137,11 +1137,12 @@ class DataReader(_CORE_Reader, Assay):
             self._setup_Reader(
                                 multi_assay = multi_assay, 
                                 big_table = big_table,
+                                decorator = decorator,
                                 **kwargs
                             )
         
         # read file and return data
-        data = self._Reader._DataReader(filename = self._src, **kwargs)
+        data = self._Reader._DataReader( filename = self._src, decorator = decorator, **kwargs )
         self._tmp_data = {self._src : data}
         return data
 
