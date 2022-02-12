@@ -580,14 +580,17 @@ class _CORE_Parser:
         the starting positions of assay replicates are inferred based on `decorators`. 
         Note, this only works for `horizontal` Big Tables!
         """
-        is_horizontal = aux.from_kwargs("is_horizontal", False, kwargs, rm = True)
-        if is_horizontal:
-            replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
-            if replicates is None: 
-                aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
+        is_horizontal = aux.from_kwargs("is_horizontal", False, kwargs)
+        
+        # gotta factor this out to some other method where we adjust the column headers
+        # or even better we directly get the replicates based on range whatever (like transpose directly)
+        # if is_horizontal:
+        #     replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
+        #     if replicates is None: 
+        #         aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
 
         # get the main data
-        data = self._data
+        data = self._data.astype("str")
         ref_col_header = self._id_label   
         
         # find big table starting row
@@ -599,10 +602,12 @@ class _CORE_Parser:
         idx = idx.reshape(idx.size)
         start, col = idx
 
-
         idx = 1
         while True:
-            entry = data[start+idx, col]
+            try: 
+                entry = data[start+idx, col]
+            except: 
+                break
             if entry == "nan":
                 break
             idx += 1
@@ -617,7 +622,6 @@ class _CORE_Parser:
         # generate bigtable data range and store
         relevant_data = data[start : end, : ]
         self._bigtable_range = relevant_data  
-
 
     def _prep_header_array(self, col = None, row = None):
         """
