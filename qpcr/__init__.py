@@ -1032,8 +1032,10 @@ class DataReader(_CORE_Reader, Assay):
         super().__init__()
         self._replicates = None
         self._names = None
-        self._Reader = None           # the functional core will be either a Reader
-        self._Data = None             # the _Data attribute will store both single and multi-assay data outputs from the Reader
+        self._Reader = None             # the functional core will be either a Reader
+        self._Data = {}                 # the _Data attribute will store any output from the Reader as a dictionary with filename : data structure.
+        self._tmp_data = None           # this will not attempt to distinguish between assays / normalisers, or anything. It's just an archive of whatever data we got.
+                                        # by default data is not stored by the DataReader, it's read only pipes through, but data can be stored using the .store() method.
 
     def Reader(self, Reader = None):
         """
@@ -1047,7 +1049,7 @@ class DataReader(_CORE_Reader, Assay):
         """
         Clears all data that was extracted
         """
-        self._Data = None
+        self._Data = {}
     
     def reset(self):
         """
@@ -1060,6 +1062,26 @@ class DataReader(_CORE_Reader, Assay):
         Resets the DataReader completely
         """
         self.__init__()
+
+    def store(self):
+        """
+        Will store the read data. 
+        Note 
+        -------
+        `DataReader` does NOT have a specific data storage facility to distinguish between 
+        assays / normalisers, data types, etc. It simply keeps a dictionary of `{filename : data}`
+        that can be accessed. This is designed in case multiple files should be read using the same 
+        `DataReader` to allow an easier access of the data in case the data outputs are of the same type.
+
+        However, the main intended application of `DataReader` is to use the`read` method's returned data directly.
+        """
+        self._Data.update(self._tmp_data)
+    
+    def get(self):
+        """
+        Returns the stored data
+        """
+        return self._Data
 
     def read(self, filename : str, reset = False, **kwargs):
         """
@@ -1075,6 +1097,12 @@ class DataReader(_CORE_Reader, Assay):
             If multiple input files shall be read but they do not all 
             adhere to the same filetype / datastructure, use `reset = True` 
             to set up a new Reader for each datafile.
+
+        **kwargs
+            Any additional keyword arguments to be passed to the core Reader.
+            Note, while this tries to be utmost versatile there is a limitation
+            to costumizibility through the kwargs. If you require streamlined datareading
+            use dedicated `qpcr.Readers` and/or `qpcr.Parsers` directly.
         """
         self._src = filename
         # vet filesuffix
@@ -1089,6 +1117,7 @@ class DataReader(_CORE_Reader, Assay):
         
         # read file and return data
         data = self._Reader._DataReader(filename = self._src, **kwargs)
+        self._tmp_data = {self._src : data}
         return data
 
     def _setup_Reader(self, **kwargs):
@@ -1105,6 +1134,7 @@ class DataReader(_CORE_Reader, Assay):
         elif suffix == "xlsx":
             use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
             multi_sheet = "sheet_name" not in kwargs
+            print(kwargs, multi_sheet)
             if multi_sheet:
                 reader = Readers.MultiSheetReader()
             elif use_multi and not multi_sheet:
