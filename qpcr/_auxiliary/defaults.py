@@ -18,9 +18,8 @@ supported_filetypes = ["csv", "xlsx"]
 # default column names for raw Ct data files (don't change this!)
 raw_col_names = ["id", "Ct"]
 
-# default nameS for horizontal big table decorated columns
-bigtable_horizontal_assays = "assay{}"
-bigtable_horizontal_group = "group{}"
+default_dataset_header = "assay"
+default_group_name = "group{}"
 
 #  =================================================================
 #                       Default Figure settings

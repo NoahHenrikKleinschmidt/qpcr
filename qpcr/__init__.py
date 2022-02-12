@@ -147,7 +147,7 @@ raw_col_names = defaults.raw_col_names
 
 supported_filetypes = defaults.supported_filetypes
 
-default_group_name = defaults.group_name
+default_group_name = defaults.default_group_name
 
 # At some future point we will remove the _CORE_Reader from the 
 # __init__ as it's now part of the Readers submodule...
