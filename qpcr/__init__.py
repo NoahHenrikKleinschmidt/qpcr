@@ -1025,8 +1025,15 @@ class DataReader(_CORE_Reader, Assay):
     This is a top-level class that is designed
     as the central port through which data is read into `qpcr.Assay` objects
     from both regular and irregular, single- and multi-assay files.
-    This is the suggested way to read your data for most users. If you require specific
-    pre-processing steps and customization, use the Readers and Parsers directly.
+    This is the suggested way to read your data for most users, which should
+    work in most cases.
+    
+    However, due to the automated setup of the inferred Readers there may be cases where you 
+    will either have a hard time or be unable to read your datafiles using the `DataReader`. 
+    In such cases, don't try too long to make it work with the DataReader, 
+    just use one of the `qpcr.Readers` directly.  
+
+    If you require specific setups use the `qpcr.Readers` or even `qpcr.Parsers` directly.
     """
     def __init__(self):
         super().__init__()
