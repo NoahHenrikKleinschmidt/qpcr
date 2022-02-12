@@ -767,8 +767,13 @@ class MultiSheetReader(MultiReader):
         """
         The DataReader interacting method
         """
-        data = super()._DataReader(**kwargs)
+        replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
+        self.replicates(replicates)
+        names = aux.from_kwargs("names", None, kwargs, rm = True)
+        self.names(names)
+        data = self.pipe(**kwargs)
         return data
+
 class BigTableReader:
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
