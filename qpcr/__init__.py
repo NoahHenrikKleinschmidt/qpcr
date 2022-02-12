@@ -882,6 +882,9 @@ class SampleReader(Assay):
     """
     def __init__(self):
         super().__init__()
+        
+        aw.SoftWarning("Versions:Deprecation", old = self.__name__, new = DataReader().__name__)
+
         self._replicates = None
         self._names = None
         self._Reader = None
@@ -1037,7 +1040,7 @@ class DataReader(Assay):
         data
             The dataset(s) extracted from the inputfile.
         """
-
+        pass
 class Results(aux._ID):
     """
     Handles a pandas dataframe for the results from `qpcr.Analyser` and `qpcr.Normaliser`.
