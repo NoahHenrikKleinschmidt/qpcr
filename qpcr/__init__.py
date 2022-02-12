@@ -147,6 +147,8 @@ raw_col_names = defaults.raw_col_names
 
 supported_filetypes = defaults.supported_filetypes
 
+# At some future point we will remove the _CORE_Reader from the 
+# __init__ as it's now part of the Readers submodule...
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -1032,6 +1034,14 @@ class DataReader(Assay):
         self._names = None
         self._Reader = None           # the functional core will be either a Reader
         self._Data = None             # the _Data attribute will store both single and multi-assay data outputs from the Reader
+
+    def Reader(self, Reader = None):
+        """
+        Gets or sets the functional core Reader    
+        """
+        if Reader is not None:
+            self._Reader = Reader
+        return self._Reader
 
     def get(self):
         """
