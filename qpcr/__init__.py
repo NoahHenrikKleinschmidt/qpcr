@@ -1076,7 +1076,12 @@ class DataReader(_CORE_Reader, Assay):
             adhere to the same filetype / datastructure, use `reset = True` 
             to set up a new Reader for each datafile.
         """
-        if reset: 
+        # vet filesuffix
+        suffix = self._filesuffix()
+        if suffix not in supported_filetypes:
+            aw.HardWarning("MultiReader:unknown_datafile", file = self._src)
+        
+        if reset or self._Reader is None: 
             self.reset()
             self._setup_Reader(**kwargs)
 
@@ -1084,8 +1089,23 @@ class DataReader(_CORE_Reader, Assay):
         """
         Sets up the core Reader 
         """
-        if self._Reader is None:
-            print("setting up new Reader...")
+        suffix = self._filesuffix()
+        if suffix == "csv":
+            use_multi = aux.from_kwargs("multi_assay", False, kwargs)
+            if use_multi:
+                reader = Readers.SingleReader()
+            else:
+                reader = Readers.MultiReader()
+        elif suffix == "xlsx":
+            use_multi = aux.from_kwargs("multi_assay", True, kwargs)
+            multi_sheet = "sheet_name" not in kwargs
+            if use_multi and multi_sheet:
+                reader = Readers.MultiSheetReader()
+            elif use_multi and not multi_sheet:
+                reader = Readers.MultiReader()
+            else:
+                reader = Readers.SingleReader()
+        self._Reader = reader
 
 
     def get(self):
