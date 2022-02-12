@@ -515,124 +515,139 @@ class _Qupid_Blueprint(Blueprint):
             self.Normaliser(qpcr.Normaliser())
 
 
+# We push this one behind in the release...
+# Since we now have the ddCt pipeline we should be able to slim down most of the pipelines here anyway...
 
+# class MultiAssay(Blueprint):
+#     """
+#     Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
+#     Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
+#     Check out the documentation of `qpcr.Parsers` for more information on decorators.
 
-class MultiAssay(Blueprint):
-    """
-    Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
-    Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
-    Check out the documentation of `qpcr.Parsers` for more information on decorators.
+#     Note
+#     -------
+#     This class relies on `qpcr.Parsers` and decorated assays to get its input data. 
+#     If your file does not offer this kind of architecture, choose another pipeline.
 
-    Note
-    -------
-    This class relies on `qpcr.Parsers` and decorated assays to get its input data. 
-    If your file does not offer this kind of architecture, choose another pipeline.
-
-    """
-    def __init__(self):
-        super().__init__()
-        self._src = None
+#     """
+#     def __init__(self):
+#         super().__init__()
+#         self._src = None
     
-    def link(self, filename : str, **kwargs):
-        """
-        Reads a datafile in csv or excel format containing 
-        multiple decorated datasets and extracts sample and normalisers assays. 
+#     def link(self, filename : str, **kwargs):
+#         """
+#         Reads a datafile in csv or excel format containing 
+#         multiple decorated datasets and extracts sample and normalisers assays. 
 
-        Parameters
-        ----------
-        filename : str
-            A filepath to a raw data file.
-        **kwargs
-            Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`'s `pipe` method.
-        """
-        self._src = filename
+#         Parameters
+#         ----------
+#         filename : str
+#             A filepath to a raw data file.
+#         **kwargs
+#             Any additional keyword arguments that shall be passed to the `qpcr.MultiReader`'s `pipe` method.
+#         """
+#         self._src = filename
 
-        # setup Reader, Analyser, and Normaliser (if none were provided)
-        self._setup_cores()
-        reader = self.Reader()
+#         # setup Reader, Analyser, and Normaliser (if none were provided)
+#         self._setup_cores(**kwargs)
+#         reader = self.Reader()
 
-        # read the multi-assay datafile
-        self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
+#         # read the multi-assay datafile
+#         self._Assays, self._Normalisers = reader.pipe(self._src, **kwargs)
         
         
-    def _run(self, **kwargs):
-        """
-        The main workflow
-        """
-        # setup Reader, Analyser, and Normaliser (if none were provided)
-        self._setup_cores()
+#     def _run(self, **kwargs):
+#         """
+#         The main workflow
+#         """
+#         # setup Reader, Analyser, and Normaliser (if none were provided)
+#         self._setup_cores()
         
-        analyser = self.Analyser()
-        normaliser = self.Normaliser()
+#         analyser = self.Analyser()
+#         normaliser = self.Normaliser()
 
-        normalisers = []
-        samples = []
+#         normalisers = []
+#         samples = []
 
-        # analyse normalisers:
-        for norm in self._Normalisers:
-            for filter in self._Filters:
-                norm = filter.pipe(norm)
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
+#         # analyse normalisers:
+#         for norm in self._Normalisers:
+#             for filter in self._Filters:
+#                 norm = filter.pipe(norm)
+#             norm = analyser.pipe(norm)
+#             normalisers.append(norm)
+#         normaliser.link(normalisers = normalisers)
 
-        # analyse sample assays
-        for sample in self._Assays:
-            for filter in self._Filters:
-                sample = filter.pipe(sample)
-            sample = analyser.pipe(sample)
-            samples.append(sample)
-        normaliser.link(assays = samples)
+#         # analyse sample assays
+#         for sample in self._Assays:
+#             for filter in self._Filters:
+#                 sample = filter.pipe(sample)
+#             sample = analyser.pipe(sample)
+#             samples.append(sample)
+#         normaliser.link(assays = samples)
 
-        normaliser.normalise()
-        results = normaliser.get()
+#         normaliser.normalise()
+#         results = normaliser.get()
 
-        self._Results = results
-        self._df = results.get()
-        self._stats_df = results.stats()
+#         self._Results = results
+#         self._df = results.get()
+#         self._stats_df = results.stats()
 
-        if self._save_to is not None:
-            results.save(self._save_to)
+#         if self._save_to is not None:
+#             results.save(self._save_to)
 
-        # plot filtering report
-        for filter in self._Filters:
-            if self._save_to is not None or filter.report() is not None:
-                # add report location if none was specified...
-                if filter.report() is None: 
-                    filter.report(self._save_to)
+#         # plot filtering report
+#         for filter in self._Filters:
+#             if self._save_to is not None or filter.report() is not None:
+#                 # add report location if none was specified...
+#                 if filter.report() is None: 
+#                     filter.report(self._save_to)
 
-            figs = filter.plot()
-            self._Figures.extend(figs)
+#             figs = filter.plot()
+#             self._Figures.extend(figs)
 
-        # plot results
-        for plotter in self._Plotters:
-            plotter.link(self._Results)
-            fig = plotter.plot()
-            self._Figures.append(fig)
+#         # plot results
+#         for plotter in self._Plotters:
+#             plotter.link(self._Results)
+#             fig = plotter.plot()
+#             self._Figures.append(fig)
 
-            if self._save_to is not None:
-                filename = self._make_figure_filename(plotter)
-                plotter.save(filename)
+#             if self._save_to is not None:
+#                 filename = self._make_figure_filename(plotter)
+#                 plotter.save(filename)
 
-    def _setup_cores(self):
-        """
-        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
-        """
-        if self.Reader() is None: 
-            self.Reader(Readers.MultiReader())
-        if self.Analyser() is None: 
-            self.Analyser(qpcr.Analyser())
-        if self.Normaliser() is None:
-            self.Normaliser(qpcr.Normaliser())
+#     def _setup_cores(self, **kwargs):
+#         """
+#         Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
+#         """
+#         # check if a sheet_name was specified in case of multi-sheet files...
+#         use_multi_sheet = "sheet_name" not in kwargs
+#         if self.Reader() is None: 
+#             if self._is_multisheet() and use_multi_sheet:
+#                 self.Reader(Readers.MultiSheetReader())
+#             else: 
+#                 self.Reader(Readers.MultiReader())
+#         if self.Analyser() is None: 
+#             self.Analyser(qpcr.Analyser())
+#         if self.Normaliser() is None:
+#             self.Normaliser(qpcr.Normaliser())
+    
+#     def _is_multisheet(self):
+#         """
+#         Checks if a provided excel file contains multiple sheets
+#         """
+#         verdict = False
+#         if self._src.endswith("xlsx"):
+#             data = pd.read_excel(self._src, sheet_name = None)
+#             verdict = len(data.keys()) > 1
+#         return verdict
 
-    # add_assays is disabled
-    def add_assays(self):
-        print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
+#     # add_assays is disabled
+#     def add_assays(self):
+#         print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
 
-    # add_normalisers is disabled
-    def add_assays(self):
-        print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
-
+#     # add_normalisers is disabled
+#     def add_assays(self):
+#         print("To provide a data input file use link()!\nIf you wish to supply separate files for assays-of-interest and normalisers, checkout another Pipeline as this one only works with a single Mlit-Assay file!")
     
 class ddCt(Blueprint):
     """
