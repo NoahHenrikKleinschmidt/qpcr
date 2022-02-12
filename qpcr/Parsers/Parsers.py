@@ -64,7 +64,7 @@ if a specific assay is an "assay-of-interest" or a "normaliser-assay".
 
 `qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
 for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` 
-(the `key` always the decorator but without the `@`).
+(the `key` is bascially the decorator but without the `@`).
 A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
 For Big Table files there are yet again two additional decorators available., checkout the documentation of the `qpcr.Readers` for more details.
 
