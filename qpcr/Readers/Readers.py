@@ -119,6 +119,39 @@ class _CORE_Reader(aux._ID):
             # get the data
             self._get_single_assay(parser, assay_of_interest)
 
+    def names(self, names:(list or dict)):
+        """
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        """
+        self._names = names
+
+    def replicates(self, replicates : (int or tuple or str) = None):
+        """
+        Either sets or gets the replicates settings to be used for grouping
+        Before they are assigned, replicates are vetted to ensure they cover all data entries.
+
+        Parameters
+        ----------
+        replicates : int or tuple or str
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
+            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
+            any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+        """
+        if replicates is not None:
+            self._replicates = replicates
+        return self._replicates
+
     def _get_single_assay(self, parser, assay_of_interest):
         """
         Gets a single dataset from the Parser
@@ -179,7 +212,7 @@ class _CORE_Reader(aux._ID):
         """
         suffix = self._src.split(".")[-1]
         return suffix
-        
+
     def _make_new_Assay(self, name, df):
         """
         Makes a new Assay object and performs group() already...
@@ -187,8 +220,10 @@ class _CORE_Reader(aux._ID):
         new_assay = qpcr.Assay()
         new_assay.adopt(df)
         new_assay.id(name)
+        
         new_assay.replicates(self._replicates)
         new_assay.group()
+
         if self._names is not None:
             new_assay.rename(self._names)
         return new_assay
@@ -265,6 +300,7 @@ class SingleReader(_CORE_Reader):
         """
         self.read(**kwargs)
         data = self.get()
+        data = self._make_new_Assay(self.id(), data)
         return data
 
     def _is_csv2(self):
@@ -293,6 +329,7 @@ class SingleReader(_CORE_Reader):
         except ValueError:
             return 0 # Headers in row 0
         return None  # no headers
+
 
 
 # removed qpcr.Assay from inheritance here...
@@ -542,39 +579,6 @@ class MultiReader(SingleReader, aux._ID):
             if not os.path.exists(self._save_loc):
                 os.mkdir(self._save_loc)
         return self._save_loc
-
-    def names(self, names:(list or dict)):
-        """
-        Set names for replicates groups.
-
-        Parameters
-        ----------
-        names : list or dict
-            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
-            Group names only need to be specified once, and are applied to all replicate entries.
-        """
-        self._names = names
-
-    def replicates(self, replicates : (int or tuple or str) = None):
-        """
-        Either sets or gets the replicates settings to be used for grouping
-        Before they are assigned, replicates are vetted to ensure they cover all data entries.
-
-        Parameters
-        ----------
-        replicates : int or tuple or str
-            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
-            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
-            Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
-            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
-            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
-            at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
-            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
-            any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
-        """
-        if replicates is not None:
-            self._replicates = replicates
-        return self._replicates
 
     def _DataReader(self, **kwargs):
         """
