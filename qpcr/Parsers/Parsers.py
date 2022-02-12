@@ -692,64 +692,39 @@ class _CORE_Parser:
                                             )
             rdx += 1
 
-        # it's actually pretty easy, we horizontally concatenate all found columns
-        # and then we simply split that array by the rows, each of which is an assay.
-        # transpose each row into a 
-
-        # now get the id column
-        id_col = self._id_label
-        # find the column header
-        id_start = np.where(array == id_col)
-        id_row, id_col = id_start
-
-        # increment index to remove header    
-        id_rows = slice( int(id_row + 1), maxrows )
-        
-        id_col = array[
-                        rows, id_col
-                    ]
-        id_col[0] = "group"
-        
-
-
-        #kinda STUCK here ... 
-
-
-        # we should transpose the concatenated data_array
-        # then we split by the columns of this and were good
-        # but the question is how we treat the assay / group Information
-        # I need to think more about this... 
-
-        # data_array = np.transpose(data_array)
-        rows, cols = data_array.shape
-
+        # remove groups from the data array
         groups = data_array[ 0, : ]
         data_array = data_array[ 1:, : ]
+
+        # reshape data into a single column
         data_array = np.concatenate(data_array, axis = 0)
 
-
-        # this now works like a charm and returns a three column vertical bigtable...
+        # now repeat the groups to match the stacked new data column
         groups_tiled = np.tile(groups, data_array.size // groups.size )
 
-        ids_tiled = np.repeat(  id_col[ 1: ], groups.size  )
+        # now get the dataset id column
+        id_col = self._id_label
+        id_start = np.where(array == id_col)
+        id_row, id_col = id_start
+        id_rows = slice( int(id_row + 1), maxrows )
+        id_col = array[  id_rows, id_col  ]
+        
+        # repeat dataset ids to match stacked new data column
+        ids_tiled = np.repeat(  id_col , groups.size  )
 
+        # combine the three columns (dataset id, groups, and Ct (actual data_array))
         data_array = np.stack( (ids_tiled, groups_tiled, data_array), axis = 1 )
 
+        # add default names into the first row
         data_array = np.concatenate(
                                         ( 
                                             [[ default_dataset_header, standard_id_header, standard_ct_header ]],
                                             data_array
-                                       ),
-                                       axis = 0
+                                       ),   axis = 0
                                 )
-        print(groups)
-        print(data_array)
-        print(data_array.shape)
-
-        print(
-                
-        )
-
+        
+        # actually return the finished array
+        return data_array
 
     def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
         """
