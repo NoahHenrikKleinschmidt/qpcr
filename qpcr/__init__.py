@@ -1043,6 +1043,50 @@ class DataReader(Assay):
             self._Reader = Reader
         return self._Reader
 
+    def clear(self):
+        """
+        Clears all data that was extracted
+        """
+        self._Data = None
+    
+    def reset(self):
+        """
+        Resets the core Reader
+        """
+        self._Reader = None
+    
+    def prune(self):
+        """
+        Resets the DataReader completely
+        """
+        self.__init__()
+
+    def read(self, filename : str, reset = False, **kwargs):
+        """
+        Reads an input file and extracts available datasets using the
+        specified `Reader` or by setting up an approproate `Reader`. 
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to an input datafile.
+        
+        reset : bool
+            If multiple input files shall be read but they do not all 
+            adhere to the same filetype / datastructure, use `reset = True` 
+            to set up a new Reader for each datafile.
+        """
+        pass
+
+
+    def _setup_Reader(self, **kwargs):
+        """
+        Sets up the core Reader 
+        """
+        if self._Reader is None:
+
+
+
     def get(self):
         """
         Returns
