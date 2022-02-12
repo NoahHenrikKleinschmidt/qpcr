@@ -275,6 +275,13 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
             self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
             self.read(filename = self._src, **kwargs)
 
+    def clear(self):
+        """
+        Clears all the extracted data from the Reader
+        """
+        self._assays = {}
+        self._normalisers = {}
+
     def get(self, which : str):
         """
         Returns the stored assays or normalisers.
@@ -448,16 +455,22 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         data : tuple
             A tuple of the found assays-of-interst (first element) and normaliser-assays (second element).
         """
+        
+        # clear previously read data 
+        self.clear()
 
+        # read new data
         try: 
             self.read(filename, **kwargs)
         except: 
             self.read(filename)
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = f"{type(self._Parser).__name__}'s read method")
         
+        # parse and make assays
         self.parse(**kwargs)
         self.make_Assays()
 
+        # return new data
         assays = self.get( which = "assays" )
         normalisers = self.get( which = "normalisers" )
         return assays, normalisers
@@ -621,7 +634,8 @@ class BigTableReader(qpcr.Assay):
 if __name__ == "__main__":
 
     multisheet_file = "/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx"
-    
+    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+
     # reader = MultiReader()
     # reader.read(multisheet_file, sheet_name = 1)
     # reader.parse(decorator = "qpcr:assay")
