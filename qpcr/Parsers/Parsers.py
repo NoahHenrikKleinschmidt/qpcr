@@ -103,6 +103,11 @@ decorators = {
                     "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",        
             }
 
+_plain_decorators = [
+                        "@qpcr:assay",
+                        "@qpcr:normaliser"
+                ]
+
 # get the standard column headers to use for the 
 # replicate id and Ct column of the finished dataframes
 standard_id_header = defaults.raw_col_names[0]
@@ -582,13 +587,6 @@ class _CORE_Parser:
         """
         is_horizontal = aux.from_kwargs("is_horizontal", False, kwargs)
         
-        # gotta factor this out to some other method where we adjust the column headers
-        # or even better we directly get the replicates based on range whatever (like transpose directly)
-        # if is_horizontal:
-        #     replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
-        #     if replicates is None: 
-        #         aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
-
         # get the main data
         data = self._data.astype("str")
         ref_col_header = self._id_label   
@@ -622,6 +620,95 @@ class _CORE_Parser:
         # generate bigtable data range and store
         relevant_data = data[start : end, : ]
         self._bigtable_range = relevant_data  
+
+
+    def _infer_BigTable_assays(self, **kwargs):
+        """
+        Gets the assay ranges from the bigtable datarange.
+        Note, this is only used in case of horizontal big tables.
+        """
+        # get the relevant data
+        array = self._bigtable_range
+        rows, cols = array.shape
+        print(rows, cols)
+
+
+        ignore_empty = aux.from_kwargs("ignore_empty",False,kwargs)
+
+        # get and vet replicates
+        replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
+        if replicates is None: 
+            aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
+        replicates, names = self._vet_replicates(ignore_empty, replicates, array, **kwargs)
+
+        
+        rdx = 0 # counter for the replicate groups
+        
+        assays = {}
+        normalisers = {}
+
+        # now get the assays in question
+        # we already vetted if the file is properly 
+        # decorated during _vet_replicates
+        for decorator, store_dict in zip(_plain_decorators, [assays, normalisers]):
+            
+            # find decorated starting columns
+            # get only column indices            
+            indices = np.argwhere(array == decorator)
+            indices = indices.reshape(indices.size)[1]
+
+            # iterate over each assay
+            for col in indices: 
+                
+                rep = replicates[rdx]
+                name = names[rdx]
+
+                # data = array[
+
+                #         ]
+
+                rdx += 1
+
+    def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
+        """
+        Checks if provided replicates cover all data assays (annoated columns).
+        And it also gets the names supposed to be used for the columns.
+        """
+        # get assays for each decorator
+        all_assays = 0
+        for decorator in _plain_decorators: 
+            # find decorated starting columns
+            indices = np.argwhere(array == decorator)
+            if indices.size == 0 and not ignore_empty:
+                aw.HardWarning("Parser:no_decorators_found", traceback = False)
+
+            # get only column indices            
+            indices = indices.reshape(indices.size)[1]
+            all_assays += indices.size
+
+        # check if replicates are an integer, if so transform to 
+        # tuple that cover all found assays
+        if aux.same_type(replicates, 1): 
+            replicates = np.tile([replicates], all_assays)
+        
+        # if replicates are already a tuple, make sure they cover all rows
+        elif aux.same_type(replicates, ()):
+            all_covered = all_assays == len(replicates)
+            if not all_covered:
+                aw.HardWarning("Assay:reps_dont_cover", n_samples = all_assays, reps = replicates, traceback = False)
+            
+        # get names for assays
+        default_assay_name = defaults.bigtable_horizontal_assays
+        assay_names = aux.from_kwargs("names", [  default_assay_name.format(i) for i in range( len(replicates) )  ], kwargs)
+
+        # vet that names cover
+        if len(assay_names) != len(replicates):
+            aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = assay_names)
+        
+        # return tranformed replicates
+        return replicates, assay_names
+
+        
 
     def _prep_header_array(self, col = None, row = None):
         """
@@ -931,103 +1018,112 @@ class ExcelParser(_CORE_Parser):
 
 if __name__ == "__main__":
     
-    parser = CsvParser()
-    parser.assay_pattern("Rotor-Gene")
-    parser.save_to("__csvparser")
-    mycsv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
-    parser.pipe(mycsv)
+    # parser = CsvParser()
+    # parser.assay_pattern("Rotor-Gene")
+    # parser.save_to("__csvparser")
+    # mycsv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv"
+    # parser.pipe(mycsv)
 
-    print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n""")
 
-    parser2 = ExcelParser()
-    parser2.assay_pattern("Rotor-Gene")
-    parser2.save_to("./__excelparser")
-    myexcel = "./__parser_data/excel 3.9.19.xlsx"
-    parser2.pipe(myexcel, sheet_name = 1)
+    # parser2 = ExcelParser()
+    # parser2.assay_pattern("Rotor-Gene")
+    # parser2.save_to("./__excelparser")
+    # myexcel = "./__parser_data/excel 3.9.19.xlsx"
+    # parser2.pipe(myexcel, sheet_name = 1)
 
-    print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n""")
 
-    parser3 = ExcelParser()
-    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
-    parser3.save_to("./__decorated_excelparser")
-    parser3.read(decorated_excel)
-    parser3.assay_pattern("Rotor-Gene")
-    parser3.find_by_decorator(decorator = "qpcr:all")
-    parser3.find_columns()
-    parser3.make_dataframes()
-    parser3.save()
-    # print(parser3.get())
+    # parser3 = ExcelParser()
+    # decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    # parser3.save_to("./__decorated_excelparser")
+    # parser3.read(decorated_excel)
+    # parser3.assay_pattern("Rotor-Gene")
+    # parser3.find_by_decorator(decorator = "qpcr:all")
+    # parser3.find_columns()
+    # parser3.make_dataframes()
+    # parser3.save()
+    # # print(parser3.get())
 
-    print("""\n\n\n ========================= \n All good with decorated ExcelParser \n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with decorated ExcelParser \n ========================= \n\n\n""")
 
-    parser4 = CsvParser()
-    decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
-    parser4.save_to("./__decorated_csvparser")
-    parser4.read(decorated_csv)
-    parser4.assay_pattern("Rotor-Gene")
-    parser4.find_by_decorator(decorator = "qpcr:all")
-    parser4.find_columns()
-    parser4.make_dataframes()
-    parser4.save()
-    # print(parser4.get())
+    # parser4 = CsvParser()
+    # decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
+    # parser4.save_to("./__decorated_csvparser")
+    # parser4.read(decorated_csv)
+    # parser4.assay_pattern("Rotor-Gene")
+    # parser4.find_by_decorator(decorator = "qpcr:all")
+    # parser4.find_columns()
+    # parser4.make_dataframes()
+    # parser4.save()
+    # # print(parser4.get())
 
-    print("""\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n""")
-
-
-    parser4 = CsvParser()
-    decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
-    parser4.save_to("./__decorated_csvparser_pipe")
-    parser4.assay_pattern("Rotor-Gene")
-    # parser4.pipe(decorated_csv, decorator = "qpcr:assay")
-    # print(parser4.get())
-
-    parser4.pipe("./__parser_data/manual_decorated.csv")
-
-    print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
-
-    parser3 = ExcelParser()
-    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
-    parser3.save_to("./__decorated_excelparser_pipe_nodec")
-    parser3.assay_pattern("Rotor-Gene")
-    parser3.pipe(decorated_excel)
-    # print(parser3.get())
-
-    print("""\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n""")
 
 
-    same_row_assays = "/Users/NoahHK/Downloads/qPCR cytokines upon treatment_decorated.xlsx"
+    # parser4 = CsvParser()
+    # decorated_csv = "./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv"
+    # parser4.save_to("./__decorated_csvparser_pipe")
+    # parser4.assay_pattern("Rotor-Gene")
+    # # parser4.pipe(decorated_csv, decorator = "qpcr:assay")
+    # # print(parser4.get())
 
-    parser5 = ExcelParser()
-    parser5.transpose()
-    parser5.read(same_row_assays, sheet_name = 1)
-    parser5.save_to("./__transposed_parser")
-    parser5.assay_pattern("all")
-    parser5.labels(  id_label = "Sample Name", ct_label = "CT"  )
+    # parser4.pipe("./__parser_data/manual_decorated.csv")
 
-    print("""\n\n\n ========================= \n Transposed excel (FIND)\n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
 
-    parser5.find_assays(col = 1)
-    parser5.find_columns()
-    parser5.make_dataframes()
-    r = parser5.get()
-    print(r)
+    # parser3 = ExcelParser()
+    # decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    # parser3.save_to("./__decorated_excelparser_pipe_nodec")
+    # parser3.assay_pattern("Rotor-Gene")
+    # parser3.pipe(decorated_excel)
+    # # print(parser3.get())
 
-    # assert parser5._assay_indices is not None, "(find_assays) No assay_indices could be found!!!"
-    parser5.clear()
-
-    print("""\n\n\n ========================= \n Transposed excel (DECO)\n ========================= \n\n\n""")
+    # print("""\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n""")
 
 
-    parser5.find_by_decorator("qpcr:all")
-    # assert parser5._assay_indices is not None, "(find_by_decorator) No assay_indices could be found!!!"
-    parser5.find_columns()
-    parser5.make_dataframes()
-    r = parser5.get()
+    # same_row_assays = "/Users/NoahHK/Downloads/qPCR cytokines upon treatment_decorated.xlsx"
+
+    # parser5 = ExcelParser()
+    # parser5.transpose()
+    # parser5.read(same_row_assays, sheet_name = 1)
+    # parser5.save_to("./__transposed_parser")
+    # parser5.assay_pattern("all")
+    # parser5.labels(  id_label = "Sample Name", ct_label = "CT"  )
+
+    # print("""\n\n\n ========================= \n Transposed excel (FIND)\n ========================= \n\n\n""")
+
+    # parser5.find_assays(col = 1)
+    # parser5.find_columns()
+    # parser5.make_dataframes()
+    # r = parser5.get()
+    # print(r)
+
+    # # assert parser5._assay_indices is not None, "(find_assays) No assay_indices could be found!!!"
+    # parser5.clear()
+
+    # print("""\n\n\n ========================= \n Transposed excel (DECO)\n ========================= \n\n\n""")
+
+
+    # parser5.find_by_decorator("qpcr:all")
+    # # assert parser5._assay_indices is not None, "(find_by_decorator) No assay_indices could be found!!!"
+    # parser5.find_columns()
+    # parser5.make_dataframes()
+    # r = parser5.get()
     
-    parser5.clear()
+    # parser5.clear()
 
-    parser5.read(same_row_assays, sheet_name = 1)
-    parser5.parse(decorator = "qpcr:all")
-    r = parser5.get()
-    print(r)
-    parser5.save()
+    # parser5.read(same_row_assays, sheet_name = 1)
+    # parser5.parse(decorator = "qpcr:all")
+    # r = parser5.get()
+    # print(r)
+    # parser5.save()
+
+    bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
+
+    parser_bigtable = ExcelParser()
+    parser_bigtable.read(bigtable_horiztonal)
+
+    parser_bigtable.labels( id_label = "tissue_number" )
+    parser_bigtable._make_BigTable_range(is_horizontal = True)
+    parser_bigtable._infer_BigTable_assays( replicates = 3 )
