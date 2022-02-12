@@ -63,9 +63,19 @@ if a specific assay is an "assay-of-interest" or a "normaliser-assay".
 
 
 `qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
-for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` (no @).
+for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` 
+(the `key` always the decorator but without the `@`).
 A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
-The implemented decorators are specified in the `qpcr.Parsers.decorators` dictionary and can be accessed via keys (you have seen the three keys already).
+For Big Table files there are yet again two additional decorators available., checkout the documentation of the `qpcr.Readers` for more details.
+
+| Decorator | Code-reference | Filetype                                 | Available for / Used by                                      |
+| --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
+| @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
+| @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
+| @qpcr:group | qpcr:group | Horizontal Big Table files | `qpcr.BigTableReader` |
+| @qpcr | qpcr:column | Horizontal or vertical Big Table files | `qpcr.BigTableReader` |
+
 
 
 > ##### Two things of Note: 

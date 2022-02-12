@@ -1092,7 +1092,7 @@ class DataReader(_CORE_Reader, Assay):
         """
         return self._Data
 
-    def read(self, filename : str, reset = False, **kwargs):
+    def read(self, filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = False, reset = False, **kwargs):
         """
         Reads an input file and extracts available datasets using the
         specified `Reader` or by setting up an approproate `Reader`. 
@@ -1101,11 +1101,24 @@ class DataReader(_CORE_Reader, Assay):
         ----------
         filename : str
             A filepath to an input datafile.
-        
+
+        multi_assay : bool
+            Set to `True` if the file contains multiple assays you wish to read.
+
+        big_table : bool
+            Set to `True` if the file is a "Big Table" file. 
+            Check out the documentation of the `qpcr.Readers` for more 
+            information on "Big Table" files.
+
+        decorator : str or bool
+            Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
+            or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
+            Check out the documentation of the `qpcr.Parsers` for more information on decorators.
+            
         reset : bool
-            If multiple input files shall be read but they do not all 
+            If multiple input files should be read but they do not all 
             adhere to the same filetype / datastructure, use `reset = True` 
-            to set up a new Reader for each datafile.
+            to set up a new Reader each time `read` is called.
 
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
