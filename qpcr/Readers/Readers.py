@@ -939,7 +939,6 @@ class BigTableReader(MultiReader):
             self._make_vertical_range_df()
 
         df = self._data
-        print(df)
         assay_col_header = self._assay_col
         ct_col_header = self._ct_col
         id_col_header = self._id_col
@@ -997,8 +996,7 @@ class BigTableReader(MultiReader):
         """
 
         # get default names for the id and ct columns
-        to_defaults = { 
-                            _from : _to for _from, _to in 
+        to_defaults = { _from : _to for _from, _to in 
 
                             zip(
                                     [self._id_col, self._ct_col], 
@@ -1101,10 +1099,11 @@ if __name__ == "__main__":
     reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
     reader.parse(ct_col = "Ct", assay_col = "Gene")
 
-    # print(reader._assays)
+    reader.clear()
 
 
     reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
     reader.parse(replicates = (3, 4))
     reader.make_Assays()
-    print(reader._assays[3].get(), reader._assays[3].id())
+    r = reader.assays()
+    print(r)
