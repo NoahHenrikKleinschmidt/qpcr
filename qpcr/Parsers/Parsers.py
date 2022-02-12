@@ -151,6 +151,10 @@ class _CORE_Parser:
         # set transpose option in case datasets are stored not on separate row ranges but separate column ranges
         self._transpose = False
 
+
+        # set up a BigTable data range
+        self._bigtable_range = None
+
         # setup a warning for decorators without patterns warning that it will set to default
         # we do this here in case the MultiSheetReader calls read+parse here multiple times
         # but we don't need to know that it defaults every time.
@@ -562,6 +566,58 @@ class _CORE_Parser:
                             )
 
             adx += 1
+
+    def _make_BigTable_range(self, **kwargs):
+        """
+        Generates a pandas DataFrame of a subsection of an irregular datafile
+        containing a "big data table" with multiple assays specified in it. 
+
+        It makes use of the `id_label` specified using `_CORE_Parser.labels` as the
+        anchor. The resulting dataframe fill contain all rows from the cell where `id_label``
+        as located until the data is empty. 
+
+        If additionally `replicates` are specified in the `kwargs` 
+        the starting positions of assay replicates are inferred based on `decorators`. 
+        Note, this only works for `horizontal` Big Tables!
+        """
+        is_horizontal = aux.from_kwargs("is_horizontal", False, kwargs, rm = True)
+        if is_horizontal:
+            replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
+            if replicates is None: 
+                aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
+
+        # get the main data
+        data = self._data
+        ref_col_header = self._id_label   
+        
+        # find big table starting row
+        idx = np.argwhere(data == ref_col_header)
+
+        # vet that we actually found the big table
+        if idx.size == 0:
+            aw.HardWarning("Parser:no_bigtable_header", header = ref_col_header)
+        idx = idx.reshape(idx.size)
+        start, col = idx
+
+
+        idx = 1
+        while True:
+            entry = data[start+idx, col]
+            if entry == "nan":
+                break
+            idx += 1
+
+        end = start + idx
+
+        # put a -1 offset on the rows if horziontal, as the decorators 
+        # are in the row above the actual column headers.
+        if is_horizontal:
+            start -= 1
+
+        # generate bigtable data range and store
+        relevant_data = data[start : end, : ]
+        self._bigtable_range = relevant_data  
+
 
     def _prep_header_array(self, col = None, row = None):
         """
