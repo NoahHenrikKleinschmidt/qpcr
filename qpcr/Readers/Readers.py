@@ -179,7 +179,19 @@ class _CORE_Reader(aux._ID):
         """
         suffix = self._src.split(".")[-1]
         return suffix
-
+        
+    def _make_new_Assay(self, name, df):
+        """
+        Makes a new Assay object and performs group() already...
+        """
+        new_assay = qpcr.Assay()
+        new_assay.adopt(df)
+        new_assay.id(name)
+        new_assay.replicates(self._replicates)
+        new_assay.group()
+        if self._names is not None:
+            new_assay.rename(self._names)
+        return new_assay
 
 class SingleReader(_CORE_Reader):
     """
@@ -575,18 +587,6 @@ class MultiReader(SingleReader, aux._ID):
         data = self.pipe(**kwargs)
         return data
 
-    def _make_new_Assay(self, name, df):
-        """
-        Makes a new Assay object and performs group() already...
-        """
-        new_assay = qpcr.Assay()
-        new_assay.adopt(df)
-        new_assay.id(name)
-        new_assay.replicates(self._replicates)
-        new_assay.group()
-        if self._names is not None:
-            new_assay.rename(self._names)
-        return new_assay
 
     def _get_from_which(self, dataset, which):
         """
