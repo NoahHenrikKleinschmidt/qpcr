@@ -654,6 +654,16 @@ class MultiSheetReader(MultiReader):
             Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
         **kwargs
                 Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `read` method that extracts the datasets.
+        
+        Returns
+        -------
+        assays : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser (if no qpcr.Assays could be made automatically)
+            or a list of `qpcr.Assay` objects.
+        normalisers : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if no qpcr.Assays could be made automatically)
+            or a list of `qpcr.Assay` objects.
         """
         self._src = filename
 
@@ -685,6 +695,14 @@ class MultiSheetReader(MultiReader):
         self._assays = all_assays
         self._normalisers = all_normalisers
 
+        # try making Assays directly, return dictioanries if not possible...
+        try: 
+            self.make_Assays()
+        except Exception as e:
+            print(e)
+            
+        assays, normalisers = self._assays, self._normalisers
+        return assays, normalisers
 class BigTableReader(qpcr.Assay):
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
