@@ -774,20 +774,53 @@ class MultiSheetReader(MultiReader):
         data = self.pipe(**kwargs)
         return data
 
-class BigTableReader:
+class BigTableReader(MultiReader):
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
     Input Data Files
     ----------------
-    Valid input files are multi-assay irregular `excel` files, 
-    that specify assays by one replicate identifier column and one Ct value column.
+    Valid input files are multi-assay irregular `csv` or `excel` files, 
+    that specify assays as one big table containing all information together.
 
-    Separate assay tables may be either below one another (separated by blank lines!)
-    or besides one another (requires `transpose = True`), but may be in DIFFERENT sheets.
-    All assays from all sheets will be read!
+    Two possible data architectures are allowed:
+    
+    #### `Vertical` Big Tables
+    Big Tables of this kind require three columns (any additional columns are disregarded): 
+    one specifying the assay, one specifying the replicate identifiers, and one specifying the Ct values. 
+    An additional fourth column (`@qpcr`) may be filled with decorators but this is not necessary in this setup.
 
-    Assays of interest and normaliser assays *must* be marked using `decorators`.
+    Example:
+
+    | assay | id   | Ct    | @qpcr |
+    | ----- | ---- | ----- | ---- |
+    | 28S   | ctrl | 7.65  | normaliser | 
+    | 28S   | ctrl | 7.74  | normaliser | 
+    | 28S   | ctrl | 7.54  | normaliser | 
+    | 28S   | kd   | 7.86  | normaliser | 
+    | 28S   | kd   | 7.57  | normaliser | 
+    | 28S   | kd   | 7.67  | normaliser | 
+    | Actin | ctrl | 11.67 | normaliser | 
+    | Actin | ctrl | 11.54  | normaliser | 
+    | ...   | ...  | ...   | ... | 
+
+
+    #### `Horizontal` Big Tables
+    Big Tables of this kind store replicates from assays in side-by-side columns.
+    The replicates may be labelled numerically or all have the same column header. 
+    A second column is required specifying the replicate identifier. 
+
+    Note, this kind of setup *requires* decorators above the first replicate of each assay,
+    as well as user-defined `replicates`!
+
+    Example:
+
+    |      | @qpcr:normaliser |      |      | @qpcr:normaliser |      |      |
+    | ---- | ---------------- | ---- | ---- | ---------------- | ---- | ---- |
+    | id   | 28S1  | 28S2  | 28S3  | Actin1 | Actin2 | ...  |
+    | ctrl | 7.74 | 7.65 | 7.54 | 11.54 | 11.67 | ...  |
+    | kd   | 7.86 | 7.57 | 7.67 | 11.43 | 11.56 | ...  |
+    | ...  | ...  | ...  | ...  | …     | ...   | ...  |
 
 
     Parameters
@@ -797,7 +830,10 @@ class BigTableReader:
         Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
     **kwargs
     """
-    pass
+    def __init__(self):
+        super().__init__()
+    
+
 
 if __name__ == "__main__":
 
