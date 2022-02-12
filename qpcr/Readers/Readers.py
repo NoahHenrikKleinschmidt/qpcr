@@ -312,7 +312,7 @@ class SingleReader(_CORE_Reader):
         """
         self.read(**kwargs)
         data = self.get()
-        data = self._make_new_Assay(self.id(), data)
+        data = self.make_Assay()
         return data
 
     def _is_csv2(self):
