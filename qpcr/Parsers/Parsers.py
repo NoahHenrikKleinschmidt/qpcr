@@ -744,8 +744,8 @@ class _CORE_Parser:
         """
         column_decorator = plain_decorators["qpcr:column"]
         qpcr_col = np.where(array == column_decorator)
+        qpcr_row, qpcr_col = qpcr_col
         if len(qpcr_col) != 0:
-            qpcr_row, qpcr_col = qpcr_col
             
             qpcr_rows = slice( int(qpcr_row + 1), maxrows )
             qpcr_col = array[  qpcr_rows, qpcr_col  ]
