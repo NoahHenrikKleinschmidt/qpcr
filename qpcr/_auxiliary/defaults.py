@@ -6,12 +6,21 @@ Stores basic default settings
 #                       Default FileIO settings
 #  =================================================================
 
-# default column names for raw Ct data files (don't change this!)
-raw_col_names = ["id", "Ct"]
 
 supported_filetypes = ["csv", "xlsx"]
 
 
+
+#  =================================================================
+#                       Default Inference settings
+#  =================================================================
+
+# default column names for raw Ct data files (don't change this!)
+raw_col_names = ["id", "Ct"]
+
+# default nameS for horizontal big table decorated columns
+bigtable_horizontal_assays = "assay{}"
+bigtable_horizontal_group = "group{}"
 
 #  =================================================================
 #                       Default Figure settings
