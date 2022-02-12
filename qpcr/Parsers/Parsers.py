@@ -100,18 +100,24 @@ assay_patterns = {
 decorators = {
                     "qpcr:all"          : "(@qpcr:|'@qpcr:)",
                     "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
-                    "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",        
+                    "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
+                    "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
             }
 
-_plain_decorators = [
-                        "@qpcr:assay",
-                        "@qpcr:normaliser"
-                ]
+plain_decorators = {
+                    "qpcr:all"          : "@qpcr:",
+                    "qpcr:assay"        : "@qpcr:assay",
+                    "qpcr:normaliser"   : "@qpcr:normaliser",
+                    "qpcr:group"        : "@qpcr:group",
+            }
 
 # get the standard column headers to use for the 
 # replicate id and Ct column of the finished dataframes
 standard_id_header = defaults.raw_col_names[0]
 standard_ct_header = defaults.raw_col_names[1]
+
+default_group_name = defaults.default_group_name
+default_dataset_header = defaults.default_dataset_header
 
 # set a dummy default value for any np.nan values
 # in the column storing the assay headers
@@ -622,16 +628,14 @@ class _CORE_Parser:
         self._bigtable_range = relevant_data  
 
 
-    def _infer_BigTable_assays(self, **kwargs):
+    def _infer_BigTable_groups(self, **kwargs):
         """
-        Gets the assay ranges from the bigtable datarange.
+        Gets the group ranges from the bigtable datarange.
         Note, this is only used in case of horizontal big tables.
         """
         # get the relevant data
         array = self._bigtable_range
-        rows, cols = array.shape
-        print(rows, cols)
-
+        maxrows, allcols = array.shape
 
         ignore_empty = aux.from_kwargs("ignore_empty",False,kwargs)
 
@@ -644,69 +648,147 @@ class _CORE_Parser:
         
         rdx = 0 # counter for the replicate groups
         
-        assays = {}
-        normalisers = {}
+        data_array = None # this array will store the entire transposed data
+
+        decorator = plain_decorators["qpcr:group"]
 
         # now get the assays in question
         # we already vetted if the file is properly 
         # decorated during _vet_replicates
-        for decorator, store_dict in zip(_plain_decorators, [assays, normalisers]):
             
-            # find decorated starting columns
-            # get only column indices            
-            indices = np.argwhere(array == decorator)
-            indices = indices.reshape(indices.size)[1]
+        # find decorated starting columns
+        # get only column indices            
+        indices = np.argwhere(array == decorator)
+        indices = indices[ : , 1 ]
 
-            # iterate over each assay
-            for col in indices: 
+        if indices.size == 1:
+            indices = [indices]
+
+        # get total slice of bigtable rows
+        rows = slice( 1, maxrows )
+        
+        # iterate over each group
+        for col in indices: 
+            
+            rep = replicates[rdx]
+            name = names[rdx]
+
+            # get data columns
+            cols = slice( col, col + rep )
+            
+            # get data
+            data = array[  rows, cols  ]
+            
+            # rename data cols uniformly
+            data[ 0 , : ] = name
+            
+            # concatenate data into a single array
+            if data_array is None: 
+                data_array = data
+            else:
+                data_array = np.concatenate(
+                                                ( data_array, data ),
+                                                axis = 1,
+                                            )
+            rdx += 1
+
+        # it's actually pretty easy, we horizontally concatenate all found columns
+        # and then we simply split that array by the rows, each of which is an assay.
+        # transpose each row into a 
+
+        # now get the id column
+        id_col = self._id_label
+        # find the column header
+        id_start = np.where(array == id_col)
+        id_row, id_col = id_start
+
+        # increment index to remove header    
+        id_rows = slice( int(id_row + 1), maxrows )
+        
+        id_col = array[
+                        rows, id_col
+                    ]
+        id_col[0] = "group"
+        
+
+
+        #kinda STUCK here ... 
+
+
+        # we should transpose the concatenated data_array
+        # then we split by the columns of this and were good
+        # but the question is how we treat the assay / group Information
+        # I need to think more about this... 
+
+        # data_array = np.transpose(data_array)
+        rows, cols = data_array.shape
+
+        groups = data_array[ 0, : ]
+        data_array = data_array[ 1:, : ]
+        data_array = np.concatenate(data_array, axis = 0)
+
+
+        # this now works like a charm and returns a three column vertical bigtable...
+        groups_tiled = np.tile(groups, data_array.size // groups.size )
+
+        ids_tiled = np.repeat(  id_col[ 1: ], groups.size  )
+
+        data_array = np.stack( (ids_tiled, groups_tiled, data_array), axis = 1 )
+
+        data_array = np.concatenate(
+                                        ( 
+                                            [[ default_dataset_header, standard_id_header, standard_ct_header ]],
+                                            data_array
+                                       ),
+                                       axis = 0
+                                )
+        print(groups)
+        print(data_array)
+        print(data_array.shape)
+
+        print(
                 
-                rep = replicates[rdx]
-                name = names[rdx]
+        )
 
-                # data = array[
-
-                #         ]
-
-                rdx += 1
 
     def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
         """
-        Checks if provided replicates cover all data assays (annoated columns).
+        Checks if provided replicates cover all data groups (annoated columns).
         And it also gets the names supposed to be used for the columns.
         """
         # get assays for each decorator
-        all_assays = 0
-        for decorator in _plain_decorators: 
-            # find decorated starting columns
-            indices = np.argwhere(array == decorator)
-            if indices.size == 0 and not ignore_empty:
-                aw.HardWarning("Parser:no_decorators_found", traceback = False)
+        groups = 0
+        decorator = plain_decorators["qpcr:group"]
+    
+        # find decorated starting columns
+        indices = np.argwhere(array == decorator)
+        if indices.size == 0 and not ignore_empty:
+            aw.HardWarning("Parser:no_decorators_found", traceback = False)
 
-            # get only column indices            
-            indices = indices.reshape(indices.size)[1]
-            all_assays += indices.size
+        # get only column indices            
+        indices = indices[ : , 1 ]
+        groups += indices.size
 
         # check if replicates are an integer, if so transform to 
         # tuple that cover all found assays
         if aux.same_type(replicates, 1): 
-            replicates = np.tile([replicates], all_assays)
+            replicates = np.tile([replicates], groups)
         
         # if replicates are already a tuple, make sure they cover all rows
         elif aux.same_type(replicates, ()):
-            all_covered = all_assays == len(replicates)
+            all_covered = groups == len(replicates)
             if not all_covered:
-                aw.HardWarning("Assay:reps_dont_cover", n_samples = all_assays, reps = replicates, traceback = False)
+                aw.HardWarning("Assay:reps_dont_cover", n_samples = groups, reps = replicates, traceback = False)
             
         # get names for assays
-        default_assay_name = defaults.bigtable_horizontal_assays
-        assay_names = aux.from_kwargs("names", [  default_assay_name.format(i) for i in range( len(replicates) )  ], kwargs)
+        group_names = aux.from_kwargs("names", [  i for i in range( len(replicates) )  ], kwargs)
 
         # vet that names cover
-        if len(assay_names) != len(replicates):
+        if len(group_names) != len(replicates):
             aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = assay_names)
         
         # return tranformed replicates
-        return replicates, assay_names
+        return replicates, group_names
 
         
 
@@ -1126,4 +1208,4 @@ if __name__ == "__main__":
 
     parser_bigtable.labels( id_label = "tissue_number" )
     parser_bigtable._make_BigTable_range(is_horizontal = True)
-    parser_bigtable._infer_BigTable_assays( replicates = 3 )
+    parser_bigtable._infer_BigTable_groups( replicates = 3 )
