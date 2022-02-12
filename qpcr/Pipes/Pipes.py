@@ -11,6 +11,7 @@ import qpcr._auxiliary.warnings as wa
 import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
+import qpcr.Readers as Readers
 import re
 import os 
 import difflib
@@ -521,6 +522,12 @@ class MultiAssay(Blueprint):
     Performs Delta-Delta-Ct based on data from a single multi-assay datafile.
     Datasets within this datafile must be decorated to identify them as assays-of-interest or normalisers.
     Check out the documentation of `qpcr.Parsers` for more information on decorators.
+
+    Note
+    -------
+    This class relies on `qpcr.Parsers` and decorated assays to get its input data. 
+    If your file does not offer this kind of architecture, choose another pipeline.
+
     """
     def __init__(self):
         super().__init__()
@@ -612,7 +619,7 @@ class MultiAssay(Blueprint):
         Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
-            self.Reader(qpcr.MultiReader())
+            self.Reader(Readers.MultiReader())
         if self.Analyser() is None: 
             self.Analyser(qpcr.Analyser())
         if self.Normaliser() is None:
