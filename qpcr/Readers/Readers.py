@@ -328,9 +328,12 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         """
         Returns
         -------
-        data : tuple
-            Returns a tuple of the first element being the assay data (either the raw dictionary of dataframes returned by the Parser, 
-            or `qpcr.Assay` objects in a list), and the assay names in a list as the second element.
+        data : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if `make_Assays` has not been run yet)
+            or a list of `qpcr.Assay` objects.
+        names : list
+            A list of the names of all extracted assays.
         """
         if aux.same_type(self._assays, {}):
             names = self._assays.keys()
@@ -339,16 +342,18 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         else:
             names = [i.id() for i in self._assays]
             assays = self._assays
-        data = assays, names
-        return data
+        return assays, names
 
     def normalisers(self):
         """
         Returns
         -------
-        data : tuple
-            Returns a tuple of the first element being the normaliser data (either the raw dictionary of dataframes returned by the Parser, 
-            or `qpcr.Assay` objects in a list), and the assay names in a list as the second element.
+        data : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if `make_Assays` has not been run yet)
+            or a list of `qpcr.Assay` objects.
+        names : list
+            A list of the names of all extracted normalisers.
         """
         if aux.same_type(self._normalisers, {}):
             names = self._normalisers.keys()
@@ -357,8 +362,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         else:
             names = [i.id() for i in self._normalisers]
             assays = self._normalisers
-        data = assays, names
-        return data
+        return assays, names
 
     def get(self, which : str):
         """
