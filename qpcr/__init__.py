@@ -1076,14 +1076,20 @@ class DataReader(_CORE_Reader, Assay):
             adhere to the same filetype / datastructure, use `reset = True` 
             to set up a new Reader for each datafile.
         """
+        self._src = filename
         # vet filesuffix
         suffix = self._filesuffix()
         if suffix not in supported_filetypes:
             aw.HardWarning("MultiReader:unknown_datafile", file = self._src)
         
+        use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
         if reset or self._Reader is None: 
             self.reset()
-            self._setup_Reader(**kwargs)
+            self._setup_Reader(multi_assay = use_multi, **kwargs)
+        
+        # read file and return data
+        data = self._Reader._DataReader(filename = self._src, **kwargs)
+        return data
 
     def _setup_Reader(self, **kwargs):
         """
@@ -1091,15 +1097,15 @@ class DataReader(_CORE_Reader, Assay):
         """
         suffix = self._filesuffix()
         if suffix == "csv":
-            use_multi = aux.from_kwargs("multi_assay", False, kwargs)
-            if use_multi:
+            use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
+            if not use_multi:
                 reader = Readers.SingleReader()
             else:
                 reader = Readers.MultiReader()
         elif suffix == "xlsx":
-            use_multi = aux.from_kwargs("multi_assay", True, kwargs)
+            use_multi = aux.from_kwargs("multi_assay", False, kwargs, rm = True)
             multi_sheet = "sheet_name" not in kwargs
-            if use_multi and multi_sheet:
+            if multi_sheet:
                 reader = Readers.MultiSheetReader()
             elif use_multi and not multi_sheet:
                 reader = Readers.MultiReader()

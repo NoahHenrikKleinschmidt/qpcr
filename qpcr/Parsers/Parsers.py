@@ -732,7 +732,12 @@ class CsvParser(_CORE_Parser):
         delimiter = aux.from_kwargs("sep", delimiter, kwargs, rm = True)
 
         # now read the data and convert to numpy array
-        df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        try: 
+            df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        except: 
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv()")
+            df = pd.read_csv(contents, header = None, sep = delimiter)
+
         df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = df.to_numpy()
 
@@ -818,7 +823,12 @@ class ExcelParser(_CORE_Parser):
         self._src = filename
 
         # read data and convert to numpy array
-        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        try: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        except: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name)
+            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel()")
+
         data = data.to_numpy()
 
         self._data = data

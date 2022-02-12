@@ -38,7 +38,7 @@ However, if your experimental setup looks differently, there are ways to adapt <
 So, again, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
 The datafiles require at least two columns: one containing identifiers of your replicates (see below for the term "Replicates"), and one for their Ct values.
 <code>Regular</code> datafiles only contain these two columns and nothing else. <code>Irregular</code> datafiles also have to have these two columns, but they allow for more irregular stuff
-around these columns. All <code>excel</code> input files are irregular. Irregular files may contain multiple datasets (see below). Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> for
+around these columns. All <code>excel</code> input files are irregular. Irregular files may contain multiple datasets (see below). Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers/index.html">qpcr.Parsers</a></code> for
 details on how to work with irregular datafiles.</p>
 <h3 id="an-assay-and-a-dataset">An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> and a "dataset"</h3>
 <p>The <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
@@ -87,7 +87,7 @@ So, again, the <code>anchor</code> is the dataset-internal reference value used 
 <p>You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code>.
 For all intents and purposes, an "assay" is simply one of your datasets (again, the name was chosen from the default assumption that your datafiles contain one assay each).
 In case of the <code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code> "assay" specifies any dataset within an irregular datafile.
-In case of the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code>, or the <code>qpcr.MultiReader</code>, as well as the pipelines from <code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code> "assays" are the short notation for specifically "assays-of-interest"
+In case of the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code>, or the <code>qpcr.MultiReader</code>, as well as the pipelines from <code><a title="qpcr.Pipes" href="Pipes/index.html">qpcr.Pipes</a></code> "assays" are the short notation for specifically "assays-of-interest"
 (or more formally "datasets-of-interest"), while "normalisers" refer to your normaliser-assays (from housekeeping genes like ActinB for instance).
 But again, if your datafiles do not conform to standard data arrangements, do not be distracted from the terminology here.
 You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode).
@@ -104,7 +104,7 @@ Actually, we try to phase out the term "sample" and it currently mainly appears 
 <p>A <code>pipeline</code> is essentially any workflow that starts from one or multiple input datafiles and ultimately results in some results table you are happy with.
 Pipelines can be manually created by assembling the main <code><a title="qpcr" href="#qpcr">qpcr</a></code> classes, usually starting with a SampleReader, passing to an Analyser, to an Normaliser, and you're good to go.
 When manually assembling your workflow you can extract your data at any point and perform your own computations on it as you like. However, if you wish to "just do some good ol' Delta-Delta-Ct"
-there are pre-defined pipelines that will handle writing the workflow and only require a very basic setup. You can find these in the <code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code> submodule.</p>
+there are pre-defined pipelines that will handle writing the workflow and only require a very basic setup. You can find these in the <code><a title="qpcr.Pipes" href="Pipes/index.html">qpcr.Pipes</a></code> submodule.</p>
 <h3 id="results-my-final-results">"Results" = my final results?</h3>
 <p>Yes and no. Anything that is computed through any of the <code><a title="qpcr" href="#qpcr">qpcr</a></code> classes is called a "result" of some kind.
 In practice as soon as you pass your data through an <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> or <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> you generate some "results" which are actually stored in a separate class called <code><a title="qpcr.Results" href="#qpcr.Results">Results</a></code> (that's not so important, though).
@@ -120,11 +120,11 @@ So for the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></co
 their output is, which is <em>not</em> normally the case otherwise (normally you'd use the <code>get()</code> method to extract your data, see above).
 Alright, we know about <code>link()</code> and <code>pipe()</code> now, what about <code>add</code>?
 Classes that accept multiple inputs have <code>add</code> methods, which tells the class where exactly to store the input data.
-<code>add</code>-methods are especially implemented within the pre-defined analysis pipelines of the <code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code> submodule. You will probably often use the methods <code>add_assays()</code> and <code>add_normalisers()</code> if you plan on using these predefined pipelines.
+<code>add</code>-methods are especially implemented within the pre-defined analysis pipelines of the <code><a title="qpcr.Pipes" href="Pipes/index.html">qpcr.Pipes</a></code> submodule. You will probably often use the methods <code>add_assays()</code> and <code>add_normalisers()</code> if you plan on using these predefined pipelines.
 However, these classes usually still have a <code>link()</code> method somewhere that you can use as well. For instance, the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> uses a <code>link</code> method to add both assays-of-interest and normaliser-assays simultaneously.</p>
 <h2 id="working-with-irregular-or-multi-assay-files">Working with "irregular" or "multi-assay" files</h2>
 <hr>
-<p>Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> which explains in more detail how to work with irregular and multi-assay datafiles.</p>
+<p>Check out the documentation of the <code><a title="qpcr.Parsers" href="Parsers/index.html">qpcr.Parsers</a></code> which explains in more detail how to work with irregular and multi-assay datafiles.</p>
 <h2 id="getting-started">Getting started</h2>
 <hr>
 <p>You can find useful tutorials and applied examples as <code>jupyter notebooks</code> <a href="https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples">on GitHub</a>.</p>
@@ -1021,16 +1021,16 @@ class SampleReader(Assay):
         self._Reader = None
         self._Assay = None
 
-    def __str__(self):
-        header = f&#34;qpcr.SampleReader ({self._id})&#34;
-        reps = f&#34;Replicate settings:\t{self._replicates}&#34;
-        names = f&#34;Name settings:\t\t{self._names}&#34;
+    # def __str__(self):
+    #     header = f&#34;qpcr.SampleReader ({self._id})&#34;
+    #     reps = f&#34;Replicate settings:\t{self._replicates}&#34;
+    #     names = f&#34;Name settings:\t\t{self._names}&#34;
 
-        header_line = max([len(i) for i in [header, reps, names]])
-        header_line = &#34;-&#34; * header_line
+    #     header_line = max([len(i) for i in [header, reps, names]])
+    #     header_line = &#34;-&#34; * header_line
 
-        string = f&#34;{header_line}\n{header}\n{header_line}\n\n{reps}\n{names}\n\n{header_line}&#34;
-        return string
+    #     string = f&#34;{header_line}\n{header}\n{header_line}\n\n{reps}\n{names}\n\n{header_line}&#34;
+    #     return string
 
     def replicates(self, replicates:(int or tuple)):
         &#34;&#34;&#34;
@@ -2138,17 +2138,17 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></dt>
+<dt><code class="name"><a title="qpcr.Filters" href="Filters/index.html">qpcr.Filters</a></code></dt>
 <dd>
 <div class="desc"><p>This submodule defines a number of filters that can be used to
 remove faulty replicates from <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code>s before before passing them to an …</p></div>
 </dd>
-<dt><code class="name"><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code></dt>
+<dt><code class="name"><a title="qpcr.Parsers" href="Parsers/index.html">qpcr.Parsers</a></code></dt>
 <dd>
 <div class="desc"><p>This module contains classes designed to work with irregularly structured datafiles.
-It provides <code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code> that are able to extract the replicate and …</p></div>
+It provides <code><a title="qpcr.Parsers" href="Parsers/index.html">qpcr.Parsers</a></code> that are able to extract the replicate and …</p></div>
 </dd>
-<dt><code class="name"><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></dt>
+<dt><code class="name"><a title="qpcr.Pipes" href="Pipes/index.html">qpcr.Pipes</a></code></dt>
 <dd>
 <div class="desc"><p>This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
 This is designed for lightweight …</p></div>
@@ -2158,7 +2158,7 @@ This is designed for lightweight …</p></div>
 <div class="desc"><p>This module is designed for streamlined data visualisation of the qpcr generated results
 It is designed to work directly with qpcr.Results() instances.</p></div>
 </dd>
-<dt><code class="name"><a title="qpcr.Readers" href="Readers.html">qpcr.Readers</a></code></dt>
+<dt><code class="name"><a title="qpcr.Readers" href="Readers/index.html">qpcr.Readers</a></code></dt>
 <dd>
 <div class="desc"><p>This module provides different <code><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></code> classes that allow reading simple and complex datafiles
 of various architectures …</p></div>
@@ -5077,16 +5077,16 @@ Note</p>
         self._Reader = None
         self._Assay = None
 
-    def __str__(self):
-        header = f&#34;qpcr.SampleReader ({self._id})&#34;
-        reps = f&#34;Replicate settings:\t{self._replicates}&#34;
-        names = f&#34;Name settings:\t\t{self._names}&#34;
+    # def __str__(self):
+    #     header = f&#34;qpcr.SampleReader ({self._id})&#34;
+    #     reps = f&#34;Replicate settings:\t{self._replicates}&#34;
+    #     names = f&#34;Name settings:\t\t{self._names}&#34;
 
-        header_line = max([len(i) for i in [header, reps, names]])
-        header_line = &#34;-&#34; * header_line
+    #     header_line = max([len(i) for i in [header, reps, names]])
+    #     header_line = &#34;-&#34; * header_line
 
-        string = f&#34;{header_line}\n{header}\n{header_line}\n\n{reps}\n{names}\n\n{header_line}&#34;
-        return string
+    #     string = f&#34;{header_line}\n{header}\n{header_line}\n\n{reps}\n{names}\n\n{header_line}&#34;
+    #     return string
 
     def replicates(self, replicates:(int or tuple)):
         &#34;&#34;&#34;
@@ -5764,11 +5764,11 @@ specify <code>name_label</code> and <code>Ct_label</code> as additional argument
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="qpcr.Filters" href="Filters.html">qpcr.Filters</a></code></li>
-<li><code><a title="qpcr.Parsers" href="Parsers.html">qpcr.Parsers</a></code></li>
-<li><code><a title="qpcr.Pipes" href="Pipes.html">qpcr.Pipes</a></code></li>
+<li><code><a title="qpcr.Filters" href="Filters/index.html">qpcr.Filters</a></code></li>
+<li><code><a title="qpcr.Parsers" href="Parsers/index.html">qpcr.Parsers</a></code></li>
+<li><code><a title="qpcr.Pipes" href="Pipes/index.html">qpcr.Pipes</a></code></li>
 <li><code><a title="qpcr.Plotters" href="Plotters/index.html">qpcr.Plotters</a></code></li>
-<li><code><a title="qpcr.Readers" href="Readers.html">qpcr.Readers</a></code></li>
+<li><code><a title="qpcr.Readers" href="Readers/index.html">qpcr.Readers</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

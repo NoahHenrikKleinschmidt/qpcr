@@ -8,6 +8,14 @@ of various architectures.
 
 """
 
+
+# Concept to link the Readers to the DataReader
+# All Readers define a _DataReader method that 
+# specifies which of its methods is supposed 
+# to be used for (mostly pipe, sometimes read...)
+# _DataReader methods *must* return the data they read!
+
+from attr import asdict
 import pandas as pd
 import qpcr.__init__ as qpcr
 import qpcr._auxiliary as aux
@@ -83,68 +91,61 @@ class _CORE_Reader(aux._ID):
             except:
                 # setup parser
                 parser = Parsers.CsvParser()
-                # check it file should be read transposed
-                transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
-                if transpose:
-                    parser.transpose()
+                self._prep_Parser(kwargs, parser)
                 
-                # setup patterns and store assay-of-interest
-                assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
                 assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
-                parser.assay_pattern(assay_pattern)
-                
-                # get data column labels
-                id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
-                ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
-                parser.labels(id_label,ct_label)
                 
                 # pipe the datafile through the parser
                 parser.pipe(self._src, **kwargs)
 
-                if len(parser.assays()) > 1:
-                    if assay_of_interest is None: 
-                        aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays())
-                    self._df = parser.get(assay_of_interest)
-                    self.id(assay_of_interest)
-                else:
-                    assay_of_interest = parser.assays()[0]
-                    self._df = parser.get(assay_of_interest)
-                    self.id(assay_of_interest)
+                # get the data
+                self._get_single_assay(parser, assay_of_interest)
 
         elif suffix == "xlsx":
             # setup parser
             parser = Parsers.ExcelParser()
-            # check it file should be read transposed
-            transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
-            if transpose:
-                parser.transpose()
+            self._prep_Parser(kwargs, parser)
             
             # check for sheet_name
             sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
 
-            # setup patterns and store assay-of-interest
-            assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
+            # store assay-of-interest
             assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
-            parser.assay_pattern(assay_pattern)
             
-            # get data column labels
-            id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
-            ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
-            parser.labels(id_label,ct_label)
-
             # pipe the datafile through the parser
             parser.read(self._src, sheet_name = sheet_name)
             parser.parse(**kwargs)
 
-            if len(parser.assays()) > 1:
-                if assay_of_interest is None: 
-                    aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
-                self._df = parser.get(assay_of_interest)
-                self.id(assay_of_interest)
-            else:
-                assay_of_interest = parser.assays()[0]
-                self._df = parser.get(assay_of_interest)
-                self.id(assay_of_interest)
+            # get the data
+            self._get_single_assay(parser, assay_of_interest)
+
+    def _get_single_assay(self, parser, assay_of_interest):
+        """
+        Gets a single dataset from the Parser
+        """
+        if len(parser.assays()) > 1:
+            if assay_of_interest is None: 
+                aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
+            self._df = parser.get(assay_of_interest)
+            self.id(assay_of_interest)
+        else:
+            assay_of_interest = parser.assays()[0]
+            self._df = parser.get(assay_of_interest)
+            self.id(assay_of_interest)
+
+    def _prep_Parser(self, kwargs, parser):
+        transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+        if transpose:
+            parser.transpose()
+                
+        # setup patterns and store assay-of-interest
+        assay_pattern = aux.from_kwargs("assay_pattern", "Rotor-Gene", kwargs)
+        parser.assay_pattern(assay_pattern)
+                
+        # get data column labels
+        id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
+        ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
+        parser.labels(id_label,ct_label)
   
     def _csv_read(self, **kwargs):
         """
@@ -245,6 +246,14 @@ class SingleReader(_CORE_Reader):
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
         super().read(**kwargs)
+
+    def _DataReader(self, **kwargs):
+        """
+        The DataReader interacting method
+        """
+        self.read(**kwargs)
+        data = self.get()
+        return data
 
     def _is_csv2(self):
         """
@@ -555,6 +564,17 @@ class MultiReader(SingleReader, aux._ID):
             self._replicates = replicates
         return self._replicates
 
+    def _DataReader(self, **kwargs):
+        """
+        The DataReader interacting method
+        """
+        replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
+        self.replicates(replicates)
+        names = aux.from_kwargs("names", None, kwargs, rm = True)
+        self.names(names)
+        data = self.pipe(**kwargs)
+        return data
+
     def _make_new_Assay(self, name, df):
         """
         Makes a new Assay object and performs group() already...
@@ -726,6 +746,13 @@ class MultiSheetReader(MultiReader):
 
         assays, normalisers = self._assays, self._normalisers
         return assays, normalisers
+        
+    def _DataReader(self, **kwargs):
+        """
+        The DataReader interacting method
+        """
+        data = super()._DataReader(**kwargs)
+        return data
 class BigTableReader:
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
