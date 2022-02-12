@@ -131,7 +131,7 @@ import qpcr._auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 import qpcr._auxiliary.defaults as defaults
 import qpcr.Parsers as Parsers
-# import qpcr.Readers as Readers
+import qpcr.Readers as Readers
 import os
 import numpy as np 
 from copy import deepcopy 
@@ -1015,7 +1015,7 @@ class _Qupid_SampleReader(SampleReader):
 
         return self._Assay
 
-class DataReader(Assay):
+class DataReader(_CORE_Reader, Assay):
     """
     Handles reading a single file containing input data
     for `qpcr`. 
@@ -1076,15 +1076,16 @@ class DataReader(Assay):
             adhere to the same filetype / datastructure, use `reset = True` 
             to set up a new Reader for each datafile.
         """
-        pass
-
+        if reset: 
+            self.reset()
+            self._setup_Reader(**kwargs)
 
     def _setup_Reader(self, **kwargs):
         """
         Sets up the core Reader 
         """
         if self._Reader is None:
-
+            print("setting up new Reader...")
 
 
     def get(self):
