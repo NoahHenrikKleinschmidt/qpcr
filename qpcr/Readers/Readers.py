@@ -72,6 +72,11 @@ class _CORE_Reader(aux._ID):
         specify `name_label` and `Ct_label` as additional arguments.
         """
         suffix = self._filesuffix()
+        
+        # check for a valid input file
+        if suffix not in supported_filetypes:
+            aw.HardWarning("MultiReader:empty_data", file = self._src)
+
         if suffix == "csv":
             try: 
                 self._csv_read()
@@ -189,6 +194,12 @@ class SingleReader(_CORE_Reader):
     Separate assay tables may be either below one another (separated by blank lines!)
     or besides one another (requires `transpose = True`).
 
+    Note
+    ----
+    This is the successor of the original `qpcr.Reader` (not the `qpcr.SampleReader`!).
+    Hence, the `SingleReader` will return a pandas DataFrame of the dataset 
+    directly using `get` but not an `qpcr.Assay`.
+
     Parameters
     ----------
     filename : str
@@ -202,12 +213,38 @@ class SingleReader(_CORE_Reader):
     **kwargs
         Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
     """
-    def __init__(self, filename:str, **kwargs) -> pd.DataFrame: 
+    def __init__(self, filename:str = None, **kwargs) -> pd.DataFrame: 
         super().__init__()
+        self._src = filename
+        self._delimiter = None
+        if self._src is not None:
+            self.read(**kwargs)
+
+    def read(self, filename : str, **kwargs):
+        """
+        Reads the given data file.
+
+        Note
+        -----
+        If the data file is an Excel file replicates and their Ct values will be 
+        extracted from the first excel sheet of the file by default. 
+        A separate sheet can be specified using `sheet_name`.
+        
+        Note, this assumes by default
+        that the replicates are headed by the label `"Name"` and the corresponding Ct values
+        are headed by the label `"Ct"`. Both labels have to be on the same row. 
+        If these labels do not match your excel file, you may
+        specify `name_label` and `Ct_label` as additional arguments.
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to an input datafile.
+        """
         self._src = filename
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
-        self.read(**kwargs)
+        super().read(**kwargs)
 
     def _is_csv2(self):
         """
@@ -252,6 +289,11 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
 
     Assays of interest and normaliser assays *must* be marked using `decorators`.
 
+    Note
+    ------
+    `MultiReader` can transform the extracted datasets directly into `qpcr.Assay` objects using `MultiReader.make_Assays()`.
+    It will perform grouping of assays if possible but will return raw-assays if not! `get` will either return a dictionary
+    of the raw dataframes or a list of `qpcr.Assay`s.
 
     Parameters
     ----------
@@ -281,6 +323,42 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         """
         self._assays = {}
         self._normalisers = {}
+
+    def assays(self):
+        """
+        Returns
+        -------
+        data : tuple
+            Returns a tuple of the first element being the assay data (either the raw dictionary of dataframes returned by the Parser, 
+            or `qpcr.Assay` objects in a list), and the assay names in a list as the second element.
+        """
+        if aux.same_type(self._assays, {}):
+            names = self._assays.keys()
+            assays = self._assays.values()
+            data = assays, names
+        else:
+            names = [i.id() for i in self._assays]
+            assays = self._assays
+        data = assays, names
+        return data
+
+    def normalisers(self):
+        """
+        Returns
+        -------
+        data : tuple
+            Returns a tuple of the first element being the normaliser data (either the raw dictionary of dataframes returned by the Parser, 
+            or `qpcr.Assay` objects in a list), and the assay names in a list as the second element.
+        """
+        if aux.same_type(self._normalisers, {}):
+            names = self._normalisers.keys()
+            assays = self._normalisers.values()
+            data = assays, names
+        else:
+            names = [i.id() for i in self._normalisers]
+            assays = self._normalisers
+        data = assays, names
+        return data
 
     def get(self, which : str):
         """
@@ -362,60 +440,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         else: 
             # ERROR HERE
             aw.SoftWarning("MultiReader:no_decorator_or_pattern")
-            
-
-    def _parse_by_pattern(self, kwargs, assay_pattern):
-        """
-        Parses the file only based on assay_pattern.
-        Note this will also work if a decorator has been specified additionally.
-        """
-        self._Parser.parse( assay_pattern = assay_pattern, **kwargs )
-        assays = self._Parser.get()       
-        self._assays = assays
-
-    def _parse_by_decorators(self, kwargs):
-        """
-        Parses the file and idenifies assays and normalisers
-        based on decorators
-        """
-        aux.from_kwargs("decorator", None, kwargs, rm = True)
-
-        # get assays-of-interest
-        self._Parser.parse( decorator = "qpcr:assay", **kwargs )
-        assays = self._Parser.get()       
-        self._assays = assays
-
-        # save extracted files if so desired...
-        if self.save_to() is not None: self._Parser.save()
-
-        # clear results and run again for normalisers
-        self._Parser.clear()
-
-        # get normaliser-assays
-        self._Parser.parse( decorator = "qpcr:normaliser", **kwargs )
-        normalisers = self._Parser.get()
-        self._normalisers = normalisers
-        if self.save_to() is not None: self._Parser.save()
-
-    def _prep_parser(self, kwargs):
-        """
-        Passes kwargs to Parser and performs additional setup
-        """
-        # setup assay_patterns if they were provided
-        assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
-        self._Parser.assay_pattern(assay_pattern)
-
-        # check if file should be read transposed
-        transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
-        if transpose:
-            self._Parser.transpose()
-
-        # get data column labels
-        id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
-        ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
-        self._Parser.labels(id_label,ct_label)
-
-
+             
     def make_Assays(self):
         """
         Convert all found assays and normalisers into `qpcr.Assay` objects.
@@ -490,7 +515,6 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
                 os.mkdir(self._save_loc)
         return self._save_loc
 
-    
     def names(self, names:(list or dict)):
         """
         Set names for replicates groups.
@@ -536,6 +560,57 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         if self._names is not None:
             new_assay.rename(self._names)
         return new_assay
+
+    def _parse_by_pattern(self, kwargs, assay_pattern):
+        """
+        Parses the file only based on assay_pattern.
+        Note this will also work if a decorator has been specified additionally.
+        """
+        self._Parser.parse( assay_pattern = assay_pattern, **kwargs )
+        assays = self._Parser.get()       
+        self._assays = assays
+
+    def _parse_by_decorators(self, kwargs):
+        """
+        Parses the file and idenifies assays and normalisers
+        based on decorators
+        """
+        aux.from_kwargs("decorator", None, kwargs, rm = True)
+
+        # get assays-of-interest
+        self._Parser.parse( decorator = "qpcr:assay", **kwargs )
+        assays = self._Parser.get()       
+        self._assays = assays
+
+        # save extracted files if so desired...
+        if self.save_to() is not None: self._Parser.save()
+
+        # clear results and run again for normalisers
+        self._Parser.clear()
+
+        # get normaliser-assays
+        self._Parser.parse( decorator = "qpcr:normaliser", **kwargs )
+        normalisers = self._Parser.get()
+        self._normalisers = normalisers
+        if self.save_to() is not None: self._Parser.save()
+
+    def _prep_parser(self, kwargs):
+        """
+        Passes kwargs to Parser and performs additional setup
+        """
+        # setup assay_patterns if they were provided
+        assay_pattern = aux.from_kwargs("assay_pattern", None, kwargs, rm = True)
+        self._Parser.assay_pattern(assay_pattern)
+
+        # check if file should be read transposed
+        transpose = aux.from_kwargs("transpose", False, kwargs, rm = True)
+        if transpose:
+            self._Parser.transpose()
+
+        # get data column labels
+        id_label = aux.from_kwargs("id_label", "Name", kwargs, rm = True)
+        ct_label = aux.from_kwargs("ct_label", "Ct", kwargs, rm = True)
+        self._Parser.labels(id_label,ct_label)
 
 class MultiSheetReader(MultiReader):
     """
@@ -646,8 +721,8 @@ if __name__ == "__main__":
     reader = MultiSheetReader()
     reader.pipe(
                 multisheet_file, 
-                decorator = True, 
-                # assay_pattern = "Rotor-Gene"
+                # decorator = True, 
+                assay_pattern = "Rotor-Gene"
             )
     print(reader.get("assays"))
 
