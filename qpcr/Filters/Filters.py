@@ -13,7 +13,7 @@ Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n
 """
 
 from re import L
-import qpcr.__init__ as qpcr
+import qpcr
 import pandas as pd
 import numpy as np
 import qpcr._auxiliary.warnings as aw

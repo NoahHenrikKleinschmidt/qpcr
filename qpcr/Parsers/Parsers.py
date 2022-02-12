@@ -73,7 +73,7 @@ The implemented decorators are specified in the `qpcr.Parsers.decorators` dictio
 > - If you are using `excel` you may have to add a single tick `'` in front of your decorators.
 """
 
-import qpcr.__init__ as qpcr
+import qpcr
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.defaults as defaults
 import qpcr._auxiliary.warnings as aw
