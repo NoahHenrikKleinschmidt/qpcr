@@ -324,8 +324,14 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         self._assays = {}
         self._normalisers = {}
 
-    def assays(self):
+    def assays(self, which : str = None):
         """
+        Parameters
+        ----
+        which : str
+            If specified it only returns the data for the specified assay.
+            Otherwise (default) it returns all assays.
+
         Returns
         -------
         data : dict or list
@@ -335,17 +341,16 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         names : list
             A list of the names of all extracted assays.
         """
-        if aux.same_type(self._assays, {}):
-            names = self._assays.keys()
-            assays = self._assays.values()
-            data = assays, names
-        else:
-            names = [i.id() for i in self._assays]
-            assays = self._assays
-        return assays, names
+        return self._get_from_which(self._assays, which)
 
-    def normalisers(self):
+    def normalisers(self, which : str = None):
         """
+        Parameters
+        ----
+        which : str
+            If specified it only returns the data for the specified normaliser.
+            Otherwise (default) it returns all normalisers.
+
         Returns
         -------
         data : dict or list
@@ -355,14 +360,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         names : list
             A list of the names of all extracted normalisers.
         """
-        if aux.same_type(self._normalisers, {}):
-            names = self._normalisers.keys()
-            assays = self._normalisers.values()
-            data = assays, names
-        else:
-            names = [i.id() for i in self._normalisers]
-            assays = self._normalisers
-        return assays, names
+        return self._get_from_which(self._normalisers, which)
 
     def get(self, which : str):
         """
@@ -371,7 +369,7 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
         Parameters
         ----------
         which : str
-            Can be either `"assays"` or `"normalisers"`.
+            Can be either `"assays"` or `"normalisers"` or any specific assay identifier.
 
         Returns
         -------
@@ -385,6 +383,11 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
             data = self._assays
         elif which == "normalisers":
             data = self._normalisers
+        else: 
+            try:
+                data = self._get_from_which(self._assays, which)
+            except: 
+                data = self._get_from_which(self._normalisers, which)
         return data
 
     def read(self, filename : str, **kwargs):
@@ -565,6 +568,26 @@ class MultiReader(qpcr.Assay, SingleReader, aux._ID):
             new_assay.rename(self._names)
         return new_assay
 
+    def _get_from_which(self, dataset, which):
+        """
+        The core for assayS() and normalisers() to get either all or a specific one
+        """
+        if which is not None: 
+            if aux.same_type(dataset, {}):
+                assay = dataset[which]
+            else: 
+                assay = [i for i in dataset if i.id() == which][0]
+            return assay
+        else:
+            if aux.same_type(dataset, {}):
+                names = dataset.keys()
+                assays = dataset.values()
+                data = assays, names
+            else:
+                names = [i.id() for i in dataset]
+                assays = dataset
+            return assays, names
+
     def _parse_by_pattern(self, kwargs, assay_pattern):
         """
         Parses the file only based on assay_pattern.
@@ -700,7 +723,7 @@ class MultiSheetReader(MultiReader):
             self.make_Assays()
         except Exception as e:
             print(e)
-            
+
         assays, normalisers = self._assays, self._normalisers
         return assays, normalisers
 class BigTableReader(qpcr.Assay):
@@ -746,5 +769,5 @@ if __name__ == "__main__":
                 # decorator = True, 
                 assay_pattern = "Rotor-Gene"
             )
-    print(reader.get("assays"))
+    print(reader.get("Actin"))
 
