@@ -618,6 +618,34 @@ class Assay(aux._ID):
         """
         return self._length
 
+    def add_dCt(self, dCt : pd.Series): 
+        """
+        Adds results from Delta-Ct (first Delta-Ct performed by a `qpcr.Analyser`).
+
+        Parameters
+        -----------
+        dCt : pandas.Series
+            A pandas Series of Delta-Ct values that will be stored in a column `"dCt"`.
+            Note, that each `Assay` can, of course, only store one single Delta-Ct column. 
+        """
+        self._df["dCt"] = dCt
+    
+    def add_ddCt(self, normaliser_id : str, ddCt : pd.Series):
+        """
+        Adds results from Delta-Delta-Ct ("normalisation" performed by a `qpcr.Normaliser`).
+        These will be stored in a column named `"rel_{normaliser_id}"`. Hence, an Assay can store
+        an arbitrary number of Delta-Delta-Ct columns against an arbitrary number of different normalisers. 
+        
+        Parameters
+        ----------
+        normaliser_id : str
+            The id of the normaliser Assay used to compute the Delta-Delta-Ct values.
+        ddCt : pandas.Series
+            A pandas Series of Delta-Delta-Ct values.
+        """
+        name = f"rel_{normaliser_id}"
+        self._df[name] = ddCt
+
     def adopt(self, df : pd.DataFrame, force = False):
         """
         Adopts an externally computed dataframe as its own.
@@ -1569,34 +1597,22 @@ class Results(aux._ID):
 
 class Analyser(aux._ID):
     """
-    Performs Single Delta CT (first normalisation within dataset) 
-    Note
-    ----
-    Delta Delta CT (normalisation using second dataset), is handled by qpcr.Normaliser!
-
-    Parameters
-    ----------
-    Assay : qpcr.Assay
-        A `qpcr.Assay` object (optional) to compute DeltaCT on. 
-        `qpcr.Assay` objects can be iteratively linked subsequently using `link()`.
+    Performs Single Delta-Ct (first normalisation 
+    within dataset against the `anchor`) 
     """
-    def __init__(self, Assay:Assay = None):
+    def __init__(self):
         super().__init__()
-        self._Assay = Assay
-        self._Results = Results()
+        self._Assay = None
 
         # default settings
         self._anchor = "first"
         self._ref_group = 0
         self._ref_group_col = "group" # used in case of "mean" anchor where the ref_group must be located either from a numeric (group) or string (group_name) id
         
-        self._efficiency = 2
+        self._efficiency = 1                # the formal effiency in percent
+        self._eff = 2 * self._efficiency    # the actual doubplciation factor used for calculation
         self._deltaCt_function = self._get_deltaCt_function(exp = True)
 
-        if self._Assay is not None: 
-            self._Results.adopt_id(Assay)
-            self._Results.adopt_names(self._Assay)
-    
     def get(self):
         """
         Returns 
@@ -1604,62 +1620,28 @@ class Analyser(aux._ID):
         Results
             A `qpcr.Results` object that contains the deltaCT results
         """
-        return self._Results
+        return self._Assay
 
-    def has_results(self):
-        """
-        Returns
-        -------
-        bool
-            `True` if any results were already computed, else `False`.
-        """
-        return not self._Results.is_empty()
-
-    def link(self, Assay:Assay, force = False, silent = False):
+    def link(self, Assay:Assay):
         """
         Links a `qpcr.Assay` object to the Analyser.
-        Note
-        ----
-        If there are any precomputed results, no new data will be linked, unless force=True is called. 
-        The user is notified if results are already present and how to proceed. 
-
+       
         Parameters
         ----------
         Assay : qpcr.Assay
             A `qpcr.Assay` object containing data.
         
-        force : bool
-            Any already linked `qpcr.Assay` objects (and their data and results) will be overwritten
-            if `force = True` (default is `force = False`).
-        
-        silent : bool
-            Warnings about overwriting data will be suppressed if `silent = True` (default is `silent = False`).
-            This is only relevant if `force = True`. 
         """
-        empty = self._Results.is_empty()
-        dont_overwrite = not empty and not force
-        if not dont_overwrite:
-            self._Assay = Assay
-            self.adopt_id(self._Assay)
-            self._Results = Results()
-            self._Results.adopt_names(self._Assay)
-            self._Results.adopt_id(self._Assay)
-            
-        if not silent:
-            # notify the user of changes to the Analyser data and results
-            if not dont_overwrite and not empty:
-                aw.SoftWarning("Analyser:newlinked")
-            elif dont_overwrite and not empty:
-                aw.SoftWarning("Analyser:not_newlinked")
+        self._Assay = Assay
 
     def pipe(self, Assay:Assay, **kwargs) -> Results:
         """
         A quick one-step implementation of link + DeltaCt.
-        This is the suggested application of the `qpcr.Analyser` class!
 
         Note
         ----
-        This will silently overwrite any previous results! 
+        This is the suggested application of the `qpcr.Analyser`.
+
 
         Parameters
         ----------
@@ -1671,28 +1653,32 @@ class Analyser(aux._ID):
 
         Returns 
         -------
-        results : qpcr.Results
-            A `qpcr.Results` object. 
+        assay : qpcr.Assay
+            The same `qpcr.Assay` with computed Delta-Ct values. 
+
         """
-        self.link(Assay, force=True, silent=True)
+        self.link(Assay)
         self.DeltaCt(**kwargs)
-        return self.get()
+        assay = self.get()
+        return assay
 
     def efficiency(self, e:float = None):
         """
         Sets an efficiency factor for externally calculated qPCR amplification efficiency.
-        By default `efficiency = 2` is assumed.
+        By default `efficiency = 1` (100%) is assumed.
 
         Parameters
         ----------
         e : float
-            An amplification efficiency factor. Default is `e = 2`.
+            An amplification efficiency factor. Default is `e = 1`, 
+            which is then treated as `eff = 2 * e`, so `e = 1` corresponds to true duplication
+            each cycle.
 
         """
         if isinstance(e, (int, float)):
-            self._efficiency = float(e)
-        elif e is None: 
-            return self._efficiency
+            self._efficiency = float( e * 2 )
+            self._eff = 2 * self._efficiency
+        return self._efficiency
 
     def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
         """
@@ -1799,13 +1785,18 @@ class Analyser(aux._ID):
         Performs DeltaCt using a function as anchor
         """
         df = self._Assay.get()
-        # update a "data" argument into the kwargs for the anchor_function
+        # update a "data" argument into the 
+        # kwargs for the anchor_function
         if "data" not in kwargs.keys(): 
             kwargs.update(dict(data = df))
         anchor = anchor_function(**kwargs)
 
-        df["dCt"] = df["Ct"].apply(deltaCt_function, ref = anchor, **kwargs)
-        self._Results.add(df["dCt"])
+        # apply deltaCt_function
+        Ct = raw_col_names[1]
+        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt.name = "dCt"
+        # store results
+        self._Assay.add_dCt(dCt)
 
     def _DeltaCt_mean_anchored(self, deltaCt_function, **kwargs):
         """
@@ -1824,8 +1815,10 @@ class Analyser(aux._ID):
         
         # apply DeltaCt function
         Ct = raw_col_names[1]
-        df["dCt"] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
-        self._Results.add(df["dCt"])
+        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt.name = "dCt"
+        # store results
+        self._Assay.add_dCt(dCt)
 
 
     def _DeltaCt_externally_anchored(self, anchor:float, deltaCt_function, **kwargs):
@@ -1836,8 +1829,11 @@ class Analyser(aux._ID):
         Ct = raw_col_names[1]
         df = self._Assay.get()
 
-        df["dCt"] = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
-        self._Results.add(df["dCt"])
+        # apply DeltaCt function
+        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt.name = "dCt"
+        # store results
+        self._Assay.add_dCt(dCt)
 
 
     def _DeltaCt_grouped_anchored(self, deltaCt_function, **kwargs):
@@ -1857,8 +1853,11 @@ class Analyser(aux._ID):
             anchor = group_subset[Ct][0]
             delta_cts = group_subset[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
             dCt = dCt.append(delta_cts).reset_index(drop = True)
+        
         dCt.name = "dCt"
-        self._Results.add(dCt)
+
+        # store results
+        self._Assay.add_dCt(dCt)
 
     def _DeltaCt_first_anchored(self, deltaCt_function, **kwargs):
         """
@@ -1877,15 +1876,18 @@ class Analyser(aux._ID):
         # get anchor
         anchor = df[Ct][ first ]
 
-        df["dCt"] = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
-        self._Results.add(df["dCt"])
+        # apply DeltaCt function
+        dCt = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
+        dCt.name = "dCt"
+        # store results
+        self._Assay.add_dCt(dCt)
 
     def _exp_DCt(self, sample, ref, **kwargs):
         """
         Calculates deltaCt exponentially
         """
         factor = sample-ref 
-        return self._efficiency **(-factor)
+        return self._eff **(-factor)
 
     def _simple_DCt(self, sample, ref, **kwargs):
         """
@@ -2149,7 +2151,11 @@ if __name__ == "__main__":
     assay1 = Assay(reader)
     print(assay1.get())
 
-#     analyser = Analyser()
+
+    analyser = Analyser()
+    analyser.anchor("mean", group = "group0")
+    assay = analyser.pipe(assays)
+    print(assay.get())
 
 #     def myanchor(data):
 #         """
