@@ -46,9 +46,11 @@ class _CORE_Reader(aux._ID):
         super().__init__()
         self._src = None
         self._delimiter = None
+        self._header = 0
         self._df = None
         self._replicates = None
         self._names = None
+
 
     def get(self):
         """
@@ -92,7 +94,6 @@ class _CORE_Reader(aux._ID):
         specify `name_label` and `Ct_label` as additional arguments.
         """
         suffix = self._filesuffix()
-        
         # check for a valid input file
         if suffix not in supported_filetypes:
             aw.HardWarning("MultiReader:empty_data", file = self._src)
@@ -206,7 +207,7 @@ class _CORE_Reader(aux._ID):
             df = pd.read_csv(
                                 self._src, 
                                 sep = self._delimiter, 
-                                header = self._has_header(), 
+                                header = self._header, 
                                 names = raw_col_names
                             )
         except: 
@@ -235,11 +236,9 @@ class _CORE_Reader(aux._ID):
         new_assay = qpcr.Assay(
                                 df = df, 
                                 id = name, 
-                                replicates = self._replicates
+                                replicates = self._replicates,
+                                group_names = self._names
                             )
-        # new_assay.group()
-        if self._names is not None:
-            new_assay.rename(self._names)
         return new_assay
 
 class SingleReader(_CORE_Reader):
@@ -279,6 +278,7 @@ class SingleReader(_CORE_Reader):
         super().__init__()
         self._src = filename
         self._delimiter = None
+        self._header = aux.from_kwargs("header", 0, kwargs, rm = True)
         if self._src is not None:
             self.read(**kwargs)
 
@@ -305,12 +305,11 @@ class SingleReader(_CORE_Reader):
         """
         self._src = filename
 
-        replicates = aux.from_kwargs("replicates", None, kwargs)
-        self.replicates(replicates)
+        self._replicates = aux.from_kwargs("replicates", None, kwargs)
 
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
-        super().read(**kwargs)
+        super().read(header = self._header, **kwargs)
 
     def _DataReader(self, **kwargs):
         """
@@ -1151,13 +1150,13 @@ if __name__ == "__main__":
     # print(r)
     # exit(1) 
 
-    reader = MultiSheetReader()
-    reader.pipe(
-                multisheet_file, 
-                # decorator = True, 
-                assay_pattern = "Rotor-Gene"
-            )
-    print(reader.get("Actin"))
+    # reader = MultiSheetReader()
+    # reader.pipe(
+    #             multisheet_file, 
+    #             # decorator = True, 
+    #             assay_pattern = "Rotor-Gene"
+    #         )
+    # print(reader.get("Actin"))
 
     bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
     bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
@@ -1167,7 +1166,9 @@ if __name__ == "__main__":
 
     reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
     reader.parse(ct_col = "Ct", assay_col = "Gene")
-
+    reader.make_Assays()
+    r = reader.get("assays")
+    print(r[0].get(), r[0].id())
     reader.clear()
 
 
