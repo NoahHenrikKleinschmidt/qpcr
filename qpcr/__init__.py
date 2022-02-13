@@ -1221,8 +1221,6 @@ class DataReader:
                                 **kwargs
                             )
         
-        print(self._Reader)
-        print(kwargs)
         # read file and return data
         data = self._Reader._DataReader( 
                                             filename = self._src, 
@@ -1361,8 +1359,6 @@ class Results(aux._ID):
             no new data can be stored under that id. Either the new data must be renamed or
             `replace = True` must be set to overwrite the presently stored data. 
         """
-        # print(self._df)
-        # print(column)
         if column.name in self._df.columns:
             if not replace:  
                 aw.SoftWarning("Results:name_overlap", name = column.name)
@@ -1960,22 +1956,28 @@ class Normaliser(aux._ID):
             return deepcopy(self._Results)
         return self._Results
     
-    def link(self, assays:(list or tuple) = None, normalisers:(list or tuple) = None):
+    def link(self, assays:(list or tuple or Analyser) = None, normalisers:(list or tuple or Analyser) = None):
         """
         Links either normalisers or assays-of-interest `qpcr.Results` objects coming from the same `qpcr.Analyser`.
 
         Parameters
         ----------
-        assays : list or tuple
+        assays : list or tuple or qpcr.Analyser
             A list of `qpcr.Assay` objects coming from a `qpcr.Analyser` or the `qpcr.Analyser` itself. These assays will be normalised against a normaliser.
         
-        normalisers : list or tuple
+        normalisers : list or tuple or qpcr.Analyser
             A list of `qpcr.Assay` objects coming from a `qpcr.Analyser` or the `qpcr.Analyser` itself. These assays will be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the assays. The method of 
             combining the normalisers can be specified using the `qpcr.Normaliser.prep_func` method.
         """
-        self._link_normaliser(normalisers)
+        # convert to lists (since the _link methods really want lists)
+        if not isinstance(assays, (list, tuple)): 
+            assays = [assays]
         self._link_assays(assays)
+
+        if not isinstance(normalisers, (list, tuple)) : 
+            normalisers = [normalisers]
+        self._link_normaliser(normalisers)
     
     def prep_func(self, f = None):
         """
@@ -2085,7 +2087,13 @@ class Normaliser(aux._ID):
 
     def _prep_columns(self, sample_assay, dCt_col, norm_col):
         """
-        Returns the columns to use if named columns shall be used (named columns will be used for second-normalisation of entire runs)
+        Returns the columns to use if named columns shall be used 
+        (named columns will be used for second-normalisation of entire runs)
+        Note
+        ----
+        Currently, second normalisation is not yet really implemented, so this is 
+        kinda not really used and would probably get overhauled when we 
+        try to seriously implement that at some point. 
         """
         if dCt_col == "named":
             dCt_col = [i for i in sample_assay.columns if i not in ["group", "group_name", raw_col_names[0], "assay"]]
@@ -2133,7 +2141,7 @@ class Normaliser(aux._ID):
                 if aux.same_type(normaliser, Assay()):
                     self._Normalisers.append(normaliser)
 
-                elif aux.same_type(normaliser, Analyser()) and normaliser.has_results():
+                elif aux.same_type(normaliser, Analyser()):
                     self._Normalisers.append(normaliser.get())
 
                 else: 
@@ -2191,77 +2199,63 @@ if __name__ == "__main__":
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
-    analysers = []
 
     reader = DataReader()
-    # reader.replicates("6:4")
-    # reader.names(groupnames)
-
-    assays = reader.read(filename = files[0], replicates = 6)
-    print(assays.get())
-
-    reader = Reader(files[0])
-    assay1 = Assay(reader)
-    print(assay1.get())
-
-
+    
     analyser = Analyser()
-    analyser.anchor("mean", group = "group0")
-    assay = analyser.pipe(assays)
+    analyser.anchor("mean")
 
     normaliser = Normaliser()
 
-    normaliser.link(assays = [assay, assay, assay], normalisers = [assay, assay])
+    assays = []
+    for file in files: 
+
+        assay = reader.read(file)
+        assay = analyser.pipe(assay)
+        assays.append(assay)
+
+    # first to files are normalisers
+    normaliser.link(normalisers = assays[:2])
+
+    # last to files are assays
+    normaliser.link(assays = assays[2:])
+
+
 
     normaliser.normalise()
-
-    print(assay.get())
     
-    r = normaliser.get()
-    r.drop_rel()
-    print(r.stats())
+    result = normaliser.get()
 
-#     def myanchor(data):
-#         """
-#         computes a custom anchor
-#         """
-#         df = data.query("group == 0")["Ct"].reset_index(drop=True)
-#         return df.mean()
+    print(result.get())
 
-#     # analyser.anchor(myanchor)
-#     analyser.anchor("mean")
 
-#     for file in files: 
+    normaliser1 = Normaliser()
 
-#         # reader = Reader(file)
-#         # reader.id(aux.fileID(file))
+    # alternatively we could link the analyser directly 
+    # to get the Assay from there like
 
-#         # samples = Assay(reader)
-        
-#         sample = reader.read(file)
-#         print(sample)
-#         # sample.ignore((0,1,3,4))
+    for file in files[2:]:
 
-#         # analyser.link(sample, force=True, silent = False)
-#         # analyser.DeltaCt()
-#         # res = analyser.get()
-#         res = analyser.pipe(sample)
-#         # print(res)
-#         analysers.append(res)
+        assay = reader.read(file)
+        analyser.pipe(assay)
+        normaliser1.link(assays = analyser)
 
-#     # for a in analysers: print(a.id(), "\n", a.get())
+    for file in files[:2]:
 
-#     normaliser = Normaliser()
+        assay = reader.read(file)
+        analyser.pipe(assay)
+        normaliser1.link(normalisers = analyser)
 
-#     print(analysers[:2])
-
-#     normaliser.link(normalisers = analysers[:2])
-#     normaliser.link(assays = analysers[2:])
-
-#     normaliser.normalise()
+    normaliser1.normalise()
     
-#     result = normaliser.get()
+    result1 = normaliser1.get()
 
+    print(result1.get())
+
+    print(result.get() == result1.get())
+
+# down here is some perliminary trial at making second
+# normalisation... But this should be properly addressed at some point...
 
 #     splitted = result.split(reset_names = False)
 
