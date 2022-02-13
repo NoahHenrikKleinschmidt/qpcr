@@ -1458,9 +1458,8 @@ class Results(aux._ID):
             stdv = self._stat_var(group_subset, np.nanstd)
             self._add_stats(assays, group, median, mean, stdv)
             
-        # add group names if present
-        if self.is_named():
-            self._add_stats_names(assays)
+        # add group names
+        self._add_stats_names(assays)
 
         self._stats_df = pd.DataFrame(self._stats_results)
         return self._stats_df.sort_values("assay")
@@ -2220,7 +2219,7 @@ if __name__ == "__main__":
     r = normaliser.get()
     r.drop_rel()
     print(r.get())
-    
+
 #     def myanchor(data):
 #         """
 #         computes a custom anchor
