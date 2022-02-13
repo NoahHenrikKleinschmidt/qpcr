@@ -232,12 +232,12 @@ class _CORE_Reader(aux._ID):
         """
         Makes a new Assay object and performs group() already...
         """
-        new_assay = qpcr.Assay()
-        new_assay.adopt(df)
-        new_assay.id(name)
-        
-        new_assay.replicates(self._replicates)
-        new_assay.group()
+        new_assay = qpcr.Assay(
+                                df = df, 
+                                id = name, 
+                                replicates = self._replicates
+                            )
+        # new_assay.group()
         if self._names is not None:
             new_assay.rename(self._names)
         return new_assay
@@ -304,6 +304,10 @@ class SingleReader(_CORE_Reader):
             A filepath to an input datafile.
         """
         self._src = filename
+
+        replicates = aux.from_kwargs("replicates", None, kwargs)
+        self.replicates(replicates)
+
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
         super().read(**kwargs)
@@ -1178,6 +1182,6 @@ if __name__ == "__main__":
     print(r[0].get())
 
     reader = SingleReader()
-    reader.read( "./Example Data/actin.csv" )
+    reader.read( "./Example Data/actin.csv", replicates = 6 )
     r = reader.make_Assay()
     print(r.get(), r.id())
