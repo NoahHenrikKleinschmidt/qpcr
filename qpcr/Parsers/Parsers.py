@@ -685,7 +685,6 @@ class _CORE_Parser:
         for col in indices: 
             
             rep = replicates[rdx]
-            name = names[rdx]
 
             # get data columns
             cols = slice( col, col + rep )
@@ -693,8 +692,10 @@ class _CORE_Parser:
             # get data
             data = array[  rows, cols  ]
             
-            # rename data cols uniformly
-            data[ 0 , : ] = name
+            # rename data cols if names are provided
+            if names is not None: 
+                name = names[rdx]
+                data[ 0 , : ] = name
             
             # concatenate data into a single array
             if data_array is None: 
@@ -709,6 +710,13 @@ class _CORE_Parser:
         # remove groups from the data array
         groups = data_array[ 0, : ]
         data_array = data_array[ 1:, : ]
+
+        # Actually, right here, instead of having to infer our own replicate 
+        # names thare are then just group0 group0 group0 group1 ...
+        # We can simply use the sample repeat / tile approach we used to make the
+        # group1 etc. replicate names, based on the ACTUAL groups (like the ones we 
+        # have just split off from the data -> their first row are already the replicate
+        # identifiers we just use those directly... )
 
         # reshape data into a single column
         data_array = np.concatenate(data_array, axis = 0)
@@ -795,10 +803,10 @@ class _CORE_Parser:
                 aw.HardWarning("Assay:reps_dont_cover", n_samples = groups, reps = replicates, traceback = False)
             
         # get names for assays
-        group_names = aux.from_kwargs("names", [ default_group_name.format(i) for i in range( len(replicates) )  ], kwargs)
+        group_names = aux.from_kwargs("names", None, kwargs)
 
         # vet that names cover
-        if len(group_names) != len(replicates):
+        if group_names is not None and len(group_names) != len(replicates):
             aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = group_names)
         
         # return tranformed replicates
@@ -1222,5 +1230,5 @@ if __name__ == "__main__":
 
     parser_bigtable.labels( id_label = "tissue_number" )
     parser_bigtable._make_BigTable_range(is_horizontal = True)
-    r = parser_bigtable._infer_BigTable_groups( replicates = (3, 2) )
+    r = parser_bigtable._infer_BigTable_groups( replicates = (3, 4), names = ["GAPDH", "SORD1"] )
     print(r)
