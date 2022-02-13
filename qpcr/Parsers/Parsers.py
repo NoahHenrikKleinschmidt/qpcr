@@ -795,6 +795,9 @@ class _CORE_Parser:
         # tuple that cover all found assays
         if aux.same_type(replicates, 1): 
             replicates = np.tile([replicates], groups)
+        # else, check it it's a formula that needs to be read out to a tuple.
+        elif aux.same_type(replicates, ""):
+            replicates = qpcr.Assay()._reps_from_formula(replicates)
         
         # if replicates are already a tuple, make sure they cover all rows
         elif aux.same_type(replicates, ()):
@@ -1230,5 +1233,5 @@ if __name__ == "__main__":
 
     parser_bigtable.labels( id_label = "tissue_number" )
     parser_bigtable._make_BigTable_range(is_horizontal = True)
-    r = parser_bigtable._infer_BigTable_groups( replicates = (3, 4), names = ["GAPDH", "SORD1"] )
+    r = parser_bigtable._infer_BigTable_groups( replicates = "3,4", names = ["GAPDH", "SORD1"] )
     print(r)
