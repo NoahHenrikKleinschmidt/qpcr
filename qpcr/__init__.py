@@ -1346,7 +1346,9 @@ class Results(aux._ID):
         # if stats_df is already present, return but sorted according to assays, not groups (nicer for user to inspect)
         if self._stats_df is not None and not recompute:
             return self._stats_df.sort_values("assay")
-        
+        elif recompute: 
+            self._stats_df = None
+
         # get groups and corresponding assay columns 
         groups = aux.sorted_set(list(self._df["group"]))
         assays = [c for c in self._df.columns if c not in [raw_col_names[0], "group", "group_name", "assay"]]
@@ -1408,6 +1410,10 @@ class Results(aux._ID):
         colnames = self._df.columns
         to_change = {i : i.split("_rel_")[0] for i in colnames if "_rel_" in i }
         self.rename_cols(to_change)
+
+        # also recompute the stats df with new names...
+        if self._stats_df is not None: 
+            self.stats(recompute = True)
 
     def split(self, reset_names = False, drop_rel = True):
         """
@@ -2117,7 +2123,6 @@ if __name__ == "__main__":
     
     result = normaliser.get()
 
-    print(result.get())
 
     splitted = result.split(reset_names = False)
 
@@ -2125,10 +2130,13 @@ if __name__ == "__main__":
     i.rename_cols({"HNRNPL_nmd": "HNRNPL"})
     j.rename_cols({"HNRNPL_prot": "HNRNPL"})
 
-    # print(i, j)
+# print(i, j)
     # print("-------")
     # print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
     # print("-----")
+    
+    
+    
     sn = Normaliser()
 
     sn.link(
@@ -2146,5 +2154,3 @@ if __name__ == "__main__":
     # #result.add_names(samples)
 
     # print(result.stats())
-
-    exit(0)
