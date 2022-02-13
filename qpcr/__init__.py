@@ -523,35 +523,81 @@ class Assay(aux._ID):
     Also adds a "group" (numeric) column and "group_name" (string) to the Reader dataframe that specifies the replicate groups. 
     Optionally, users may re-name the groups manually (otherwise Group1,... will be used by default).
 
+    Note
+    -------
+    The new implementation of the `qpcr.Assay` works directly with a DataFrame instead of a (now depcrecated) `qpcr.Reader`. 
+    However, a `qpcr.Reader` can still be passed as `df` argument and will be read-in using `link`. 
+    Support for this will be removed at some point in the future. 
+
     Parameters
     ----------
-    Reader : qpcr.Reader
-        A qpcr.Reader object (optional). 
-        Reader objects can also be linked to the assay after setup iteratively.
-
+    df : pandas.DataFrame
+        A DataFrame produces by one of the `qpcr.Readers` 
+        containing an `id` column for the replicate identifiers 
+        and a `Ct` value column. 
+    id : str
+        The identifer of the assays (the Assay name, essentially). 
+    replicates : int or tuple or str
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
+            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            at the end there is one which only has a single replicate, we could either specify the tuple as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` 
+            or we use the formula to specify `replicates = "3:12,1"`. If no replicates are provided, the `Assay` will try to infer the replicates directly based on the 
+            identifier column. 
+    
+    group_names : list
+        A list of names to use for the replicates groups. If replicates of the same group share the same identifier, then the 
+        group will be inferred automatically. Otherwise, default group names will be set if no `group_names` are provided. 
     """
-    def __init__(self, Reader:Reader = None) -> dict:
+    def __init__(self, df : pd.DataFrame = None, id : str = None, replicates : (int or tuple or str) = None, group_names : list = None) -> dict:
         super().__init__()
-        self._Reader = Reader
-        self._df = None
-        self._length = None
-        self._replicates = None
-        self._renamed = False
-        if Reader is not None:
-            self.link(Reader)
+        
+        # FUTURE DROP HERE
+        # check if a qpcr.Reader was supplied instead of a dataframe
+        # drop this at some point
+        if aux.same_type( df, Reader("./Example Data/actin.csv") ):
+            self.link(df)
+        else: 
+            self._df = df
+            if id is not None: self._id = id
+
+        # setup length of the found data        
+        self._length = None if self._df is None else len(self._df)
+
+        # get replicates
+        self._replicates = replicates
+
+        # store names 
+        self._names = group_names
+
+        # if we got data, try to read it 
+        if self._df is not None: 
+            self.replicates(self._replicates)
+            self.group()
+            if self._names is not None: 
+                self.rename(self._names)
+
 
     def get(self):
         """
         Returns
         -------
-        data : pd.DataFrame
+        data : pandas.DataFrame
             The stored dataframe
         """
         return self._df
 
     def link(self, Reader:Reader):
         """
-        Links a qpcr.Reader object to the Assay.
+        Links a `qpcr.Reader` object to the Assay.
+
+        Note
+        ------
+        This is deprecated since the `qpcr.Reader` has been 
+        replaced by the `qpcr.Readers.SingleReader`. 
+        This method will be removed in the future.  
 
         Parameters
         ----------
@@ -564,6 +610,14 @@ class Assay(aux._ID):
         self._df = df
         self._length = self._Reader.n()
         
+    def n(self):
+        """
+        Returns 
+        int 
+            The number of entries (individual replicates) within the Assay.
+        """
+        return self._length
+
     def adopt(self, df : pd.DataFrame, force = False):
         """
         Adopts an externally computed dataframe as its own.
@@ -607,15 +661,15 @@ class Assay(aux._ID):
         else: 
             return self._df["group_name"]
     
-    def is_named(self): # not used so far...
-        """
-        Returns 
-        -------
-        bool
-            `True` if .rename() was performed and custom group names are provided
-            else `False`.
-        """
-        return self._renamed
+    # def is_named(self): # not used so far...
+    #     """
+    #     Returns 
+    #     -------
+    #     bool
+    #         `True` if .rename() was performed and custom group names are provided
+    #         else `False`.
+    #     """
+    #     return self._renamed
 
     def groups(self):
         """
@@ -645,9 +699,7 @@ class Assay(aux._ID):
             individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
             any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
         """
-        if replicates is None:
-            return self._replicates
-        else: 
+        if replicates is not None and self._df is not None: 
             # convert a string formula to tuple if one was provided
             if isinstance(replicates, str): 
                 replicates = self._reps_from_formula(replicates)
@@ -656,6 +708,7 @@ class Assay(aux._ID):
                 self._replicates = replicates
             else: 
                 aw.HardWarning("Assay:reps_dont_cover", n_samples = self._length, reps = replicates)
+        return self._replicates
 
     def group(self, infer_names = True):
         """
@@ -670,8 +723,7 @@ class Assay(aux._ID):
         
         # generate group and group_names columns
         if isinstance(self._replicates, int):
-            assays = self._length
-            groups, group_names = self._make_equal_groups(assays)            
+            groups, group_names = self._make_equal_groups()            
         elif isinstance(self._replicates, tuple):
             groups, group_names = self._make_unequal_groups()
         else:
@@ -689,11 +741,11 @@ class Assay(aux._ID):
             # infer group names
             self._infer_names()
             
-            
 
     def rename(self, names:(list or dict)):
         """
-        Replaces the generic Group0,... in the "group_name" column.
+        Replaces the current names of the replicate groups 
+        (stored in the "group_name" column).
 
         Parameters
         ----------
@@ -838,7 +890,7 @@ class Assay(aux._ID):
             group_names.extend([ default_group_name.format(idx) ] * rep)
         return groups, group_names
 
-    def _make_equal_groups(self, assays):
+    def _make_equal_groups(self):
         """
         Returns two lists of [0,0,0,1,1,1] and 
         [Group0, Group0, Group0, Group1,...] 
@@ -846,6 +898,7 @@ class Assay(aux._ID):
         (this function works with an integer group size, 
         assuming all groups have the same size)
         """
+        assays = self._length
         groups = []
         group_names = []
         slices = range(int(assays / self._replicates))
@@ -1017,7 +1070,7 @@ class _Qupid_SampleReader(SampleReader):
 
         return self._Assay
 
-class DataReader(_CORE_Reader, Assay):
+class DataReader:
     """
     Handles reading a single file containing input data
     for `qpcr`. 
@@ -1038,7 +1091,6 @@ class DataReader(_CORE_Reader, Assay):
     If you require specific setups use the `qpcr.Readers` or even `qpcr.Parsers` directly.
     """
     def __init__(self):
-        super().__init__()
         self._replicates = None
         self._names = None
         self._Reader = None             # the functional core will be either a Reader
@@ -1141,10 +1193,23 @@ class DataReader(_CORE_Reader, Assay):
                                 **kwargs
                             )
         
+        print(self._Reader)
+        print(kwargs)
         # read file and return data
-        data = self._Reader._DataReader( filename = self._src, decorator = decorator, **kwargs )
+        data = self._Reader._DataReader( 
+                                            filename = self._src, 
+                                            decorator = decorator, 
+                                            **kwargs 
+                                    )
+
         self._tmp_data = {self._src : data}
         return data
+
+    def _filesuffix(self):
+        """
+        Returns the filesuffix
+        """
+        return self._src.split(".")[-1]
 
     def _setup_Reader(self, **kwargs):
         """
@@ -1179,14 +1244,6 @@ class DataReader(_CORE_Reader, Assay):
         self._Reader = reader
 
 
-    def get(self):
-        """
-        Returns
-        -------
-        data
-            The dataset(s) extracted from the inputfile.
-        """
-        pass
 class Results(aux._ID):
     """
     Handles a pandas dataframe for the results from `qpcr.Analyser` and `qpcr.Normaliser`.
@@ -1216,19 +1273,19 @@ class Results(aux._ID):
         else:
             aw.SoftWarning("Results:cannot_link")
     
-    def is_named(self):
-        """
-        Note
-        ----
-        This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
-        `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
+    # def is_named(self):
+    #     """
+    #     Note
+    #     ----
+    #     This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
+    #     `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
         
-        Returns 
-        -------
-        bool
-            `True` if `group_name` column is present in the Results dataframe, else `False`.
-        """
-        return "group_name" in self._df.columns
+    #     Returns 
+    #     -------
+    #     bool
+    #         `True` if `group_name` column is present in the Results dataframe, else `False`.
+    #     """
+    #     return "group_name" in self._df.columns
     
     def names(self, as_set = False):
         """
@@ -1709,21 +1766,21 @@ class Analyser(aux._ID):
         **kwargs
             Any additional keyword arguments that a custom DeltaCt function may require.
         """
-        if self._anchor == "first":
-            self._DeltaCt_first_anchored(
+
+        predefined = {
+                        "first"     : self._DeltaCt_first_anchored,
+                        "grouped"   : self._DeltaCt_grouped_anchored,
+                        "mean"      : self._DeltaCt_mean_anchored,
+                    }
+
+        if self._anchor in predefined.keys():
+        
+            deltaCt_func = predefined[ self._anchor ]
+            deltaCt_func(
                                             self._deltaCt_function, 
                                             **kwargs
                                     )
-        elif self._anchor == "grouped":
-            self._DeltaCt_grouped_anchored(
-                                            self._deltaCt_function, 
-                                            **kwargs
-                                        )
-        elif self._anchor == "mean":
-            self._DeltaCt_mean_anchored(
-                                            self._deltaCt_function, 
-                                            **kwargs
-                                    )
+        
         elif isinstance(self._anchor, (float, int)): 
             self._DeltaCt_externally_anchored(
                                                 self._anchor, 
@@ -2075,7 +2132,7 @@ class Normaliser(aux._ID):
 if __name__ == "__main__":
     
     files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
-    files = ["Example Data 2/28S.csv", "Example Data 2/actin.csv", "Example Data 2/HNRNPL_nmd.csv", "Example Data 2/HNRNPL_prot.csv"]
+    # files = ["Example Data 2/28S.csv", "Example Data 2/actin.csv", "Example Data 2/HNRNPL_nmd.csv", "Example Data 2/HNRNPL_prot.csv"]
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
@@ -2085,73 +2142,84 @@ if __name__ == "__main__":
     # reader.replicates("6:4")
     # reader.names(groupnames)
 
-    analyser = Analyser()
+    assays = reader.read(filename = files[0], replicates = 6)
+    print(assays.get())
 
-    def myanchor(data):
-        """
-        computes a custom anchor
-        """
-        df = data.query("group == 0")["Ct"].reset_index(drop=True)
-        return df.mean()
+    reader = Reader(files[0])
+    assay1 = Assay(reader)
+    print(assay1.get())
 
-    # analyser.anchor(myanchor)
-    analyser.anchor("mean")
+#     analyser = Analyser()
 
-    for file in files: 
+#     def myanchor(data):
+#         """
+#         computes a custom anchor
+#         """
+#         df = data.query("group == 0")["Ct"].reset_index(drop=True)
+#         return df.mean()
 
-        # reader = Reader(file)
-        # reader.id(aux.fileID(file))
+#     # analyser.anchor(myanchor)
+#     analyser.anchor("mean")
 
-        # samples = Assay(reader)
+#     for file in files: 
+
+#         # reader = Reader(file)
+#         # reader.id(aux.fileID(file))
+
+#         # samples = Assay(reader)
         
-        sample = reader.read(file)
-        # sample.ignore((0,1,3,4))
+#         sample = reader.read(file)
+#         print(sample)
+#         # sample.ignore((0,1,3,4))
 
-        # analyser.link(sample, force=True, silent = False)
-        # analyser.DeltaCt()
-        # res = analyser.get()
-        res = analyser.pipe(sample)
-        # print(res)
-        analysers.append(res)
+#         # analyser.link(sample, force=True, silent = False)
+#         # analyser.DeltaCt()
+#         # res = analyser.get()
+#         res = analyser.pipe(sample)
+#         # print(res)
+#         analysers.append(res)
 
-    # for a in analysers: print(a.id(), "\n", a.get())
+#     # for a in analysers: print(a.id(), "\n", a.get())
 
-    normaliser = Normaliser()
-    normaliser.link(normalisers = analysers[:2])
-    normaliser.link(assays = analysers[2:])
+#     normaliser = Normaliser()
 
-    normaliser.normalise()
+#     print(analysers[:2])
+
+#     normaliser.link(normalisers = analysers[:2])
+#     normaliser.link(assays = analysers[2:])
+
+#     normaliser.normalise()
     
-    result = normaliser.get()
+#     result = normaliser.get()
 
 
-    splitted = result.split(reset_names = False)
+#     splitted = result.split(reset_names = False)
 
-    i, j = splitted
-    i.rename_cols({"HNRNPL_nmd": "HNRNPL"})
-    j.rename_cols({"HNRNPL_prot": "HNRNPL"})
+#     i, j = splitted
+#     i.rename_cols({"HNRNPL_nmd": "HNRNPL"})
+#     j.rename_cols({"HNRNPL_prot": "HNRNPL"})
 
-# print(i, j)
-    # print("-------")
-    # print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
-    # print("-----")
+# # print(i, j)
+#     # print("-------")
+#     # print(i.get()["HNRNPL"] / j.get()["HNRNPL"])
+#     # print("-----")
     
     
     
-    sn = Normaliser()
+#     sn = Normaliser()
 
-    sn.link(
-        assays = [splitted[0]], 
-        normalisers = [splitted[1]],
-    )
+#     sn.link(
+#         assays = [splitted[0]], 
+#         normalisers = [splitted[1]],
+#     )
     
-    sn.normalise(dCt_col = "named", norm_col = "same")
+#     sn.normalise(dCt_col = "named", norm_col = "same")
 
-    print(sn.get().get())
-    print(sn.get().stats())
+#     print(sn.get().get())
+#     print(sn.get().stats())
 
-    # # result.save("..")
+#     # # result.save("..")
     
-    # #result.add_names(samples)
+#     # #result.add_names(samples)
 
-    # print(result.stats())
+#     # print(result.stats())
