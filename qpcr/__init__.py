@@ -1347,6 +1347,7 @@ class Results(aux._ID):
         if self._stats_df is not None and not recompute:
             return self._stats_df.sort_values("assay")
         elif recompute: 
+            self._stats_results = {"group" : [], "assay" : [], "mean" : [], "stdev" : [], "median" : []}
             self._stats_df = None
 
         # get groups and corresponding assay columns 
