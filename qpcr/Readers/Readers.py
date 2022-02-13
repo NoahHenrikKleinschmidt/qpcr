@@ -955,9 +955,12 @@ class BigTableReader(MultiReader):
         # transform data into vertical
         self._data = self._Parser._infer_BigTable_groups(**kwargs)
         
-        # transform array into df
+        # transform array into df 
+        # and set _is_regular to True so _parse_vertical 
+        # wont try to also convert to df
         self._make_vertical_range_df()
-        
+        self._is_regular = True 
+
         # and parse_vertical to get assays
         ct_col = raw_col_names[1]
         assay_col = default_dataset_header
@@ -1122,10 +1125,10 @@ class BigTableReader(MultiReader):
         """
         The DataReader interacting method
         """
-        replicates = aux.from_kwargs("replicates", None, kwargs)
-        self.replicates(replicates)
-        names = aux.from_kwargs("names", None, kwargs)
-        self.names(names)
+        # replicates = aux.from_kwargs("replicates", None, kwargs)
+        # self.replicates(replicates)
+        # names = aux.from_kwargs("names", None, kwargs)
+        # self.names(names)
         data = self.pipe(**kwargs)
         return data
 
@@ -1166,7 +1169,7 @@ if __name__ == "__main__":
                                         filename = bigtable_horiztonal, 
                                         kind = "horizontal", 
                                         id_col = "tissue_number",
-                                        replicates = "3,4", 
+                                        replicates = (3,4), 
                                         names = ["Gapdh", "Sord1"]
                                     )
     r = normalisers
