@@ -838,6 +838,56 @@ class BigTableReader(MultiReader):
         self._is_regular = False    # store if the datafile was regular and does not 
                                     # have to be converted to a dataframe based on a numpy array...
     
+    def pipe(self, filename : str, kind : str, id_col : str, **kwargs):
+        """
+        A wrapper for read+parse+make_Assays
+
+        Note 
+        -------
+        This is the suggested use of the `BigTableReader`.
+
+        Parameters
+        ----------
+        filename : str
+            A filepath to a raw data file, containing multiple assays that were decorated. 
+            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+        kind : str
+            Specifies the kind of Big Table from the file. 
+            This may either be `"horizontal"` or `"vertical"`.
+        id_col : str
+            The column header specifying the replicate identifiers 
+            (or "group names" in case of `horizontal` big tables).
+        **kwargs
+            Any additional columns or keyword arguments.
+        Returns
+        -------
+        assays : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser (if no qpcr.Assays could be made automatically)
+            or a list of `qpcr.Assay` objects.
+        normalisers : dict or list
+            Returns either the raw dictionary of dataframes returned by the Parser 
+            (if no qpcr.Assays could be made automatically)
+            or a list of `qpcr.Assay` objects.
+        """
+        replicates = aux.from_kwargs("replicates", None, kwargs)
+        names = aux.from_kwargs("names", None, kwargs)
+
+        self.read(
+                    filename = filename, 
+                    kind = kind, 
+                    id_col = id_col,
+                    **kwargs
+                )
+        self.parse(**kwargs)
+
+        self.replicates(replicates)
+        self.names(names)
+        self.make_Assays()
+
+        assays, normalisers = self.get("assays"), self.get("normalisers")
+        return assays, normalisers
+
+
     def read(self, filename : str, kind : str, id_col : str, **kwargs):
         """
         Reads a regular or irregular `csv` or `excel` datafile that contains data stored 
@@ -1068,6 +1118,16 @@ class BigTableReader(MultiReader):
         if got_regular_data:
             self._data = data
         
+    def _DataReader(self, **kwargs):
+        """
+        The DataReader interacting method
+        """
+        replicates = aux.from_kwargs("replicates", None, kwargs)
+        self.replicates(replicates)
+        names = aux.from_kwargs("names", None, kwargs)
+        self.names(names)
+        data = self.pipe(**kwargs)
+        return data
 
 
 if __name__ == "__main__":
@@ -1102,8 +1162,12 @@ if __name__ == "__main__":
     reader.clear()
 
 
-    reader.read(bigtable_horiztonal, kind = "horizontal", id_col = "tissue_number")
-    reader.parse(replicates = (3, 4))
-    reader.make_Assays()
-    r = reader.assays()
+    assays, normalisers = reader._DataReader(
+                                        filename = bigtable_horiztonal, 
+                                        kind = "horizontal", 
+                                        id_col = "tissue_number",
+                                        replicates = "3,4", 
+                                        names = ["Gapdh", "Sord1"]
+                                    )
+    r = normalisers
     print(r)
