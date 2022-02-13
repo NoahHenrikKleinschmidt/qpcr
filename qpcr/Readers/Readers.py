@@ -217,7 +217,8 @@ class _CORE_Reader(aux._ID):
         full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
         if not full_valid_Ct_col:
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
-
+        
+        self.id(aux.fileID(self._src))
         self._df = df
 
     def _filesuffix(self):
@@ -1175,3 +1176,8 @@ if __name__ == "__main__":
                                     )
     r = normalisers
     print(r[0].get())
+
+    reader = SingleReader()
+    reader.read( "./Example Data/actin.csv" )
+    r = reader.make_Assay()
+    print(r.get(), r.id())
