@@ -1500,7 +1500,8 @@ class Results(aux._ID):
 
     def drop_rel(self):
         """
-        Crops the `X_rel_Y` column-names to just `X`.
+        Crops the `X_rel_Y` column-names of Delta-Delta-Ct results to just `X`.
+        I.e. reduces back to the assay-of-intereste name only.
         """
         colnames = self._df.columns
         to_change = {i : i.split("_rel_")[0] for i in colnames if "_rel_" in i }
@@ -2218,7 +2219,7 @@ if __name__ == "__main__":
     
     r = normaliser.get()
     r.drop_rel()
-    print(r.get())
+    print(r.stats())
 
 #     def myanchor(data):
 #         """

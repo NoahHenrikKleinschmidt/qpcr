@@ -70,8 +70,8 @@ class Pipeline(qpcr.DataReader):
         **kwargs
             Any additional keyword arguments that will be passed to the actual `_run()` method.
         """
-        # if self._replicates is None:
-        #     wa.HardWarning("Pipeline:no_reps")
+
+        # vet if there are at least one normaliser and assay present
         if self._Normalisers == [] or self._Assays == []:
             wa.HardWarning("Pipeline:no_data")
 
@@ -110,21 +110,26 @@ class Pipeline(qpcr.DataReader):
         elif kind == "obj":
             return self._Results
     
-    def link(self, assays:(list or str)):
+    def link(self, assays:(list or str) = None, normalisers:(list or str) = None):
         """
-        Links new assays-of-interest / sample assays to the pipline, either replacing old ones or keeping them, 
+        Links new assays-of-interest / sample assays and/or normaliser assays 
+        to the pipline, either replacing old ones or keeping them, 
         depending on `softlink()` settings.
 
         Parameters
         ----------
         assays : list or str
             A `list` of filepaths to raw datafiles of assays-of-interest, or a directory (`str`) where these are stored.
+        normalisers : list or str
+            A `list` of filepaths to raw datafiles of normaliser assays, or a directory (`str`) where these are stored.
         """
         if self._softlink:
             self.prune()
         self.add_assays(assays)
+        self.add_normalisers(normalisers)
 
-    def prune(self, assays = True, results = True, normalisers = False):
+
+    def prune(self, assays = True, results = True, normalisers = True):
         """
         Will clear assays, results, and/or normalisers
 
@@ -137,7 +142,7 @@ class Pipeline(qpcr.DataReader):
             Will clear any computed results in the pipline if True (default).
         
         normalisers : bool
-            Will clear any normalisers in the pipline if True (default is False).
+            Will clear any normalisers in the pipline if True (default).
         """
         if assays: self._Assays = []
         if normalisers: self._Normalisers = []
