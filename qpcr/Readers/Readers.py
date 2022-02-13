@@ -219,6 +219,7 @@ class _CORE_Reader(aux._ID):
         if not full_valid_Ct_col:
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
         
+        self._id_reset()
         self.id(aux.fileID(self._src))
         self._df = df
 
