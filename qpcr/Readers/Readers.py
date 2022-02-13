@@ -141,7 +141,9 @@ class _CORE_Reader(aux._ID):
             Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
             Group names only need to be specified once, and are applied to all replicate entries.
         """
-        self._names = names
+        if names is not None: 
+            self._names = names
+        return self._names
 
     def replicates(self, replicates : (int or tuple or str) = None):
         """
@@ -235,7 +237,6 @@ class _CORE_Reader(aux._ID):
         
         new_assay.replicates(self._replicates)
         new_assay.group()
-
         if self._names is not None:
             new_assay.rename(self._names)
         return new_assay
@@ -870,7 +871,7 @@ class BigTableReader(MultiReader):
             or a list of `qpcr.Assay` objects.
         """
         replicates = aux.from_kwargs("replicates", None, kwargs)
-        names = aux.from_kwargs("names", None, kwargs)
+        names = aux.from_kwargs("names", None, kwargs, rm = True)
 
         self.read(
                     filename = filename, 
@@ -1127,7 +1128,7 @@ class BigTableReader(MultiReader):
         """
         # replicates = aux.from_kwargs("replicates", None, kwargs)
         # self.replicates(replicates)
-        # names = aux.from_kwargs("names", None, kwargs)
+        # names = aux.from_kwargs("names", None, kwargs, rm = True)
         # self.names(names)
         data = self.pipe(**kwargs)
         return data
@@ -1173,4 +1174,4 @@ if __name__ == "__main__":
                                         names = ["Gapdh", "Sord1"]
                                     )
     r = normalisers
-    print(r)
+    print(r[0].get())
