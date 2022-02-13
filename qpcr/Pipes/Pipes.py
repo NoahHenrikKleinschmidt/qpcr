@@ -16,7 +16,7 @@ import re
 import os 
 import difflib
 
-class Pipeline(qpcr.SampleReader):
+class Pipeline(qpcr.DataReader):
     """
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
@@ -37,6 +37,26 @@ class Pipeline(qpcr.SampleReader):
         self._replicates = None
         self._names = None
         self._softlink = True
+
+    def assays(self):
+        """
+        Returns
+        -------
+        assays : list
+            The linked `qpcr.Assay` objects for assays-of-interest.
+        """
+        assays = self._Assays
+        return assays
+    
+    def normalisers(self):
+        """
+        Returns
+        -------
+        normalisers : list
+            The linked `qpcr.Assay` objects for normaliser-assays.
+        """
+        normalisers = self._Normalisers
+        return normalisers
 
     def run(self, **kwargs):
         """
