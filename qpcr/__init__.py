@@ -1346,7 +1346,7 @@ class Results(aux._ID):
         """
         return self._df is None
 
-    def add(self, column:pd.Series):
+    def add(self, column:pd.Series, replace : bool = False):
         """
         Adds a new column of either DeltaCt 
         computed data or normalised DeltaCt data to the results dataframe.
@@ -1356,10 +1356,20 @@ class Results(aux._ID):
         column : pd.Series
             A named pandas Series or DataFrame that can be joined into the already
             stored dataframe.
+        replace : bool
+            In case results from a computation with the same identifiers are already stored
+            no new data can be stored under that id. Either the new data must be renamed or
+            `replace = True` must be set to overwrite the presently stored data. 
         """
         # print(self._df)
         # print(column)
-        self._df = self._df.join(column)
+        if column.name in self._df.columns:
+            if not replace:  
+                aw.SoftWarning("Results:name_overlap", name = column.name)
+            else: 
+                self._df[column.name] = column
+        else: 
+            self._df = self._df.join(column)
         
     def merge(self, *Results):
         """
@@ -1910,14 +1920,27 @@ class Analyser(aux._ID):
 class Normaliser(aux._ID):
     """
     Handles the second step in Delta-Delta-Ct (normalisation against normaliser assays).
+    
+    Note
+    -----
     This requires that all have been analysed in the same way before!
     """
     def __init__(self):
         super().__init__()
+
         self._Normalisers = []
-        self._Assay = []
+        self._Assays = []
+        
         self._Results = Results()
+        
+        # the actually used normaliser 
+        # which will be a pre-processed version
+        # from all supplied normalsier assays
+        # by default this will be the averaged version
+        # of all normaliser assays (but this can be changed)  
         self._normaliser = None
+
+        # setup defaults
         self._prep_func = self._average
         self._norm_func = self._divide_by_normaliser
 
@@ -1944,12 +1967,12 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         assays : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be normalised against a normaliser.
+            A list of `qpcr.Assay` objects coming from a `qpcr.Analyser` or the `qpcr.Analyser` itself. These assays will be normalised against a normaliser.
         
         normalisers : list or tuple
-            A list of `qpcr.Results` objects coming from a `qpcr.Analyser` which shall be used as normalisers. These will be
+            A list of `qpcr.Assay` objects coming from a `qpcr.Analyser` or the `qpcr.Analyser` itself. These assays will be used as normalisers. These will be
             combined into one single pseudo-normaliser which will then be used to normalise the assays. The method of 
-            combining the normalisers can be specified using the `prep_func()` method.
+            combining the normalisers can be specified using the `qpcr.Normaliser.prep_func` method.
         """
         self._link_normaliser(normalisers)
         self._link_assays(assays)
@@ -1962,11 +1985,12 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one list of qpcr.Results objects, and must return 
-            one list (or iterable) of the same length as entries within the qpcr.Results dataframes.
-            If the provided function does adhere to these criteria is NOT vetted by this method!
+            The function may accept one list of `qpcr.Assay` objects, and must return 
+            one list (or iterable) of the same length as entries within the `qpcr.Assay` dataframes.
+            Wether or not the provided function does adhere to these criteria is NOT vetted by this method!
         """
-        if type(f) == type(aux.fileID):
+        
+        if aux.same_type(f, aux.fileID):
             self._prep_func = f
         elif f is None:
             return f
@@ -1982,9 +2006,10 @@ class Normaliser(aux._ID):
         ----------
         f : function
             The function may accept one numeric entry for a sample and a normaliser, and must return 
-            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, and `n` is the corresponding deltaCt column from the combined normaliser.
+            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, 
+            and `n` is the corresponding `"dCt"` column from the combined normaliser.
         """
-        if type(f) == type(aux.fileID):
+        if aux.same_type(f, aux.fileID):
             self._norm_func = f
         elif f is None:
             return f
@@ -2003,24 +2028,48 @@ class Normaliser(aux._ID):
         if self._normaliser is None: 
             self._preprocess_normalisers()
 
-        if self._Assay == [] or self._normaliser is None:
+        if self._Assays == [] or self._normaliser is None:
             aw.SoftWarning("Normaliser:no_data_yet")
 
-        # get normaliser dataframe
+        # get combined dataframe
         normaliser = self._normaliser.get()
 
-        # setup groups for _Results
-        self._Results.adopt_names(self._Assay[0])
+        # setup _Results by passing in the common columns 
+        # from the first Assays (since all Assays should have 
+        # the same id, group, and group_name columns, if they
+        # come from the same experiment...)
+        self._Results.adopt_names(self._Assays[0])
         self._Results.drop_cols()
-        # print(self._Results.get())
 
-        # combine normalised assays into unified dataframe
-        for S in self._Assay:
-            S_df = S.get()
-            column_name = f"{S.id()}_rel_{self._normaliser.id()}"
-            normalised = self._norm_func_wrapper(S_df, normaliser, **kwargs)
-            normalised = normalised.rename(column_name)
-            self._Results.add(normalised)
+        # perform normalisation for each assay 
+        for assay in self._Assays:
+
+            # get data
+            assay_df = assay.get()
+
+            # apply normalisation (delta-delta-Ct)
+            normalised = self._norm_func_wrapper(
+                                                    assay_df, 
+                                                    normaliser, 
+                                                    **kwargs
+                                            )
+
+            # store results in _Results
+            self._store_to_Results(assay, normalised)
+
+            # and store results also in the Assay itself
+            assay.add_ddCt( self._normaliser.id(), normalised )
+            
+
+    def _store_to_Results(self, assay, normalised):
+        """
+        Stores computed Delta-delta-ct (normalisation)
+        into the _Results object.
+        """
+        column_name = f"{assay.id()}_rel_{self._normaliser.id()}"
+        normalised = normalised.rename(column_name)
+        self._Results.add(normalised)
+
 
     def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col="dCt", norm_col="dCt_combined"):
         """
@@ -2064,12 +2113,13 @@ class Normaliser(aux._ID):
         """
         if assays is not None:
             for sample in assays: 
-                if aux.same_type(sample, Results()):
-                    self._Assay.append(sample)
-                elif aux.same_type(sample, Analyser()) and sample.has_results():
-                    self._Assay.append(sample.get())
-                elif aux.same_type(sample, Analyser()) and not sample.has_results():
-                    aw.SoftWarning("Normaliser:empty_data", s = sample)
+
+                if aux.same_type(sample, Assay()):
+                    self._Assays.append(sample)
+
+                elif aux.same_type(sample, Analyser()):
+                    self._Assays.append(sample.get())
+                
                 else: 
                     aw.SoftWarning("Normaliser:unknown_data", s = sample)
                 
@@ -2079,10 +2129,13 @@ class Normaliser(aux._ID):
         """
         if normalisers is not None:
             for normaliser in normalisers:
-                if aux.same_type(normaliser, Results()):
+
+                if aux.same_type(normaliser, Assay()):
                     self._Normalisers.append(normaliser)
+
                 elif aux.same_type(normaliser, Analyser()) and normaliser.has_results():
                     self._Normalisers.append(normaliser.get())
+
                 else: 
                     aw.SoftWarning("Normaliser:norm_unknown_data", s = normaliser)
 
@@ -2155,8 +2208,19 @@ if __name__ == "__main__":
     analyser = Analyser()
     analyser.anchor("mean", group = "group0")
     assay = analyser.pipe(assays)
-    print(assay.get())
 
+    normaliser = Normaliser()
+
+    normaliser.link(assays = [assay, assay, assay], normalisers = [assay, assay])
+
+    normaliser.normalise()
+
+    print(assay.get())
+    
+    r = normaliser.get()
+    r.drop_rel()
+    print(r.get())
+    
 #     def myanchor(data):
 #         """
 #         computes a custom anchor

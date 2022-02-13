@@ -26,12 +26,13 @@ WARNINGS = {
 "Results:cannot_add_names" : "Names could not be added! Dimensionality did not match...\nExpected length: {length}, but got {length_names}",
 "Results:cannot_add_column" : "The column you try to add to Results does not match the current dimensions! Have: {length}, got: {length_column}",
 "Results:save_need_dir" : "When saving both df and stats, a directory must be specified to store files in!",
+"Results:name_overlap" : "Could not add results from computation '{name}' because it appears results from this assay against these normalisers are already stored!\n",
 
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
 "Normaliser:empty_data" : "Assay {s} was not added because it did not contain any results data!", 
-"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
-"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Results or qpcr.Analysis objects are allowed!",
+"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
+"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
 "SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
