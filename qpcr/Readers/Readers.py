@@ -312,13 +312,25 @@ class SingleReader(_CORE_Reader):
             self._delimiter = ";" if self._is_csv2() else ","
         super().read(header = self._header, **kwargs)
 
+    def pipe(self, filename : str, **kwargs):
+        """
+        A wrapper for read+parse+make_Assay
+
+        Returns
+        -------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object of the extracted data
+        """
+        self.read(filename = filename, **kwargs)
+        assay = self.get()
+        assay = self.make_Assay()
+        return assay
+
     def _DataReader(self, **kwargs):
         """
         The DataReader interacting method
         """
-        self.read(**kwargs)
-        data = self.get()
-        data = self.make_Assay()
+        data = self.pipe(**kwargs)
         return data
 
     def _is_csv2(self):
