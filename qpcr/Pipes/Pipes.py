@@ -16,7 +16,7 @@ import re
 import os 
 import difflib
 
-class Pipeline(qpcr.DataReader):
+class Pipeline:
     """
     This is the basic template class for qpcr Pipelines. 
     It contains a set of basic preliminary methods
@@ -27,7 +27,7 @@ class Pipeline(qpcr.DataReader):
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
     """
     def __init__(self):
-        super().__init__()
+        # super().__init__()
         self._Normalisers = []
         self._Assays = []
         self._save_to = None
@@ -57,6 +57,31 @@ class Pipeline(qpcr.DataReader):
         """
         normalisers = self._Normalisers
         return normalisers
+
+    def replicates(self, replicates:(int or tuple)):
+        """
+        Set the replicates specifics to use for grouping.
+
+        Parameters
+        ----------
+        replicates : int or tuple
+            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
+            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+        """
+        self._replicates = replicates
+
+    def names(self, names:(list or dict)):
+        """
+        Set names for replicates groups.
+
+        Parameters
+        ----------
+        names : list or dict
+            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Group names only need to be specified once, and are applied to all replicate entries.
+        """
+        self._names = names
+
 
     def run(self, **kwargs):
         """
@@ -223,15 +248,12 @@ class Basic(Pipeline):
     def __init__(self):
         super().__init__()
     
-    def _run(self):
+    def _run(self, **kwargs):
         """
         The automated standard DeltaDeltaCt pipeline. 
         Using default settings of `qpcr.Analyser`
         """
-        reader = qpcr.SampleReader()
-        reader.replicates(self._replicates)
-        if self._names is not None:
-            reader.names(self._names)
+        reader = qpcr.DataReader()
         
         analyser = qpcr.Analyser()
         normaliser = qpcr.Normaliser()
@@ -241,14 +263,24 @@ class Basic(Pipeline):
 
         # analyse normalisers:
         for _normaliser in self._Normalisers:
-            norm = reader.read(_normaliser)
+            norm = reader.read(
+                                _normaliser, 
+                                replicates = self._replicates, 
+                                names = self._names,
+                                **kwargs
+                            )
             norm = analyser.pipe(norm)
             normalisers.append(norm)
         normaliser.link(normalisers = normalisers)
 
         # analyse sample assays
         for sample in self._Assays:
-            _sample = reader.read(sample)
+            _sample = reader.read(
+                                    sample,
+                                    replicates = self._replicates, 
+                                    names = self._names, 
+                                    **kwargs
+                                )
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
         normaliser.link(assays = samples)
@@ -304,16 +336,13 @@ class BasicPlus(Basic):
         """
         return self._Figures
 
-    def _run(self):
+    def _run(self, **kwargs):
         """
         The automated standard DeltaDeltaCt pipeline. 
         Also produces applies and Plotters to produce figures...
         """
 
-        reader = qpcr.SampleReader()
-        reader.replicates(self._replicates)
-        if self._names is not None:
-            reader.names(self._names)
+        reader = qpcr.DataReader()
         
         analyser = qpcr.Analyser()
         normaliser = qpcr.Normaliser()
@@ -323,22 +352,28 @@ class BasicPlus(Basic):
 
         # analyse normalisers:
         for _normaliser in self._Normalisers:
-            norm = reader.read(_normaliser)
-
+            norm = reader.read(
+                                _normaliser, 
+                                replicates = self._replicates, 
+                                names = self._names,
+                                **kwargs
+                            )
             for filter in self._Filters:
                 norm = filter.pipe(norm)
-
             norm = analyser.pipe(norm)
             normalisers.append(norm)
         normaliser.link(normalisers = normalisers)
 
         # analyse sample assays
         for sample in self._Assays:
-            _sample = reader.read(sample)
-
+            _sample = reader.read(
+                                    sample,
+                                    replicates = self._replicates, 
+                                    names = self._names, 
+                                    **kwargs
+                                )
             for filter in self._Filters:
                 _sample = filter.pipe(_sample)
-
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
         normaliser.link(assays = samples)
@@ -441,13 +476,13 @@ class Blueprint(BasicPlus):
         Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
-            self.Reader(qpcr.SampleReader())
+            self.Reader(qpcr.DataReader())
         if self.Analyser() is None: 
             self.Analyser(qpcr.Analyser())
         if self.Normaliser() is None:
             self.Normaliser(qpcr.Normaliser())
 
-    def _run(self):
+    def _run(self, **kwargs):
         """
         The automated standard DeltaDeltaCt pipeline. 
         Also produces applies and Plotters to produce figures...
@@ -456,10 +491,6 @@ class Blueprint(BasicPlus):
         self._setup_cores()
         
         reader = self.Reader()
-        reader.replicates(self._replicates)
-        if self._names is not None:
-            reader.names(self._names)
-        
         analyser = self.Analyser()
         normaliser = self.Normaliser()
 
@@ -468,22 +499,28 @@ class Blueprint(BasicPlus):
 
         # analyse normalisers:
         for _normaliser in self._Normalisers:
-            norm = reader.read(_normaliser)
-
+            norm = reader.read(
+                                _normaliser, 
+                                replicates = self._replicates, 
+                                names = self._names,
+                                **kwargs
+                            )
             for filter in self._Filters:
                 norm = filter.pipe(norm)
-
             norm = analyser.pipe(norm)
             normalisers.append(norm)
         normaliser.link(normalisers = normalisers)
 
         # analyse sample assays
         for sample in self._Assays:
-            _sample = reader.read(sample)
-
+            _sample = reader.read(
+                                    sample,
+                                    replicates = self._replicates, 
+                                    names = self._names, 
+                                    **kwargs
+                                )
             for filter in self._Filters:
                 _sample = filter.pipe(_sample)
-
             _sample = analyser.pipe(_sample)
             samples.append(_sample)
         normaliser.link(assays = samples)
@@ -700,7 +737,7 @@ class ddCt(Blueprint):
         samples = []
 
         # analyse normalisers:
-        for norm in self._Normalisers:
+        for _normaliser in self._Normalisers:
             for filter in self._Filters:
                 norm = filter.pipe(norm)
             norm = analyser.pipe(norm)
@@ -710,9 +747,9 @@ class ddCt(Blueprint):
         # analyse sample assays
         for sample in self._Assays:
             for filter in self._Filters:
-                sample = filter.pipe(sample)
-            sample = analyser.pipe(sample)
-            samples.append(sample)
+                _sample = filter.pipe(_sample)
+            _sample = analyser.pipe(_sample)
+            samples.append(_sample)
         normaliser.link(assays = samples)
 
         normaliser.normalise()
@@ -758,11 +795,11 @@ class ddCt(Blueprint):
 
 if __name__ == "__main__":
 
-    norm_files = ["Example Data/28S.csv", "Example Data/actin.csv"]
-    sample_files = ["Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    norm_files = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv"]
+    sample_files = ["./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
 
-    norm_folder = "Example Data 2/normalisers"
-    sample_folder = "Example Data 2/samples"
+    norm_folder = "./Example Data 2/normalisers"
+    sample_folder = "./Example Data 2/samples"
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
     
@@ -776,9 +813,9 @@ if __name__ == "__main__":
     analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
     analysis.add_normalisers(norm_files)
     
-    print("No Reps specified, all inferred!")
-    # analysis.replicates(6)
-    # analysis.names(groupnames)
+    # print("No Reps specified, all inferred!")
+    analysis.replicates(6)
+    analysis.names(groupnames)
 
     iqr_filter = Filters.RangeFilter()
     # iqr_filter.report("Example Data 2")
