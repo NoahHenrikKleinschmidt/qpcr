@@ -662,13 +662,13 @@ class MultiReader(SingleReader, aux._ID):
         assays = self._Parser.get()       
         self._assays = assays
 
-    def _parse_by_decorators(self, kwargs):
+    def _parse_by_decorators(self, **kwargs):
         """
         Parses the file and idenifies assays and normalisers
         based on decorators
         """
         aux.from_kwargs("decorator", None, kwargs, rm = True)
-
+        
         # get assays-of-interest
         self._Parser.parse( decorator = "qpcr:assay", **kwargs )
         assays = self._Parser.get()       
