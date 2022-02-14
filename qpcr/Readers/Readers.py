@@ -836,7 +836,7 @@ class BigTableReader(MultiReader):
 
     |      | @qpcr:group |      |      | @qpcr:group |      |      |    |
     | ---- | ---------------- | ---- | ---- | ---------------- | ---- | ---- | ---- |
-    | id   | group0_1  | group0_2  | group0_3  | group1_1 | group1_2 | ...  | @qpcr   |
+    | assay   | group0_1  | group0_2  | group0_3  | group1_1 | group1_2 | ...  | @qpcr   |
     | assay1 | 7.74 | 7.65 | 7.54 | 11.54 | 11.67 | ...  |  normaliser  |
     | assay 2   | 16.67 | 16.54 | 16.97 |  16.43 |  16.56 | ...  | assay   |
     | ...  | ...  | ...  | ...  | …     | ...   | ...  |  ...  |
