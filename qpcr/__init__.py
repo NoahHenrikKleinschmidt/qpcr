@@ -1346,7 +1346,11 @@ class Results(aux._ID):
         
         # remove groups from dataset
         for group in groups: 
-            self._df = self._df.query(ref_query.format(group))
+            self._df = self._df.query(ref_query.format(group = group))
+
+            # also drop from stats df
+            if self._stats_df is not None:
+                self._stats_df = self._stats_df.query(ref_query.format(group = group))
     
 
     def add(self, column:pd.Series, replace : bool = False):
@@ -2256,7 +2260,7 @@ if __name__ == "__main__":
     result1 = normaliser1.get()
 
     result1.drop_groups([3, 1])
-    print(result1.get())
+    print(result1.stats())
 
     # print(result.get() == result1.get())
 
