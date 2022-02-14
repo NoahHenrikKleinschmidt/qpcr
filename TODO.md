@@ -167,5 +167,10 @@ A reader class that is able to work with multi-assay files that contain a single
 for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
 
 
-### 10. Factor out Readers into their own submodule
+### 10. Factor out Readers into their own submodule << CHECK 
 The files are soo diverse we make a new submodule just for the Readers...
+> We already factored out all the submodules
+
+
+### 11. Add vectorized support or pipe methods
+Pipe methods and such should also be able to work directly with a list of input files ...
