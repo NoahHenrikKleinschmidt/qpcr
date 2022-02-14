@@ -100,7 +100,7 @@ of the excel / csv file that will tell the program if it's a assay of interest o
 |    7.5  |     |            |     x (pushed back to another release)  |
 |    7.6  |   x  |            |       |
 |    7.7  |  x   |            |       |
-|    7.8  |     |            |       |
+|    7.8  |     |      x      |       |
 
 ### 9. Filter nan policy
 Filters now by default ignore groups that have a nan median, since otherwise they would raise an Error...
@@ -109,6 +109,15 @@ Filters now by default ignore groups that have a nan median, since otherwise the
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    9.1   |   x   |            |       |
+
+### 9. BigTableReader << CHECK
+A reader class that is able to work with multi-assay files that contain a single big table of assays with all ct values from all samples. We already have the algorithm
+for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
+
+
+### 10. Factor out Readers into their own submodule << CHECK 
+The files are soo diverse we make a new submodule just for the Readers...
+> We already factored out all the submodules
 
 
 # New features of *some future* release
@@ -133,7 +142,7 @@ Currently the workflow is only designed for a single normalisation. Comparing th
 > IDEA: Just an idea about the index file implementation. Given that we can manually set ids after SampleReader has read in a file, we might simply implement a re-id at this point using the Basic pipeline workflow. Like this we would be able to pair groups of replicates together pretty straightforwardly (unless we loose that specificity again after the first normalisation step, but this should be no problem due to the `drop_rel` method of the qpcr.Results, so we should be able to re-store the original ids after the first normalisation pretty easily...)
 
 ### 5. New pipelines with more versatile customization
-Two new pipelines are supposed to join the current Basic ones: The `Blueprint` pipeline and the `Framework` pipeline. They are just again both doing essentially the same as the Basic ones, except that Blueprint allows to link an externally set up SampleReader, Analyser, and Normaliser as desired, while using default settings for anything that was not explicitly set. Framework on the otherhand really requires the user to explicitly set all of these, it only provides the workflow framework.
+Two new pipelines are supposed to join the current Basic ones: The `Blueprint` (<< CHECK) pipeline and the `Framework` pipeline. They are just again both doing essentially the same as the Basic ones, except that Blueprint allows to link an externally set up SampleReader, Analyser, and Normaliser as desired, while using default settings for anything that was not explicitly set. Framework on the otherhand really requires the user to explicitly set all of these, it only provides the workflow framework.
 
 
 ### 6. Estimation of qPCR efficiency
@@ -162,15 +171,10 @@ New Qupid web-app for easy access to the analysis pipeline for non-experienced u
 ### 8. __str__ methods 
 At some point we should add some `__str__` methdos to all classes ...
 
-### 9. BigTableReader
-A reader class that is able to work with multi-assay files that contain a single big table of assays with all ct values from all samples. We already have the algorithm
-for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
-
-
-### 10. Factor out Readers into their own submodule << CHECK 
-The files are soo diverse we make a new submodule just for the Readers...
-> We already factored out all the submodules
-
-
 ### 11. Add vectorized support or pipe methods
 Pipe methods and such should also be able to work directly with a list of input files ...
+
+### 12. Test if list comprehensions would markedly improve the speed of the Pipelines
+If we could markedly increase pipeline speed by following the list comprehension approach used by the `Getting Started` notebook First Look code example, then we should re-write the entire pipelines like this...
+
+
