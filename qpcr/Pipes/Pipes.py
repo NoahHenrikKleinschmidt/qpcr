@@ -737,7 +737,7 @@ class ddCt(Blueprint):
         samples = []
 
         # analyse normalisers:
-        for _normaliser in self._Normalisers:
+        for norm in self._Normalisers:
             for filter in self._Filters:
                 norm = filter.pipe(norm)
             norm = analyser.pipe(norm)
@@ -747,9 +747,9 @@ class ddCt(Blueprint):
         # analyse sample assays
         for sample in self._Assays:
             for filter in self._Filters:
-                _sample = filter.pipe(_sample)
-            _sample = analyser.pipe(_sample)
-            samples.append(_sample)
+                sample = filter.pipe(sample)
+            sample = analyser.pipe(sample)
+            samples.append(sample)
         normaliser.link(assays = samples)
 
         normaliser.normalise()
