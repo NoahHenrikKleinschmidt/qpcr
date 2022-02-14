@@ -540,7 +540,7 @@ class MultiReader(SingleReader, aux._ID):
 
         # set up parsing
         if decorator is not None or assay_pattern is None:
-            self._parse_by_decorators(kwargs)
+            self._parse_by_decorators(**kwargs)
         elif assay_pattern is not None: 
             self._parse_by_pattern(kwargs, assay_pattern)
         else: 
