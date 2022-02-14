@@ -171,13 +171,20 @@ class _CORE_Reader(aux._ID):
         """
         Gets a single dataset from the Parser
         """
+
+        # check if there are multiple datasets
+        # and if so, check if we got a specified assay_of_interest
         if len(parser.assays()) > 1:
+            
             if assay_of_interest is None: 
                 aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
             self._df = parser.get(assay_of_interest)
             self._id_reset()
             self.id(assay_of_interest)
+
+        # if only one assay is present anyway, get that one
         else:
+
             assay_of_interest = parser.assays()[0]
             self._df = parser.get(assay_of_interest)
             self._id_reset()
