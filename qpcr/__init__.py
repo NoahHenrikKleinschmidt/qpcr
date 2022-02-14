@@ -8,42 +8,45 @@ It is designed for maximal user-friendliness and streamlined data-visualisation.
 Let's talk some terminology first. There are a number of important terms that you will meet when using the `qpcr` module that you may feel have nothing to do with qPCR. 
 Read on to learn what these terms mean and why they are important. 
 
+### `qpcr` vs qPCR
+Throughout this documentation, we will refer to the python module as `qpcr` in all lowercase, while we will talk about the qPCR experiment itself 
+by using `qPCR` with uppercase. 
+
 ### File (or "datafile")
 Let's start simple. A `file` is simply one of your input datafiles (shocker). For the `qpcr` module this means either a `csv` or an `excel` file. 
 Files are the at the very basis of our data pipeline. 
-However, we do not strictly assume that these files correspond to qPCR assays _per se_ (although this is the assumption underlying the default settings). 
-Hence, the default settings of the `qpcr` classes are designed to work with datafiles that contain Ct values of _one single qPCR assay_ each. 
-However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
-So, again, if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
-The datafiles require at least two columns: one containing identifiers of your replicates (see below for the term "Replicates"), and one for their Ct values.
-`Regular` datafiles only contain these two columns and nothing else. `Irregular` datafiles also have to have these two columns, but they allow for more irregular stuff
-around these columns. All `excel` input files are irregular. Irregular files may contain multiple datasets (see below). Check out the documentation of the `qpcr.Parsers` for 
-details on how to work with irregular datafiles.
+However, `qpcr` does not strictly require that these files correspond to anything in particular from "qPCR vocabulary" _per se_ 
+(although the basic assumption underlying the default settings
+is that a single "regular" datafile contains exactly one single qPCR assay). 
 
-### An `qpcr.Assay` and a "dataset"
-The `qpcr.Assay` class is used to store the Ct values from a datafile. The class was named with the assumption in mind that each qPCR assay is stored as a separate datafile, but again,
-if this does not match your setup then this class will still handle the data of your datafiles. So, this is obviously the same as a "dataset", right? Correct. 
-A "dataset" is a set of replicate identifiers and their Ct values, period. 
-You will find the term "dataset" here and there in the documentation and this is all there is to it, it is a more formally correct way to talk about your "qPCR assays" which are probably (but not necessarily) what your input datafiles are all about. 
+The main `qpcr` classes are designed to work with datafiles that contain Ct values and replicate identifiers (see below for "replicates").
+In the very most basic case, a simple datafile contains extactly an `"id"` or `"Name"` or whatever column and a `"Ct"` column (can also be named differently),
+that store values from exactly _one single qPCR assay_. 
+
+However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
+But if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
+
+#### "Regular" vs "irregular" datafiles
+`Regular` datafiles only contain the `id` and `Ct` columns and nothing else, storing values of exactly one qPCR assay. 
+`Irregular` datafiles also have to have these two columns, but they allow for more irregular stuff
+around these columns. 
+Irregular files may contain multiple datasets / assays (see below). Check out the documentation of the `qpcr.Parsers` and `qpcr.Readers` for 
+details on how to work with irregular and multi-assay datafiles.
+
+### An `qpcr.Assay` and a "dataset" / "assay"
+Let's start by the term "dataset". Well, a "dataset" is simply a collection or replicate identifiers and corresponding Ct values belonging together. 
+By default this usually corresponds to a single qPCR assay, hence you will often encounter the term "assay" used instead of "dataset" to be more 
+intuitive. However, the two terms are really interchangeable. The `qpcr.Assay` class is used to store the Ct values and replicate identifiers 
+from a single assay extracted from a datafile. 
 
 ### Replicates
-As far as the `qpcr` module is concerned, each row within your datafiles corresponds to one replicate. Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
+As far as the `qpcr` module is concerned, each row within your datasets corresponds to one replicate. 
+Hence, a _replicate_ is just a single pair of some identifier and a corresponding Ct value. 
 That means that `qpcr` does not terminologically distinguish between multiplets (i.e. "true replicates" as an experimentor would understand them) and unicates. 
-That's it for what "replicates" _are_. Now to how we deal with them. 
-
-Here's the best part: usually, we don't necessarily need to do anything as `qpcr.Assay` objects are able to infer the replicates of your data automatically from the replicate identifiers in your datafile (yeah!). You will be asked to manually provide replicate settings in case this fails. 
-In case you want to / have to manually specify replicate settings, the `qpcr.Assay` class has an attribute called `replicates` which is where you can specify this information. 
-`replicates` can be either an `integer`, a `tuple`, or a `string`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets, but some assays might only be done in unicates (such as the diluent assay).
-In these cases your dataset does not have uniformly sized groups of replicates (see next paragraph for the term "group"). 
-Let's look at an example. Assume you did biological triplicates and technical duplicates. 
-Now you might choose to keep the triplicates separately or merge them together. To tell `qpcr` that you want to merge your biological and techincal replicates all together you would specify `replicates = 6` (2x3 = 6), otherwise you might specify `replicates = 2`. 
-You get the idea... If you now also had a diluent sample that is a unicate at the end of your dataset, then you have a problem as the program currently expects to always find either 6 or 2 replicates belonging together but you have only one.
-That's where the `tuple` or `string` input for `replicates` come in. With the `tuple` you can specify the number of replicates individually for each group such as `replicates = (6,6,6,6,1)` if you had four separeate qPCR samples, all of which are hexaplicates. 
-If you have many groups of replicates then this would be a long tuple to make and a bit annoying. So you could also specify a string `formula` which is a "recipe" for the tuple such as `replicates = "6:4,1"`, which will generate the same tuple as specified above. 
-Check out the documentation of `qpcr.Assay.replicates` for more details here.
+If you feel more comfortable with a term like "measurement" then you can also think of the replicates like that. 
 
 ### Groups (of Replicates)
-This is one of the most fundamental terms. In the previous paragraph we already started to talk about "groups of replicates". 
+This is one of the most important terms. In the previous paragraph we already started to talk about "groups of replicates". 
 Groups of replicates are, as their name already implies, well, a number of replicates that somehow belong together.
 For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions. 
 We talk about _groups_ of replicates instead of samples or conditions, primarily, because there might be different data setups so that these terms might not be always appropriate.
@@ -53,30 +56,42 @@ However, they also come with a text label called the `group_name` (you can manua
 Some classes such as the `qpcr.SampleReader` class will actually just use the term `names` instead of the full `group_names`. 
 Whenever you see anything "names"-related it is (super-duper most likely) a reference to the `group_names`.
 
+#### Specifying Replicates
+Here's the best part: usually, we don't necessarily need to do anything as `qpcr.Assay` objects are able to infer the replicates of your data 
+automatically from the replicate identifiers in your dataset (yeah!). However, you will be asked to manually provide replicate settings in case this fails. 
+In case you want to / have to manually specify replicate settings, the `qpcr.Assay` class accepts an input `replicates` which is where you can specify this information. 
+`replicates` can be either an `integer`, a `tuple`, or a `string`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets.
+Hence, if we always have the same number of replicates in each group (say all triplicates) we can simply specify this number as `replicates = 3`. 
+However, some assays might only be done in unicates (such as the diluent assay), while others are triplicates.
+In these cases your dataset does not have uniformly sized groups of replicates and a single number will not do to describe the groups of replicates. 
+For these cases you can specify the number of replicates in each group separately as a `tuple` such as `replicates = (3,3,3,3,1)` or as a `string` "formula"
+which allows you to avoid repeating the same number of replicates many times like `replicates = "3:4,1"`, which will translate into the same tuple as we specified manually. 
+Check out the documentation of `qpcr.Assay.replicates` for more information on this. 
 
 ### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
 Now it gets more technical (sorry).
 The default analysis workflow in $\Delta \Delta Ct$ analysis is to first calculate a $\Delta Ct$ using an intra-assay reference and then calculate the $\Delta \Delta Ct$ using a normaliser assay. 
-The first $\Delta Ct$ step is performed by a class called `qpcr.Analyser` using its native method `DeltaCt()`. 
-Why just `DeltaCt()` and not `DeltaDeltaCt()`? Well, we call this second `Delta`-step in `DeltaDeltaCt` differently. 
-We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser` using its native method `normalise()`. 
-So, as far as the `qpcr` module is concerned there is only `DeltaCt()` which performs the first $\Delta Ct$, and `normalise()` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
+The first $\Delta Ct$ step is performed by a class called `qpcr.Analyser` using its native method `qpcr.Analyser.DeltaCt`. 
+Why just `DeltaCt` and not `DeltaDeltaCt`? Well, we call this second `Delta`-step in `DeltaDeltaCt` differently. 
+We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser` using its native method `qpcr.Normaliser.normalise`. 
+So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaCt` which performs the first $\Delta Ct$, and `qpcr.Normaliser.normalise` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
 ### The `anchor` and the "reference group"
 Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
-If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? Well, in `qpcr` terms that would be your _reference group_.
-Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their mean for instance).
+If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? 
+Well, in `qpcr` terms that would be your _reference group_.
+Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their `mean` for instance).
 By default it is assumed that your reference group is the _very first_ group of replicates. However, it's not a big problem if this is not the case, as you can specify different anchors easily.
 So, again, the `anchor` is the dataset-internal reference value used for the first $\Delta Ct$.
 
 ### "assays" vs "normalisers"
 You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the `qpcr.Normaliser`. 
-For all intents and purposes, an "assay" is simply one of your datasets (again, the name was chosen from the default assumption that your datafiles contain one assay each).
-In case of the `qpcr.Reader` "assay" specifies any dataset within an irregular datafile. 
-In case of the `qpcr.Normaliser`, or the `qpcr.MultiReader`, as well as the pipelines from `qpcr.Pipes` "assays" are the short notation for specifically "assays-of-interest" 
+For all intents and purposes, an "assay" is simply one of your datasets (we know this already).
+However, in practice "assays" are the short notation for specifically "assays-of-interest" 
 (or more formally "datasets-of-interest"), while "normalisers" refer to your normaliser-assays (from housekeeping genes like ActinB for instance). 
 But again, if your datafiles do not conform to standard data arrangements, do not be distracted from the terminology here.
+
 You will also find that the term "assays" is used within the final results dataframe (when using the summary-statistics mode). 
 In this setting "assays" refers to the assay-of-interst whose data was analysed according to the provided normaliser-assays. 
 In fact, this is a new "hybrid" assay identifier taht includes the names of all the normaliser-assays used during computation (check out what the final results look like and it'll be immediately clear).
@@ -92,15 +107,15 @@ Actually, we try to phase out the term "sample" and it currently mainly appears 
 ----
 
 ### `pipeline`s 
-A `pipeline` is essentially any workflow that starts from one or multiple input datafiles and ultimately results in some results table you are happy with.
-Pipelines can be manually created by assembling the main `qpcr` classes, usually starting with a SampleReader, passing to an Analyser, to an Normaliser, and you're good to go.
+A `pipeline` is essentially any workflow that starts from one or multiple input datafiles and ultimately pops out some results table you are happy with.
+Pipelines can be manually created by assembling the main `qpcr` classes, usually starting with a Reader, passing to an Analyser, to an Normaliser, and you're good to go.
 When manually assembling your workflow you can extract your data at any point and perform your own computations on it as you like. However, if you wish to "just do some good ol' Delta-Delta-Ct"
 there are pre-defined pipelines that will handle writing the workflow and only require a very basic setup. You can find these in the `qpcr.Pipes` submodule.
 
 ### "Results" = my final results?
 Yes and no. Anything that is computed through any of the `qpcr` classes is called a "result" of some kind.
-In practice as soon as you pass your data through an `qpcr.Analyser` or `qpcr.Normaliser` you generate some "results" which are actually stored in a separate class called `qpcr.Results` (that's not so important, though).
-The `qpcr.Results` that comes out of your `qpcr.Normaliser` will probably be what you would think of as your "final results", yes. The one from the `qpcr.Analyser` will probably not be.
+In practice as soon as you pass your data through a `qpcr.Normaliser` you generate "results" which are actually stored in a separate class called `qpcr.Results` (that's not so important, though).
+So, when using the term "result" we usually mean just anything that was explicitly computed by `qpcr`. 
 
 ### `get`ting your data
 Too many classes and objects? Well, no worries, the underlying data is stored as `pandas DataFrames`. To get your data from the clutches of the `qpcr` classes you can always use the `get()` method. 
@@ -111,14 +126,10 @@ Different classes have slightly different methods of adding data to them. Classe
 usually have a `link()` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform (an `qpcr.Analyser` would perform `DeltaCt()` for instance). 
 Some classes such as the `qpcr.Analyser` have a wrapper that will call both their `link()` as well as their actual core-functional method together in one go. This wrapper is called `pipe()`. 
 So for the `qpcr.Analyser` you could either manually use `link()` and then `DeltaCt()`, or simply call `pipe()` which does both for you. It is noteworthy that `pipe` methods actually _return_ whatever
-their output is, which is *not* normally the case otherwise (normally you'd use the `get()` method to extract your data, see above).
-Alright, we know about `link()` and `pipe()` now, what about `add`?  Classes that accept multiple inputs have `add` methods, which tells the class where exactly to store the input data. 
+their output is, which is *not* normally the case otherwise (normally you'd use the `get()` method to extract your data, see above). Most `qpcr.Readers` and `qpcr.Parsers` are also equipped with `pipe` methods.
+Alright, we know about `link` and `pipe` now, what about `add`?  Classes that accept multiple inputs have `add` methods, which tells the class where exactly to store the input data. 
 `add`-methods are especially implemented within the pre-defined analysis pipelines of the `qpcr.Pipes` submodule. You will probably often use the methods `add_assays()` and `add_normalisers()` if you plan on using these predefined pipelines.
 However, these classes usually still have a `link()` method somewhere that you can use as well. For instance, the `qpcr.Normaliser` uses a `link` method to add both assays-of-interest and normaliser-assays simultaneously.
-
-## Working with "irregular" or "multi-assay" files
----
-Check out the documentation of the `qpcr.Parsers` which explains in more detail how to work with irregular and multi-assay datafiles.
 
 ## Getting started
 ----
@@ -263,111 +274,6 @@ class _CORE_Reader(aux._ID):
                 assay_of_interest = parser.assays()[0]
                 self._df = parser.get(assay_of_interest)
                 self.id(assay_of_interest)
-
-            # self._excel_read(**kwargs)
-
-    # this entire functionality was moved to qpcr.Parsers and is now fully implemented there
-    # --------------------------------------------------------------------------------------
-    # def _parse_read(self, data, name_label = "Name", Ct_label = "Ct", **kwargs):
-    #     """
-    #     Reads a given data file and locates the relevant columns for sample ids (names) and Ct values.
-    #     This is the funtional core of the _excel_read() method, but also works as a backup read method
-    #     in case a csv converted input file is provided that does not conform to the default two-column structure
-    #     requirements. 
-
-    #     Parameters
-    #     ----------
-    #     data : np.ndarray
-    #         A numpy array of the raw data file.
-    #     name_label : str
-    #         The header above the replicate sample ids.
-    #     Ct_label : str
-    #         The header above the replicates' Ct values.
-    #     """
-    #     # locate name_label and Ct_label
-    #     names_loc = np.argwhere(data == name_label)
-    #     cts_loc = np.argwhere(data == Ct_label)
-
-    #     # check if locations match, if not, get the one where both share the same row
-    #     names_loc, cts_loc = self._adjust_loc_shapes(names_loc, cts_loc)
-
-    #     # get the values from the excel sheet array
-    #     sample_ids = self._get_values_from_range(data, names_loc)
-    #     ct_values = self._get_values_from_range(data, cts_loc)
-
-    #     # assemble the dataframe
-    #     df = pd.DataFrame(
-    #                         dict(
-    #                                 Sample = sample_ids, 
-    #                                 Ct = ct_values
-    #                             )
-    #                     )
-    #     return df
-
-    # def _excel_read(self, name_label = "Name", Ct_label = "Ct", **kwargs):
-    #     """
-    #     Reads the given data file if it's an excel file
-
-    #     Parameters
-    #     ----------
-    #     name_label : str
-    #         The header above the replicate sample ids.
-    #     Ct_label : str
-    #         The header above the replicates' Ct values.
-    #     """
-    #     # read data and convert to numpy array
-    #     data = pd.read_excel(self._src)
-    #     data = data.to_numpy()
-
-    #     # parse file and get data
-    #     df = self._parse_read(data, name_label, Ct_label)
-    #     self._df = df
-        
-
-    # def _get_values_from_range(self, data, indices):
-    #     """
-    #     Gets values from an excel spreadhseet as numpy ndarray starting from the indices
-    #     provided until the cells are filled with np.nan
-    #     """
-    #     row, col = indices
-    #     idx = 0
-    #     value = 0
-    #     while True:
-    #         idx += 1
-    #         try: value = data[row + idx, col]
-    #         except: break
-    #         if value == np.nan: 
-    #             break
-        
-    #     values = data[  # we start at row+1 to exclude the header
-    #                     slice(row+1, row + idx+1), 
-    #                     col
-    #                 ]
-    #     return values
-
-    # def _adjust_loc_shapes(self, names_loc, cts_loc):
-    #     """
-    #     Adjusts the location indices of the start of sample ids and ct values,
-    #     in case the headers were identified multiple times in the spreadsheet.
-
-    #     It returns the location indices for both names (ids) and ct values that are 
-    #     on the same row.
-    #     """
-    #     trans_names = np.transpose(names_loc)
-    #     trans_cts = np.transpose(cts_loc)
-
-    #     # get common index for the row, first apply to names
-    #     common_row_index = np.argwhere(trans_names[0] == trans_cts[0])
-    #     names_loc = names_loc[common_row_index]
-    #     # now also apply to cts
-    #     common_row_index = np.argwhere(trans_cts[0] == names_loc[0][0][0])
-    #     cts_loc = cts_loc[common_row_index]
-
-    #     # now reduce shape back to 1D
-    #     names_loc, cts_loc = names_loc.reshape(2), cts_loc.reshape(2)
-
-    #     return names_loc, cts_loc
-            
         
     def _csv_read(self, **kwargs):
         """
@@ -557,7 +463,7 @@ class Assay(aux._ID):
         # FUTURE DROP HERE
         # check if a qpcr.Reader was supplied instead of a dataframe
         # drop this at some point
-        if aux.same_type( df, Reader("./Example Data/actin.csv") ):
+        if isinstance(df, Reader):
             self.link(df)
         else: 
             self._df = df
@@ -574,11 +480,13 @@ class Assay(aux._ID):
 
         # if we got data, try to read it 
         if self._df is not None: 
-            self.replicates(self._replicates)
-            self.group()
-            if self._names is not None: 
-                self.rename(self._names)
-
+            try: 
+                self.replicates(self._replicates)
+                self.group()
+                if self._names is not None: 
+                    self.rename(self._names)
+            except: 
+                aw.SoftWarning("Assay:setup_not_grouped")
 
     def get(self):
         """
@@ -689,16 +597,6 @@ class Assay(aux._ID):
         else: 
             return self._df["group_name"]
     
-    # def is_named(self): # not used so far...
-    #     """
-    #     Returns 
-    #     -------
-    #     bool
-    #         `True` if .rename() was performed and custom group names are provided
-    #         else `False`.
-    #     """
-    #     return self._renamed
-
     def groups(self):
         """
         Returns a set of sample groups (numeric).
@@ -955,6 +853,40 @@ class Assay(aux._ID):
             aw.HardWarning("Assay:reps_could_not_vet", reps = replicates)
 
         return verdict
+
+"""
+## Setting up a `qpcr.Assay`
+---
+
+Here is a manual example of creating a `qpcr.Assay` object. You can use either the `qpcr.DataReader` or any one of `qpcr.Readers` directly to 
+read in your data and generate a pandas DataFrame. Note, the `qpcr.Readers` are already equipped with `make_Assay(s)` methods that will handle
+setting up `qpcr.Assay` objects for you. 
+
+However, setting up `qpcr.Assay`s manually can be as simple as:
+
+```python
+# get the dataframe from one of the qpcr.Readers
+mydata = some_reader.get()
+
+assay = Assay( df = mydata, id = "my_assay" )
+
+```
+
+If your replicate identifiers are the same for all replicates within each group then the groups are automatically inferred. And your assay is 
+ready at this point already to be passed to an `qpcr.Analyser`. If not, you can specify the replicates manually like: 
+
+```python
+# manually specify triplicates during setup
+assay = Assay( df = mydata, id = "my_assay", replicates = 3 )
+
+# or you can change the replicates after initial setup like 
+assay = Assay( df = mydata, id = "my_assay" )
+assay.replicates(3)
+assay.group()
+
+```
+
+"""
 
 class SampleReader(Assay):
     """
@@ -2197,13 +2129,14 @@ class Normaliser(aux._ID):
         """
         tmp = combined.get()
         tmp_df = tmp.drop(columns = ["group"]) # drop group as it is a numeric column and would otherwise skew the average
-        tmp_df = tmp_df.mean(axis = 1)
+        tmp_df = tmp_df.mean(axis = 1, numeric_only = True)
+
         return tmp_df
 
 
 if __name__ == "__main__":
     
-    files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    files = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv", "./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
     # files = ["Example Data 2/28S.csv", "Example Data 2/actin.csv", "Example Data 2/HNRNPL_nmd.csv", "Example Data 2/HNRNPL_prot.csv"]
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
@@ -2212,7 +2145,7 @@ if __name__ == "__main__":
     reader = DataReader()
 
     analyser = Analyser()
-    analyser.anchor("mean")
+    analyser.anchor("first")
 
     normaliser = Normaliser()
 
@@ -2259,7 +2192,7 @@ if __name__ == "__main__":
     
     result1 = normaliser1.get()
 
-    result1.drop_groups([3, 1])
+    # result1.drop_groups([3, 1])
     print(result1.stats())
 
     # print(result.get() == result1.get())
