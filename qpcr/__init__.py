@@ -1340,13 +1340,13 @@ class Results(aux._ID):
             Either the numeric group identifiers or the group names
             of the groups to be removed.
         """
-        # get the right reference column to be 
+        # get the right reference column and query to use to be 
         # used (either group or group_name)
-        ref_col = "group" if isinstance( groups[0], int ) else "group_name"
+        ref_query = "group != {group}" if isinstance( groups[0], int ) else "group_name != '{group}'"
         
         # remove groups from dataset
         for group in groups: 
-            self._df = self._df.query(f"{ref_col} != {group}")
+            self._df = self._df.query(ref_query.format(group))
     
 
     def add(self, column:pd.Series, replace : bool = False):
