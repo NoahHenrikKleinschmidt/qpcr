@@ -307,6 +307,8 @@ class SingleReader(_CORE_Reader):
         self._src = filename
 
         self._replicates = aux.from_kwargs("replicates", None, kwargs)
+        self._names = aux.from_kwargs("names", None, kwargs)
+
 
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
