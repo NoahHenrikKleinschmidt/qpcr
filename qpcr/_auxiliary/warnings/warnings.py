@@ -21,6 +21,7 @@ WARNINGS = {
 "Assay:groupnames_dont_colver" : "The new group names specified do not cover all current groups of replicates!\nRequired are new_names for all groups either as dictionary old_name : new_name or as list, replaced per index.\nCurrent group names \t = {current_groups}\nReceived new group names = {new_received}", 
 "Assay:groupnames_not_inferred" : "Could not infer group names based on the provided replicate sample names.\nPlease, specify group names directly.",
 "Assay:no_data_adopted" : "No data was adopted by the Assay!\nData is already stored by this Assay. If you wish to overwrite it use the force=True option.",
+"Assay:setup_not_grouped" : "Could not group the dataset! This is probably because the replicates could either not be inferred or the provided replicates do not cover all the data. Make sure to properly specify replicates.",
 
 "Results:cannot_link" : "Names could not be linked!\nIf names shall be added after results have been computed, use .add_names() instead! .link() is only allowed on empty Results!",
 "Results:cannot_add_names" : "Names could not be added! Dimensionality did not match...\nExpected length: {length}, but got {length_names}",
