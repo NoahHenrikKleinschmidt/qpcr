@@ -1104,7 +1104,7 @@ class DataReader:
         """
         return self._Data
 
-    def read(self, filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = False, reset = False, **kwargs):
+    def read(self, filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = None, reset = False, **kwargs):
         """
         Reads an input file and extracts available datasets using the
         specified `Reader` or by setting up an approproate `Reader`. 
