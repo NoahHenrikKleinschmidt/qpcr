@@ -1078,9 +1078,9 @@ class ExcelParser(_CORE_Parser):
 
         # read data and convert to numpy array
         try: 
-            data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
         except: 
-            data = pd.read_excel(self._src, sheet_name = sheet_name)
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel()")
 
         data = data.to_numpy()
