@@ -45,6 +45,8 @@ WARNINGS = {
 "Pipeline:no_reps" : "Pipeline requires at least one set of replicates!, Make sure to provide these using .replicates()!",
 "Pipeline:no_data" : "Pipeline requires at least one Normaliser and Sample Assay!, Make sure to provide these using .add_() or link() methods!",
 "Pipeline:faulty_index" : "The index file does not appear to be properly constructed!\nMake sure to use a standard csv format with the following labeled columns: 'id', 'condition', 'normaliser', and 'path' (plus any additional columns of your own, which will be ignored)",
+"Pipeline:no_data_input" : "Could not interpret data input: '{file}'!\nIt appears the given data input is neither an existing file nor a directory containing files. Make sure to provide valid data inputs.",
+
 
 "Filter:no_assay" : "Filtering requires a sample Assay! First link an Assay object before applying filter()",
 

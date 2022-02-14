@@ -7,7 +7,7 @@ import qpcr
 import matplotlib.pyplot as plt
 import pandas as pd 
 import statistics as stats
-import qpcr._auxiliary.warnings as wa
+import qpcr._auxiliary.warnings as aw
 import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
@@ -98,7 +98,7 @@ class Pipeline:
 
         # vet if there are at least one normaliser and assay present
         if self._Normalisers == [] or self._Assays == []:
-            wa.HardWarning("Pipeline:no_data")
+            aw.HardWarning("Pipeline:no_data")
 
         self._run(**kwargs)
     
@@ -223,12 +223,38 @@ class Pipeline:
         This is used for add_assays and add_normalisers
         """
         if isinstance(files, str):
+
+            # if inputs are a directory
             if os.path.isdir(files):
-                norms = os.listdir(files)
-                norms = [os.path.join(files,n) for n in norms]
-                return norms
-        else:
+            
+                # get files from the directory
+                datafiles = os.listdir(files)
+            
+                # if no files are found, raise error
+                if len(datafiles) == 0:
+                    aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+            
+                # combine paths with parent directory
+                datafiles = [os.path.join(files,n) for n in datafiles]
+                return datafiles
+
+            # else check if inputs are a single file
+            # then just put it into a list to be valid input for .extend()
+            elif os.path.isfile(files):
+                
+                return [files]
+
+            else: 
+                aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+        
+        # else check if we got a list or tuple of files
+        elif isinstance(files, (list or tuple)):
             return files
+        
+        # raise error for anything else...
+        else: 
+            aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+
 
     def _run(self, **kwargs):
         """
@@ -798,8 +824,8 @@ if __name__ == "__main__":
     norm_files = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv"]
     sample_files = ["./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
 
-    norm_folder = "./Example Data 2/normalisers"
-    sample_folder = "./Example Data 2/samples"
+    norm_folder = "./Example Data 3/normalisers/"
+    sample_folder = "./Example Data 3/samples/"
 
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
     
@@ -810,8 +836,11 @@ if __name__ == "__main__":
     analysis.Analyser(grouped_analyser)
 
     analysis.save_to("Example Data 2")
-    analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
-    analysis.add_normalisers(norm_files)
+    # analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
+    # analysis.add_normalisers(norm_files)
+
+    analysis.add_assays(sample_folder)
+    analysis.add_normalisers(norm_folder)
     
     # print("No Reps specified, all inferred!")
     analysis.replicates(6)
