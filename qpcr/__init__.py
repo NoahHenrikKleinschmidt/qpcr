@@ -1299,20 +1299,6 @@ class Results(aux._ID):
         else:
             aw.SoftWarning("Results:cannot_link")
     
-    # def is_named(self):
-    #     """
-    #     Note
-    #     ----
-    #     This is primarily a legacy function from a development-version that discarded `group_name` if no custom names were provided in `qpcr.Assay` objects.
-    #     `qpcr.Assay` objects now retain the `group_name` column in any case, but migrating names into `qpcr.Results` is still an additional step performed by `adopt_names()`.
-        
-    #     Returns 
-    #     -------
-    #     bool
-    #         `True` if `group_name` column is present in the Results dataframe, else `False`.
-    #     """
-    #     return "group_name" in self._df.columns
-    
     def names(self, as_set = False):
         """
         Returns 
@@ -1343,6 +1329,25 @@ class Results(aux._ID):
             `True` if NO data is yet stored, else `False`.
         """
         return self._df is None
+
+    def drop_groups(self, groups : list):
+        """
+        Removes specific groups of replicates from the DataFrame.
+
+        Parameters
+        ----------
+        groups : list
+            Either the numeric group identifiers or the group names
+            of the groups to be removed.
+        """
+        # get the right reference column to be 
+        # used (either group or group_name)
+        ref_col = "group" if isinstance( groups[0], int ) else "group_name"
+        
+        # remove groups from dataset
+        for group in groups: 
+            self._df = self._df.query(f"{ref_col} != {group}")
+    
 
     def add(self, column:pd.Series, replace : bool = False):
         """
@@ -2201,7 +2206,7 @@ if __name__ == "__main__":
 
 
     reader = DataReader()
-    
+
     analyser = Analyser()
     analyser.anchor("mean")
 
@@ -2210,7 +2215,7 @@ if __name__ == "__main__":
     assays = []
     for file in files: 
 
-        assay = reader.read(file)
+        assay = reader.read(file, replicates = 6)
         assay = analyser.pipe(assay)
         assays.append(assay)
 
@@ -2236,13 +2241,13 @@ if __name__ == "__main__":
 
     for file in files[2:]:
 
-        assay = reader.read(file)
+        assay = reader.read(file, replicates = 6)
         analyser.pipe(assay)
         normaliser1.link(assays = analyser)
 
     for file in files[:2]:
 
-        assay = reader.read(file)
+        assay = reader.read(file, replicates = 6)
         analyser.pipe(assay)
         normaliser1.link(normalisers = analyser)
 
@@ -2250,9 +2255,10 @@ if __name__ == "__main__":
     
     result1 = normaliser1.get()
 
+    result1.drop_groups([3, 1])
     print(result1.get())
 
-    print(result.get() == result1.get())
+    # print(result.get() == result1.get())
 
 # down here is some perliminary trial at making second
 # normalisation... But this should be properly addressed at some point...
