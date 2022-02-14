@@ -745,7 +745,7 @@ class Assay(aux._ID):
         """
         if self._identically_named():
             self._df["group_name"] = self._df[raw_col_names[0]]
-        else: 
+        elif self._names is None: 
             aw.SoftWarning("Assay:groupnames_not_inferred")
 
     def _identically_named(self):
@@ -1912,11 +1912,11 @@ class Normaliser(aux._ID):
             combining the normalisers can be specified using the `qpcr.Normaliser.prep_func` method.
         """
         # convert to lists (since the _link methods really want lists)
-        if not isinstance(assays, (list, tuple)): 
+        if assays is not None and not isinstance(assays, (list, tuple)): 
             assays = [assays]
         self._link_assays(assays)
 
-        if not isinstance(normalisers, (list, tuple)) : 
+        if normalisers is not None and not isinstance(normalisers, (list, tuple)): 
             normalisers = [normalisers]
         self._link_normaliser(normalisers)
     
@@ -2062,7 +2062,6 @@ class Normaliser(aux._ID):
         """
         if assays is not None:
             for sample in assays: 
-
                 if aux.same_type(sample, Assay()):
                     self._Assays.append(sample)
 
@@ -2152,7 +2151,7 @@ if __name__ == "__main__":
     assays = []
     for file in files: 
 
-        assay = reader.read(file, replicates = 6)
+        assay = reader.read(file, replicates = 6, names = groupnames)
         assay = analyser.pipe(assay)
         assays.append(assay)
 
@@ -2176,24 +2175,24 @@ if __name__ == "__main__":
     # alternatively we could link the analyser directly 
     # to get the Assay from there like
 
-    for file in files[2:]:
+    # for file in files[2:]:
 
-        assay = reader.read(file, replicates = 6)
-        analyser.pipe(assay)
-        normaliser1.link(assays = analyser)
+    #     assay = reader.read(file, replicates = 6)
+    #     analyser.pipe(assay)
+    #     normaliser1.link(assays = analyser)
 
-    for file in files[:2]:
+    # for file in files[:2]:
 
-        assay = reader.read(file, replicates = 6)
-        analyser.pipe(assay)
-        normaliser1.link(normalisers = analyser)
+    #     assay = reader.read(file, replicates = 6)
+    #     analyser.pipe(assay)
+    #     normaliser1.link(normalisers = analyser)
 
-    normaliser1.normalise()
+    # normaliser1.normalise()
     
-    result1 = normaliser1.get()
+    # result1 = normaliser1.get()
 
     # result1.drop_groups([3, 1])
-    print(result1.stats())
+    # print(result1.stats())
 
     # print(result.get() == result1.get())
 
