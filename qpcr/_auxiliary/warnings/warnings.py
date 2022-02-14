@@ -94,7 +94,7 @@ class SoftWarning:
         if not should_not_raise:
             self._message = self._message.format(**kwargs)
             self._was_raised = True
-            print("Warning:", self._message, sep = "\n")
+            print("\nWarning:", self._message, sep = "\n")
 
 class HardWarning:
     """
@@ -105,7 +105,7 @@ class HardWarning:
         traceback = kwargs.pop("traceback", True)
         self._message = self._message.format(**kwargs)
         if traceback:
-            raise Warning(f"\n{self._message}")
+            raise Exception(f"\n{self._message}")
         else:
-            print("Warning:", self._message, sep = "\n")
+            print("\nError:", self._message, sep = "\n")
             exit(1)
