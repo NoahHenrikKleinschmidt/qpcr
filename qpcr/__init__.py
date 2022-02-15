@@ -503,6 +503,20 @@ class Assay(aux._ID):
             except: 
                 aw.SoftWarning("Assay:setup_not_grouped")
 
+    def save(self, filename : str):
+        """
+        Saves the data from the `Assay` to a `csv` file.
+        Parameters
+        ----------
+        filename : str
+            The filename into which the assay should be stored.
+            If this is a `directory`, then the assay `id` will automatically
+            be used as filename. 
+        """
+        if os.path.isdir(filename):
+            filename = os.path.join(filename, f"{self.id()}.csv")
+        self.to_csv(filename, index = False)
+
     def get(self):
         """
         Returns
@@ -2246,7 +2260,7 @@ if __name__ == "__main__":
         assays.append(assay)
 
     # first to files are normalisers
-    normaliser.link(normalisers = assays[1])
+    normaliser.link(normalisers = assays[:2])
 
     # last to files are assays
     normaliser.link(assays = assays[2:])
@@ -2257,9 +2271,9 @@ if __name__ == "__main__":
     print(assays[2].get())
     
     result = normaliser.get()
-
-    result.drop_groups("wt.")
     print(result.stats())
+
+
 
     # alternatively we could link the analyser directly 
     # to get the Assay from there like
