@@ -289,6 +289,9 @@ class Basic(Pipeline):
         analyser = qpcr.Analyser()
         normaliser = qpcr.Normaliser()
 
+        # add replicate and names info to kwargs
+        kwargs = dict(kwargs, replicates = self._replicates, names = self._names)
+
         # analyse normalisers
         normalisers = [  reader.read(i, **kwargs) for i in self._Normalisers  ]     
         normalisers = [  analyser.pipe(i) for i in normalisers  ]
@@ -389,6 +392,10 @@ class BasicPlus(Basic):
         # simply set up the Blueprint pipeline 
         # and run with default settings
         pipeline = Blueprint()
+
+        pipeline.replicates(self._replicates)
+        pipeline.names(self._names)
+
         if self._save_to is not None:
             pipeline.save_to(self._save_to)
 
@@ -541,6 +548,9 @@ class Blueprint(BasicPlus):
         # check if we have plotters or filters
         have_plotters = len(self._Plotters) != 0 
         have_filters = len(self._Filters) != 0
+
+        # add replicate and names info to kwargs
+        kwargs = dict(kwargs, replicates = self._replicates, names = self._names)
 
         # analyse normalisers
         normalisers = [  reader.read(i, **kwargs) for i in self._Normalisers  ]
@@ -801,8 +811,6 @@ class ddCt(Blueprint):
         # check if we have plotters or filters
         have_plotters = len(self._Plotters) != 0 
         have_filters = len(self._Filters) != 0
-
-        print(have_filters, have_plotters)
 
         # analyse normalisers
         normalisers = [  i for i in self._Normalisers  ]
