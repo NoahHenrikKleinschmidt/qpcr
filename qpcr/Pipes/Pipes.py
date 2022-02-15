@@ -1,6 +1,12 @@
 """
 This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
 This is designed for lightweight users that do not wish to employ specialised pipelines.
+
+> ### A Word on Plotters 
+> Please, note that pipelines fully support mixing "static" and "interactive" Plotters, 
+> but static figures will not stay open if interactive plotters are called to plot after them! 
+> Because `qpcr.Filters` are always called to plot *before* any other `qpcr.Plotters`, this will mainly
+> affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
 """
 
 import qpcr
@@ -277,43 +283,26 @@ class Basic(Pipeline):
     def _run(self, **kwargs):
         """
         The automated standard DeltaDeltaCt pipeline. 
-        Using default settings of `qpcr.Analyser`
+        Using default settings of `qpcr.Analyser` and `qpcr.Normaliser`
         """
         reader = qpcr.DataReader()
-        
         analyser = qpcr.Analyser()
         normaliser = qpcr.Normaliser()
 
-        normalisers = []
-        samples = []
-
-        # analyse normalisers:
-        for _normaliser in self._Normalisers:
-            norm = reader.read(
-                                _normaliser, 
-                                replicates = self._replicates, 
-                                names = self._names,
-                                **kwargs
-                            )
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
-
+        # analyse normalisers
+        normalisers = [  reader.read(i, **kwargs) for i in self._Normalisers  ]     
+        normalisers = [  analyser.pipe(i) for i in normalisers  ]
+       
         # analyse sample assays
-        for sample in self._Assays:
-            _sample = reader.read(
-                                    sample,
-                                    replicates = self._replicates, 
-                                    names = self._names, 
-                                    **kwargs
-                                )
-            _sample = analyser.pipe(_sample)
-            samples.append(_sample)
-        normaliser.link(assays = samples)
+        assays = [  reader.read(i, **kwargs) for i in self._Assays  ]   
+        assays = [  analyser.pipe(i) for i in assays  ]
 
+        # now normalise
+        normaliser.link( assays = assays, normalisers = normalisers )
         normaliser.normalise()
-        results = normaliser.get()
 
+        # get and store results
+        results = normaliser.get()
         self._Results = results
         self._df = results.get()
         self._stats_df = results.stats()
@@ -397,88 +386,31 @@ class BasicPlus(Basic):
         Also produces applies and Plotters to produce figures...
         """
 
-        reader = qpcr.DataReader()
-        
-        analyser = qpcr.Analyser()
-        normaliser = qpcr.Normaliser()
-
-        normalisers = []
-        samples = []
-
-        # analyse normalisers:
-        for _normaliser in self._Normalisers:
-            norm = reader.read(
-                                _normaliser, 
-                                replicates = self._replicates, 
-                                names = self._names,
-                                **kwargs
-                            )
-            for filter in self._Filters:
-                norm = filter.pipe(norm)
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
-
-        # analyse sample assays
-        for sample in self._Assays:
-            _sample = reader.read(
-                                    sample,
-                                    replicates = self._replicates, 
-                                    names = self._names, 
-                                    **kwargs
-                                )
-            for filter in self._Filters:
-                _sample = filter.pipe(_sample)
-            _sample = analyser.pipe(_sample)
-            samples.append(_sample)
-        normaliser.link(assays = samples)
-
-        normaliser.normalise()
-        results = normaliser.get()
-
-        self._Results = results
-        self._df = results.get()
-        self._stats_df = results.stats()
-
+        # simply set up the Blueprint pipeline 
+        # and run with default settings
+        pipeline = Blueprint()
         if self._save_to is not None:
-            results.save(self._save_to)
+            pipeline.save_to(self._save_to)
 
-        # plot filtering report
-        for filter in self._Filters:
-            if self._save_to is not None or filter.report() is not None:
-                # add report location if none was specified...
-                if filter.report() is None: 
-                    filter.report(self._save_to)
+        pipeline.add_assays(self._Assays)
+        pipeline.add_normalisers(self._Normalisers)
 
-            figs = filter.plot()
-            self._Figures.extend(figs)
+        pipeline.add_plotters(*self._Plotters)
+        pipeline.add_filters(*self._Filters)
 
-        # plot results
-        for plotter in self._Plotters:
-            plotter.link(self._Results)
-            fig = plotter.plot()
-            self._Figures.append(fig)
+        pipeline.run()
 
-            if self._save_to is not None:
-                filename = self._make_figure_filename(plotter)
-                plotter.save(filename)
+        # and store the results
+        self._Results = pipeline.get(kind = "obj")
+        self._df = pipeline.get(kind = "df")
+        self._stats_df = pipeline.get(kind = "stats")
 
-    def _make_figure_filename(self, plotter):
-        """
-        Increments a filename with a numeric counter...
-        """
-        num = 1
-        suffix = plotter.suffix()
-        while True:
-            filename = os.path.join(self._save_to, f"{plotter.id()}_{num}.{suffix}")
-            if not os.path.exists(filename):
-                break
-            num+=1
-        return filename
+
+
 
 class Blueprint(BasicPlus):
     """
-    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `Basic` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
+    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `BasicPlus` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
     Optionally, `qpcr.SampleReader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
     """
     def __init__(self):
@@ -599,47 +531,41 @@ class Blueprint(BasicPlus):
         The automated standard DeltaDeltaCt pipeline. 
         Also produces applies and Plotters to produce figures...
         """
-        # setup SampleReader, Analyser, and Normaliser (if none were provided)
+        # setup Analyser, and Normaliser (if none were provided)
         self._setup_cores()
         
         reader = self.Reader()
         analyser = self.Analyser()
         normaliser = self.Normaliser()
 
-        normalisers = []
-        samples = []
+        # check if we have plotters or filters
+        have_plotters = len(self._Plotters) != 0 
+        have_filters = len(self._Filters) != 0
 
-        # analyse normalisers:
-        for _normaliser in self._Normalisers:
-            norm = reader.read(
-                                _normaliser, 
-                                replicates = self._replicates, 
-                                names = self._names,
-                                **kwargs
-                            )
+        # analyse normalisers
+        normalisers = [  reader.read(i, **kwargs) for i in self._Normalisers  ]
+
+        if have_filters:
             for filter in self._Filters:
-                norm = filter.pipe(norm)
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
-
+                normalisers = [  filter.pipe(i) for i in normalisers  ]
+            
+        normalisers = [  analyser.pipe(i) for i in normalisers  ]
+       
         # analyse sample assays
-        for sample in self._Assays:
-            _sample = reader.read(
-                                    sample,
-                                    replicates = self._replicates, 
-                                    names = self._names, 
-                                    **kwargs
-                                )
+        assays = [  reader.read(i, **kwargs) for i in self._Assays  ]
+
+        if have_filters:
             for filter in self._Filters:
-                _sample = filter.pipe(_sample)
-            _sample = analyser.pipe(_sample)
-            samples.append(_sample)
-        normaliser.link(assays = samples)
+                assays = [  filter.pipe(i) for i in assays  ]
+        
+        assays = [  analyser.pipe(i) for i in assays  ]
 
+        # now normalise
+        normaliser.link( assays = assays, normalisers = normalisers )
         normaliser.normalise()
-        results = normaliser.get()
 
+        # get and store results
+        results = normaliser.get()
         self._Results = results
         self._df = results.get()
         self._stats_df = results.stats()
@@ -648,25 +574,43 @@ class Blueprint(BasicPlus):
             results.save(self._save_to)
 
         # plot filtering report
-        for filter in self._Filters:
-            if self._save_to is not None or filter.report() is not None:
-                # add report location if none was specified...
-                if filter.report() is None: 
-                    filter.report(self._save_to)
+        if have_filters:
+            for filter in self._Filters:
+                if self._save_to is not None or filter.report() is not None:
+                    
+                    # add report location if none was specified...
+                    if filter.report() is None: 
+                        filter.report(self._save_to)
 
-            figs = filter.plot()
-            self._Figures.extend(figs)
+                # save filter summary fig
+                figs = filter.plot()
+                self._Figures.extend(figs)
 
         # plot results
-        for plotter in self._Plotters:
-            plotter.link(self._Results)
-            fig = plotter.plot()
-            self._Figures.append(fig)
+        if have_plotters:
+            for plotter in self._Plotters:
 
-            if self._save_to is not None:
-                filename = self._make_figure_filename(plotter)
-                plotter.save(filename)
+                # generate plotter fig and save
+                plotter.link(self._Results)
+                fig = plotter.plot()
+                self._Figures.append(fig)
 
+                if self._save_to is not None:
+                    filename = self._make_figure_filename(plotter)
+                    plotter.save(filename)
+
+    def _make_figure_filename(self, plotter):
+        """
+        Increments a filename with a numeric counter...
+        """
+        num = 1
+        suffix = plotter.suffix()
+        while True:
+            filename = os.path.join(self._save_to, f"{plotter.id()}_{num}.{suffix}")
+            if not os.path.exists(filename):
+                break
+            num+=1
+        return filename
 
 
 class _Qupid_Blueprint(Blueprint):
@@ -828,6 +772,9 @@ class ddCt(Blueprint):
     Performs only Delta-Delta-Ct and requires `qpcr.Assay` objects as inputs.
     Hence, this pipeline does NOT read any files!
 
+    It follows the default workflow of the `BasicPlus`pipeline and is based on the `BluePrint`
+    pipeline to allow customisation.
+
     Note
     ----
     As the pipeline inherits from the `Blueprint` pipeline it does have a `Reader` method (which won't do anything though!). 
@@ -835,65 +782,6 @@ class ddCt(Blueprint):
     def __init__(self):
         super().__init__()
         
-    def _run(self, **kwargs):
-        """
-        The main workflow
-        """
-        # setup Analyser, and Normaliser (if none were provided)
-        self._setup_cores()
-        
-        analyser = self.Analyser()
-        normaliser = self.Normaliser()
-
-        normalisers = []
-        samples = []
-
-        # analyse normalisers:
-        for norm in self._Normalisers:
-            for filter in self._Filters:
-                norm = filter.pipe(norm)
-            norm = analyser.pipe(norm)
-            normalisers.append(norm)
-        normaliser.link(normalisers = normalisers)
-
-        # analyse sample assays
-        for sample in self._Assays:
-            for filter in self._Filters:
-                sample = filter.pipe(sample)
-            sample = analyser.pipe(sample)
-            samples.append(sample)
-        normaliser.link(assays = samples)
-
-        normaliser.normalise()
-        results = normaliser.get()
-
-        self._Results = results
-        self._df = results.get()
-        self._stats_df = results.stats()
-
-        if self._save_to is not None:
-            results.save(self._save_to)
-
-        # plot filtering report
-        for filter in self._Filters:
-            if self._save_to is not None or filter.report() is not None:
-                # add report location if none was specified...
-                if filter.report() is None: 
-                    filter.report(self._save_to)
-
-            figs = filter.plot()
-            self._Figures.extend(figs)
-
-        # plot results
-        for plotter in self._Plotters:
-            plotter.link(self._Results)
-            fig = plotter.plot()
-            self._Figures.append(fig)
-
-            if self._save_to is not None:
-                filename = self._make_figure_filename(plotter)
-                plotter.save(filename)
-    
     def _setup_cores(self):
         """
         Sets Analyser, and Normaliser to defaults, if no external ones were provided...
@@ -902,14 +790,7 @@ class ddCt(Blueprint):
             self.Analyser(qpcr.Analyser())
         if self.Normaliser() is None:
             self.Normaliser(qpcr.Normaliser())
-
-class ddCt2(ddCt):
-    """
-    A refactored version of ddCt that uses list comprehension
-    """
-    def __init__(self):
-        super().__init__()
-    
+        
     def _run(self, **kwargs):
         # setup Analyser, and Normaliser (if none were provided)
         self._setup_cores()
@@ -917,25 +798,68 @@ class ddCt2(ddCt):
         analyser = self.Analyser()
         normaliser = self.Normaliser()
 
+        # check if we have plotters or filters
+        have_plotters = len(self._Plotters) != 0 
+        have_filters = len(self._Filters) != 0
+
+        print(have_filters, have_plotters)
+
         # analyse normalisers
         normalisers = [  i for i in self._Normalisers  ]
 
-        for filter in self._Filters:
-            normalisers = [  filter.pipe(i) for i in normalisers  ]
-        
+        if have_filters:
+            for filter in self._Filters:
+                normalisers = [  filter.pipe(i) for i in normalisers  ]
+            
         normalisers = [  analyser.pipe(i) for i in normalisers  ]
        
         # analyse sample assays
         assays = [  i for i in self._Assays  ]
 
-        for filter in self._Filters:
-            assays = [  filter.pipe(i) for i in assays  ]
+        if have_filters:
+            for filter in self._Filters:
+                assays = [  filter.pipe(i) for i in assays  ]
         
         assays = [  analyser.pipe(i) for i in assays  ]
 
         # now normalise
         normaliser.link( assays = assays, normalisers = normalisers )
         normaliser.normalise()
+
+        # get and store results
+        results = normaliser.get()
+        self._Results = results
+        self._df = results.get()
+        self._stats_df = results.stats()
+
+        if self._save_to is not None:
+            results.save(self._save_to)
+
+        # plot filtering report
+        if have_filters:
+            for filter in self._Filters:
+                if self._save_to is not None or filter.report() is not None:
+                    
+                    # add report location if none was specified...
+                    if filter.report() is None: 
+                        filter.report(self._save_to)
+
+                # save filter summary fig
+                figs = filter.plot()
+                self._Figures.extend(figs)
+
+        # plot results
+        if have_plotters:
+            for plotter in self._Plotters:
+
+                # generate plotter fig and save
+                plotter.link(self._Results)
+                fig = plotter.plot()
+                self._Figures.append(fig)
+
+                if self._save_to is not None:
+                    filename = self._make_figure_filename(plotter)
+                    plotter.save(filename)
 
 if __name__ == "__main__":
 
@@ -949,11 +873,11 @@ if __name__ == "__main__":
     
     analysis = Blueprint()
     
-    grouped_analyser = qpcr.Analyser()
-    grouped_analyser.anchor("first")
-    analysis.Analyser(grouped_analyser)
+    # grouped_analyser = qpcr.Analyser()
+    # grouped_analyser.anchor("first")
+    # analysis.Analyser(grouped_analyser)
 
-    analysis.save_to("Example Data 2")
+    # analysis.save_to("Example Data 2")
     # analysis.add_assays(sample_files) # alternative: link() for iteratively linking new assays...
     # analysis.add_normalisers(norm_files)
 
@@ -965,10 +889,12 @@ if __name__ == "__main__":
     analysis.names(groupnames)
 
     iqr_filter = Filters.RangeFilter()
-    # iqr_filter.report("Example Data 2")
+    iqr_filter.plotmode("interactive")
+
+    iqr_filter.report("Example Data 4")
     analysis.add_filters(iqr_filter)
 
-    preview = Plotters.PreviewResults(mode = "interactive")
+    preview = Plotters.PreviewResults(mode = "static")
     analysis.add_plotters(preview)
 
     # now that pipeline is ready, we can run!
@@ -976,9 +902,7 @@ if __name__ == "__main__":
 
     # now we can get results!
     results = analysis.get(kind="df")
-    print(results)
-    
-    
+    print(results)    
     # norm_folder = "Example Data 3/normalisers"
     # exp_folder = "Example Data 3/experimental/samples"
     # ctr_folder = "Example Data 3/experimental/samples"
