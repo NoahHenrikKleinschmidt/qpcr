@@ -1270,7 +1270,46 @@ class Results(aux._ID):
             if not named_identically:
                 aw.SoftWarning("Results:cannot_link")
 
-    
+    def add_dCt(self, assay : Assay):
+        """
+        Adds a `"dCt"` column with Delta-Ct values from an `qpcr.Assay`.
+        It will store these as a new column using the Assay's `id` as header.
+
+        Parameters
+        -------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object from which to import.
+        """
+        id = assay.id()
+        dCt = assay.get()["dCt"]
+        dCt.name = id
+        self.add(dCt)
+
+    def add_ddCt(self, assay : Assay):
+        """
+        Adds all `"rel_{}"` columns with Delta-Delta-Ct values from an `qpcr.Assay`.
+        It will store these as new columns using the Assay's `id` + the `_rel_{}` composite id.
+
+        Parameters
+        -------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object from which to import.
+        """
+        id = assay.id()
+        df = assay.get()
+        # get the ddCt containing columns
+        rel_cols = [ i for i in df.columns if "rel_" in i ]
+        # generate new composite ids 
+        new_names = [ f"{id}_{i}" for i in rel_cols ]
+        # get ddCt columns 
+        df = df[rel_cols]
+        # rename the columns to include the assay id
+        df = df.rename( columns = { new : old for new, old in zip(new_names, rel_cols) } )
+
+        # add data
+        self.add(df)
+
+
     def names(self, as_set = False):
         """
         Returns 
@@ -1561,7 +1600,7 @@ class Results(aux._ID):
         """
         # drop the Ct column
         self.drop_cols(
-                        raw_col_names[1]
+                        raw_col_names[1], "dCt"
                     )
 
 
