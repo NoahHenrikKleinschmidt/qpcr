@@ -727,8 +727,8 @@ class _CORE_Parser:
         # now repeat the groups to match the stacked new data column
         groups_tiled = np.tile(groups, data_array.size // groups.size )
         groups_tiled = np.array(groups_tiled, dtype = float)
-        # and now convert to int 
-        groups_tiled = groups_tiled.astype(int)#.astype(str)
+        # # and now convert to int 
+        # groups_tiled = groups_tiled.astype(int)#.astype(str)
 
         # now get the dataset id column
         id_col = self._id_label
