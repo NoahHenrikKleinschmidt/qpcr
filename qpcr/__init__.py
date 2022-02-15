@@ -1239,22 +1239,28 @@ class Results(aux._ID):
         Assay : qpcr.Assay
             A `qpcr.Assay` object whose group_name column will be copied.
         """
-        self._Assay = Assay
         if self.is_empty():
-            self._df = self._Assay.get()
+            self._df = Assay.get()
             self._drop_setup_cols()
         else:
-            aw.SoftWarning("Results:cannot_link")
+            named_identically = all( self._df["group_name"] == Assay.get()["group_name"] )
+            if not named_identically:
+                aw.SoftWarning("Results:cannot_link")
+
     
     def names(self, as_set = False):
         """
         Returns 
         -------
         names : list or None
-            The adopted `group_names` (only works if a `qpcr.Assay` have been linked using `adopt_names()`!)
+            The adopted `group_names` 
+            (only works if a `qpcr.Assay` has already been linked 
+            using `adopt_names()`!)
         """
-        if self._Assay is not None:
-            return self._Assay.names(as_set)
+        if self._df is not None:
+            names = self._df["group_name"]
+            if as_set: names = aux.sorted_set(names)
+            return names
         return None
 
     def get(self):
@@ -1896,6 +1902,33 @@ class Normaliser(aux._ID):
         # setup defaults
         self._prep_func = self._average
         self._norm_func = self._divide_by_normaliser
+
+    def clear(self):
+        """
+        Will clear the presently stored results
+        """
+        self._Results = Results()
+
+    
+    def prune(self, assays = True, normalisers = True, results = True):
+        """
+        Will clear assays, normalisers, and/or results
+        assays : bool
+            Will clear any sample assays if True (default).
+        
+        results : bool
+            Will clear any computed results if True (default).
+        
+        normalisers : bool
+            Will clear any normalisers if True (default).
+        """
+        if assays:
+            self._Assays = []
+        if normalisers: 
+            self._Normalisers = []
+        if results: 
+            self.clear()
+
 
     def get(self, copy=False):
         """
