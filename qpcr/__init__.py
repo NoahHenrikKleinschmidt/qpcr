@@ -147,7 +147,7 @@ import os
 import numpy as np 
 from copy import deepcopy 
 from io import StringIO
-
+import re
 
 __pdoc__ = {
     "_CORE_Reader" : True
@@ -1225,7 +1225,11 @@ class Results(aux._ID):
         super().__init__()
         self._df = None
         self._Assay = None
-        self._stats_results = {"group" : [], "assay" : [], "mean" : [], "stdev" : [], "median" : []}
+        self._stats_results = {
+                                "group" : [], 
+                                defaults.default_dataset_header : [], 
+                                "mean" : [], "stdev" : [], "median" : []
+                            }
         self._stats_df = None
 
     def adopt_names(self, Assay:Assay):
@@ -1283,7 +1287,7 @@ class Results(aux._ID):
         """
         return self._df is None
 
-    def drop_groups(self, groups : list):
+    def drop_groups(self, groups : (list or str)):
         """
         Removes specific groups of replicates from the DataFrame.
 
@@ -1291,8 +1295,14 @@ class Results(aux._ID):
         ----------
         groups : list
             Either the numeric group identifiers or the group names
-            of the groups to be removed.
+            of the groups to be removed, or a `regex` pattern defining which groups
+            should be dropped (this is useful for systematically removing RT- groups etc.)
         """
+        # check for regex pattern
+        # and get corresponding group names 
+        if isinstance(groups, str):
+            groups = [i for i in self._df["group_name"] if re.match(groups, i) is not None]
+        
         # get the right reference column and query to use to be 
         # used (either group or group_name)
         ref_query = "group != {group}" if isinstance( groups[0], int ) else "group_name != '{group}'"
@@ -1343,8 +1353,21 @@ class Results(aux._ID):
         new_df = self._df
         for R in Results: 
             R_df = R.get()
-            # we merge the dataframes based on their groups, and add the instance id as identifier
-            new_df = pd.merge(new_df, R_df["dCt"], 
+
+            # get only the delta-delta-Ct columns
+            ref_cols = [ raw_col_names[0], "group", "group_name", defaults.default_dataset_header ]
+            cols = [i for i in R_df.columns if i not in ref_cols]
+            R_df = R_df[cols]
+
+
+            # we merge the dataframes first without adding 
+            # some new id suffix, only do so if this fails
+            try: 
+                new_df = pd.merge(new_df, R_df, 
+                                    right_index = True, left_index = True, 
+                                )
+            except: 
+                new_df = pd.merge(new_df, R_df, 
                                 right_index = True, left_index = True, 
                                 suffixes = [f"_{self.id()}", f"_{R.id()}"]
                             )
@@ -1363,9 +1386,9 @@ class Results(aux._ID):
             If this is the case then the only columns retained are: `"group", "group_name", "id", "assay"`.
         """
         if cols == ():
-            _to_drop = [c for c in self._df.columns if c not in ["group", "group_name", raw_col_names[0], "assay"]]
+            _to_drop = [c for c in self._df.columns if c not in [ "group", "group_name", raw_col_names[0], defaults.default_dataset_header ]]
         else:
-            _to_drop = [c for c in list(cols) if c in list(self._df.columns)]
+            _to_drop = [c for c in cols if c in list(self._df.columns)]
         self._df = self._df.drop(columns = _to_drop)
         
     def rename_cols(self, cols:dict):
@@ -1396,16 +1419,18 @@ class Results(aux._ID):
             A new dataframe containing the computed statistics for each replicate group.
 
         """
+        default_dataset_header = defaults.default_dataset_header
         # if stats_df is already present, return but sorted according to assays, not groups (nicer for user to inspect)
         if self._stats_df is not None and not recompute:
-            return self._stats_df.sort_values("assay")
+            return self._stats_df.sort_values(default_dataset_header)
         elif recompute: 
-            self._stats_results = {"group" : [], "assay" : [], "mean" : [], "stdev" : [], "median" : []}
+            self._stats_results = {"group" : [], default_dataset_header : [], "mean" : [], "stdev" : [], "median" : []}
             self._stats_df = None
 
         # get groups and corresponding assay columns 
         groups = aux.sorted_set(list(self._df["group"]))
-        assays = [c for c in self._df.columns if c not in [raw_col_names[0], "group", "group_name", "assay"]]
+        ref_cols = [raw_col_names[0], "group", "group_name", default_dataset_header]
+        assays = [c for c in self._df.columns if c not in ref_cols]
      
         # compute stats for all replicates per group
         for group in groups:
@@ -1420,7 +1445,7 @@ class Results(aux._ID):
         self._add_stats_names(assays)
 
         self._stats_df = pd.DataFrame(self._stats_results)
-        return self._stats_df.sort_values("assay")
+        return self._stats_df.sort_values(default_dataset_header)
 
     def save(self, path, df = True, stats = True):
         """
@@ -1644,7 +1669,7 @@ class Analyser(aux._ID):
 
         """
         if isinstance(e, (int, float)):
-            self._efficiency = float( e * 2 )
+            self._efficiency = float( e )
             self._eff = 2 * self._efficiency
         return self._efficiency
 
@@ -2141,15 +2166,30 @@ class Normaliser(aux._ID):
         Averages the provided normalisers row-wise for all normalisers into a 
         single combined normaliser, that will be stored as a Results instance.
         """
-        combined = Results() # setup new dataframe for combined normalisers, intialise with first id
-        combined.adopt_names(self._Normalisers[0])
-        combined.adopt_id(self._Normalisers[0])
-        combined.merge(*self._Normalisers[1:])
 
-        tmp_df = self._prep_func(combined)
-        tmp_df = tmp_df.rename("dCt_combined")
-        combined.add(tmp_df)
-        combined.drop_cols("group", "group_name", raw_col_names[0])
+        # initialise new Results to store the dCt values form all normalisers
+        combined = Results()
+        
+        # setup names using the first normaliser
+        combined.adopt_names(self._Normalisers[0])
+        combined.drop_cols("dCt")
+        combined.adopt_id(self._Normalisers[0])
+
+        # now add all dCt columns from all normalisers
+        for norm in self._Normalisers:
+            dCt = norm.get()["dCt"]
+            dCt.name = norm.id()
+            combined.add(dCt)
+        
+        # remove the non-dCt columns as they would interfere with
+        # pre-processing. But we keep the "group" column because some
+        # custom prep_func may want to use the group references.
+        combined.drop_cols("group_name", raw_col_names[0])
+
+        # now generate the combined normaliser
+        combined_normaliser = self._prep_func(combined)
+        combined_normaliser = combined_normaliser.rename("dCt_combined")
+        combined.add(combined_normaliser)
 
         self._normaliser = combined  
         if len(self._Normalisers) > 1:
@@ -2175,8 +2215,9 @@ class Normaliser(aux._ID):
         generates a series of their per-row means
         (default preprocess_normalisers function)
         """
-        tmp = combined.get()
-        tmp_df = tmp.drop(columns = ["group"]) # drop group as it is a numeric column and would otherwise skew the average
+        tmp_df = combined.get()
+        if "group" in tmp_df.columns:
+            tmp_df = tmp_df.drop(columns = ["group"]) # drop group as it is a numeric column and would otherwise skew the average
         tmp_df = tmp_df.mean(axis = 1, numeric_only = True)
 
         return tmp_df
@@ -2205,21 +2246,20 @@ if __name__ == "__main__":
         assays.append(assay)
 
     # first to files are normalisers
-    normaliser.link(normalisers = assays[:2])
+    normaliser.link(normalisers = assays[1])
 
     # last to files are assays
     normaliser.link(assays = assays[2:])
 
-
-
     normaliser.normalise()
+
+    print(assays[2].id())
+    print(assays[2].get())
     
     result = normaliser.get()
 
-    print(result.get())
-
-
-    normaliser1 = Normaliser()
+    result.drop_groups("wt.")
+    print(result.stats())
 
     # alternatively we could link the analyser directly 
     # to get the Assay from there like
