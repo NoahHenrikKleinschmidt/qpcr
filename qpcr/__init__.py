@@ -70,8 +70,7 @@ For these cases you can specify the number of replicates in each group separatel
 which allows you to avoid repeating the same number of replicates many times like `replicates = "3:4,1"`, which will translate into the same tuple as we specified manually. 
 Check out the documentation of `qpcr.Assay.replicates` for more information on this. 
 
-### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation` ???
-Now it gets more technical (sorry).
+### `Delta-Ct` vs `Delta-Delta-Ct` vs `normalisation`
 The default analysis workflow in $\Delta \Delta Ct$ analysis is to first calculate a $\Delta Ct$ using an intra-assay reference and then calculate the $\Delta \Delta Ct$ using a normaliser assay. 
 The first $\Delta Ct$ step is performed by a class called `qpcr.Analyser` using its native method `qpcr.Analyser.DeltaCt`. 
 Why just `DeltaCt` and not `DeltaDeltaCt`? Well, we call this second `Delta`-step in `DeltaDeltaCt` differently. 
@@ -460,18 +459,14 @@ class Assay(aux._ID):
         and a `Ct` value column. 
     id : str
         The identifer of the assays (the Assay name, essentially). 
+
     replicates : int or tuple or str
             Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
             Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
             The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
-            this pattern is repeated (if no `:m` is specified `:1` is assumed). 
-            
-            So, as an example, if there are 12 groups which are triplicates, but
-            at the end there is one which only has a single replicate, we could either specify the tuple as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` 
-            or we use the formula to specify `replicates = "3:12,1"`. If no replicates are provided, the `Assay` will try to infer the replicates directly based on the 
-            identifier column. 
-    
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). See `qpcr.Assay.replicates` for an example. 
+
     group_names : list
         A list of names to use for the replicates groups. If replicates of the same group share the same identifier, then the 
         group will be inferred automatically. Otherwise, default group names will be set if no `group_names` are provided. 
@@ -930,9 +925,10 @@ class SampleReader(Assay):
     Sets up a Reader+Assay pipeline that reads in a single datafile and handles the 
     extracted dataset in a pandas dataframe. 
     Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+    
     Note
     ----
-    This is the suggested to read in data, instead of manually setting up Reader and Assay objects.
+    This is now deprecated and will be removed in a future version! Please, use the `qpcr.DataReader` instead.
     """
     def __init__(self):
         super().__init__()
@@ -1507,7 +1503,7 @@ class Results(aux._ID):
     def drop_rel(self):
         """
         Crops the `X_rel_Y` column-names of Delta-Delta-Ct results to just `X`.
-        I.e. reduces back to the assay-of-intereste name only.
+        I.e. reduces back to the assay-of-interest name only.
         """
         colnames = self._df.columns
         to_change = {i : i.split("_rel_")[0] for i in colnames if "_rel_" in i }
@@ -1745,10 +1741,11 @@ class Analyser(aux._ID):
         ----------
         f : str or function
             The function to be used for DeltaCt computation. Pre-defined functions are 
-            either `"exponential"` (which uses  `efficiency^(-(s-r))`, default), or `"linear"` 
-            (uses `s-r`), where `s` is any replicate entry in the dataframe and `r` is the anchor.
+            either `"exponential"` (which uses  `dCt = eff ** ( -(s-r) )`, default), or `"linear"` 
+            (uses `dCt = s-r`), where `s` is any replicate entry in the dataframe and `r` is the anchor. `eff = 2 * efficiency` is the 
+            numeric duplication factor (default assumed `efficiency = 1`).
             It is also possible to assign any defined function that accepts one `float` Ct value `s` (1st!) and anchor `r` value (2nd!), 
-            alongside any kwargs (which will be forwarded from DeltaCt()...).
+            alongside any `kwargs` (which will be forwarded from DeltaCt()...). It must return also a single `float`. 
         """
         if f in ["exponential", "linear"]:
             f = True if f == "exponential" else False
@@ -2069,7 +2066,7 @@ class Normaliser(aux._ID):
             Any additional keyword arguments that may be passed to a custom `norm_func`.
         """
         if self._normaliser is None: 
-            self._normaliser = self._prep_func(self._Normalisers)
+            self._normaliser = self._prep_func(self._Normalisers, **kwargs)
             self._vet_normaliser()
 
         if self._Assays == [] or self._normaliser is None:

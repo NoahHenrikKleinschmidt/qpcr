@@ -23,7 +23,7 @@ import qpcr.Plotters as Plotters
 
 class Filter(aux._ID):
     """
-    The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.
+    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     """
     def __init__(self):
         super().__init__()
@@ -104,12 +104,12 @@ class Filter(aux._ID):
 
     def link(self, Assay:qpcr.Assay):
         """
-        Links a qpcr.Assay to be filtered
+        Links a `qpcr.Assay` to be filtered
         
         Parameters
         ----------
-            Assay : qpcr.Assay
-                A qpcr.Assay object to be filtered.
+            Assay : `qpcr.Assay`
+                A `qpcr.Assay` object to be filtered.
         """
         self._Assay = Assay
         self._before_BoxPlotter.link(self._Assay)
@@ -121,15 +121,15 @@ class Filter(aux._ID):
         
         Parameters
         ----------
-        Assay : qpcr.Assay
-            A qpcr.Assay object to be filtered.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object to be filtered.
         **kwargs
             Any keyword arguments that should be passed to the plotting method.
         
         Returns
         -------
-        Assay : qpcr.Assay
-            A qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object containing only entries that passed the filter.
 
         """
         self.link(Assay)
@@ -147,8 +147,8 @@ class Filter(aux._ID):
         
         Returns
         -------
-        Assay : qpcr.Assay
-            An updated qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            An updated `qpcr.Assay` object containing only entries that passed the filter.
         """
         if self._Assay is not None:
             self._filter(**kwargs)
@@ -283,8 +283,8 @@ class RangeFilter(Filter):
         anchor 
             Supported types for `anchor` are: a numeric value (`int or float`),
             an `iterable` of same length as groups in the dataframe, 
-            a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
-            or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
             which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
         """
         self._anchor = anchor

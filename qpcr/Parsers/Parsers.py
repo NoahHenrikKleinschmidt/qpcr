@@ -1,7 +1,7 @@
 """
 This module contains classes designed to work with irregularly structured datafiles.
-It provides `Parsers` that are able to extract the replicate and Ct values as pandas DataFrames
-from irregular `csv` and `excel` files.
+It provides `Parsers` that are able to extract the replicate identifiers and Ct values as pandas DataFrames
+from irregular `csv` and `excel` files. 
 
 
 ## Working with "irregular files"
@@ -10,16 +10,21 @@ from irregular `csv` and `excel` files.
 Any datafile that does not only consist of a replicate identifer and Ct column is called "irregular". 
 In fact, most excel sheets or csv exports from qPCR machines are actually irregular as they often contain some
 information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to `qpcr`, however, 
-so we have extract the data we are intersted in. This is the job of the `qpcr.Parsers`. They read in an irregular datafile and use 
-a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this. 
+so we have to extract the data we are intersted in. This is the job of the `qpcr.Parsers`. They read in an irregular datafile and use 
+a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this, which are explained below. 
+
+> In fact, `qpcr.Parsers` are already implemented in the `qpcr.Readers` so you will often 
+be able to read irregular datafiles directly with one of the `qpcr.Readers` and will not have to manually work with the `qpcr.Parsers`. 
 
 ### "Finding" relevant datasets through `assay_patterns`
-The Parsers are quipped with a method called `_CORE_Parser.find_assays` which locates assays (or just "datasets") within the datafile
-using `regex`. Of course, in order to do that it needs to know the patterns it's supposed to look for. Some patterns are already pre-specified
+The Parsers are quipped with a method called `_CORE_Parser.find_assays` which locates assays (or more formally "datasets") within the datafile
+using `regex`. Of course, in order to do that they need to know the patterns they are supposed to look for. Some patterns are already pre-specified
 in the `qpcr.Parsers.assay_patterns` dictionary and can simply be specified using their key. If your own pattern is not yet pre-defined, 
 [post an issue on github](https://github.com/NoahHenrikKleinschmidt/qpcr/issues) and supply some samples of how your assays usually appear in your datafiles 
 alongside with the name of the machine that produces your datafiles.
 Of course, you can also manually specify your own regex pattern. The only constraint is that is _must_ have *one* capturing group for the assay name.
+
+> Please note, all assay headers must be located either in the same column or the same row to be identified by a `Parser`!
 
 Once the assays in your datafile are identified, the data columns belonging to them are searched for. The constraint here is that they must start either
 in the row exactly below the assay headers or have at most one single row in between them. Anything else is no good! The data columns _must_ be labelled 
@@ -31,13 +36,7 @@ If your datafiles contain multiple datasets / assays, the `qpcr.Parsers` will be
 ## Working with `multi-assay` files
 ----
 
-While working with datafiles that contain multiple assays you have essentially two options. First, you are only interested in one of the assays in your file,
-or you want to work with _all_ assays in your file at the same time. There is two different methods to deal with either of these situations.
-
-### Getting a single assay from a multi-assay file
-Parsers are actually implemented in the core of the `qpcr.Reader` but if you use a multi-assay file using the `qpcr.Reader` 
-you will have to specify which assay you are specifically interested in using the `assay` argument. So you can simply read 
-a multi-assay file as you would a regular file using the `qpcr.SampleReader` (or `qpcr.Reader` manually) and add the `assay` argument as kwarg to the `read` method.
+While working with datafiles that contain multiple assays you will likely want to use *all* the assays from the datafile, here's how the `qpcr.Parsers` help you do this. 
 
 ### Getting all assays from a multi-assay file
 Here it depends on what you want to do. Do you wish to extract the individual assays to make individual files from them or do you want to use them directly for an analysis?
@@ -45,41 +44,45 @@ Both options are possible.
 
 #### Making indivdual assay files from a multi-assay file
 This is the core-business of the `qpcr.Parsers`. So you can simply set up a Parser, set a saving location using the 
-Parser's `save_to` method and then `pipe` your file throuhg. All done at this point. Of course, you can also work with the dataframes directly
-using the Parser's `get` method.
+Parser's `save_to` method and then `pipe` your file through. All done at this point. Of course, you can also work with the dataframes directly
+using the Parser's `get` method. Like this you easily separate the assays which you can then pass to your main analysis as assays and normalisers. 
 
 #### Using a multi-assay file directly for my analysis
 So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
-Sure, no problem! You can easily read a multi-assay file using the `qpcr.MultiReader` which allows you (after setup) to simply `pipe` through your datafile
+Sure, no problem! Parsers will be able to do that, but you can more easily read a multi-assay file using the `qpcr.Readers.MultiReader` which allows you (after setup) to simply `pipe` through your datafile
 and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though? 
 That's the super-important topic of the next paragraph.
 
 #### Decorators
-A `decorator` technically is a function that wraps another function when coding. Well, that's not quite the case for the `qpcr` decorators but the idea is the same. 
-Instead of wrapping functions the `qpcr` decorators decorate assays in a multi-assay file. What does "decorate" mean? It means they provide meta-data about the assay
-in question. What does that mean? There are two implemented `qpcr` decorators `@qpcr:assay` and `@qpcr:normaliser` – now clear what they do? They are placed in the 
-cell _exactly above_ the cell where the assay header is located (seriously, anything else won't do!) and tell the `qpcr.MultiReader` 
+A `decorator` technically is a function that wraps another function when coding. Well, that's not quite the case for the `qpcr` decorators but the idea is similar. 
+Instead of wrapping functions the `qpcr` decorators wrap assays in a multi-assay file. What does "wrap" mean? It means they provide meta-data about the assay
+in question. What does that mean? There are multiple implemented `qpcr` decorators. For irregular multi-assay files the two important decorators are:
+`@qpcr:assay` and `@qpcr:normaliser` – is it now clear what they do? They are placed in the 
+cell _exactly above_ the cell where the assay header is located (seriously, anything else won't do!) and tell the `qpcr.Parsers` (because all the `MultiReader` is doing is setting up some `Parsers`) 
 if a specific assay is an "assay-of-interest" or a "normaliser-assay".
 
 
-`qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
+So, let's recap this quickly: `qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
 for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` 
 (the `key` is bascially the decorator but without the `@`).
-A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
-For Big Table files there are yet again two additional decorators available., checkout the documentation of the `qpcr.Readers` for more details.
+
+If you work with `qpcr.Parsers` directly you can choose if you only wish to extract "assays-of-interest" (decorated as `@qpcr:assay`) *or* "normalisers", or whatever other decorators are available.
+However, this flexibility is not available when calling Parsers indirectly through one of the `qpcr.Readers`.
+
+> Please note, just like assay headers, all decorators must be located either in the same column or the same row to be identified by a `Parser`!
 
 
-| Decorator | Code-reference | Filetype                                 | Available for / Used by                                      |
+| Decorator | Code-reference | Filetype                                 | Available for / Used by `qpcr.Readers`                                   |
 | --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
-| @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
-| @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `qpcr.Readers.SingleReader`, `qpcr.Readers.MultiReader`, `qpcr.Readers.MultiSheetReader`, `qpcr.Parsers.CsvParser`, `qpcr.Parsers.ExcelParser` |
-| @qpcr:group | qpcr:group | Horizontal Big Table files | `qpcr.BigTableReader` |
-| @qpcr | qpcr:column | Horizontal or vertical Big Table files | `qpcr.BigTableReader` |
+| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
+| @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
+| @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
+| @qpcr:group | qpcr:group | Horizontal Big Table files | `BigTableReader` |
+| @qpcr | qpcr:column | Horizontal or vertical Big Table files | `BigTableReader` |
 
 
 
-> ##### Two things of Note: 
+> #### Two things of Note: 
 > - When specifying a decorator any non-decorated assay will be *ignored*!
 > - If you are using `excel` you may have to add a single tick `'` in front of your decorators.
 """

@@ -1,6 +1,6 @@
 """
 This module is designed for streamlined data visualisation of the qpcr generated results
-It is designed to work directly with qpcr.Results() instances. 
+It is designed to work directly with `qpcr.Results` objects. 
 """
 
 import qpcr.__init__ as qpcr
@@ -320,8 +320,8 @@ class PreviewResults(Plotter):
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   color : `str`   | The fillcolor for the individual bars   | `color = "yellow"`     |
-    |   edgecolor : `str`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
+    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
     |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
     |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
     |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
