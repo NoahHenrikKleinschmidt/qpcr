@@ -909,6 +909,10 @@ class BigTableReader(MultiReader):
     | assay 2   | 16.67 | 16.54 | 16.97 |  16.43 |  16.56 | ...  | assay   |
     | ...  | ...  | ...  | ...  | …     | ...   | ...  |  ...  |
 
+    > Note
+    >
+    > The column headers have to be **unique** to the table!
+
     """
     def __init__(self):
         super().__init__()
@@ -1016,7 +1020,7 @@ class BigTableReader(MultiReader):
         # setup Parser to get data
         self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
 
-        self._Parser.read(self._src)
+        self._Parser.read(self._src, **kwargs)
         self._Parser.labels(id_label = self._id_col)
         self._Parser._make_BigTable_range(is_horizontal = is_horizontal)
         self._data = self._Parser._bigtable_range
