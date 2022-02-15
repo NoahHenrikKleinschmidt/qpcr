@@ -499,7 +499,8 @@ class Assay(aux._ID):
                 self.group()
                 if self._names is not None: 
                     self.rename(self._names)
-            except: 
+            except Exception as e:
+                print(e) 
                 aw.SoftWarning("Assay:setup_not_grouped")
 
     def save(self, filename : str):
