@@ -912,6 +912,9 @@ class BigTableReader(MultiReader):
     > Note
     >
     > The column headers have to be **unique** to the table!
+    >
+    > Also, a word of warning with regard to replicate _assays_. The entries in the `assay` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same `qpcr.Assay` object. However, this will result in differently sized `Assays` which will cause problems downstream when you try to assemble a `qpcr.Results` object!
+
 
     """
     def __init__(self):
@@ -946,7 +949,7 @@ class BigTableReader(MultiReader):
             This may either be `"horizontal"` or `"vertical"`.
         id_col : str
             The column header specifying the replicate identifiers 
-            (or "group names" in case of `horizontal` big tables).
+            (or "assays" in case of `horizontal` big tables).
         **kwargs
             Any additional columns or keyword arguments.
         Returns
@@ -994,7 +997,7 @@ class BigTableReader(MultiReader):
             This may either be `"horizontal"` or `"vertical"`.
         id_col : str
             The column header specifying the replicate identifiers 
-            (or "group names" in case of `horizontal` big tables).
+            (or "assays" in case of `horizontal` big tables).
         **kwargs
             Any additional columns or keyword arguments.
         """
@@ -1007,7 +1010,7 @@ class BigTableReader(MultiReader):
 
         if not is_horizontal:
             # first try default pd.read_csv or read_excel
-            self._try_simple_read(kwargs)
+            self._try_simple_read(**kwargs)
 
             # check if we got data, and abort if so
             if self._data is not None: 
@@ -1191,7 +1194,7 @@ class BigTableReader(MultiReader):
         all_good = self._ct_col in cols and self._assay_col in cols
         return all_good
 
-    def _try_simple_read(self, kwargs):
+    def _try_simple_read(self, **kwargs):
         """
         Try default readings without parsing in case the file is a regular
         csv or excel file (only works in case of vertical big tables).
