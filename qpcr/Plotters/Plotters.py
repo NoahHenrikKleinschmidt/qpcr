@@ -175,7 +175,7 @@ class Plotter:
         if supersede:
             kwargs = dict(self._PARAMS, **kwargs)
         else:
-            kwargs = kwargs = dict(kwargs, **self._PARAMS)
+            kwargs = dict(kwargs, **self._PARAMS)
         
         if store:
             self._PARAMS = kwargs
