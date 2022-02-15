@@ -26,7 +26,7 @@ that store values from exactly _one single qPCR assay_.
 However, if your experimental setup looks differently, there are ways to adapt `qpcr` to handle different setups.
 But if your data follows the above mentioned standard arrangements, you can think of a file as identical to a "qPCR assay".
 
-#### "Regular" vs "irregular" datafiles
+### "Regular" vs "irregular" datafiles
 `Regular` datafiles only contain the `id` and `Ct` columns and nothing else, storing values of exactly one qPCR assay. 
 `Irregular` datafiles also have to have these two columns, but they allow for more irregular stuff
 around these columns. 
@@ -37,7 +37,7 @@ details on how to work with irregular and multi-assay datafiles.
 Let's start by the term "dataset". Well, a "dataset" is simply a collection or replicate identifiers and corresponding Ct values belonging together. 
 By default this usually corresponds to a single qPCR assay, hence you will often encounter the term "assay" used instead of "dataset" to be more 
 intuitive. However, the two terms are really interchangeable. The `qpcr.Assay` class is used to store the Ct values and replicate identifiers 
-from a single assay extracted from a datafile. 
+from a single dataset extracted from a datafile. 
 
 ### Replicates
 As far as the `qpcr` module is concerned, each row within your datasets corresponds to one replicate. 
@@ -46,23 +46,25 @@ That means that `qpcr` does not terminologically distinguish between multiplets 
 If you feel more comfortable with a term like "measurement" then you can also think of the replicates like that. 
 
 ### Groups (of Replicates)
-This is one of the most important terms. In the previous paragraph we already started to talk about "groups of replicates". 
-Groups of replicates are, as their name already implies, well, a number of replicates that somehow belong together.
+This is one of the most important terms. In the previous paragraphs we already started to talk about replicates "belonging together". 
+Groups of replicates are, as their name already implies, well, a number of replicates that somehow do belong together.
 For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions. 
 We talk about _groups_ of replicates instead of samples or conditions, primarily, because there might be different data setups so that these terms might not be always appropriate.
 If your data follows default arrangements, however, then a _group of replicates_ is just what you would think of as a "qPCR sample". 
 Groups are assigned a numeric index starting from 0, which is how they are identified by the classes. 
 However, they also come with a text label called the `group_name` (you can manually set and re-set the group names as you like). 
-Some classes such as the `qpcr.SampleReader` class will actually just use the term `names` instead of the full `group_names`. 
+Many classes such as the `qpcr.DataReader` will actually just use the term `names` instead of the full `group_names`. 
 Whenever you see anything "names"-related it is (super-duper most likely) a reference to the `group_names`.
 
-#### Specifying Replicates
-Here's the best part: usually, we don't necessarily need to do anything as `qpcr.Assay` objects are able to infer the replicates of your data 
-automatically from the replicate identifiers in your dataset (yeah!). However, you will be asked to manually provide replicate settings in case this fails. 
-In case you want to / have to manually specify replicate settings, the `qpcr.Assay` class accepts an input `replicates` which is where you can specify this information. 
+### Specifying (Groups of) Replicates
+Here's the best part: usually, we don't necessarily need to do anything because `qpcr.Assay` objects are able to infer the groups of replicates in your data 
+automatically from the replicate identifiers (yeah!). However, you will be asked to manually provide replicate settings in case this fails. 
+In case you want to / have to manually specify replicate settings, an `qpcr.Assay` accepts an input `replicates` which is where you can specify this information. 
+
 `replicates` can be either an `integer`, a `tuple`, or a `string`. Why's that? Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets.
 Hence, if we always have the same number of replicates in each group (say all triplicates) we can simply specify this number as `replicates = 3`. 
-However, some assays might only be done in unicates (such as the diluent assay), while others are triplicates.
+However, some samples might only be done in unicates (such as the diluent sample), while others are triplicates.
+
 In these cases your dataset does not have uniformly sized groups of replicates and a single number will not do to describe the groups of replicates. 
 For these cases you can specify the number of replicates in each group separately as a `tuple` such as `replicates = (3,3,3,3,1)` or as a `string` "formula"
 which allows you to avoid repeating the same number of replicates many times like `replicates = "3:4,1"`, which will translate into the same tuple as we specified manually. 
@@ -78,7 +80,7 @@ So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaC
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
 ### The `anchor` and the "reference group"
-Next to the groups of replicates, this is probably one of the most important terms to come to grips with. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
+Next to the "groups of replicates", this is probably one of the most important terms. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? 
 Well, in `qpcr` terms that would be your _reference group_.
 Usually your `anchor` is part of or generated from the Ct values of your _reference group_ (like their `mean` for instance).
@@ -1116,6 +1118,8 @@ class DataReader:
     def store(self):
         """
         Will store the read data. 
+
+
         Note 
         -------
         `DataReader` does NOT have a specific data storage facility to distinguish between 
@@ -1737,9 +1741,9 @@ class Analyser(aux._ID):
         f : str or function
             The function to be used for DeltaCt computation. Pre-defined functions are 
             either `"exponential"` (which uses  `efficiency^(-(s-r))`, default), or `"linear"` 
-            (uses uses `s-r`), where `s` is any replicate entry in the dataframe and `r` is the anchor.
-            It is also possible to assign any defined function that accepts an anchor (1st!) and replicate (2nd!) 
-            numeric value each, alongside any kwargs (which will be forwarded from DeltaCt()...).
+            (uses `s-r`), where `s` is any replicate entry in the dataframe and `r` is the anchor.
+            It is also possible to assign any defined function that accepts one `float` Ct value `s` (1st!) and anchor `r` value (2nd!), 
+            alongside any kwargs (which will be forwarded from DeltaCt()...).
         """
         if f in ["exponential", "linear"]:
             f = True if f == "exponential" else False
@@ -1801,7 +1805,7 @@ class Analyser(aux._ID):
 
         # apply deltaCt_function
         Ct = raw_col_names[1]
-        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt = df[Ct].apply(deltaCt_function, r = anchor, **kwargs)
         dCt.name = "dCt"
         # store results
         self._Assay.add_dCt(dCt)
@@ -1823,7 +1827,7 @@ class Analyser(aux._ID):
         
         # apply DeltaCt function
         Ct = raw_col_names[1]
-        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt = df[Ct].apply(deltaCt_function, r = anchor, **kwargs)
         dCt.name = "dCt"
         # store results
         self._Assay.add_dCt(dCt)
@@ -1838,7 +1842,7 @@ class Analyser(aux._ID):
         df = self._Assay.get()
 
         # apply DeltaCt function
-        dCt = df[Ct].apply(deltaCt_function, ref = anchor, **kwargs)
+        dCt = df[Ct].apply(deltaCt_function, r = anchor, **kwargs)
         dCt.name = "dCt"
         # store results
         self._Assay.add_dCt(dCt)
@@ -1859,7 +1863,7 @@ class Analyser(aux._ID):
         for group in groups: 
             group_subset = df.query(f"group == {group}").reset_index(drop = True)
             anchor = group_subset[Ct][0]
-            delta_cts = group_subset[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
+            delta_cts = group_subset[Ct].apply(deltaCt_function, r = anchor, **kwargs)
             dCt = dCt.append(delta_cts).reset_index(drop = True)
         
         dCt.name = "dCt"
@@ -1885,23 +1889,23 @@ class Analyser(aux._ID):
         anchor = df[Ct][ first ]
 
         # apply DeltaCt function
-        dCt = df[Ct].apply(deltaCt_function, ref=anchor, **kwargs)
+        dCt = df[Ct].apply(deltaCt_function, r = anchor, **kwargs)
         dCt.name = "dCt"
         # store results
         self._Assay.add_dCt(dCt)
 
-    def _exp_DCt(self, sample, ref, **kwargs):
+    def _exp_DCt(self, s, r, **kwargs):
         """
         Calculates deltaCt exponentially
         """
-        factor = sample-ref 
+        factor = s - r 
         return self._eff **(-factor)
 
-    def _simple_DCt(self, sample, ref, **kwargs):
+    def _simple_DCt(self, s, r, **kwargs):
         """
         Calculates deltaCt linearly
         """
-        return sample-ref
+        return s - r
 
     def _get_deltaCt_function(self, exp):
         """
