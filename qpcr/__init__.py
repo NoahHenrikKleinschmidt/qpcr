@@ -465,7 +465,9 @@ class Assay(aux._ID):
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
             Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
             The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
-            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). 
+            
+            So, as an example, if there are 12 groups which are triplicates, but
             at the end there is one which only has a single replicate, we could either specify the tuple as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` 
             or we use the formula to specify `replicates = "3:12,1"`. If no replicates are provided, the `Assay` will try to infer the replicates directly based on the 
             identifier column. 
@@ -552,6 +554,8 @@ class Assay(aux._ID):
     def n(self):
         """
         Returns 
+        ------
+
         int 
             The number of entries (individual replicates) within the Assay.
         """
@@ -651,7 +655,9 @@ class Assay(aux._ID):
             or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
             Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
             The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
-            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            this pattern is repeated (if no `:m` is specified `:1` is assumed). 
+            
+            So, as an example, if there are 12 groups which are triplicates, but
             at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
             individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
             any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
@@ -1077,9 +1083,8 @@ class DataReader:
     However, due to the automated setup of the inferred Readers there may be cases where you 
     will either have a hard time or be unable to read your datafiles using the `DataReader`. 
     In such cases, don't try too long to make it work with the DataReader, 
-    just use one of the `qpcr.Readers` directly.  
+    just use one of the `qpcr.Readers` or even `qpcr.Parsers`directly.  
 
-    If you require specific setups use the `qpcr.Readers` or even `qpcr.Parsers` directly.
     """
     def __init__(self):
         self._replicates = None
@@ -1628,8 +1633,8 @@ class Analyser(aux._ID):
         """
         Returns 
         -------
-        Results
-            A `qpcr.Results` object that contains the deltaCT results
+        Assay : qpcr.Assay
+            The analysed `qpcr.Assay` object that contains now deltaCT values.
         """
         return self._Assay
 
@@ -1943,7 +1948,7 @@ class Normaliser(aux._ID):
         self._normaliser = None
 
         # setup defaults
-        self._prep_func = self._average
+        self._prep_func = self._preprocess_normalisers
         self._norm_func = self._divide_by_normaliser
 
     def clear(self):
@@ -2021,8 +2026,9 @@ class Normaliser(aux._ID):
         ----------
         f : function
             The function may accept one list of `qpcr.Assay` objects, and must return 
-            one list (or iterable) of the same length as entries within the `qpcr.Assay` dataframes.
-            Wether or not the provided function does adhere to these criteria is NOT vetted by this method!
+            either a `qpcr.Results` object directly or a `pandas.Dataframe` (that will be migrated to a `qpcr.Results`).
+            The returned dataframe must contain a `"dCt_combined"` column which stores the delta-Ct values ultimately used as 
+            "normaliser assay".  
         """
         
         if aux.same_type(f, aux.fileID):
@@ -2040,8 +2046,10 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one numeric entry for a sample and a normaliser, and must return 
-            a numeric value. By default `s/n` is used, where `s` is a column of sample deltaCt values, 
+            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
+            and must return a numeric `pandas.Series` of the same length. 
+            
+            By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `"dCt"` column from the combined normaliser.
         """
         if aux.same_type(f, aux.fileID):
@@ -2061,7 +2069,8 @@ class Normaliser(aux._ID):
             Any additional keyword arguments that may be passed to a custom `norm_func`.
         """
         if self._normaliser is None: 
-            self._preprocess_normalisers()
+            self._normaliser = self._prep_func(self._Normalisers)
+            self._vet_normaliser()
 
         if self._Assays == [] or self._normaliser is None:
             aw.SoftWarning("Normaliser:no_data_yet")
@@ -2094,6 +2103,17 @@ class Normaliser(aux._ID):
 
             # and store results also in the Assay itself
             assay.add_ddCt( self._normaliser.id(), normalised )
+
+    def _vet_normaliser(self):
+        """
+        Checks if the normaliser is already a qpcr.Results object, and if not
+        convert it to one. 
+        """
+        if not isinstance(self._normaliser, Results):
+            tmp = Results()
+            tmp.id("combined_normaliser")
+            tmp._df = self._normaliser
+            self._normaliser = tmp
             
 
     def _store_to_Results(self, assay, normalised):
@@ -2106,7 +2126,7 @@ class Normaliser(aux._ID):
         self._Results.add(normalised)
 
 
-    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col="dCt", norm_col="dCt_combined"):
+    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col="dCt", norm_col="dCt_combined", **kwargs):
         """
         The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
         """
@@ -2115,7 +2135,7 @@ class Normaliser(aux._ID):
 
         tmp_df = normaliser.join(sample_assay, lsuffix="_s")
         # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
-        results = self._norm_func(tmp_df[[dCt_col, norm_col]])
+        results = self._norm_func(tmp_df[[dCt_col, norm_col]], **kwargs)
         return results
 
     def _prep_columns(self, sample_assay, dCt_col, norm_col):
@@ -2137,7 +2157,7 @@ class Normaliser(aux._ID):
             norm_col = dCt_col + "_s"
         return dCt_col,norm_col
 
-    def _divide_by_normaliser(self, df):
+    def _divide_by_normaliser(self, df, **kwargs):
         """
         Performs normalisation of sample s against normaliser n
         s and n are specified as two pandas dataframe columns
@@ -2179,7 +2199,7 @@ class Normaliser(aux._ID):
                 else: 
                     aw.SoftWarning("Normaliser:norm_unknown_data", s = normaliser)
 
-    def _preprocess_normalisers(self):
+    def _preprocess_normalisers(self, *args, **kwargs):
         """
         Averages the provided normalisers row-wise for all normalisers into a 
         single combined normaliser, that will be stored as a Results instance.
@@ -2205,7 +2225,7 @@ class Normaliser(aux._ID):
         combined.drop_cols("group_name", raw_col_names[0])
 
         # now generate the combined normaliser
-        combined_normaliser = self._prep_func(combined)
+        combined_normaliser = self._average(combined)
         combined_normaliser = combined_normaliser.rename("dCt_combined")
         combined.add(combined_normaliser)
 
@@ -2216,6 +2236,8 @@ class Normaliser(aux._ID):
         # forward combined_id to self and _Results 
         self.adopt_id(self._normaliser)
         self._Results.adopt_id(self._normaliser)
+
+        return self._normaliser
 
     def _update_combined_id(self):
         """
@@ -2268,6 +2290,13 @@ if __name__ == "__main__":
 
     # last to files are assays
     normaliser.link(assays = assays[2:])
+
+    # def some_prepfunc(normalisers):
+    #     first = normalisers[0].get()
+    #     first = first["dCt"]
+    #     return pd.DataFrame(dict(dCt_combined = first))
+    
+    # normaliser.prep_func(some_prepfunc)
 
     normaliser.normalise()
 
