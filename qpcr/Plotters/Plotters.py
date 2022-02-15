@@ -612,7 +612,7 @@ class ReplicateBoxPlot(Plotter):
         Generates an interactive Boxplot summary of the input Ct values
         """
 
-        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
         template = aux.from_kwargs("template", None, kwargs, rm=True)
         title = aux.from_kwargs("title", None, kwargs, rm=True)
 
@@ -665,7 +665,7 @@ class ReplicateBoxPlot(Plotter):
 
         data = self._data
         
-        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
         figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
         title = aux.from_kwargs("title", None, kwargs, rm=True)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
