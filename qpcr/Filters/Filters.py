@@ -47,6 +47,27 @@ class Filter(aux._ID):
                                             "anchor" : [], "upper" : [], "lower" : []
                                         })
     
+    def plot_params(self, which = "both", **params):
+        """
+        Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+        This can also be passed directly while calling `Filter.plot`.
+
+        Parameters
+        ----------
+        which : str
+            Specifies which of the Boxplots to modify. 
+            This can be either `"both"`, `"pre"` or `"post"`.
+        **kwargs
+            Any accepted additional keyword arguments. 
+        """
+        if which == "both":
+            self._before_BoxPlotter.params(**params)
+            self._after_BoxPlotter.params(**params)
+        elif which == "pre":
+            self._before_BoxPlotter.params(**params)
+        elif which == "post":
+            self._after_BoxPlotter.params(**params)
+
     def get_stats(self):
         """
         Returns 
@@ -410,100 +431,29 @@ class IQRFilter(Filter):
 
 if __name__ == "__main__":
     
-    files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    normalisers = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv"]
+    assays = ["./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
+
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
-    analysers = []
+    reader = qpcr.DataReader()
+    assays = [ reader.read(i) for i in assays ]
+    normalisers = [ reader.read(i) for i in normalisers ]
 
-    reader = qpcr.SampleReader()
-    reader.replicates(6)
-    reader.names(groupnames)
+    filter = IQRFilter()
+    assays = [ filter.pipe(i) for i in assays ]
+    normalisers = [ filter.pipe(i) for i in normalisers ]
 
     analyser = qpcr.Analyser()
-    analyser.anchor("first")
-
-    iqr_filter = RangeFilter()
-    iqr_filter.plotmode("static")
-    # iqr_filter.report(".")
-    # iqr_filter.set_lim(1.6)
-
-    for file in files: 
-        
-        sample = reader.read(file)
-        
-        # here comes in the filter...
-        sample = iqr_filter.pipe(sample)
-        # print(sample.get())
-
-        res = analyser.pipe(sample)
-        analysers.append(res)
-
-    iqr_filter.plot(show = False)
+    assays = [ analyser.pipe(i) for i in assays ]
+    normalisers = [ analyser.pipe(i) for i in normalisers ]
 
     normaliser = qpcr.Normaliser()
-    normaliser.link(normalisers = analysers[:2])
-    normaliser.link(assays = analysers[2:])
-
+    normaliser.link(assays, normalisers)
     normaliser.normalise()
-    
-    result = normaliser.get()
 
-    print("first result...")
-    print(result.get())
-    # print(result.stats())
-    
-    # just for fun, let's try to normalise nmd against prot...
+    filter.plot(show = True)
 
-    nmd = normaliser.get(copy=True)
-    prot = normaliser.get(copy=True)
-
-    nmd.drop_cols("HNRNPL_prot_rel_28S+actin", "assay")
-    nmd.rename_cols(
-        {"HNRNPL_nmd_rel_28S+actin" : "dCt"}
-        )
-    
-    nmd.id("nmd")
-
-    prot.drop_cols("HNRNPL_nmd_rel_28S+actin", "assay")
-    prot.rename_cols(
-        {"HNRNPL_prot_rel_28S+actin" : "dCt"}
-    
-        )
-
-    prot.id("prot")
-
-    # Alright: At the moment we cannot use a second_normaliser, 
-    # as it for whatever reason overwrites ALL Ct containing 
-    # columns with the last one??? >> happy bug hunting...
-
-    # UDPATE: It seems like nmd is used for normaliser instead of prot??
-    # 
-    # SOLUTION: Solution is: use copy.deepcopy() otherwise both nmd 
-    #           and prot are just referencing the same Results instance!
-
-    second_normaliser = qpcr.Normaliser()
-    second_normaliser.link(normalisers = [prot])
-    second_normaliser.link(assays = [nmd, prot])
-
-    second_normaliser.normalise()
-    
-    result = second_normaliser.get()
-
-    print("second result...")
-    print(result.get())
-
-    # p = Plotters.PreviewResults(mode = "interactive")
-    # p.link(result)
-    # p.plot()
-
-    p1 = Plotters.PreviewResults(mode = "static")
-    p1.link(result)
-    p1.plot()
-    
-    #  
-    # result.save("..")
-    
-    # result.add_names(samples)
-
-
-    exit(0)
+    prev = Plotters.PreviewResults("interactive")
+    prev.link( normaliser.get() )
+    prev.plot()
