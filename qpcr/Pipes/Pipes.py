@@ -331,6 +331,35 @@ class BasicPlus(Basic):
         self._Figures = []
         self._Filters = []
     
+    def prune(self, assays = True, results = True, normalisers = True, figures = True, plotters = False, filters = False):
+        """
+        Will clear the pipeline.
+
+        Parameters
+        ----------
+        assays : bool
+            Will clear any sample assays in the pipeline if True (default).
+        
+        results : bool
+            Will clear any computed results in the pipline if True (default).
+        
+        normalisers : bool
+            Will clear any normalisers in the pipline if True (default).
+        figures : bool
+            Will clear any figures in the pipline if True (default).
+        plotters : bool
+            Will clear any Plotters from the pipeline if True (default False).
+        filters : bool
+            Will clear any Filters in the pipline if True (default False).
+        """
+        super().prune(assays = assays, results = results, normalisers = normalisers)
+        if figures: 
+            self._Figures = []
+        if filters:
+            self._Filters = []
+        if plotters: 
+            self._Plotters = []
+
     def add_plotters(self, *Plotters:object):
         """
         Adds already specified qpcr.Plotter objects to the Pipeline.
@@ -457,6 +486,63 @@ class Blueprint(BasicPlus):
         self._Reader = None
         self._Analyser = None
         self._Normaliser = None
+
+    def prune(self, assays = True, results = True, normalisers = True, figures = True, plotters = False, filters = False, cores = False, reader = False, analyser = False, normaliser = False):
+        """
+        Will clear the pipeline.
+
+        Parameters
+        ----------
+        assays : bool
+            Will clear any sample assays in the pipeline if True (default).
+        
+        results : bool
+            Will clear any computed results in the pipline if True (default).
+        
+        normalisers : bool
+            Will clear any normalisers in the pipline if True (default).
+        figures : bool
+            Will clear any figures in the pipline if True (default).
+        plotters : bool
+            Will clear any Plotters from the pipeline if True (default False).
+        filters : bool
+            Will clear any Filters in the pipline if True (default False).
+        cores : bool
+            Will clear Reader, Analyser, and Normaliser if True (default False).
+        reader : bool
+            Will only clear the Reader if True (default False).
+        analyser : bool
+            Will only clear the Analyser if True (default False).
+        normaliser : bool
+            Will only clear the Normaliser if True (default False).
+            Note, that clearing `results` will also clear the `Normaliser`'s results,
+            but keep the Normaliser itself!
+        """
+        super().prune(
+                        assays = assays, 
+                        results = results, 
+                        normalisers = normalisers,
+                        figures = figures, 
+                        plotters = plotters, 
+                        filters = filters
+                    )
+        
+        self._Normaliser.prune(
+                                assays = assays, 
+                                normalisers = normalisers, 
+                                results = results
+                            )
+        if cores: 
+            self._Reader = None
+            self._Analyser = None
+            self._Normaliser = None
+        else:
+            if reader:
+                self._Reader = None
+            if analyser:
+                self._Analyser = None
+            if normaliser:
+                self._Normaliser = None
 
     def Reader(self, Reader : qpcr.SampleReader = None):
         """
@@ -817,7 +903,39 @@ class ddCt(Blueprint):
         if self.Normaliser() is None:
             self.Normaliser(qpcr.Normaliser())
 
+class ddCt2(ddCt):
+    """
+    A refactored version of ddCt that uses list comprehension
+    """
+    def __init__(self):
+        super().__init__()
+    
+    def _run(self, **kwargs):
+        # setup Analyser, and Normaliser (if none were provided)
+        self._setup_cores()
+        
+        analyser = self.Analyser()
+        normaliser = self.Normaliser()
 
+        # analyse normalisers
+        normalisers = [  i for i in self._Normalisers  ]
+
+        for filter in self._Filters:
+            normalisers = [  filter.pipe(i) for i in normalisers  ]
+        
+        normalisers = [  analyser.pipe(i) for i in normalisers  ]
+       
+        # analyse sample assays
+        assays = [  i for i in self._Assays  ]
+
+        for filter in self._Filters:
+            assays = [  filter.pipe(i) for i in assays  ]
+        
+        assays = [  analyser.pipe(i) for i in assays  ]
+
+        # now normalise
+        normaliser.link( assays = assays, normalisers = normalisers )
+        normaliser.normalise()
 
 if __name__ == "__main__":
 
