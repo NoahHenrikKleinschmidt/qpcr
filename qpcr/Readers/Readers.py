@@ -5,6 +5,25 @@ of various architectures.
 ## Available Data Readers
 ---
 
+### SingleReader
+The `SingleReader` is able to read both regular and irregular single-assay datafiles. 
+It can also read multi-assay datafiles but requires an `assay` argument, specifying
+which assay specifically to extract from it.
+
+### MultiReader
+The `MultiReader` can read irregular multi-assay datafiles and extract all assays from them
+either using a specific `assay_pattern` to find them or using `decorators` (check out the documentation
+of the `qpcr.Parsers` for more information).
+
+### MultiSheetReader
+The `MultiSheetReader` is able to read irregular multi-assay datafiles that contain assays in multiple 
+datasheets.
+
+### BigTableReader
+The `BigTableReader` is able to read datafiles that store their assays in one single "big table". It
+can extract all assays from that big table using either simple extraction methods or `decorators` depending
+on the type of big table (check out the documentation of the `BigTableReader` for more information on the
+types of "big tables").
 
 """
 
@@ -265,6 +284,27 @@ class SingleReader(_CORE_Reader):
     Separate assay tables may be either below one another (separated by blank lines!)
     or besides one another (requires `transpose = True`).
 
+    #### Example of a "regular" single-assay datafile
+    |id|Ct|
+    |---|---|
+    | ctrl1| 5.67 |
+    | ctrl2| 5.79 |
+    | ctrl3 | 5.86 |
+    | condA1 | 5.34 |
+    | ... | ... |
+
+    #### Example of an "irregular" single-assay datafile
+    |                     |                    |            |      |      |
+    | ------------------- | ------------------ | ---------- | ---- | ---- |
+    | Some meta-data here | maybe today's date |            |      |      |
+    |                     |                    |            |      |      |
+    | Assay 1             |                    |            |      |      |
+    | id                  | Ct                 | other_data |      |      |
+    | ctrl1               | 5.67               | ...        |      |      |
+    | ctrl2               | 5.79               | ...        |      |      |
+    | ...                 | ...                |            |      |      |
+
+
     Note
     ----
     This is the successor of the original `qpcr.Reader` (not the `qpcr.SampleReader`!).
@@ -387,6 +427,23 @@ class MultiReader(SingleReader, aux._ID):
     or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
 
     Assays of interest and normaliser assays *must* be marked using `decorators`.
+
+    #### Example of an "irregular" multi-assay datafile
+    |                     |                    |            |      |      |
+    | ------------------- | ------------------ | ---------- | ---- | ---- |
+    | Some meta-data here | maybe today's date |            |      |      |
+    |                     |                    |            |      |      |
+    | Assay 1             |                    |            |      |      |
+    | id                  | Ct                 | other_data |      |      |
+    | ctrl1               | 5.67               | ...        |      |      |
+    | ctrl2               | 5.79               | ...        |      |      |
+    | ...                 | ...                |            |      |      |
+    |                     |                    |            |   <- blank line here!   |      |
+    | Assay 2             |                    |            |      |      |
+    | id                  | Ct                 | other_data |      |      |
+    | ctrl1               | 10.23              | ...        |      |      |
+    | ctrl2               | 10.54              | ...        |      |      |
+    | ...                 | ...                |            |      |      |
 
     Note
     ------
