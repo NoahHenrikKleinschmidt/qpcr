@@ -7,83 +7,67 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="249.72855mm"
-   height="65.555687mm"
-   viewBox="0 0 249.72855 65.555687"
-   version="1.1"
-   id="svg1924"
+   sodipodi:docname="qpcr_tiny.svg"
    inkscape:version="1.0 (4035a4f, 2020-05-01)"
-   sodipodi:docname="qpcr_light.svg">
+   id="svg3289"
+   version="1.1"
+   viewBox="0 0 81.840248 55.000587"
+   height="55.000587mm"
+   width="81.840248mm">
   <defs
-     id="defs1918" />
+     id="defs3283" />
   <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0.0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="0.65921824"
-     inkscape:cx="390.34257"
-     inkscape:cy="-18.210482"
-     inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
-     inkscape:document-rotation="0"
-     showgrid="false"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0"
-     inkscape:window-width="1920"
-     inkscape:window-height="972"
-     inkscape:window-x="0"
+     inkscape:window-maximized="0"
      inkscape:window-y="23"
-     inkscape:window-maximized="0" />
+     inkscape:window-x="0"
+     inkscape:window-height="972"
+     inkscape:window-width="1920"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="109.05978"
+     inkscape:cx="160.39168"
+     inkscape:zoom="1.5899178"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#6b6b6b"
+     id="base"
+     inkscape:snap-global="false" />
   <metadata
-     id="metadata1921">
+     id="metadata3286">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
-     inkscape:label="Ebene 1"
-     inkscape:groupmode="layer"
+     transform="translate(-89.859788,-91.940213)"
      id="layer1"
-     transform="translate(-84.534517,-265.0674)">
-    <text
-       id="text1867"
-       y="312.59595"
-       x="166.9949"
-       style="font-size:86.4627px;line-height:0.1;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke-width:2.16157"
-       xml:space="preserve"
-       inkscape:export-filename="/Users/NoahHK/Downloads/g1877.png"
-       inkscape:export-xdpi="600"
-       inkscape:export-ydpi="600"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica;fill:#000000;fill-opacity:1;stroke-width:2.16157"
-         y="312.59595"
-         x="166.9949"
-         id="tspan1865"
-         sodipodi:role="line">qpcr</tspan></text>
+     inkscape:groupmode="layer"
+     inkscape:label="Ebene 1">
     <g
        id="g1877"
-       transform="translate(-2045.8916,-556.13814)"
-       inkscape:export-filename="/Users/NoahHK/Downloads/g1877.png"
-       inkscape:export-xdpi="600"
-       inkscape:export-ydpi="600">
+       transform="translate(-2036.9213,-726.00274)">
       <rect
          ry="23.48118"
          y="821.96204"
          x="2131.1826"
          height="46.96236"
          width="73.036919"
-         id="rect1855"
-         style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:2.813;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000" />
+         id="rect3870"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:1.513;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000" />
       <g
          transform="matrix(0.87213608,0,0,0.80827843,830.32707,380.62409)"
          id="g1863">
@@ -104,13 +88,21 @@
            id="path1861" />
       </g>
       <rect
-         style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.313;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.713;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
          id="rect1869"
          width="73.036919"
          height="46.96236"
          x="2131.1826"
          y="821.96204"
          ry="23.48118" />
+      <rect
+         ry="26.016489"
+         y="819.42676"
+         x="2128.2649"
+         height="52.032978"
+         width="78.872635"
+         id="rect2010"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.96761;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000" />
     </g>
   </g>
 </svg>
