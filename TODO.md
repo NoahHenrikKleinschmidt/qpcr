@@ -52,7 +52,7 @@ The qpcr.Reader will parse the excel sheet to find the replciates and their ct v
 | Point | Done | In progress | Stuck |
 | ----- | ---- | ----------- | ----- |
 |    5.1   |    x  |            |       |
-|    5.2   |      |   x (I think?)         |       |
+|    5.2   |      |           |  pushed back...      |
 
 
 ### 6. Formula for unequal group lengths
@@ -119,6 +119,12 @@ for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
 The files are soo diverse we make a new submodule just for the Readers...
 > We already factored out all the submodules
 
+### 11. Interactive preview can set paddings << CHECK
+
+### 12. Test if list comprehensions would markedly improve the speed of the Pipelines
+If we could markedly increase pipeline speed by following the list comprehension approach used by the `Getting Started` notebook First Look code example, then we should re-write the entire pipelines like this...
+> Check the pipelines have already been refactored
+
 
 # New features of *some future* release
 
@@ -140,6 +146,16 @@ Currently, no options are available for preforming t-tests and such on the resul
 Currently the workflow is only designed for a single normalisation. Comparing the levels of transcript A from condition X against the same of condition Y (i.e. get the fold-change) is not directly difficult but currently not implemented due to the same problem for the statistical evaluation - missing knowledge which groups of replicates to pair together...
 
 > IDEA: Just an idea about the index file implementation. Given that we can manually set ids after SampleReader has read in a file, we might simply implement a re-id at this point using the Basic pipeline workflow. Like this we would be able to pair groups of replicates together pretty straightforwardly (unless we loose that specificity again after the first normalisation step, but this should be no problem due to the `drop_rel` method of the qpcr.Results, so we should be able to re-store the original ids after the first normalisation pretty easily...)
+> SPONTANEOUS UPDATE: such an index file should be a vertical big table 
+> with:
+> normaliser, assay
+> normaliser, assay
+> ... , ... 
+> where the entries are the assay ids...
+
+> IDEA 2: 
+> Let the assays split their id to id + label attributes. So "HNRNPL nmd" and "HNRNPL prot" can be split into id "HNRNPL" and label "nmd" + "prot", respectively. Then develop a class / function, whatever, that will pair up assays according to the same id but different labels. The splitting should be available through both simple `.split` and `regex`...
+
 
 ### 5. New pipelines with more versatile customization
 Two new pipelines are supposed to join the current Basic ones: The `Blueprint` (<< CHECK) pipeline and the `Framework` pipeline. They are just again both doing essentially the same as the Basic ones, except that Blueprint allows to link an externally set up SampleReader, Analyser, and Normaliser as desired, while using default settings for anything that was not explicitly set. Framework on the otherhand really requires the user to explicitly set all of these, it only provides the workflow framework.
@@ -152,7 +168,6 @@ There are some nice papers describing how they estimated qPCR amiplification eff
 ### 7. Multi-Assay Excel support << CHECK ^^
 We want to be able to read and split multi-assay containing excel files into individual csv files that adhere to the structure of input files for the `qpcr` module. We want to make 
 a stand-alone web-app for this as well... 
-
 ### 1. Qupid 
 New Qupid web-app for easy access to the analysis pipeline for non-experienced users. 
 
@@ -174,7 +189,5 @@ At some point we should add some `__str__` methdos to all classes ...
 ### 11. Add vectorized support or pipe methods
 Pipe methods and such should also be able to work directly with a list of input files ...
 
-### 12. Test if list comprehensions would markedly improve the speed of the Pipelines
-If we could markedly increase pipeline speed by following the list comprehension approach used by the `Getting Started` notebook First Look code example, then we should re-write the entire pipelines like this...
 
 
