@@ -1,5 +1,5 @@
 <!-- # <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="32"> qpcr -->
-# <img src="https://user-images.githubusercontent.com/89252165/154299580-3d92df53-443d-40b5-ae04-38422499f7a5.svg" width="25"> qpcr
+# <img src="./docs/qpcr_tiny.svg" width="25"> qpcr
 
 ### A python module to analyse qPCR data on single-datasets or high-throughput
 
