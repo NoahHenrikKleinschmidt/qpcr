@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>qpcr.Filters API documentation</title>
+<title>qpcr.Filters.Filters API documentation</title>
 <meta name="description" content="This submodule defines a number of filters that can be used to
 remove faulty replicates from `qpcr.Assay`s before before passing them to an …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -20,11 +20,11 @@ remove faulty replicates from `qpcr.Assay`s before before passing them to an …
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>qpcr.Filters</code></h1>
+<h1 class="title">Module <code>qpcr.Filters.Filters</code></h1>
 </header>
 <section id="section-intro">
 <p>This submodule defines a number of filters that can be used to
-remove faulty replicates from <code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code>s before before passing them to an <code><a title="qpcr.Analyser" href="index.html#qpcr.Analyser">Analyser</a></code>.</p>
+remove faulty replicates from <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code>s before before passing them to an <code><a title="qpcr.Analyser" href="../index.html#qpcr.Analyser">Analyser</a></code>.</p>
 <h2 id="available-filters">Available Filters</h2>
 <hr>
 <h3 id="rangefilter">RangeFilter</h3>
@@ -51,7 +51,7 @@ Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n
 &#34;&#34;&#34;
 
 from re import L
-import qpcr.__init__ as qpcr
+import qpcr
 import pandas as pd
 import numpy as np
 import qpcr._auxiliary.warnings as aw
@@ -61,7 +61,7 @@ import qpcr.Plotters as Plotters
 
 class Filter(aux._ID):
     &#34;&#34;&#34;
-    The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.
+    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -85,6 +85,27 @@ class Filter(aux._ID):
                                             &#34;anchor&#34; : [], &#34;upper&#34; : [], &#34;lower&#34; : []
                                         })
     
+    def plot_params(self, which = &#34;both&#34;, **params):
+        &#34;&#34;&#34;
+        Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+        This can also be passed directly while calling `Filter.plot`.
+
+        Parameters
+        ----------
+        which : str
+            Specifies which of the Boxplots to modify. 
+            This can be either `&#34;both&#34;`, `&#34;pre&#34;` or `&#34;post&#34;`.
+        **kwargs
+            Any accepted additional keyword arguments. 
+        &#34;&#34;&#34;
+        if which == &#34;both&#34;:
+            self._before_BoxPlotter.params(**params)
+            self._after_BoxPlotter.params(**params)
+        elif which == &#34;pre&#34;:
+            self._before_BoxPlotter.params(**params)
+        elif which == &#34;post&#34;:
+            self._after_BoxPlotter.params(**params)
+
     def get_stats(self):
         &#34;&#34;&#34;
         Returns 
@@ -142,12 +163,12 @@ class Filter(aux._ID):
 
     def link(self, Assay:qpcr.Assay):
         &#34;&#34;&#34;
-        Links a qpcr.Assay to be filtered
+        Links a `qpcr.Assay` to be filtered
         
         Parameters
         ----------
-            Assay : qpcr.Assay
-                A qpcr.Assay object to be filtered.
+            Assay : `qpcr.Assay`
+                A `qpcr.Assay` object to be filtered.
         &#34;&#34;&#34;
         self._Assay = Assay
         self._before_BoxPlotter.link(self._Assay)
@@ -159,15 +180,15 @@ class Filter(aux._ID):
         
         Parameters
         ----------
-        Assay : qpcr.Assay
-            A qpcr.Assay object to be filtered.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object to be filtered.
         **kwargs
             Any keyword arguments that should be passed to the plotting method.
         
         Returns
         -------
-        Assay : qpcr.Assay
-            A qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object containing only entries that passed the filter.
 
         &#34;&#34;&#34;
         self.link(Assay)
@@ -185,8 +206,8 @@ class Filter(aux._ID):
         
         Returns
         -------
-        Assay : qpcr.Assay
-            An updated qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            An updated `qpcr.Assay` object containing only entries that passed the filter.
         &#34;&#34;&#34;
         if self._Assay is not None:
             self._filter(**kwargs)
@@ -321,8 +342,8 @@ class RangeFilter(Filter):
         anchor 
             Supported types for `anchor` are: a numeric value (`int or float`),
             an `iterable` of same length as groups in the dataframe, 
-            a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
-            or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
             which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
         &#34;&#34;&#34;
         self._anchor = anchor
@@ -448,103 +469,32 @@ class IQRFilter(Filter):
 
 if __name__ == &#34;__main__&#34;:
     
-    files = [&#34;Example Data/28S.csv&#34;, &#34;Example Data/actin.csv&#34;, &#34;Example Data/HNRNPL_nmd.csv&#34;, &#34;Example Data/HNRNPL_prot.csv&#34;]
+    normalisers = [&#34;./Examples/Example Data/28S.csv&#34;, &#34;./Examples/Example Data/actin.csv&#34;]
+    assays = [&#34;./Examples/Example Data/HNRNPL_nmd.csv&#34;, &#34;./Examples/Example Data/HNRNPL_prot.csv&#34;]
+
     groupnames = [&#34;wt-&#34;, &#34;wt+&#34;, &#34;ko-&#34;, &#34;ko+&#34;]
 
-    analysers = []
+    reader = qpcr.DataReader()
+    assays = [ reader.read(i) for i in assays ]
+    normalisers = [ reader.read(i) for i in normalisers ]
 
-    reader = qpcr.SampleReader()
-    reader.replicates(6)
-    reader.names(groupnames)
+    filter = IQRFilter()
+    assays = [ filter.pipe(i) for i in assays ]
+    normalisers = [ filter.pipe(i) for i in normalisers ]
 
     analyser = qpcr.Analyser()
-    analyser.anchor(&#34;first&#34;)
-
-    iqr_filter = RangeFilter()
-    iqr_filter.plotmode(&#34;static&#34;)
-    # iqr_filter.report(&#34;.&#34;)
-    # iqr_filter.set_lim(1.6)
-
-    for file in files: 
-        
-        sample = reader.read(file)
-        
-        # here comes in the filter...
-        sample = iqr_filter.pipe(sample)
-        # print(sample.get())
-
-        res = analyser.pipe(sample)
-        analysers.append(res)
-
-    iqr_filter.plot(show = False)
+    assays = [ analyser.pipe(i) for i in assays ]
+    normalisers = [ analyser.pipe(i) for i in normalisers ]
 
     normaliser = qpcr.Normaliser()
-    normaliser.link(normalisers = analysers[:2])
-    normaliser.link(assays = analysers[2:])
-
+    normaliser.link(assays, normalisers)
     normaliser.normalise()
-    
-    result = normaliser.get()
 
-    print(&#34;first result...&#34;)
-    print(result.get())
-    # print(result.stats())
-    
-    # just for fun, let&#39;s try to normalise nmd against prot...
+    filter.plot(show = True)
 
-    nmd = normaliser.get(copy=True)
-    prot = normaliser.get(copy=True)
-
-    nmd.drop_cols(&#34;HNRNPL_prot_rel_28S+actin&#34;, &#34;assay&#34;)
-    nmd.rename_cols(
-        {&#34;HNRNPL_nmd_rel_28S+actin&#34; : &#34;dCt&#34;}
-        )
-    
-    nmd.id(&#34;nmd&#34;)
-
-    prot.drop_cols(&#34;HNRNPL_nmd_rel_28S+actin&#34;, &#34;assay&#34;)
-    prot.rename_cols(
-        {&#34;HNRNPL_prot_rel_28S+actin&#34; : &#34;dCt&#34;}
-    
-        )
-
-    prot.id(&#34;prot&#34;)
-
-    # Alright: At the moment we cannot use a second_normaliser, 
-    # as it for whatever reason overwrites ALL Ct containing 
-    # columns with the last one??? &gt;&gt; happy bug hunting...
-
-    # UDPATE: It seems like nmd is used for normaliser instead of prot??
-    # 
-    # SOLUTION: Solution is: use copy.deepcopy() otherwise both nmd 
-    #           and prot are just referencing the same Results instance!
-
-    second_normaliser = qpcr.Normaliser()
-    second_normaliser.link(normalisers = [prot])
-    second_normaliser.link(assays = [nmd, prot])
-
-    second_normaliser.normalise()
-    
-    result = second_normaliser.get()
-
-    print(&#34;second result...&#34;)
-    print(result.get())
-
-    # p = Plotters.PreviewResults(mode = &#34;interactive&#34;)
-    # p.link(result)
-    # p.plot()
-
-    p1 = Plotters.PreviewResults(mode = &#34;static&#34;)
-    p1.link(result)
-    p1.plot()
-    
-    #  
-    # result.save(&#34;..&#34;)
-    
-    # result.add_names(samples)
-
-
-    exit(0)</code></pre>
+    prev = Plotters.PreviewResults(&#34;interactive&#34;)
+    prev.link( normaliser.get() )
+    prev.plot()</code></pre>
 </details>
 </section>
 <section>
@@ -556,18 +506,18 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="qpcr.Filters.Filter"><code class="flex name class">
+<dt id="qpcr.Filters.Filters.Filter"><code class="flex name class">
 <span>class <span class="ident">Filter</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.</p></div>
+<div class="desc"><p>The super filtering class that takes in a <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> object and updates its dataframe to a filtered version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Filter(aux._ID):
     &#34;&#34;&#34;
-    The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.
+    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     &#34;&#34;&#34;
     def __init__(self):
         super().__init__()
@@ -591,6 +541,27 @@ if __name__ == &#34;__main__&#34;:
                                             &#34;anchor&#34; : [], &#34;upper&#34; : [], &#34;lower&#34; : []
                                         })
     
+    def plot_params(self, which = &#34;both&#34;, **params):
+        &#34;&#34;&#34;
+        Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+        This can also be passed directly while calling `Filter.plot`.
+
+        Parameters
+        ----------
+        which : str
+            Specifies which of the Boxplots to modify. 
+            This can be either `&#34;both&#34;`, `&#34;pre&#34;` or `&#34;post&#34;`.
+        **kwargs
+            Any accepted additional keyword arguments. 
+        &#34;&#34;&#34;
+        if which == &#34;both&#34;:
+            self._before_BoxPlotter.params(**params)
+            self._after_BoxPlotter.params(**params)
+        elif which == &#34;pre&#34;:
+            self._before_BoxPlotter.params(**params)
+        elif which == &#34;post&#34;:
+            self._after_BoxPlotter.params(**params)
+
     def get_stats(self):
         &#34;&#34;&#34;
         Returns 
@@ -648,12 +619,12 @@ if __name__ == &#34;__main__&#34;:
 
     def link(self, Assay:qpcr.Assay):
         &#34;&#34;&#34;
-        Links a qpcr.Assay to be filtered
+        Links a `qpcr.Assay` to be filtered
         
         Parameters
         ----------
-            Assay : qpcr.Assay
-                A qpcr.Assay object to be filtered.
+            Assay : `qpcr.Assay`
+                A `qpcr.Assay` object to be filtered.
         &#34;&#34;&#34;
         self._Assay = Assay
         self._before_BoxPlotter.link(self._Assay)
@@ -665,15 +636,15 @@ if __name__ == &#34;__main__&#34;:
         
         Parameters
         ----------
-        Assay : qpcr.Assay
-            A qpcr.Assay object to be filtered.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object to be filtered.
         **kwargs
             Any keyword arguments that should be passed to the plotting method.
         
         Returns
         -------
-        Assay : qpcr.Assay
-            A qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object containing only entries that passed the filter.
 
         &#34;&#34;&#34;
         self.link(Assay)
@@ -691,8 +662,8 @@ if __name__ == &#34;__main__&#34;:
         
         Returns
         -------
-        Assay : qpcr.Assay
-            An updated qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            An updated `qpcr.Assay` object containing only entries that passed the filter.
         &#34;&#34;&#34;
         if self._Assay is not None:
             self._filter(**kwargs)
@@ -812,12 +783,12 @@ Details:
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="qpcr.Filters.IQRFilter" href="#qpcr.Filters.IQRFilter">IQRFilter</a></li>
-<li><a title="qpcr.Filters.RangeFilter" href="#qpcr.Filters.RangeFilter">RangeFilter</a></li>
+<li><a title="qpcr.Filters.Filters.IQRFilter" href="#qpcr.Filters.Filters.IQRFilter">IQRFilter</a></li>
+<li><a title="qpcr.Filters.Filters.RangeFilter" href="#qpcr.Filters.Filters.RangeFilter">RangeFilter</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="qpcr.Filters.Filter.filter"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.filter"><code class="name flex">
 <span>def <span class="ident">filter</span></span>(<span>self, **kwargs)</span>
 </code></dt>
 <dd>
@@ -829,8 +800,8 @@ Details:
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code></dt>
-<dd>An updated qpcr.Assay object containing only entries that passed the filter.</dd>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code></dt>
+<dd>An updated <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> object containing only entries that passed the filter.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -847,8 +818,8 @@ Details:
     
     Returns
     -------
-    Assay : qpcr.Assay
-        An updated qpcr.Assay object containing only entries that passed the filter.
+    Assay : `qpcr.Assay`
+        An updated `qpcr.Assay` object containing only entries that passed the filter.
     &#34;&#34;&#34;
     if self._Assay is not None:
         self._filter(**kwargs)
@@ -858,7 +829,7 @@ Details:
         aw.HardWarning(&#34;Filter:no_assay&#34;)</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.get_stats"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.get_stats"><code class="name flex">
 <span>def <span class="ident">get_stats</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -879,7 +850,7 @@ The filtering statistics dataframe (a summary of filtering parameters used)</p><
     return self._filter_stats</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.ignore_nan"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.ignore_nan"><code class="name flex">
 <span>def <span class="ident">ignore_nan</span></span>(<span>self, bool)</span>
 </code></dt>
 <dd>
@@ -899,14 +870,14 @@ If set to <code>False</code> the Filter will raise an Error!</p></div>
     self._ignore_nan = bool</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.link"><code class="name flex">
-<span>def <span class="ident">link</span></span>(<span>self, Assay: qpcr.__init__.Assay)</span>
+<dt id="qpcr.Filters.Filters.Filter.link"><code class="name flex">
+<span>def <span class="ident">link</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Links a qpcr.Assay to be filtered</p>
+<div class="desc"><p>Links a <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> to be filtered</p>
 <h2 id="parameters">Parameters</h2>
-<pre><code>Assay : qpcr.Assay
-    A qpcr.Assay object to be filtered.
+<pre><code>Assay : &lt;code&gt;&lt;a title="qpcr.Assay" href="../index.html#qpcr.Assay"&gt;Assay&lt;/a&gt;&lt;/code&gt;
+    A &lt;code&gt;&lt;a title="qpcr.Assay" href="../index.html#qpcr.Assay"&gt;Assay&lt;/a&gt;&lt;/code&gt; object to be filtered.
 </code></pre></div>
 <details class="source">
 <summary>
@@ -914,34 +885,34 @@ If set to <code>False</code> the Filter will raise an Error!</p></div>
 </summary>
 <pre><code class="python">def link(self, Assay:qpcr.Assay):
     &#34;&#34;&#34;
-    Links a qpcr.Assay to be filtered
+    Links a `qpcr.Assay` to be filtered
     
     Parameters
     ----------
-        Assay : qpcr.Assay
-            A qpcr.Assay object to be filtered.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object to be filtered.
     &#34;&#34;&#34;
     self._Assay = Assay
     self._before_BoxPlotter.link(self._Assay)</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.pipe"><code class="name flex">
-<span>def <span class="ident">pipe</span></span>(<span>self, Assay: qpcr.__init__.Assay, **kwargs)</span>
+<dt id="qpcr.Filters.Filters.Filter.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, Assay: <a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a>, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A shortcut for link+filter.
 This is the suggested usage for Filters.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code></dt>
-<dd>A qpcr.Assay object to be filtered.</dd>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> object to be filtered.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>Any keyword arguments that should be passed to the plotting method.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="index.html#qpcr.Assay">Assay</a></code></dt>
-<dd>A qpcr.Assay object containing only entries that passed the filter.</dd>
+<dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code></dt>
+<dd>A <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> object containing only entries that passed the filter.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -954,15 +925,15 @@ This is the suggested usage for Filters.</p>
     
     Parameters
     ----------
-    Assay : qpcr.Assay
-        A qpcr.Assay object to be filtered.
+    Assay : `qpcr.Assay`
+        A `qpcr.Assay` object to be filtered.
     **kwargs
         Any keyword arguments that should be passed to the plotting method.
     
     Returns
     -------
-    Assay : qpcr.Assay
-        A qpcr.Assay object containing only entries that passed the filter.
+    Assay : `qpcr.Assay`
+        A `qpcr.Assay` object containing only entries that passed the filter.
 
     &#34;&#34;&#34;
     self.link(Assay)
@@ -970,7 +941,7 @@ This is the suggested usage for Filters.</p>
     return self._Assay    </code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.plot"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.plot"><code class="name flex">
 <span>def <span class="ident">plot</span></span>(<span>self, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1010,7 +981,47 @@ Note</p>
     return figs</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.plotmode"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.plot_params"><code class="name flex">
+<span>def <span class="ident">plot_params</span></span>(<span>self, which='both', **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+This can also be passed directly while calling <code><a title="qpcr.Filters.Filters.Filter.plot" href="#qpcr.Filters.Filters.Filter.plot">Filter.plot()</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>which</code></strong> :&ensp;<code>str</code></dt>
+<dd>Specifies which of the Boxplots to modify.
+This can be either <code>"both"</code>, <code>"pre"</code> or <code>"post"</code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Any accepted additional keyword arguments.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_params(self, which = &#34;both&#34;, **params):
+    &#34;&#34;&#34;
+    Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+    This can also be passed directly while calling `Filter.plot`.
+
+    Parameters
+    ----------
+    which : str
+        Specifies which of the Boxplots to modify. 
+        This can be either `&#34;both&#34;`, `&#34;pre&#34;` or `&#34;post&#34;`.
+    **kwargs
+        Any accepted additional keyword arguments. 
+    &#34;&#34;&#34;
+    if which == &#34;both&#34;:
+        self._before_BoxPlotter.params(**params)
+        self._after_BoxPlotter.params(**params)
+    elif which == &#34;pre&#34;:
+        self._before_BoxPlotter.params(**params)
+    elif which == &#34;post&#34;:
+        self._after_BoxPlotter.params(**params)</code></pre>
+</details>
+</dd>
+<dt id="qpcr.Filters.Filters.Filter.plotmode"><code class="name flex">
 <span>def <span class="ident">plotmode</span></span>(<span>self, mode='interactive')</span>
 </code></dt>
 <dd>
@@ -1040,7 +1051,7 @@ Note</p>
     self._after_BoxPlotter.params(title = &#34;Post-Filter Summary&#34;)</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.report"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.report"><code class="name flex">
 <span>def <span class="ident">report</span></span>(<span>self, directory=None)</span>
 </code></dt>
 <dd>
@@ -1084,7 +1095,7 @@ Note</p>
         return self._report_loc</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.reset"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.reset"><code class="name flex">
 <span>def <span class="ident">reset</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1100,7 +1111,7 @@ Note</p>
     self._faulty_indices = []</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Filters.Filter.set_lim"><code class="name flex">
+<dt id="qpcr.Filters.Filters.Filter.set_lim"><code class="name flex">
 <span>def <span class="ident">set_lim</span></span>(<span>self, lim=None, upper=None, lower=None)</span>
 </code></dt>
 <dd>
@@ -1142,7 +1153,7 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
 </dd>
 </dl>
 </dd>
-<dt id="qpcr.Filters.IQRFilter"><code class="flex name class">
+<dt id="qpcr.Filters.Filters.IQRFilter"><code class="flex name class">
 <span>class <span class="ident">IQRFilter</span></span>
 </code></dt>
 <dd>
@@ -1209,28 +1220,29 @@ Default settings are <code>lim = 1</code> setting both <code>upper</code> and <c
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></li>
+<li><a title="qpcr.Filters.Filters.Filter" href="#qpcr.Filters.Filters.Filter">Filter</a></li>
 <li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></b></code>:
+<li><code><b><a title="qpcr.Filters.Filters.Filter" href="#qpcr.Filters.Filters.Filter">Filter</a></b></code>:
 <ul class="hlist">
-<li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plotmode" href="#qpcr.Filters.Filter.plotmode">plotmode</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.report" href="#qpcr.Filters.Filter.report">report</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.reset" href="#qpcr.Filters.Filter.reset">reset</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.set_lim" href="#qpcr.Filters.Filter.set_lim">set_lim</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.filter" href="#qpcr.Filters.Filters.Filter.filter">filter</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.get_stats" href="#qpcr.Filters.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.link" href="#qpcr.Filters.Filters.Filter.link">link</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.pipe" href="#qpcr.Filters.Filters.Filter.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot" href="#qpcr.Filters.Filters.Filter.plot">plot</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot_params" href="#qpcr.Filters.Filters.Filter.plot_params">plot_params</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plotmode" href="#qpcr.Filters.Filters.Filter.plotmode">plotmode</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.report" href="#qpcr.Filters.Filters.Filter.report">report</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.reset" href="#qpcr.Filters.Filters.Filter.reset">reset</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.set_lim" href="#qpcr.Filters.Filters.Filter.set_lim">set_lim</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="qpcr.Filters.RangeFilter"><code class="flex name class">
+<dt id="qpcr.Filters.Filters.RangeFilter"><code class="flex name class">
 <span>class <span class="ident">RangeFilter</span></span>
 </code></dt>
 <dd>
@@ -1261,8 +1273,8 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
         anchor 
             Supported types for `anchor` are: a numeric value (`int or float`),
             an `iterable` of same length as groups in the dataframe, 
-            a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
-            or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
             which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
         &#34;&#34;&#34;
         self._anchor = anchor
@@ -1330,12 +1342,12 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></li>
+<li><a title="qpcr.Filters.Filters.Filter" href="#qpcr.Filters.Filters.Filter">Filter</a></li>
 <li>qpcr._auxiliary._ID</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="qpcr.Filters.RangeFilter.set_anchor"><code class="name flex">
+<dt id="qpcr.Filters.Filters.RangeFilter.set_anchor"><code class="name flex">
 <span>def <span class="ident">set_anchor</span></span>(<span>self, anchor)</span>
 </code></dt>
 <dd>
@@ -1344,8 +1356,8 @@ Default are <code>+/- 1</code> around the replicate-group median.</p></div>
 <p>anchor
 Supported types for <code>anchor</code> are: a numeric value (<code>int or float</code>),
 an <code>iterable</code> of same length as groups in the dataframe,
-a <code>dict</code> where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (<code>int or float</code>),
-or a <code>function</code> that works with a pandas dataframe as stored by qpcr.Assay objects,
+a <code>dict</code> where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (<code>int or float</code>),
+or a <code>function</code> that works with a pandas dataframe as stored by <code><a title="qpcr.Assay" href="../index.html#qpcr.Assay">Assay</a></code> objects,
 which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).</p></div>
 <details class="source">
 <summary>
@@ -1360,8 +1372,8 @@ which must return a single numeric value for the anchor (it will be applied to r
     anchor 
         Supported types for `anchor` are: a numeric value (`int or float`),
         an `iterable` of same length as groups in the dataframe, 
-        a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
-        or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+        a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+        or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
         which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
     &#34;&#34;&#34;
     self._anchor = anchor</code></pre>
@@ -1370,18 +1382,19 @@ which must return a single numeric value for the anchor (it will be applied to r
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></b></code>:
+<li><code><b><a title="qpcr.Filters.Filters.Filter" href="#qpcr.Filters.Filters.Filter">Filter</a></b></code>:
 <ul class="hlist">
-<li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plotmode" href="#qpcr.Filters.Filter.plotmode">plotmode</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.report" href="#qpcr.Filters.Filter.report">report</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.reset" href="#qpcr.Filters.Filter.reset">reset</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.set_lim" href="#qpcr.Filters.Filter.set_lim">set_lim</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.filter" href="#qpcr.Filters.Filters.Filter.filter">filter</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.get_stats" href="#qpcr.Filters.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.link" href="#qpcr.Filters.Filters.Filter.link">link</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.pipe" href="#qpcr.Filters.Filters.Filter.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot" href="#qpcr.Filters.Filters.Filter.plot">plot</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot_params" href="#qpcr.Filters.Filters.Filter.plot_params">plot_params</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plotmode" href="#qpcr.Filters.Filters.Filter.plotmode">plotmode</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.report" href="#qpcr.Filters.Filters.Filter.report">report</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.reset" href="#qpcr.Filters.Filters.Filter.reset">reset</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.set_lim" href="#qpcr.Filters.Filters.Filter.set_lim">set_lim</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1406,33 +1419,34 @@ which must return a single numeric value for the anchor (it will be applied to r
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="qpcr" href="index.html">qpcr</a></code></li>
+<li><code><a title="qpcr.Filters" href="index.html">qpcr.Filters</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="qpcr.Filters.Filter" href="#qpcr.Filters.Filter">Filter</a></code></h4>
+<h4><code><a title="qpcr.Filters.Filters.Filter" href="#qpcr.Filters.Filters.Filter">Filter</a></code></h4>
 <ul class="two-column">
-<li><code><a title="qpcr.Filters.Filter.filter" href="#qpcr.Filters.Filter.filter">filter</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.get_stats" href="#qpcr.Filters.Filter.get_stats">get_stats</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.link" href="#qpcr.Filters.Filter.link">link</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.pipe" href="#qpcr.Filters.Filter.pipe">pipe</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plot" href="#qpcr.Filters.Filter.plot">plot</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.plotmode" href="#qpcr.Filters.Filter.plotmode">plotmode</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.report" href="#qpcr.Filters.Filter.report">report</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.reset" href="#qpcr.Filters.Filter.reset">reset</a></code></li>
-<li><code><a title="qpcr.Filters.Filter.set_lim" href="#qpcr.Filters.Filter.set_lim">set_lim</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.filter" href="#qpcr.Filters.Filters.Filter.filter">filter</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.get_stats" href="#qpcr.Filters.Filters.Filter.get_stats">get_stats</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.ignore_nan" href="#qpcr.Filters.Filters.Filter.ignore_nan">ignore_nan</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.link" href="#qpcr.Filters.Filters.Filter.link">link</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.pipe" href="#qpcr.Filters.Filters.Filter.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot" href="#qpcr.Filters.Filters.Filter.plot">plot</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plot_params" href="#qpcr.Filters.Filters.Filter.plot_params">plot_params</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.plotmode" href="#qpcr.Filters.Filters.Filter.plotmode">plotmode</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.report" href="#qpcr.Filters.Filters.Filter.report">report</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.reset" href="#qpcr.Filters.Filters.Filter.reset">reset</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.Filter.set_lim" href="#qpcr.Filters.Filters.Filter.set_lim">set_lim</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="qpcr.Filters.IQRFilter" href="#qpcr.Filters.IQRFilter">IQRFilter</a></code></h4>
+<h4><code><a title="qpcr.Filters.Filters.IQRFilter" href="#qpcr.Filters.Filters.IQRFilter">IQRFilter</a></code></h4>
 </li>
 <li>
-<h4><code><a title="qpcr.Filters.RangeFilter" href="#qpcr.Filters.RangeFilter">RangeFilter</a></code></h4>
+<h4><code><a title="qpcr.Filters.Filters.RangeFilter" href="#qpcr.Filters.Filters.RangeFilter">RangeFilter</a></code></h4>
 <ul class="">
-<li><code><a title="qpcr.Filters.RangeFilter.set_anchor" href="#qpcr.Filters.RangeFilter.set_anchor">set_anchor</a></code></li>
+<li><code><a title="qpcr.Filters.Filters.RangeFilter.set_anchor" href="#qpcr.Filters.Filters.RangeFilter.set_anchor">set_anchor</a></code></li>
 </ul>
 </li>
 </ul>

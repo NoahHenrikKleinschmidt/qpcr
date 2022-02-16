@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>qpcr.Parsers API documentation</title>
+<title>qpcr.Parsers.Parsers API documentation</title>
 <meta name="description" content="This module contains classes designed to work with irregularly structured datafiles.
-It provides `Parsers` that are able to extract the replicate and …" />
+It provides `Parsers` that are able to extract the replicate …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -20,62 +20,111 @@ It provides `Parsers` that are able to extract the replicate and …" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>qpcr.Parsers</code></h1>
+<h1 class="title">Module <code>qpcr.Parsers.Parsers</code></h1>
 </header>
 <section id="section-intro">
 <p>This module contains classes designed to work with irregularly structured datafiles.
-It provides <code>Parsers</code> that are able to extract the replicate and Ct values as pandas DataFrames
-from irregular <code>csv</code> and <code>excel</code> files.</p>
+It provides <code>Parsers</code> that are able to extract the replicate identifiers and Ct values as pandas DataFrames
+from irregular <code>csv</code> and <code>excel</code> files. </p>
 <h2 id="working-with-irregular-files">Working with "irregular files"</h2>
 <hr>
 <p>Any datafile that does not only consist of a replicate identifer and Ct column is called "irregular".
 In fact, most excel sheets or csv exports from qPCR machines are actually irregular as they often contain some
-information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to <code><a title="qpcr" href="index.html">qpcr</a></code>, however,
-so we have extract the data we are intersted in. This is the job of the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code>. They read in an irregular datafile and use
-a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this. </p>
+information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to <code><a title="qpcr" href="../index.html">qpcr</a></code>, however,
+so we have to extract the data we are intersted in. This is the job of the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code>. They read in an irregular datafile and use
+a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this, which are explained below. </p>
+<blockquote>
+<p>In fact, <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> are already implemented in the <code><a title="qpcr.Readers" href="../Readers/index.html">qpcr.Readers</a></code> so you will often
+be able to read irregular datafiles directly with one of the <code><a title="qpcr.Readers" href="../Readers/index.html">qpcr.Readers</a></code> and will not have to manually work with the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code>. </p>
+</blockquote>
 <h3 id="finding-relevant-datasets-through-assay_patterns">"Finding" relevant datasets through <code>assay_patterns</code></h3>
-<p>The Parsers are quipped with a method called <code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">_CORE_Parser.find_assays()</a></code> which locates assays (or just "datasets") within the datafile
-using <code>regex</code>. Of course, in order to do that it needs to know the patterns it's supposed to look for. Some patterns are already pre-specified
+<p>The Parsers are quipped with a method called <code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers.Parsers._CORE_Parser.find_assays">_CORE_Parser.find_assays()</a></code> which locates assays (or more formally "datasets") within the datafile
+using <code>regex</code>. Of course, in order to do that they need to know the patterns they are supposed to look for. Some patterns are already pre-specified
 in the <code>qpcr.Parsers.assay_patterns</code> dictionary and can simply be specified using their key. If your own pattern is not yet pre-defined,
 <a href="https://github.com/NoahHenrikKleinschmidt/qpcr/issues">post an issue on github</a> and supply some samples of how your assays usually appear in your datafiles
 alongside with the name of the machine that produces your datafiles.
 Of course, you can also manually specify your own regex pattern. The only constraint is that is <em>must</em> have <em>one</em> capturing group for the assay name.</p>
+<blockquote>
+<p>Please note, all assay headers must be located either in the same column or the same row to be identified by a <code>Parser</code>!</p>
+</blockquote>
 <p>Once the assays in your datafile are identified, the data columns belonging to them are searched for. The constraint here is that they must start either
 in the row exactly below the assay headers or have at most one single row in between them. Anything else is no good! The data columns <em>must</em> be labelled
 (i.e. have a header). By default <code>Name</code> and <code>Ct</code> are assumed as data column labels / headers, but this can be changed. </p>
-<p>If your datafiles contain multiple datasets / assays, the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> will be able to extract all of them and store their extracted data. </p>
+<p>If your datafiles contain multiple datasets / assays, the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> will be able to extract all of them and store their extracted data. </p>
 <h2 id="working-with-multi-assay-files">Working with <code>multi-assay</code> files</h2>
 <hr>
-<p>While working with datafiles that contain multiple assays you have essentially two options. First, you are only interested in one of the assays in your file,
-or you want to work with <em>all</em> assays in your file at the same time. There is two different methods to deal with either of these situations.</p>
-<h3 id="getting-a-single-assay-from-a-multi-assay-file">Getting a single assay from a multi-assay file</h3>
-<p>Parsers are actually implemented in the core of the <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code> but if you use a multi-assay file using the <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code>
-you will have to specify which assay you are specifically interested in using the <code>assay</code> argument. So you can simply read
-a multi-assay file as you would a regular file using the <code><a title="qpcr.SampleReader" href="index.html#qpcr.SampleReader">SampleReader</a></code> (or <code><a title="qpcr.Reader" href="index.html#qpcr.Reader">Reader</a></code> manually) and add the <code>assay</code> argument as kwarg to the <code>read</code> method.</p>
+<p>While working with datafiles that contain multiple assays you will likely want to use <em>all</em> the assays from the datafile, here's how the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> help you do this. </p>
 <h3 id="getting-all-assays-from-a-multi-assay-file">Getting all assays from a multi-assay file</h3>
 <p>Here it depends on what you want to do. Do you wish to extract the individual assays to make individual files from them or do you want to use them directly for an analysis?
 Both options are possible. </p>
 <h4 id="making-indivdual-assay-files-from-a-multi-assay-file">Making indivdual assay files from a multi-assay file</h4>
-<p>This is the core-business of the <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code>. So you can simply set up a Parser, set a saving location using the
-Parser's <code>save_to</code> method and then <code>pipe</code> your file throuhg. All done at this point. Of course, you can also work with the dataframes directly
-using the Parser's <code>get</code> method.</p>
+<p>This is the core-business of the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code>. So you can simply set up a Parser, set a saving location using the
+Parser's <code>save_to</code> method and then <code>pipe</code> your file through. All done at this point. Of course, you can also work with the dataframes directly
+using the Parser's <code>get</code> method. Like this you easily separate the assays which you can then pass to your main analysis as assays and normalisers. </p>
 <h4 id="using-a-multi-assay-file-directly-for-my-analysis">Using a multi-assay file directly for my analysis</h4>
 <p>So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
-Sure, no problem! You can easily read a multi-assay file using the <code>qpcr.MultiReader</code> which allows you (after setup) to simply <code>pipe</code> through your datafile
+Sure, no problem! Parsers will be able to do that, but you can more easily read a multi-assay file using the <code>qpcr.Readers.MultiReader</code> which allows you (after setup) to simply <code>pipe</code> through your datafile
 and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though?
 That's the super-important topic of the next paragraph.</p>
 <h4 id="decorators">Decorators</h4>
-<p>A <code>decorator</code> technically is a function that wraps another function when coding. Well, that's not quite the case for the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators but the idea is the same.
-Instead of wrapping functions the <code><a title="qpcr" href="index.html">qpcr</a></code> decorators decorate assays in a multi-assay file. What does "decorate" mean? It means they provide meta-data about the assay
-in question. What does that mean? There are two implemented <code><a title="qpcr" href="index.html">qpcr</a></code> decorators <code>@qpcr:assay</code> and <code>@qpcr:normaliser</code> – now clear what they do? They are placed in the
-cell <em>exactly above</em> the cell where the assay header is located (seriously, anything else won't do!) and tell the <code>qpcr.MultiReader</code>
+<p>A <code>decorator</code> technically is a function that wraps another function when coding. Well, that's not quite the case for the <code><a title="qpcr" href="../index.html">qpcr</a></code> decorators but the idea is similar.
+Instead of wrapping functions the <code><a title="qpcr" href="../index.html">qpcr</a></code> decorators wrap assays in a multi-assay file. What does "wrap" mean? It means they provide meta-data about the assay
+in question. What does that mean? There are multiple implemented <code><a title="qpcr" href="../index.html">qpcr</a></code> decorators. For irregular multi-assay files the two important decorators are:
+<code>@qpcr:assay</code> and <code>@qpcr:normaliser</code> – is it now clear what they do? They are placed in the
+cell <em>exactly above</em> the cell where the assay header is located (seriously, anything else won't do!) and tell the <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> (because all the <code>MultiReader</code> is doing is setting up some <code>Parsers</code>)
 if a specific assay is an "assay-of-interest" or a "normaliser-assay".</p>
-<p><code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> can identify assays either through <em>de novo</em> finding using <code>regex</code> patterns <em>or</em> through decorators. To tell a Parser to use a specific decorator
-for finding assays you can specify the <code>decorator</code> argument in <code>pipe</code> or <code>parse</code>. To specify a decorator like this you only write <code>qpcr:assay</code> <code>qpcr:normaliser</code> (no @).
-A third option is available only to <code><a title="qpcr.Parsers" href="#qpcr.Parsers">qpcr.Parsers</a></code> (not to the <code>qpcr.MultiReader</code>) and that is <code>qpcr:all</code> which will tell the Parser to extract <em>all</em> decorated assays.
-The implemented decorators are specified in the <code>qpcr.Parsers.decorators</code> dictionary and can be accessed via keys (you have seen the three keys already).</p>
+<p>So, let's recap this quickly: <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> can identify assays either through <em>de novo</em> finding using <code>regex</code> patterns <em>or</em> through decorators. To tell a Parser to use a specific decorator
+for finding assays you can specify the <code>decorator</code> argument in <code>pipe</code> or <code>parse</code>. To specify a decorator like this you only write <code>qpcr:assay</code> <code>qpcr:normaliser</code>
+(the <code>key</code> is bascially the decorator but without the <code>@</code>).</p>
+<p>If you work with <code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code> directly you can choose if you only wish to extract "assays-of-interest" (decorated as <code>@qpcr:assay</code>) <em>or</em> "normalisers", or whatever other decorators are available.
+However, this flexibility is not available when calling Parsers indirectly through one of the <code><a title="qpcr.Readers" href="../Readers/index.html">qpcr.Readers</a></code>.</p>
 <blockquote>
-<h5 id="two-things-of-note">Two things of Note:</h5>
+<p>Please note, just like assay headers, all decorators must be located either in the same column or the same row to be identified by a <code>Parser</code>!</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Decorator</th>
+<th>Code-reference</th>
+<th>Filetype</th>
+<th>Available for / Used by <code><a title="qpcr.Readers" href="../Readers/index.html">qpcr.Readers</a></code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>@qpcr:all</td>
+<td>qpcr:all</td>
+<td>Irregular single- or multi-assay files.</td>
+<td><code>SingleReader</code>, <code>MultiReader</code>, <code>MultiSheetReader</code></td>
+</tr>
+<tr>
+<td>@qpcr:assay</td>
+<td>qpcr:assay</td>
+<td>Irregular single- or multi-assay files.</td>
+<td><code>SingleReader</code>, <code>MultiReader</code>, <code>MultiSheetReader</code></td>
+</tr>
+<tr>
+<td>@qpcr:normaliser</td>
+<td>qpcr:normaliser</td>
+<td>Irregular single- or multi-assay files.</td>
+<td><code>SingleReader</code>, <code>MultiReader</code>, <code>MultiSheetReader</code></td>
+</tr>
+<tr>
+<td>@qpcr:group</td>
+<td>qpcr:group</td>
+<td>Horizontal Big Table files</td>
+<td><code>BigTableReader</code></td>
+</tr>
+<tr>
+<td>@qpcr</td>
+<td>qpcr:column</td>
+<td>Horizontal or vertical Big Table files</td>
+<td><code>BigTableReader</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<h4 id="two-things-of-note">Two things of Note:</h4>
 <ul>
 <li>When specifying a decorator any non-decorated assay will be <em>ignored</em>!</li>
 <li>If you are using <code>excel</code> you may have to add a single tick <code>'</code> in front of your decorators.</li>
@@ -87,8 +136,8 @@ The implemented decorators are specified in the <code>qpcr.Parsers.decorators</c
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 This module contains classes designed to work with irregularly structured datafiles.
-It provides `Parsers` that are able to extract the replicate and Ct values as pandas DataFrames
-from irregular `csv` and `excel` files.
+It provides `Parsers` that are able to extract the replicate identifiers and Ct values as pandas DataFrames
+from irregular `csv` and `excel` files. 
 
 
 ## Working with &#34;irregular files&#34;
@@ -97,16 +146,21 @@ from irregular `csv` and `excel` files.
 Any datafile that does not only consist of a replicate identifer and Ct column is called &#34;irregular&#34;. 
 In fact, most excel sheets or csv exports from qPCR machines are actually irregular as they often contain some
 information about the run, and melting curve data, and so forth. Such data is not relevant or of interest to `qpcr`, however, 
-so we have extract the data we are intersted in. This is the job of the `qpcr.Parsers`. They read in an irregular datafile and use 
-a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this. 
+so we have to extract the data we are intersted in. This is the job of the `qpcr.Parsers`. They read in an irregular datafile and use 
+a guided-parsing approach to find the relevant sections within the datafile. There are essentially two ways how they can do this, which are explained below. 
+
+&gt; In fact, `qpcr.Parsers` are already implemented in the `qpcr.Readers` so you will often 
+be able to read irregular datafiles directly with one of the `qpcr.Readers` and will not have to manually work with the `qpcr.Parsers`. 
 
 ### &#34;Finding&#34; relevant datasets through `assay_patterns`
-The Parsers are quipped with a method called `_CORE_Parser.find_assays` which locates assays (or just &#34;datasets&#34;) within the datafile
-using `regex`. Of course, in order to do that it needs to know the patterns it&#39;s supposed to look for. Some patterns are already pre-specified
+The Parsers are quipped with a method called `_CORE_Parser.find_assays` which locates assays (or more formally &#34;datasets&#34;) within the datafile
+using `regex`. Of course, in order to do that they need to know the patterns they are supposed to look for. Some patterns are already pre-specified
 in the `qpcr.Parsers.assay_patterns` dictionary and can simply be specified using their key. If your own pattern is not yet pre-defined, 
 [post an issue on github](https://github.com/NoahHenrikKleinschmidt/qpcr/issues) and supply some samples of how your assays usually appear in your datafiles 
 alongside with the name of the machine that produces your datafiles.
 Of course, you can also manually specify your own regex pattern. The only constraint is that is _must_ have *one* capturing group for the assay name.
+
+&gt; Please note, all assay headers must be located either in the same column or the same row to be identified by a `Parser`!
 
 Once the assays in your datafile are identified, the data columns belonging to them are searched for. The constraint here is that they must start either
 in the row exactly below the assay headers or have at most one single row in between them. Anything else is no good! The data columns _must_ be labelled 
@@ -118,13 +172,7 @@ If your datafiles contain multiple datasets / assays, the `qpcr.Parsers` will be
 ## Working with `multi-assay` files
 ----
 
-While working with datafiles that contain multiple assays you have essentially two options. First, you are only interested in one of the assays in your file,
-or you want to work with _all_ assays in your file at the same time. There is two different methods to deal with either of these situations.
-
-### Getting a single assay from a multi-assay file
-Parsers are actually implemented in the core of the `qpcr.Reader` but if you use a multi-assay file using the `qpcr.Reader` 
-you will have to specify which assay you are specifically interested in using the `assay` argument. So you can simply read 
-a multi-assay file as you would a regular file using the `qpcr.SampleReader` (or `qpcr.Reader` manually) and add the `assay` argument as kwarg to the `read` method.
+While working with datafiles that contain multiple assays you will likely want to use *all* the assays from the datafile, here&#39;s how the `qpcr.Parsers` help you do this. 
 
 ### Getting all assays from a multi-assay file
 Here it depends on what you want to do. Do you wish to extract the individual assays to make individual files from them or do you want to use them directly for an analysis?
@@ -132,35 +180,50 @@ Both options are possible.
 
 #### Making indivdual assay files from a multi-assay file
 This is the core-business of the `qpcr.Parsers`. So you can simply set up a Parser, set a saving location using the 
-Parser&#39;s `save_to` method and then `pipe` your file throuhg. All done at this point. Of course, you can also work with the dataframes directly
-using the Parser&#39;s `get` method.
+Parser&#39;s `save_to` method and then `pipe` your file through. All done at this point. Of course, you can also work with the dataframes directly
+using the Parser&#39;s `get` method. Like this you easily separate the assays which you can then pass to your main analysis as assays and normalisers. 
 
 #### Using a multi-assay file directly for my analysis
 So, you want to just feed in your one datafile and expect to get a table with your Delta-Delta-Ct values for all assays against all normalisers?!
-Sure, no problem! You can easily read a multi-assay file using the `qpcr.MultiReader` which allows you (after setup) to simply `pipe` through your datafile
+Sure, no problem! Parsers will be able to do that, but you can more easily read a multi-assay file using the `qpcr.Readers.MultiReader` which allows you (after setup) to simply `pipe` through your datafile
 and returns immediately a list of your assays-of-interest and normaliser-assays. How does it know which is which though? 
 That&#39;s the super-important topic of the next paragraph.
 
 #### Decorators
-A `decorator` technically is a function that wraps another function when coding. Well, that&#39;s not quite the case for the `qpcr` decorators but the idea is the same. 
-Instead of wrapping functions the `qpcr` decorators decorate assays in a multi-assay file. What does &#34;decorate&#34; mean? It means they provide meta-data about the assay
-in question. What does that mean? There are two implemented `qpcr` decorators `@qpcr:assay` and `@qpcr:normaliser` – now clear what they do? They are placed in the 
-cell _exactly above_ the cell where the assay header is located (seriously, anything else won&#39;t do!) and tell the `qpcr.MultiReader` 
+A `decorator` technically is a function that wraps another function when coding. Well, that&#39;s not quite the case for the `qpcr` decorators but the idea is similar. 
+Instead of wrapping functions the `qpcr` decorators wrap assays in a multi-assay file. What does &#34;wrap&#34; mean? It means they provide meta-data about the assay
+in question. What does that mean? There are multiple implemented `qpcr` decorators. For irregular multi-assay files the two important decorators are:
+`@qpcr:assay` and `@qpcr:normaliser` – is it now clear what they do? They are placed in the 
+cell _exactly above_ the cell where the assay header is located (seriously, anything else won&#39;t do!) and tell the `qpcr.Parsers` (because all the `MultiReader` is doing is setting up some `Parsers`) 
 if a specific assay is an &#34;assay-of-interest&#34; or a &#34;normaliser-assay&#34;.
 
 
-`qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
-for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` (no @).
-A third option is available only to `qpcr.Parsers` (not to the `qpcr.MultiReader`) and that is `qpcr:all` which will tell the Parser to extract _all_ decorated assays.
-The implemented decorators are specified in the `qpcr.Parsers.decorators` dictionary and can be accessed via keys (you have seen the three keys already).
+So, let&#39;s recap this quickly: `qpcr.Parsers` can identify assays either through _de novo_ finding using `regex` patterns *or* through decorators. To tell a Parser to use a specific decorator 
+for finding assays you can specify the `decorator` argument in `pipe` or `parse`. To specify a decorator like this you only write `qpcr:assay` `qpcr:normaliser` 
+(the `key` is bascially the decorator but without the `@`).
+
+If you work with `qpcr.Parsers` directly you can choose if you only wish to extract &#34;assays-of-interest&#34; (decorated as `@qpcr:assay`) *or* &#34;normalisers&#34;, or whatever other decorators are available.
+However, this flexibility is not available when calling Parsers indirectly through one of the `qpcr.Readers`.
+
+&gt; Please note, just like assay headers, all decorators must be located either in the same column or the same row to be identified by a `Parser`!
 
 
-&gt; ##### Two things of Note: 
+| Decorator | Code-reference | Filetype                                 | Available for / Used by `qpcr.Readers`                                   |
+| --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
+| @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
+| @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
+| @qpcr:group | qpcr:group | Horizontal Big Table files | `BigTableReader` |
+| @qpcr | qpcr:column | Horizontal or vertical Big Table files | `BigTableReader` |
+
+
+
+&gt; #### Two things of Note: 
 &gt; - When specifying a decorator any non-decorated assay will be *ignored*!
 &gt; - If you are using `excel` you may have to add a single tick `&#39;` in front of your decorators.
 &#34;&#34;&#34;
 
-import qpcr.__init__ as qpcr
+import qpcr
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.defaults as defaults
 import qpcr._auxiliary.warnings as aw
@@ -187,13 +250,27 @@ assay_patterns = {
 decorators = {
                     &#34;qpcr:all&#34;          : &#34;(@qpcr:|&#39;@qpcr:)&#34;,
                     &#34;qpcr:assay&#34;        : &#34;(@qpcr:assay\s{0,}|&#39;@qpcr:assay\s{0,})&#34;,
-                    &#34;qpcr:normaliser&#34;   : &#34;(@qpcr:normaliser\s{0,}|&#39;@qpcr:normaliser\s{0,})&#34;,        
+                    &#34;qpcr:normaliser&#34;   : &#34;(@qpcr:normaliser\s{0,}|&#39;@qpcr:normaliser\s{0,})&#34;,     
+                    &#34;qpcr:group&#34;        : &#34;(@qpcr:group\s{0,}|&#39;@qpcr:group\s{0,})&#34;,
+                    &#34;qpcr:column&#34;       : &#34;(@qpcr|&#39;@qpcr)&#34;,
+
+            }
+
+plain_decorators = {
+                    &#34;qpcr:all&#34;          : &#34;@qpcr:&#34;,
+                    &#34;qpcr:assay&#34;        : &#34;@qpcr:assay&#34;,
+                    &#34;qpcr:normaliser&#34;   : &#34;@qpcr:normaliser&#34;,
+                    &#34;qpcr:group&#34;        : &#34;@qpcr:group&#34;,
+                    &#34;qpcr:column&#34;       : &#34;@qpcr&#34;,
             }
 
 # get the standard column headers to use for the 
 # replicate id and Ct column of the finished dataframes
 standard_id_header = defaults.raw_col_names[0]
 standard_ct_header = defaults.raw_col_names[1]
+
+default_group_name = defaults.default_group_name
+default_dataset_header = defaults.default_dataset_header
 
 # set a dummy default value for any np.nan values
 # in the column storing the assay headers
@@ -237,6 +314,15 @@ class _CORE_Parser:
 
         # set transpose option in case datasets are stored not on separate row ranges but separate column ranges
         self._transpose = False
+
+
+        # set up a BigTable data range
+        self._bigtable_range = None
+
+        # setup a warning for decorators without patterns warning that it will set to default
+        # we do this here in case the MultiSheetReader calls read+parse here multiple times
+        # but we don&#39;t need to know that it defaults every time.
+        self._WARNING_decorators_but_no_patterns = aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;, once = True)
 
     def prune(self):
         &#34;&#34;&#34;
@@ -447,7 +533,7 @@ class _CORE_Parser:
 
         # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
         if self.assay_pattern() is None:
-            aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
+            self._WARNING_decorators_but_no_patterns.trigger()
             self.assay_pattern(&#34;all&#34;)
 
         assay_indices = decorator_indices
@@ -644,6 +730,231 @@ class _CORE_Parser:
                             )
 
             adx += 1
+
+    def _make_BigTable_range(self, **kwargs):
+        &#34;&#34;&#34;
+        Generates a pandas DataFrame of a subsection of an irregular datafile
+        containing a &#34;big data table&#34; with multiple assays specified in it. 
+
+        It makes use of the `id_label` specified using `_CORE_Parser.labels` as the
+        anchor. The resulting dataframe fill contain all rows from the cell where `id_label``
+        as located until the data is empty. 
+
+        If additionally `replicates` are specified in the `kwargs` 
+        the starting positions of assay replicates are inferred based on `decorators`. 
+        Note, this only works for `horizontal` Big Tables!
+        &#34;&#34;&#34;
+        is_horizontal = aux.from_kwargs(&#34;is_horizontal&#34;, False, kwargs)
+        
+        # get the main data
+        data = self._data.astype(&#34;str&#34;)
+        ref_col_header = self._id_label   
+        
+        # find big table starting row
+        idx = np.argwhere(data == ref_col_header)
+
+        # vet that we actually found the big table
+        if idx.size == 0:
+            aw.HardWarning(&#34;Parser:no_bigtable_header&#34;, header = ref_col_header)
+        idx = idx.reshape(idx.size)
+        start, col = idx
+
+        idx = 1
+        while True:
+            try: 
+                entry = data[start+idx, col]
+            except: 
+                break
+            if entry == &#34;nan&#34;:
+                break
+            idx += 1
+
+        end = start + idx
+
+        # put a -1 offset on the rows if horziontal, as the decorators 
+        # are in the row above the actual column headers.
+        if is_horizontal:
+            start -= 1
+
+        # generate bigtable data range and store
+        relevant_data = data[start : end, : ]
+        self._bigtable_range = relevant_data  
+
+
+    def _infer_BigTable_groups(self, **kwargs):
+        &#34;&#34;&#34;
+        Gets the group ranges from the bigtable datarange.
+        Note, this is only used in case of horizontal big tables.
+        &#34;&#34;&#34;
+        # get the relevant data
+        array = self._bigtable_range
+        maxrows, allcols = array.shape
+
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;,False,kwargs)
+
+        # get and vet replicates
+        replicates = aux.from_kwargs(&#34;replicates&#34;, None, kwargs, rm = True)
+        if replicates is None: 
+            aw.HardWarning(&#34;Parser:bigtable_no_replicates&#34;, traceback = False)
+        replicates, names = self._vet_replicates(ignore_empty, replicates, array, **kwargs)
+
+        
+        rdx = 0 # counter for the replicate groups
+        
+        data_array = None # this array will store the entire transposed data
+
+        decorator = plain_decorators[&#34;qpcr:group&#34;]
+
+        # now get the assays in question
+        # we already vetted if the file is properly 
+        # decorated during _vet_replicates
+            
+        # find decorated starting columns
+        # get only column indices            
+        indices = np.argwhere(array == decorator)
+        indices = indices[ : , 1 ]
+
+        if indices.size == 1:
+            indices = [indices]
+
+        # get total slice of bigtable rows
+        rows = slice( 1, maxrows )
+        
+        # iterate over each group
+        for col in indices: 
+            
+            rep = replicates[rdx]
+
+            # get data columns
+            cols = slice( col, col + rep )
+            
+            # get data
+            data = array[  rows, cols  ]
+            
+            # rename data cols if names are provided
+            if names is not None: 
+                name = names[rdx]
+                data[ 0 , : ] = name
+            
+            # concatenate data into a single array
+            if data_array is None: 
+                data_array = data
+            else:
+                data_array = np.concatenate(
+                                                ( data_array, data ),
+                                                axis = 1,
+                                            )
+            rdx += 1
+
+        # remove groups from the data array
+        groups = data_array[ 0, : ]
+        data_array = data_array[ 1:, : ]
+
+        # Actually, right here, instead of having to infer our own replicate 
+        # names thare are then just group0 group0 group0 group1 ...
+        # We can simply use the sample repeat / tile approach we used to make the
+        # group1 etc. replicate names, based on the ACTUAL groups (like the ones we 
+        # have just split off from the data -&gt; their first row are already the replicate
+        # identifiers we just use those directly... )
+
+        # reshape data into a single column
+        data_array = np.concatenate(data_array, axis = 0)
+
+        # now repeat the groups to match the stacked new data column
+        groups_tiled = np.tile(groups, data_array.size // groups.size )
+
+        # now get the dataset id column
+        id_col = self._id_label
+        id_start = np.where(array == id_col)
+        id_row, id_col = id_start
+        id_rows = slice( int(id_row + 1), maxrows )
+        id_col = array[  id_rows, id_col  ]
+        
+        # repeat dataset ids to match stacked new data column
+        ids_tiled = np.repeat(  id_col , groups.size  )
+
+        # assemble all data
+        total_data = [ids_tiled, groups_tiled, data_array]
+        headers = [ default_dataset_header, standard_id_header, standard_ct_header ]  
+
+        # check for qpcr column and if present, get and adjust shape
+        self._BigTable_horizontal_qpcr_col(array, maxrows, groups, total_data, headers)
+
+
+        # combine the three columns (dataset id, groups, and Ct (actual data_array))
+        data_array = np.stack( total_data, axis = 1 )
+
+        # add default names into the first row
+        data_array = np.concatenate(
+                                        ( 
+                                            [headers],
+                                            data_array
+                                       ),   axis = 0
+                                )
+        
+        # actually return the finished array
+        return data_array
+
+    def _BigTable_horizontal_qpcr_col(self, array, maxrows, groups, total_data, headers):
+        &#34;&#34;&#34;
+        Checks if a &#34;@qpcr&#34; column is present in the data and if so, adjusts its shape and 
+        adds it to the data to be assembled for the assays.
+        &#34;&#34;&#34;
+        column_decorator = plain_decorators[&#34;qpcr:column&#34;]
+        qpcr_col = np.where(array == column_decorator)
+        qpcr_row, qpcr_col = qpcr_col
+        if len(qpcr_col) != 0:
+            
+            qpcr_rows = slice( int(qpcr_row + 1), maxrows )
+            qpcr_col = array[  qpcr_rows, qpcr_col  ]
+
+            qpcr_tiled = np.repeat(  qpcr_col , groups.size  )
+            total_data.append(qpcr_tiled)
+            headers.append(&#34;@qpcr&#34;)
+
+    def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
+        &#34;&#34;&#34;
+        Checks if provided replicates cover all data groups (annoated columns).
+        And it also gets the names supposed to be used for the columns.
+        &#34;&#34;&#34;
+        # get assays for each decorator
+        groups = 0
+        decorator = plain_decorators[&#34;qpcr:group&#34;]
+    
+        # find decorated starting columns
+        indices = np.argwhere(array == decorator)
+        if indices.size == 0 and not ignore_empty:
+            aw.HardWarning(&#34;Parser:no_decorators_found&#34;, traceback = False)
+
+        # get only column indices            
+        indices = indices[ : , 1 ]
+        groups += indices.size
+
+        # check if replicates are an integer, if so transform to 
+        # tuple that cover all found assays
+        if aux.same_type(replicates, 1): 
+            replicates = np.tile([replicates], groups)
+        # else, check it it&#39;s a formula that needs to be read out to a tuple.
+        elif aux.same_type(replicates, &#34;&#34;):
+            replicates = qpcr.Assay()._reps_from_formula(replicates)
+        
+        # if replicates are already a tuple, make sure they cover all rows
+        elif aux.same_type(replicates, ()):
+            all_covered = groups == len(replicates)
+            if not all_covered:
+                aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = groups, reps = replicates, traceback = False)
+            
+        # get names for assays
+        group_names = aux.from_kwargs(&#34;names&#34;, None, kwargs)
+
+        # vet that names cover
+        if group_names is not None and len(group_names) != len(replicates):
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, traceback = False, current_groups = f&#34;None, but needs to be {len(replicates)} names.&#34;, new_received = group_names)
+        
+        # return tranformed replicates
+        return replicates, group_names
+
+        
 
     def _prep_header_array(self, col = None, row = None):
         &#34;&#34;&#34;
@@ -814,7 +1125,12 @@ class CsvParser(_CORE_Parser):
         delimiter = aux.from_kwargs(&#34;sep&#34;, delimiter, kwargs, rm = True)
 
         # now read the data and convert to numpy array
-        df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        try: 
+            df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        except: 
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv()&#34;)
+            df = pd.read_csv(contents, header = None, sep = delimiter)
+
         df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
         data = df.to_numpy()
 
@@ -900,7 +1216,12 @@ class ExcelParser(_CORE_Parser):
         self._src = filename
 
         # read data and convert to numpy array
-        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        try: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
+        except: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel()&#34;)
+
         data = data.to_numpy()
 
         self._data = data
@@ -943,106 +1264,116 @@ class ExcelParser(_CORE_Parser):
 
 if __name__ == &#34;__main__&#34;:
     
-    parser = CsvParser()
-    parser.assay_pattern(&#34;Rotor-Gene&#34;)
-    parser.save_to(&#34;__csvparser&#34;)
-    mycsv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv&#34;
-    parser.pipe(mycsv)
+    # parser = CsvParser()
+    # parser.assay_pattern(&#34;Rotor-Gene&#34;)
+    # parser.save_to(&#34;__csvparser&#34;)
+    # mycsv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1).csv&#34;
+    # parser.pipe(mycsv)
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with CsvParser \n ========================= \n\n\n&#34;&#34;&#34;)
 
-    parser2 = ExcelParser()
-    parser2.assay_pattern(&#34;Rotor-Gene&#34;)
-    parser2.save_to(&#34;./__excelparser&#34;)
-    myexcel = &#34;./__parser_data/excel 3.9.19.xlsx&#34;
-    parser2.pipe(myexcel, sheet_name = 1)
+    # parser2 = ExcelParser()
+    # parser2.assay_pattern(&#34;Rotor-Gene&#34;)
+    # parser2.save_to(&#34;./__excelparser&#34;)
+    # myexcel = &#34;./__parser_data/excel 3.9.19.xlsx&#34;
+    # parser2.pipe(myexcel, sheet_name = 1)
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with ExcelParser \n ========================= \n\n\n&#34;&#34;&#34;)
 
-    parser3 = ExcelParser()
-    decorated_excel = &#34;./__parser_data/excel 3.9.19_decorated.xlsx&#34;
-    parser3.save_to(&#34;./__decorated_excelparser&#34;)
-    parser3.read(decorated_excel)
-    parser3.assay_pattern(&#34;Rotor-Gene&#34;)
-    parser3.find_by_decorator(decorator = &#34;qpcr:all&#34;)
-    parser3.find_columns()
-    parser3.make_dataframes()
-    parser3.save()
-    # print(parser3.get())
+    # parser3 = ExcelParser()
+    # decorated_excel = &#34;./__parser_data/excel 3.9.19_decorated.xlsx&#34;
+    # parser3.save_to(&#34;./__decorated_excelparser&#34;)
+    # parser3.read(decorated_excel)
+    # parser3.assay_pattern(&#34;Rotor-Gene&#34;)
+    # parser3.find_by_decorator(decorator = &#34;qpcr:all&#34;)
+    # parser3.find_columns()
+    # parser3.make_dataframes()
+    # parser3.save()
+    # # print(parser3.get())
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser \n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser \n ========================= \n\n\n&#34;&#34;&#34;)
 
-    parser4 = CsvParser()
-    decorated_csv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv&#34;
-    parser4.save_to(&#34;./__decorated_csvparser&#34;)
-    parser4.read(decorated_csv)
-    parser4.assay_pattern(&#34;Rotor-Gene&#34;)
-    parser4.find_by_decorator(decorator = &#34;qpcr:all&#34;)
-    parser4.find_columns()
-    parser4.make_dataframes()
-    parser4.save()
-    # print(parser4.get())
+    # parser4 = CsvParser()
+    # decorated_csv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv&#34;
+    # parser4.save_to(&#34;./__decorated_csvparser&#34;)
+    # parser4.read(decorated_csv)
+    # parser4.assay_pattern(&#34;Rotor-Gene&#34;)
+    # parser4.find_by_decorator(decorator = &#34;qpcr:all&#34;)
+    # parser4.find_columns()
+    # parser4.make_dataframes()
+    # parser4.save()
+    # # print(parser4.get())
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n&#34;&#34;&#34;)
-
-
-    parser4 = CsvParser()
-    decorated_csv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv&#34;
-    parser4.save_to(&#34;./__decorated_csvparser_pipe&#34;)
-    parser4.assay_pattern(&#34;Rotor-Gene&#34;)
-    # parser4.pipe(decorated_csv, decorator = &#34;qpcr:assay&#34;)
-    # print(parser4.get())
-
-    parser4.pipe(&#34;./__parser_data/manual_decorated.csv&#34;)
-
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n&#34;&#34;&#34;)
-
-    parser3 = ExcelParser()
-    decorated_excel = &#34;./__parser_data/excel 3.9.19_decorated.xlsx&#34;
-    parser3.save_to(&#34;./__decorated_excelparser_pipe_nodec&#34;)
-    parser3.assay_pattern(&#34;Rotor-Gene&#34;)
-    parser3.pipe(decorated_excel)
-    # print(parser3.get())
-
-    print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated CsvParser \n ========================= \n\n\n&#34;&#34;&#34;)
 
 
-    same_row_assays = &#34;/Users/NoahHK/Downloads/qPCR cytokines upon treatment_decorated.xlsx&#34;
+    # parser4 = CsvParser()
+    # decorated_csv = &#34;./__parser_data/Brilliant III Ultra Fast SYBR Green 2019-01-07 (1)_decorated.csv&#34;
+    # parser4.save_to(&#34;./__decorated_csvparser_pipe&#34;)
+    # parser4.assay_pattern(&#34;Rotor-Gene&#34;)
+    # # parser4.pipe(decorated_csv, decorator = &#34;qpcr:assay&#34;)
+    # # print(parser4.get())
 
-    parser5 = ExcelParser()
-    parser5.transpose()
-    parser5.read(same_row_assays, sheet_name = 1)
-    parser5.save_to(&#34;./__transposed_parser&#34;)
-    parser5.assay_pattern(&#34;all&#34;)
-    parser5.labels(  id_label = &#34;Sample Name&#34;, ct_label = &#34;CT&#34;  )
+    # parser4.pipe(&#34;./__parser_data/manual_decorated.csv&#34;)
 
-    print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (FIND)\n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n&#34;&#34;&#34;)
 
-    parser5.find_assays(col = 1)
-    parser5.find_columns()
-    parser5.make_dataframes()
-    r = parser5.get()
-    print(r)
+    # parser3 = ExcelParser()
+    # decorated_excel = &#34;./__parser_data/excel 3.9.19_decorated.xlsx&#34;
+    # parser3.save_to(&#34;./__decorated_excelparser_pipe_nodec&#34;)
+    # parser3.assay_pattern(&#34;Rotor-Gene&#34;)
+    # parser3.pipe(decorated_excel)
+    # # print(parser3.get())
 
-    # assert parser5._assay_indices is not None, &#34;(find_assays) No assay_indices could be found!!!&#34;
-    parser5.clear()
-
-    print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (DECO)\n ========================= \n\n\n&#34;&#34;&#34;)
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n&#34;&#34;&#34;)
 
 
-    parser5.find_by_decorator(&#34;qpcr:all&#34;)
-    # assert parser5._assay_indices is not None, &#34;(find_by_decorator) No assay_indices could be found!!!&#34;
-    parser5.find_columns()
-    parser5.make_dataframes()
-    r = parser5.get()
+    # same_row_assays = &#34;/Users/NoahHK/Downloads/qPCR cytokines upon treatment_decorated.xlsx&#34;
+
+    # parser5 = ExcelParser()
+    # parser5.transpose()
+    # parser5.read(same_row_assays, sheet_name = 1)
+    # parser5.save_to(&#34;./__transposed_parser&#34;)
+    # parser5.assay_pattern(&#34;all&#34;)
+    # parser5.labels(  id_label = &#34;Sample Name&#34;, ct_label = &#34;CT&#34;  )
+
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (FIND)\n ========================= \n\n\n&#34;&#34;&#34;)
+
+    # parser5.find_assays(col = 1)
+    # parser5.find_columns()
+    # parser5.make_dataframes()
+    # r = parser5.get()
+    # print(r)
+
+    # # assert parser5._assay_indices is not None, &#34;(find_assays) No assay_indices could be found!!!&#34;
+    # parser5.clear()
+
+    # print(&#34;&#34;&#34;\n\n\n ========================= \n Transposed excel (DECO)\n ========================= \n\n\n&#34;&#34;&#34;)
+
+
+    # parser5.find_by_decorator(&#34;qpcr:all&#34;)
+    # # assert parser5._assay_indices is not None, &#34;(find_by_decorator) No assay_indices could be found!!!&#34;
+    # parser5.find_columns()
+    # parser5.make_dataframes()
+    # r = parser5.get()
     
-    parser5.clear()
+    # parser5.clear()
 
-    parser5.read(same_row_assays, sheet_name = 1)
-    parser5.parse(decorator = &#34;qpcr:all&#34;)
-    r = parser5.get()
-    print(r)
-    parser5.save()</code></pre>
+    # parser5.read(same_row_assays, sheet_name = 1)
+    # parser5.parse(decorator = &#34;qpcr:all&#34;)
+    # r = parser5.get()
+    # print(r)
+    # parser5.save()
+
+    bigtable_horiztonal = &#34;/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx&#34;
+
+    parser_bigtable = ExcelParser()
+    parser_bigtable.read(bigtable_horiztonal)
+
+    parser_bigtable.labels( id_label = &#34;tissue_number&#34; )
+    parser_bigtable._make_BigTable_range(is_horizontal = True)
+    r = parser_bigtable._infer_BigTable_groups( replicates = &#34;3,4&#34;, names = [&#34;GAPDH&#34;, &#34;SORD1&#34;] )
+    print(r)</code></pre>
 </details>
 </section>
 <section>
@@ -1054,7 +1385,7 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="qpcr.Parsers.CsvParser"><code class="flex name class">
+<dt id="qpcr.Parsers.Parsers.CsvParser"><code class="flex name class">
 <span>class <span class="ident">CsvParser</span></span>
 </code></dt>
 <dd>
@@ -1130,7 +1461,12 @@ decorators within the datafile.</p></div>
         delimiter = aux.from_kwargs(&#34;sep&#34;, delimiter, kwargs, rm = True)
 
         # now read the data and convert to numpy array
-        df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        try: 
+            df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+        except: 
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv()&#34;)
+            df = pd.read_csv(contents, header = None, sep = delimiter)
+
         df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
         data = df.to_numpy()
 
@@ -1190,17 +1526,17 @@ decorators within the datafile.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></li>
+<li><a title="qpcr.Parsers.Parsers._CORE_Parser" href="#qpcr.Parsers.Parsers._CORE_Parser">_CORE_Parser</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="qpcr.Parsers.CsvParser.pipe"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers.CsvParser.pipe"><code class="name flex">
 <span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A wrapper for read+parse</p>
 <h2 id="note">Note</h2>
-<p>This is the suggested use of <code><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></code>.
+<p>This is the suggested use of <code><a title="qpcr.Parsers.Parsers.CsvParser" href="#qpcr.Parsers.Parsers.CsvParser">CsvParser</a></code>.
 If a directory has been specified into which the datafiles shall be saved,
 then saving will automatically be done.</p>
 <h2 id="parameters">Parameters</h2>
@@ -1257,7 +1593,7 @@ Individual assays can also be accessed using the <code>get</code> method.</dd>
     return assays</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers.CsvParser.read"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers.CsvParser.read"><code class="name flex">
 <span>def <span class="ident">read</span></span>(<span>self, filename: str, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1293,7 +1629,12 @@ Any additional keyword arguments to be passed to pandas' <code>read_csv</code> f
     delimiter = aux.from_kwargs(&#34;sep&#34;, delimiter, kwargs, rm = True)
 
     # now read the data and convert to numpy array
-    df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+    try: 
+        df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
+    except: 
+        aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_csv()&#34;)
+        df = pd.read_csv(contents, header = None, sep = delimiter)
+
     df = df.dropna(axis = 0, how = &#34;all&#34;).reset_index(drop=True)
     data = df.to_numpy()
 
@@ -1303,28 +1644,28 @@ Any additional keyword arguments to be passed to pandas' <code>read_csv</code> f
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
+<li><code><b><a title="qpcr.Parsers.Parsers._CORE_Parser" href="#qpcr.Parsers.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
 <ul class="hlist">
-<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assays" href="#qpcr.Parsers.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.clear" href="#qpcr.Parsers.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.get" href="#qpcr.Parsers.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.labels" href="#qpcr.Parsers.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.parse" href="#qpcr.Parsers.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.prune" href="#qpcr.Parsers.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save" href="#qpcr.Parsers.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="qpcr.Parsers.ExcelParser"><code class="flex name class">
+<dt id="qpcr.Parsers.Parsers.ExcelParser"><code class="flex name class">
 <span>class <span class="ident">ExcelParser</span></span>
 </code></dt>
 <dd>
@@ -1363,7 +1704,12 @@ decorators within the datafile.</p></div>
         self._src = filename
 
         # read data and convert to numpy array
-        data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+        try: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
+        except: 
+            data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
+            aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel()&#34;)
+
         data = data.to_numpy()
 
         self._data = data
@@ -1406,17 +1752,17 @@ decorators within the datafile.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></li>
+<li><a title="qpcr.Parsers.Parsers._CORE_Parser" href="#qpcr.Parsers.Parsers._CORE_Parser">_CORE_Parser</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="qpcr.Parsers.ExcelParser.pipe"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers.ExcelParser.pipe"><code class="name flex">
 <span>def <span class="ident">pipe</span></span>(<span>self, filename: str, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A wrapper for read+parse</p>
 <h2 id="note">Note</h2>
-<p>This is the suggested use of <code><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></code>.
+<p>This is the suggested use of <code><a title="qpcr.Parsers.Parsers.ExcelParser" href="#qpcr.Parsers.Parsers.ExcelParser">ExcelParser</a></code>.
 If a directory has been specified into which the datafiles shall be saved,
 then saving will automatically be done.</p>
 <h2 id="parameters">Parameters</h2>
@@ -1473,7 +1819,7 @@ Individual assays can also be accessed using the <code>get</code> method.</dd>
     return assays</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers.ExcelParser.read"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers.ExcelParser.read"><code class="name flex">
 <span>def <span class="ident">read</span></span>(<span>self, filename: str, sheet_name: str = 0, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1513,7 +1859,12 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
     self._src = filename
 
     # read data and convert to numpy array
-    data = pd.read_excel(self._src, sheet_name = sheet_name, **kwargs)
+    try: 
+        data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
+    except: 
+        data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
+        aw.SoftWarning(&#34;Parser:incompatible_read_kwargs&#34;, func = &#34;pandas.read_excel()&#34;)
+
     data = data.to_numpy()
 
     self._data = data</code></pre>
@@ -1522,28 +1873,28 @@ If an <code>integer</code> is provided the sheets will be accessed by their orde
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
+<li><code><b><a title="qpcr.Parsers.Parsers._CORE_Parser" href="#qpcr.Parsers.Parsers._CORE_Parser">_CORE_Parser</a></b></code>:
 <ul class="hlist">
-<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assays" href="#qpcr.Parsers.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.clear" href="#qpcr.Parsers.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.get" href="#qpcr.Parsers.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.labels" href="#qpcr.Parsers.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.parse" href="#qpcr.Parsers.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.prune" href="#qpcr.Parsers.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save" href="#qpcr.Parsers.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser"><code class="flex name class">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser"><code class="flex name class">
 <span>class <span class="ident">_CORE_Parser</span></span>
 </code></dt>
 <dd>
@@ -1589,6 +1940,15 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
 
         # set transpose option in case datasets are stored not on separate row ranges but separate column ranges
         self._transpose = False
+
+
+        # set up a BigTable data range
+        self._bigtable_range = None
+
+        # setup a warning for decorators without patterns warning that it will set to default
+        # we do this here in case the MultiSheetReader calls read+parse here multiple times
+        # but we don&#39;t need to know that it defaults every time.
+        self._WARNING_decorators_but_no_patterns = aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;, once = True)
 
     def prune(self):
         &#34;&#34;&#34;
@@ -1799,7 +2159,7 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
 
         # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
         if self.assay_pattern() is None:
-            aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
+            self._WARNING_decorators_but_no_patterns.trigger()
             self.assay_pattern(&#34;all&#34;)
 
         assay_indices = decorator_indices
@@ -1997,6 +2357,231 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
 
             adx += 1
 
+    def _make_BigTable_range(self, **kwargs):
+        &#34;&#34;&#34;
+        Generates a pandas DataFrame of a subsection of an irregular datafile
+        containing a &#34;big data table&#34; with multiple assays specified in it. 
+
+        It makes use of the `id_label` specified using `_CORE_Parser.labels` as the
+        anchor. The resulting dataframe fill contain all rows from the cell where `id_label``
+        as located until the data is empty. 
+
+        If additionally `replicates` are specified in the `kwargs` 
+        the starting positions of assay replicates are inferred based on `decorators`. 
+        Note, this only works for `horizontal` Big Tables!
+        &#34;&#34;&#34;
+        is_horizontal = aux.from_kwargs(&#34;is_horizontal&#34;, False, kwargs)
+        
+        # get the main data
+        data = self._data.astype(&#34;str&#34;)
+        ref_col_header = self._id_label   
+        
+        # find big table starting row
+        idx = np.argwhere(data == ref_col_header)
+
+        # vet that we actually found the big table
+        if idx.size == 0:
+            aw.HardWarning(&#34;Parser:no_bigtable_header&#34;, header = ref_col_header)
+        idx = idx.reshape(idx.size)
+        start, col = idx
+
+        idx = 1
+        while True:
+            try: 
+                entry = data[start+idx, col]
+            except: 
+                break
+            if entry == &#34;nan&#34;:
+                break
+            idx += 1
+
+        end = start + idx
+
+        # put a -1 offset on the rows if horziontal, as the decorators 
+        # are in the row above the actual column headers.
+        if is_horizontal:
+            start -= 1
+
+        # generate bigtable data range and store
+        relevant_data = data[start : end, : ]
+        self._bigtable_range = relevant_data  
+
+
+    def _infer_BigTable_groups(self, **kwargs):
+        &#34;&#34;&#34;
+        Gets the group ranges from the bigtable datarange.
+        Note, this is only used in case of horizontal big tables.
+        &#34;&#34;&#34;
+        # get the relevant data
+        array = self._bigtable_range
+        maxrows, allcols = array.shape
+
+        ignore_empty = aux.from_kwargs(&#34;ignore_empty&#34;,False,kwargs)
+
+        # get and vet replicates
+        replicates = aux.from_kwargs(&#34;replicates&#34;, None, kwargs, rm = True)
+        if replicates is None: 
+            aw.HardWarning(&#34;Parser:bigtable_no_replicates&#34;, traceback = False)
+        replicates, names = self._vet_replicates(ignore_empty, replicates, array, **kwargs)
+
+        
+        rdx = 0 # counter for the replicate groups
+        
+        data_array = None # this array will store the entire transposed data
+
+        decorator = plain_decorators[&#34;qpcr:group&#34;]
+
+        # now get the assays in question
+        # we already vetted if the file is properly 
+        # decorated during _vet_replicates
+            
+        # find decorated starting columns
+        # get only column indices            
+        indices = np.argwhere(array == decorator)
+        indices = indices[ : , 1 ]
+
+        if indices.size == 1:
+            indices = [indices]
+
+        # get total slice of bigtable rows
+        rows = slice( 1, maxrows )
+        
+        # iterate over each group
+        for col in indices: 
+            
+            rep = replicates[rdx]
+
+            # get data columns
+            cols = slice( col, col + rep )
+            
+            # get data
+            data = array[  rows, cols  ]
+            
+            # rename data cols if names are provided
+            if names is not None: 
+                name = names[rdx]
+                data[ 0 , : ] = name
+            
+            # concatenate data into a single array
+            if data_array is None: 
+                data_array = data
+            else:
+                data_array = np.concatenate(
+                                                ( data_array, data ),
+                                                axis = 1,
+                                            )
+            rdx += 1
+
+        # remove groups from the data array
+        groups = data_array[ 0, : ]
+        data_array = data_array[ 1:, : ]
+
+        # Actually, right here, instead of having to infer our own replicate 
+        # names thare are then just group0 group0 group0 group1 ...
+        # We can simply use the sample repeat / tile approach we used to make the
+        # group1 etc. replicate names, based on the ACTUAL groups (like the ones we 
+        # have just split off from the data -&gt; their first row are already the replicate
+        # identifiers we just use those directly... )
+
+        # reshape data into a single column
+        data_array = np.concatenate(data_array, axis = 0)
+
+        # now repeat the groups to match the stacked new data column
+        groups_tiled = np.tile(groups, data_array.size // groups.size )
+
+        # now get the dataset id column
+        id_col = self._id_label
+        id_start = np.where(array == id_col)
+        id_row, id_col = id_start
+        id_rows = slice( int(id_row + 1), maxrows )
+        id_col = array[  id_rows, id_col  ]
+        
+        # repeat dataset ids to match stacked new data column
+        ids_tiled = np.repeat(  id_col , groups.size  )
+
+        # assemble all data
+        total_data = [ids_tiled, groups_tiled, data_array]
+        headers = [ default_dataset_header, standard_id_header, standard_ct_header ]  
+
+        # check for qpcr column and if present, get and adjust shape
+        self._BigTable_horizontal_qpcr_col(array, maxrows, groups, total_data, headers)
+
+
+        # combine the three columns (dataset id, groups, and Ct (actual data_array))
+        data_array = np.stack( total_data, axis = 1 )
+
+        # add default names into the first row
+        data_array = np.concatenate(
+                                        ( 
+                                            [headers],
+                                            data_array
+                                       ),   axis = 0
+                                )
+        
+        # actually return the finished array
+        return data_array
+
+    def _BigTable_horizontal_qpcr_col(self, array, maxrows, groups, total_data, headers):
+        &#34;&#34;&#34;
+        Checks if a &#34;@qpcr&#34; column is present in the data and if so, adjusts its shape and 
+        adds it to the data to be assembled for the assays.
+        &#34;&#34;&#34;
+        column_decorator = plain_decorators[&#34;qpcr:column&#34;]
+        qpcr_col = np.where(array == column_decorator)
+        qpcr_row, qpcr_col = qpcr_col
+        if len(qpcr_col) != 0:
+            
+            qpcr_rows = slice( int(qpcr_row + 1), maxrows )
+            qpcr_col = array[  qpcr_rows, qpcr_col  ]
+
+            qpcr_tiled = np.repeat(  qpcr_col , groups.size  )
+            total_data.append(qpcr_tiled)
+            headers.append(&#34;@qpcr&#34;)
+
+    def _vet_replicates(self, ignore_empty, replicates, array, **kwargs):
+        &#34;&#34;&#34;
+        Checks if provided replicates cover all data groups (annoated columns).
+        And it also gets the names supposed to be used for the columns.
+        &#34;&#34;&#34;
+        # get assays for each decorator
+        groups = 0
+        decorator = plain_decorators[&#34;qpcr:group&#34;]
+    
+        # find decorated starting columns
+        indices = np.argwhere(array == decorator)
+        if indices.size == 0 and not ignore_empty:
+            aw.HardWarning(&#34;Parser:no_decorators_found&#34;, traceback = False)
+
+        # get only column indices            
+        indices = indices[ : , 1 ]
+        groups += indices.size
+
+        # check if replicates are an integer, if so transform to 
+        # tuple that cover all found assays
+        if aux.same_type(replicates, 1): 
+            replicates = np.tile([replicates], groups)
+        # else, check it it&#39;s a formula that needs to be read out to a tuple.
+        elif aux.same_type(replicates, &#34;&#34;):
+            replicates = qpcr.Assay()._reps_from_formula(replicates)
+        
+        # if replicates are already a tuple, make sure they cover all rows
+        elif aux.same_type(replicates, ()):
+            all_covered = groups == len(replicates)
+            if not all_covered:
+                aw.HardWarning(&#34;Assay:reps_dont_cover&#34;, n_samples = groups, reps = replicates, traceback = False)
+            
+        # get names for assays
+        group_names = aux.from_kwargs(&#34;names&#34;, None, kwargs)
+
+        # vet that names cover
+        if group_names is not None and len(group_names) != len(replicates):
+            aw.HardWarning(&#34;Assay:groupnames_dont_colver&#34;, traceback = False, current_groups = f&#34;None, but needs to be {len(replicates)} names.&#34;, new_received = group_names)
+        
+        # return tranformed replicates
+        return replicates, group_names
+
+        
+
     def _prep_header_array(self, col = None, row = None):
         &#34;&#34;&#34;
         Generates the array in which header entries should be searched for
@@ -2102,12 +2687,12 @@ It handles the regex searching and numpy indexing of relevant column subsets of 
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></li>
-<li><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></li>
+<li><a title="qpcr.Parsers.Parsers.CsvParser" href="#qpcr.Parsers.Parsers.CsvParser">CsvParser</a></li>
+<li><a title="qpcr.Parsers.Parsers.ExcelParser" href="#qpcr.Parsers.Parsers.ExcelParser">ExcelParser</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="qpcr.Parsers._CORE_Parser.assay_pattern"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.assay_pattern"><code class="name flex">
 <span>def <span class="ident">assay_pattern</span></span>(<span>self, pattern: str = None, *flags)</span>
 </code></dt>
 <dd>
@@ -2158,7 +2743,7 @@ Any additional flags to pass to <code>re.compile()</code> for the regex pattern<
     return self._pattern</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.assays"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.assays"><code class="name flex">
 <span>def <span class="ident">assays</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -2181,7 +2766,7 @@ Any additional flags to pass to <code>re.compile()</code> for the regex pattern<
     return list(self._dfs.keys())</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.clear"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.clear"><code class="name flex">
 <span>def <span class="ident">clear</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -2206,7 +2791,7 @@ Any additional flags to pass to <code>re.compile()</code> for the regex pattern<
     self._assay_ct_end_indices = None           # indices of the last entry of the ct columns</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.find_assays"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.find_assays"><code class="name flex">
 <span>def <span class="ident">find_assays</span></span>(<span>self, col=0, **kwargs)</span>
 </code></dt>
 <dd>
@@ -2287,7 +2872,7 @@ By default the first column <code>col = 0</code>.</dd>
     return indices, names</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.find_by_decorator"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator"><code class="name flex">
 <span>def <span class="ident">find_by_decorator</span></span>(<span>self, decorator: str, col=0, **kwargs)</span>
 </code></dt>
 <dd>
@@ -2355,7 +2940,7 @@ By default the first column <code>col = 0</code>.</dd>
 
     # if no assay_pattern was specified then default to generic &#34;all&#34; to get full cell contents
     if self.assay_pattern() is None:
-        aw.SoftWarning(&#34;Parser:decorators_but_no_pattern&#34;)
+        self._WARNING_decorators_but_no_patterns.trigger()
         self.assay_pattern(&#34;all&#34;)
 
     assay_indices = decorator_indices
@@ -2393,7 +2978,7 @@ By default the first column <code>col = 0</code>.</dd>
     return assay_indices, names</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.find_columns"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.find_columns"><code class="name flex">
 <span>def <span class="ident">find_columns</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -2440,7 +3025,7 @@ By default the first column <code>col = 0</code>.</dd>
     self._assay_ct_end_indices = ct_col_ends</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.get"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.get"><code class="name flex">
 <span>def <span class="ident">get</span></span>(<span>self, assay: str = None)</span>
 </code></dt>
 <dd>
@@ -2479,7 +3064,7 @@ or the entire dictionary of all found dataframes from all assays.</dd>
     return data</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.labels"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.labels"><code class="name flex">
 <span>def <span class="ident">labels</span></span>(<span>self, id_label: str = 'Name', ct_label: str = 'Ct')</span>
 </code></dt>
 <dd>
@@ -2511,13 +3096,13 @@ or the entire dictionary of all found dataframes from all assays.</dd>
     self._ct_label = ct_label</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.make_dataframes"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.make_dataframes"><code class="name flex">
 <span>def <span class="ident">make_dataframes</span></span>(<span>self, allow_nan_ct: bool = True, default_to: float = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a set of <code>pandas DataFrame</code>s each containing two columns
 (one for the replicate identifiers, one for the Ct values)
-for subsequent use with the main <code><a title="qpcr" href="index.html">qpcr</a></code> module.</p>
+for subsequent use with the main <code><a title="qpcr" href="../index.html">qpcr</a></code> module.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>allow_nan_Ct</code></strong> :&ensp;<code>bool</code></dt>
@@ -2600,7 +3185,7 @@ This is ignored if <code>allow_nan_ct = True</code>.</dd>
         adx += 1</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.max_assay_name_length"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length"><code class="name flex">
 <span>def <span class="ident">max_assay_name_length</span></span>(<span>self, length=20)</span>
 </code></dt>
 <dd>
@@ -2628,7 +3213,7 @@ Default is <code>length = 20</code> characters.</dd>
     self._max_assay_name_length = length</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.parse"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.parse"><code class="name flex">
 <span>def <span class="ident">parse</span></span>(<span>self, **kwargs)</span>
 </code></dt>
 <dd>
@@ -2672,7 +3257,7 @@ This is the functional core of the Parser's <code>pipe</code> method.</p>
         self.make_dataframes(**kwargs)</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.prune"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.prune"><code class="name flex">
 <span>def <span class="ident">prune</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -2688,7 +3273,7 @@ This is the functional core of the Parser's <code>pipe</code> method.</p>
     self.__init__()</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.save"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.save"><code class="name flex">
 <span>def <span class="ident">save</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -2713,7 +3298,7 @@ The files will simply be named according to the assay name (i.e. <code>ActinB.cs
             df.to_csv(assay_path, index = False)</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.save_to"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.save_to"><code class="name flex">
 <span>def <span class="ident">save_to</span></span>(<span>self, location: str = None)</span>
 </code></dt>
 <dd>
@@ -2745,11 +3330,11 @@ If this directory does not yet exist, it will be automatically made.</dd>
     return self._save_loc</code></pre>
 </details>
 </dd>
-<dt id="qpcr.Parsers._CORE_Parser.transpose"><code class="name flex">
+<dt id="qpcr.Parsers.Parsers._CORE_Parser.transpose"><code class="name flex">
 <span>def <span class="ident">transpose</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Inverts the <code>col</code> index used by <code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">_CORE_Parser.find_assays()</a></code> and <code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">_CORE_Parser.find_by_decorator()</a></code>.
+<div class="desc"><p>Inverts the <code>col</code> index used by <code>qpcr.Parsers._CORE_Parser.find_assays</code> and <code>qpcr.Parsers._CORE_Parser.find_by_decorator</code>.
 By default the <code>col</code> refers to a column. After using <code>transpose</code> it will be interpreted as a <code>row</code>.
 Note</p>
 <hr>
@@ -2786,14 +3371,11 @@ Note</p>
 </ul>
 </li>
 <li><a href="#working-with-multi-assay-files">Working with multi-assay files</a><ul>
-<li><a href="#getting-a-single-assay-from-a-multi-assay-file">Getting a single assay from a multi-assay file</a></li>
 <li><a href="#getting-all-assays-from-a-multi-assay-file">Getting all assays from a multi-assay file</a><ul>
 <li><a href="#making-indivdual-assay-files-from-a-multi-assay-file">Making indivdual assay files from a multi-assay file</a></li>
 <li><a href="#using-a-multi-assay-file-directly-for-my-analysis">Using a multi-assay file directly for my analysis</a></li>
-<li><a href="#decorators">Decorators</a><ul>
+<li><a href="#decorators">Decorators</a></li>
 <li><a href="#two-things-of-note">Two things of Note:</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -2803,43 +3385,43 @@ Note</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="qpcr" href="index.html">qpcr</a></code></li>
+<li><code><a title="qpcr.Parsers" href="index.html">qpcr.Parsers</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="qpcr.Parsers.CsvParser" href="#qpcr.Parsers.CsvParser">CsvParser</a></code></h4>
+<h4><code><a title="qpcr.Parsers.Parsers.CsvParser" href="#qpcr.Parsers.Parsers.CsvParser">CsvParser</a></code></h4>
 <ul class="">
-<li><code><a title="qpcr.Parsers.CsvParser.pipe" href="#qpcr.Parsers.CsvParser.pipe">pipe</a></code></li>
-<li><code><a title="qpcr.Parsers.CsvParser.read" href="#qpcr.Parsers.CsvParser.read">read</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers.CsvParser.pipe" href="#qpcr.Parsers.Parsers.CsvParser.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers.CsvParser.read" href="#qpcr.Parsers.Parsers.CsvParser.read">read</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="qpcr.Parsers.ExcelParser" href="#qpcr.Parsers.ExcelParser">ExcelParser</a></code></h4>
+<h4><code><a title="qpcr.Parsers.Parsers.ExcelParser" href="#qpcr.Parsers.Parsers.ExcelParser">ExcelParser</a></code></h4>
 <ul class="">
-<li><code><a title="qpcr.Parsers.ExcelParser.pipe" href="#qpcr.Parsers.ExcelParser.pipe">pipe</a></code></li>
-<li><code><a title="qpcr.Parsers.ExcelParser.read" href="#qpcr.Parsers.ExcelParser.read">read</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers.ExcelParser.pipe" href="#qpcr.Parsers.Parsers.ExcelParser.pipe">pipe</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers.ExcelParser.read" href="#qpcr.Parsers.Parsers.ExcelParser.read">read</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="qpcr.Parsers._CORE_Parser" href="#qpcr.Parsers._CORE_Parser">_CORE_Parser</a></code></h4>
+<h4><code><a title="qpcr.Parsers.Parsers._CORE_Parser" href="#qpcr.Parsers.Parsers._CORE_Parser">_CORE_Parser</a></code></h4>
 <ul class="">
-<li><code><a title="qpcr.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.assays" href="#qpcr.Parsers._CORE_Parser.assays">assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.clear" href="#qpcr.Parsers._CORE_Parser.clear">clear</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.get" href="#qpcr.Parsers._CORE_Parser.get">get</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.labels" href="#qpcr.Parsers._CORE_Parser.labels">labels</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.parse" href="#qpcr.Parsers._CORE_Parser.parse">parse</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.prune" href="#qpcr.Parsers._CORE_Parser.prune">prune</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save" href="#qpcr.Parsers._CORE_Parser.save">save</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers._CORE_Parser.save_to">save_to</a></code></li>
-<li><code><a title="qpcr.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers._CORE_Parser.transpose">transpose</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assay_pattern" href="#qpcr.Parsers.Parsers._CORE_Parser.assay_pattern">assay_pattern</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.assays" href="#qpcr.Parsers.Parsers._CORE_Parser.assays">assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.clear" href="#qpcr.Parsers.Parsers._CORE_Parser.clear">clear</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_assays" href="#qpcr.Parsers.Parsers._CORE_Parser.find_assays">find_assays</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator" href="#qpcr.Parsers.Parsers._CORE_Parser.find_by_decorator">find_by_decorator</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.find_columns" href="#qpcr.Parsers.Parsers._CORE_Parser.find_columns">find_columns</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.get" href="#qpcr.Parsers.Parsers._CORE_Parser.get">get</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.labels" href="#qpcr.Parsers.Parsers._CORE_Parser.labels">labels</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.make_dataframes" href="#qpcr.Parsers.Parsers._CORE_Parser.make_dataframes">make_dataframes</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length" href="#qpcr.Parsers.Parsers._CORE_Parser.max_assay_name_length">max_assay_name_length</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.parse" href="#qpcr.Parsers.Parsers._CORE_Parser.parse">parse</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.prune" href="#qpcr.Parsers.Parsers._CORE_Parser.prune">prune</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save" href="#qpcr.Parsers.Parsers._CORE_Parser.save">save</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.save_to" href="#qpcr.Parsers.Parsers._CORE_Parser.save_to">save_to</a></code></li>
+<li><code><a title="qpcr.Parsers.Parsers._CORE_Parser.transpose" href="#qpcr.Parsers.Parsers._CORE_Parser.transpose">transpose</a></code></li>
 </ul>
 </li>
 </ul>
