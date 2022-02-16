@@ -582,6 +582,19 @@ class Assay(aux._ID):
     # def fc(self):
         # some method to also return the fold change columns... 
 
+
+    def rename_cols(self, cols:dict):
+        """
+        Renames columns according to a dictionary as key -> value.
+
+        Parameters
+        ----------
+        cols : dict
+            A dictionary specifying old column names (keys) and new colums names (values).
+        """
+        self._df = self._df.rename(columns = cols)
+
+
     def link(self, Reader:Reader):
         """
         Links a `qpcr.Reader` object to the Assay.
@@ -1562,7 +1575,7 @@ class Results(aux._ID):
         
     def rename_cols(self, cols:dict):
         """
-        Renames all columns according to a dictionary as key -> value.
+        Renames columns according to a dictionary as key -> value.
 
         Parameters
         ----------
