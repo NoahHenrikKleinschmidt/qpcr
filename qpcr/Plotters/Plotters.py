@@ -338,6 +338,7 @@ class PreviewResults(Plotter):
     | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
@@ -461,9 +462,21 @@ class PreviewResults(Plotter):
             ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties()
             headers = aux.from_kwargs("headers", headings, kwargs, rm = True)
             show = aux.from_kwargs("show", True, kwargs, rm = True)
+            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+
+            if isinstance(padding, (list, tuple)):
+                hpad, vpad = padding
+            else: 
+                hpad, vpad = padding, None
 
             speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(rows = nrows, cols = ncols, specs = speclist, subplot_titles = headers)
+            fig = make_subplots(
+                                    rows = nrows, cols = ncols, 
+                                    specs = speclist, 
+                                    subplot_titles = headers,
+                                    horizontal_spacing = hpad,
+                                    vertical_spacing = vpad
+                            )
 
 
             Coords = gx.AxesCoords(fig, [], (ncols, nrows))

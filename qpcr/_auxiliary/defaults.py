@@ -30,16 +30,19 @@ default_group_name = "group{}"
 static_PreviewResults = dict(
                                 color = "white",
                                 edgecolor = "xkcd:pure blue",
+                                ecolor = "black",
                                 edgewidth = 1,
                                 rot = 0,
                                 legend = False, 
                                 frame = False,
-                                title = "Preview of Results"
+                                title = "Preview of Results",
+                                ylabel  = "$\Delta\Delta$Ct",
                             )
 
 interactive_PreviewResults = dict(
                                     template = "plotly_white",
-                                    title = "Preview of Results"
+                                    title = "Preview of Results",
+                                    ylabel = "ΔΔCT"
                                 )
 
 # ReplicateBoxPlot
