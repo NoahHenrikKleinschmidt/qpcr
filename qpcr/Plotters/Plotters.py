@@ -21,8 +21,9 @@ with regard to styling. You can set plotly `templates`, but that's about it. How
 adequate for your labjournal, and you may prefer using these for their dynamic figure size adjustments directly from your browser. 
 
 ### Plotting `kwargs` 
-Both Static and Interactive Figures support a variety of keyword arguments that. You can check which kwargs are passable to each 
-type of figure in the documentation of each Plotter's `plot` method. 
+Both Static and Interactive Figures support a variety of keyword arguments that allow you to customise many of their 
+characteristics and their underlying data handling. You can check which kwargs are passable to each type of figure in 
+the documentation of each Plotter's `plot` method. 
 """
 
 import qpcr.__init__ as qpcr
