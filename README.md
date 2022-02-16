@@ -29,7 +29,7 @@ pip install qpcr
 The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. It offers automated processes to read datafiles, filter out outlier Ct values, compute Delta-Ct, normalise assays against one another, and visualise the results. Hence, `qpcr` offers a full suite for automated Delta-Delta-Ct analyses.
 However, even if your analysis is not going to be Delta-Delta-Ct, you may wish to check out how the `qpcr.Readers` might help you faciliate your workflow, as they are streamlined to read diversely structured datafiles contianing both a single and multiple qPCR datasets. 
 
-#### Customisibility
+#### Customisability
 A technical note at this point. At it's core `qpcr` offers very versatile data manipulation through two processing classes called the `qpcr.Analyser` and the `qpcr.Normaliser`. The `qpcr.Analyser` performs actions on a single qPCR datasets / assay stored in a `qpcr.Assay` object (the central data storage unit of the `qpcr` module). 
 It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single Assay is costumisable, so there is no restriction as such to what the Analyser will do to an Assay. 
 On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisable.  
