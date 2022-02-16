@@ -25,6 +25,19 @@ can extract all assays from that big table using either simple extraction method
 on the type of big table (check out the documentation of the `BigTableReader` for more information on the
 types of "big tables").
 
+
+> ### Kwarg incompatibility Warning
+> When using the `qpcr.DataReader` or a `pipe` method you will regularly observe the following warning: 
+> 
+> ```
+> Warning:
+> It appears as if some provided kwargs were incompatible with pandas.read_excel()! Defaulting to standard settings for file-reading...
+> If the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.
+> ```
+>
+> This is because the `pipe` method (and the `qpcr.DataReader`, which usually calls the `pipe` method of a specific Reader) pass all kwargs to both `read` and `parse`. 
+> However, `pandas`' `read_excel` and `read_csv` are rather picky with the arguments they accept. So, in case you observe this warning, just know that the kwargs were removed from the 
+> `read` call.
 """
 
 
