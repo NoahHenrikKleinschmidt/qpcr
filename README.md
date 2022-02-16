@@ -24,8 +24,8 @@ pip install qpcr
 ```
 
 ### What does `qpcr` do?
-The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. 
-However, a main feature of `qpcr` are the `qpcr.Readers` that are designed for verstaile and efficient reading of differently structured datafiles storing a single or multiple qPCR datasets. Hence, even if your analysis is not going to be Delta-Delta-Ct you may wish to check out how the `qpcr.Readers` might help you faciliate your workflow. 
+The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. It offers automated processes to read datafiles, filter out outlier Ct values, compute Delta-Ct, normalise assays against one another, and visualise the results. Hence, `qpcr` offers a full suite for automated Delta-Delta-Ct analyses.
+However, even if your analysis is not going to be Delta-Delta-Ct, you may wish to check out how the `qpcr.Readers` might help you faciliate your workflow, as they are streamlined to read diversely structured datafiles contianing both a single and multiple qPCR datasets. 
 
 ### Example usage
 To facilitate data analysis, common workflows have been implemented in pre-defined `pipelines` that allow for quick data analysis with minimal user effort. An example analysis using the pre-defined `BasicPlus` pipeline:
