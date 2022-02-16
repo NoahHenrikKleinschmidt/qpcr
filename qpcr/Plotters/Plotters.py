@@ -588,7 +588,7 @@ class ReplicateBoxPlot(Plotter):
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    | title : `str`   |  The overall figure title   | `title = "My run"`    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
