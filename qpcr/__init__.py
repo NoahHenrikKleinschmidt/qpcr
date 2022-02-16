@@ -648,7 +648,7 @@ class Assay(aux._ID):
         """
         Adopts an externally computed dataframe as its own.
         This is supposed to be used when setting up new `qpcr.Assay` objects that do not 
-        inherit from a `qpcr.Reader`. If you wish to alter an existing `qpcr.Assay` use `force = True`.
+        inherit data from one of the `qpcr.Readers`. If you wish to alter an existing `qpcr.Assay` use `force = True`.
         When doing this, please, make sure to retain the proper data structure!
 
         Parameters
@@ -1298,7 +1298,13 @@ class DataReader:
 
 class Results(aux._ID):
     """
-    Handles a pandas dataframe for the results from a `qpcr.Normaliser`.
+    Handles a pandas dataframe for data and computed results from a `qpcr` class. 
+    
+    Note
+    -----
+    This is a central data collection that can inherit directly from `qpcr.Assay` objects and from 
+    extrenally computed sources. Please, note that it will not perform extensive vetting on its data input, 
+    so make sure to only provide proper data input when manually assembling your `qpcr.Results`!
     """
     def __init__(self):
         super().__init__()
