@@ -356,9 +356,9 @@ class PreviewResults(Plotter):
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"    |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
     |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
