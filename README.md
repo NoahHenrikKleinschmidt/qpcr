@@ -5,12 +5,6 @@
 
 [![DOI](https://zenodo.org/badge/398244987.svg)](https://zenodo.org/badge/latestdoi/398244987)
 
----
-
-> NOTE: This is the development branch of the next planned release `v3.0.1`.
-> Check out the `TODO.md` to check on new features and progress...
----
-
 
 This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` or `excel` files all the way to finished visualisations of the results. 
 
