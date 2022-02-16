@@ -23,7 +23,7 @@ adequate for your labjournal, and you may prefer using these for their dynamic f
 ### Plotting `kwargs` 
 Both Static and Interactive Figures support a variety of keyword arguments that allow you to customise many of their 
 characteristics and their underlying data handling. You can check which kwargs are passable to each type of figure in 
-the documentation of each Plotter's `plot` method. 
+the documentation of each Plotter. 
 """
 
 import qpcr.__init__ as qpcr
