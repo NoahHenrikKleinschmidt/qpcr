@@ -170,8 +170,7 @@ ref_cols = [ raw_col_names[0], "group", "group_name", defaults.default_dataset_h
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
-    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
-    inherit from this. 
+    The standard qpcr.Reader inherits from this. 
 
     Note
     ----
@@ -384,61 +383,61 @@ class Reader(_CORE_Reader):
         return None  # no headers
 
 
-class _Qupid_Reader(_CORE_Reader):
-    """
-    This Reader class works with streamlit's UploadedFile class.
+# class _Qupid_Reader(_CORE_Reader):
+#     """
+#     This Reader class works with streamlit's UploadedFile class.
     
-    Note
-    -------
-    We have to use a little hack to make the UploadedFile readable.
-    We convert to a string and then back to a StringIO which we can then pass to pandas...
+#     Note
+#     -------
+#     We have to use a little hack to make the UploadedFile readable.
+#     We convert to a string and then back to a StringIO which we can then pass to pandas...
     
-    Parameters
-    ----------
-    file
-        A streamlit UploadedFile object
-    """
-    def __init__(self, file) -> pd.DataFrame: 
-        super().__init__()
-        self._filename = file.name
-        if self._filesuffix() == "csv":
-            self._content = file.read().decode()
-            self._src = StringIO(self._content)
-            self._delimiter = ";" if self._is_csv2() else ","
-        else: 
-            self._src = file
-        self.read()
+#     Parameters
+#     ----------
+#     file
+#         A streamlit UploadedFile object
+#     """
+#     def __init__(self, file) -> pd.DataFrame: 
+#         super().__init__()
+#         self._filename = file.name
+#         if self._filesuffix() == "csv":
+#             self._content = file.read().decode()
+#             self._src = StringIO(self._content)
+#             self._delimiter = ";" if self._is_csv2() else ","
+#         else: 
+#             self._src = file
+#         self.read()
 
-    def _filesuffix(self):
-        """
-        Returns the file-suffix of the provided file
-        """
-        suffix = self._filename.split(".")[-1]
-        return suffix
+#     def _filesuffix(self):
+#         """
+#         Returns the file-suffix of the provided file
+#         """
+#         suffix = self._filename.split(".")[-1]
+#         return suffix
 
-    def _is_csv2(self):
-        """
-        Tests if csv file is ; delimited (True) or common , (False)
-        """
-        if ";" in self._content: 
-            return True
-        return False
+#     def _is_csv2(self):
+#         """
+#         Tests if csv file is ; delimited (True) or common , (False)
+#         """
+#         if ";" in self._content: 
+#             return True
+#         return False
 
-    def _has_header(self):
-        """
-        Checks if column headers are provided in the data file
-        It does so by checking if the second element in the first row is numeric
-        if it is numeric (returns None << False) no headers are presumed. Otherwise
-        it returns 0 (as in first row has headers)...
-        """
-        content = self._content.split("\n")[0]
-        content = content.split(self._delimiter)
-        try: 
-            second_col = content[1]
-            second_col = float(second_col)
-        except ValueError:
-            return 0 # Headers in row 0
-        return None  # no headers
+#     def _has_header(self):
+#         """
+#         Checks if column headers are provided in the data file
+#         It does so by checking if the second element in the first row is numeric
+#         if it is numeric (returns None << False) no headers are presumed. Otherwise
+#         it returns 0 (as in first row has headers)...
+#         """
+#         content = self._content.split("\n")[0]
+#         content = content.split(self._delimiter)
+#         try: 
+#             second_col = content[1]
+#             second_col = float(second_col)
+#         except ValueError:
+#             return 0 # Headers in row 0
+#         return None  # no headers
 
 class Assay(aux._ID):
     """
@@ -1092,49 +1091,49 @@ class SampleReader(Assay):
             
         return self._Assay
 
-class _Qupid_SampleReader(SampleReader):
-    """
-    Sets up a Reader+Assay pipeline that reads in a datafile and handles the 
-    stored raw data in a pandas dataframe. 
-    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
-    Note
-    ----
-    This is the Qupid applicable version of the SampleReader
-    """
-    def __init__(self):
-        super().__init__()
+# class _Qupid_SampleReader(SampleReader):
+#     """
+#     Sets up a Reader+Assay pipeline that reads in a datafile and handles the 
+#     stored raw data in a pandas dataframe. 
+#     Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+#     Note
+#     ----
+#     This is the Qupid applicable version of the SampleReader
+#     """
+#     def __init__(self):
+#         super().__init__()
         
 
-    def read(self, file):
-        """
-        Reads one raw datafile (csv format).
+#     def read(self, file):
+#         """
+#         Reads one raw datafile (csv format).
 
-        Parameters
-        ----------
-        file
-            An UploadedFile object from streamlit.
+#         Parameters
+#         ----------
+#         file
+#             An UploadedFile object from streamlit.
 
-        Returns
-        -------
-        Assay : qpcr.Assay
-            A `qpcr.Assay` object containing the grouped and renamed data.
-        """
-        self._Reader = _Qupid_Reader(file)
-        self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
+#         Returns
+#         -------
+#         Assay : qpcr.Assay
+#             A `qpcr.Assay` object containing the grouped and renamed data.
+#         """
+#         self._Reader = _Qupid_Reader(file)
+#         self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
 
-        self._Assay = Assay(self._Reader)
-        self._Assay.adopt_id(self._Reader)
+#         self._Assay = Assay(self._Reader)
+#         self._Assay.adopt_id(self._Reader)
 
-        if self._replicates is not None:
-            self._Assay.replicates(self._replicates)
-            self._Assay.group()
-        else: 
-            aw.HardWarning("SampleReader:no_reps_yet")
+#         if self._replicates is not None:
+#             self._Assay.replicates(self._replicates)
+#             self._Assay.group()
+#         else: 
+#             aw.HardWarning("SampleReader:no_reps_yet")
 
-        if self._names is not None:
-            self._Assay.rename(self._names)
+#         if self._names is not None:
+#             self._Assay.rename(self._names)
 
-        return self._Assay
+#         return self._Assay
 
 class DataReader:
     """

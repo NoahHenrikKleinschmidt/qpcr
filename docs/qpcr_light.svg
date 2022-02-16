@@ -7,9 +7,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="249.72855mm"
-   height="65.555687mm"
-   viewBox="0 0 249.72855 65.555687"
+   width="250.52855mm"
+   height="66.35569mm"
+   viewBox="0 0 250.52855 66.35569"
    version="1.1"
    id="svg1924"
    inkscape:version="1.0 (4035a4f, 2020-05-01)"
@@ -17,15 +17,17 @@
   <defs
      id="defs1918" />
   <sodipodi:namedview
+     inkscape:guide-bbox="true"
+     showguides="true"
      id="base"
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.65921824"
-     inkscape:cx="390.34257"
-     inkscape:cy="-18.210482"
+     inkscape:zoom="0.68653672"
+     inkscape:cx="323.69128"
+     inkscape:cy="128.19432"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -47,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -55,7 +57,7 @@
      inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-84.534517,-265.0674)">
+     transform="translate(-83.734517,-264.2674)">
     <text
        id="text1867"
        y="312.59595"
@@ -104,7 +106,7 @@
            id="path1861" />
       </g>
       <rect
-         style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.313;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.113;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
          id="rect1869"
          width="73.036919"
          height="46.96236"
