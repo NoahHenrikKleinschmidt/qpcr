@@ -30,8 +30,8 @@ However, even if your analysis is not going to be Delta-Delta-Ct, you may wish t
 
 #### Customisibility
 A technical note at this point. At it's core `qpcr` offers very versatile data manipulation through two processing classes called the `qpcr.Analyser` and the `qpcr.Normaliser`. The `qpcr.Analyser` performs actions on a single qPCR datasets / assay stored in a `qpcr.Assay` object (the central data storage unit of the `qpcr` module). 
-It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single Assay is costumisible, so there is no restriction as such to what the Analyser will do to an Assay. 
-On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisible.  
+It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single Assay is costumisable, so there is no restriction as such to what the Analyser will do to an Assay. 
+On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisable.  
 
 ### Example usage
 To facilitate data analysis, common workflows have been implemented in pre-defined `pipelines` that allow for quick data analysis with minimal user effort. An example analysis using the pre-defined `BasicPlus` pipeline:
