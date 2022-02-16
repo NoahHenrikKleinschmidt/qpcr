@@ -1,4 +1,4 @@
-# <img src="https://user-images.githubusercontent.com/89252165/152382559-0983a05a-af31-49e6-a06f-15b26359e3df.svg" width="30"> qpcr
+# <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="32"> qpcr
 
 ### A python module to analyse qPCR data on single-datasets or high-throughput
 
@@ -6,9 +6,10 @@
 
 ---
 
-> NOTE: This is the development branch for the next planned release `Version 2.1.1`. Checkout the `TODO.md` to see what's planned and what still needs to be done...
-
+> NOTE: This is the development branch of the next planned release `v3.0.1`.
+> Check out the `TODO.md` to check on new features and progress...
 ---
+
 
 This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` files all the way to finished visualisations of the results. 
 
@@ -32,16 +33,16 @@ from qpcr.Plotters import PreviewResults
 
 # get our datafiles
 normaliser_files = [
-    "../Example Data/28S.csv",
-    "../Example Data/actin.csv"
-]
+                    "./Examples/Example Data/28S.csv",
+                    "./Examples/Example Data/actin.csv"
+                ]
 
-sample_files = [
-    "../Example Data/HNRNPL_nmd.csv",
-    "../Example Data/HNRNPL_prot.csv",
-    "../Example Data/SRSF11_nmd.csv",
-    "../Example Data/SRSF11_prot.csv",
-]
+assay_files = [
+                "./Examples/Example Data/HNRNPL_nmd.csv",
+                "./Examples/Example Data/HNRNPL_prot.csv",
+                "./Examples/Example Data/SRSF11_nmd.csv",
+                "./Examples/Example Data/SRSF11_prot.csv",
+            ]
 
 # define our experimental parameters
 reps = 6
@@ -56,8 +57,9 @@ pipeline.names(group_names)
 
 # set up a preview of results
 preview = PreviewResults(mode = "static")
+colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
 preview.params( # setting some custom style
-                color = "xkcd:sandy yellow", 
+                color = colors, 
                 edgecolor = "black", 
                 edgewidth = 1, 
                 figsize = (8,4)
@@ -65,7 +67,7 @@ preview.params( # setting some custom style
 pipeline.add_plotters(preview)
 
 # feed in our data
-pipeline.add_assays(sample_files)
+pipeline.add_assays(assay_files)
 pipeline.add_normalisers(normaliser_files)
 
 # run the pipeline
@@ -73,8 +75,7 @@ pipeline.run()
 
 # and at this point the results are already saved...
 ```
-
-![](https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/Example%20Results/PreviewResults_1.jpg)
+![](https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/Example%20Results/colorful.jpg)
 
 
 ### Getting started
