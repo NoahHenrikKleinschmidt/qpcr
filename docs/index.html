@@ -311,8 +311,7 @@ ref_cols = [ raw_col_names[0], &#34;group&#34;, &#34;group_name&#34;, defaults.d
 class _CORE_Reader(aux._ID):
     &#34;&#34;&#34;
     The class handling the core functions of the Reader class. 
-    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
-    inherit from this. 
+    The standard qpcr.Reader inherits from this. 
 
     Note
     ----
@@ -525,61 +524,61 @@ class Reader(_CORE_Reader):
         return None  # no headers
 
 
-class _Qupid_Reader(_CORE_Reader):
-    &#34;&#34;&#34;
-    This Reader class works with streamlit&#39;s UploadedFile class.
+# class _Qupid_Reader(_CORE_Reader):
+#     &#34;&#34;&#34;
+#     This Reader class works with streamlit&#39;s UploadedFile class.
     
-    Note
-    -------
-    We have to use a little hack to make the UploadedFile readable.
-    We convert to a string and then back to a StringIO which we can then pass to pandas...
+#     Note
+#     -------
+#     We have to use a little hack to make the UploadedFile readable.
+#     We convert to a string and then back to a StringIO which we can then pass to pandas...
     
-    Parameters
-    ----------
-    file
-        A streamlit UploadedFile object
-    &#34;&#34;&#34;
-    def __init__(self, file) -&gt; pd.DataFrame: 
-        super().__init__()
-        self._filename = file.name
-        if self._filesuffix() == &#34;csv&#34;:
-            self._content = file.read().decode()
-            self._src = StringIO(self._content)
-            self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
-        else: 
-            self._src = file
-        self.read()
+#     Parameters
+#     ----------
+#     file
+#         A streamlit UploadedFile object
+#     &#34;&#34;&#34;
+#     def __init__(self, file) -&gt; pd.DataFrame: 
+#         super().__init__()
+#         self._filename = file.name
+#         if self._filesuffix() == &#34;csv&#34;:
+#             self._content = file.read().decode()
+#             self._src = StringIO(self._content)
+#             self._delimiter = &#34;;&#34; if self._is_csv2() else &#34;,&#34;
+#         else: 
+#             self._src = file
+#         self.read()
 
-    def _filesuffix(self):
-        &#34;&#34;&#34;
-        Returns the file-suffix of the provided file
-        &#34;&#34;&#34;
-        suffix = self._filename.split(&#34;.&#34;)[-1]
-        return suffix
+#     def _filesuffix(self):
+#         &#34;&#34;&#34;
+#         Returns the file-suffix of the provided file
+#         &#34;&#34;&#34;
+#         suffix = self._filename.split(&#34;.&#34;)[-1]
+#         return suffix
 
-    def _is_csv2(self):
-        &#34;&#34;&#34;
-        Tests if csv file is ; delimited (True) or common , (False)
-        &#34;&#34;&#34;
-        if &#34;;&#34; in self._content: 
-            return True
-        return False
+#     def _is_csv2(self):
+#         &#34;&#34;&#34;
+#         Tests if csv file is ; delimited (True) or common , (False)
+#         &#34;&#34;&#34;
+#         if &#34;;&#34; in self._content: 
+#             return True
+#         return False
 
-    def _has_header(self):
-        &#34;&#34;&#34;
-        Checks if column headers are provided in the data file
-        It does so by checking if the second element in the first row is numeric
-        if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
-        it returns 0 (as in first row has headers)...
-        &#34;&#34;&#34;
-        content = self._content.split(&#34;\n&#34;)[0]
-        content = content.split(self._delimiter)
-        try: 
-            second_col = content[1]
-            second_col = float(second_col)
-        except ValueError:
-            return 0 # Headers in row 0
-        return None  # no headers
+#     def _has_header(self):
+#         &#34;&#34;&#34;
+#         Checks if column headers are provided in the data file
+#         It does so by checking if the second element in the first row is numeric
+#         if it is numeric (returns None &lt;&lt; False) no headers are presumed. Otherwise
+#         it returns 0 (as in first row has headers)...
+#         &#34;&#34;&#34;
+#         content = self._content.split(&#34;\n&#34;)[0]
+#         content = content.split(self._delimiter)
+#         try: 
+#             second_col = content[1]
+#             second_col = float(second_col)
+#         except ValueError:
+#             return 0 # Headers in row 0
+#         return None  # no headers
 
 class Assay(aux._ID):
     &#34;&#34;&#34;
@@ -1233,49 +1232,49 @@ class SampleReader(Assay):
             
         return self._Assay
 
-class _Qupid_SampleReader(SampleReader):
-    &#34;&#34;&#34;
-    Sets up a Reader+Assay pipeline that reads in a datafile and handles the 
-    stored raw data in a pandas dataframe. 
-    Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
-    Note
-    ----
-    This is the Qupid applicable version of the SampleReader
-    &#34;&#34;&#34;
-    def __init__(self):
-        super().__init__()
+# class _Qupid_SampleReader(SampleReader):
+#     &#34;&#34;&#34;
+#     Sets up a Reader+Assay pipeline that reads in a datafile and handles the 
+#     stored raw data in a pandas dataframe. 
+#     Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
+#     Note
+#     ----
+#     This is the Qupid applicable version of the SampleReader
+#     &#34;&#34;&#34;
+#     def __init__(self):
+#         super().__init__()
         
 
-    def read(self, file):
-        &#34;&#34;&#34;
-        Reads one raw datafile (csv format).
+#     def read(self, file):
+#         &#34;&#34;&#34;
+#         Reads one raw datafile (csv format).
 
-        Parameters
-        ----------
-        file
-            An UploadedFile object from streamlit.
+#         Parameters
+#         ----------
+#         file
+#             An UploadedFile object from streamlit.
 
-        Returns
-        -------
-        Assay : qpcr.Assay
-            A `qpcr.Assay` object containing the grouped and renamed data.
-        &#34;&#34;&#34;
-        self._Reader = _Qupid_Reader(file)
-        self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
+#         Returns
+#         -------
+#         Assay : qpcr.Assay
+#             A `qpcr.Assay` object containing the grouped and renamed data.
+#         &#34;&#34;&#34;
+#         self._Reader = _Qupid_Reader(file)
+#         self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
 
-        self._Assay = Assay(self._Reader)
-        self._Assay.adopt_id(self._Reader)
+#         self._Assay = Assay(self._Reader)
+#         self._Assay.adopt_id(self._Reader)
 
-        if self._replicates is not None:
-            self._Assay.replicates(self._replicates)
-            self._Assay.group()
-        else: 
-            aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
+#         if self._replicates is not None:
+#             self._Assay.replicates(self._replicates)
+#             self._Assay.group()
+#         else: 
+#             aw.HardWarning(&#34;SampleReader:no_reps_yet&#34;)
 
-        if self._names is not None:
-            self._Assay.rename(self._names)
+#         if self._names is not None:
+#             self._Assay.rename(self._names)
 
-        return self._Assay
+#         return self._Assay
 
 class DataReader:
     &#34;&#34;&#34;
@@ -6939,10 +6938,6 @@ Its <code>read()</code> method directly returns a <code><a title="qpcr.Assay" hr
 <li><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></li>
 <li>qpcr._auxiliary._ID</li>
 </ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li>qpcr._Qupid_SampleReader</li>
-</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="qpcr.SampleReader.names"><code class="name flex">
@@ -7101,8 +7096,7 @@ or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the se
 </code></dt>
 <dd>
 <div class="desc"><p>The class handling the core functions of the Reader class.
-Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
-inherit from this. </p>
+The standard qpcr.Reader inherits from this. </p>
 <h2 id="note">Note</h2>
 <p>This implementation is deprecated. The _CORE_Reader has been moved
 (and further updated since) to the <code><a title="qpcr.Readers" href="Readers/index.html">qpcr.Readers</a></code> submodule.</p></div>
@@ -7113,8 +7107,7 @@ inherit from this. </p>
 <pre><code class="python">class _CORE_Reader(aux._ID):
     &#34;&#34;&#34;
     The class handling the core functions of the Reader class. 
-    Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
-    inherit from this. 
+    The standard qpcr.Reader inherits from this. 
 
     Note
     ----
@@ -7266,7 +7259,6 @@ inherit from this. </p>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="qpcr.Reader" href="#qpcr.Reader">Reader</a></li>
-<li>qpcr._Qupid_Reader</li>
 </ul>
 <h3>Methods</h3>
 <dl>
