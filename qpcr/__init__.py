@@ -161,6 +161,10 @@ supported_filetypes = defaults.supported_filetypes
 
 default_group_name = defaults.default_group_name
 
+# the default columns that are structurally part of an Assay object
+ref_cols = [ raw_col_names[0], "group", "group_name", defaults.default_dataset_header ]
+
+
 # At some future point we will remove the _CORE_Reader from the 
 # __init__ as it's now part of the Readers submodule...
 class _CORE_Reader(aux._ID):
@@ -526,6 +530,58 @@ class Assay(aux._ID):
         """
         return self._df
 
+    def Ct(self):
+        """
+        Returns
+        ------
+        Ct : pandas.Series
+            A pandas Series with the assay's Ct values. The column is renamed 
+            from "Ct" to the assay's `id`.
+        """
+        Ct = self._df[ raw_col_names[1] ]
+        Ct.name = self.id()
+        return Ct
+
+
+    def dCt(self):
+        """
+        Returns
+        -------
+        dCt : pandas.Series
+            A pandas Series with the computed Delta-Ct values. The column is renamed 
+            from "dCt" to the assay's `id`.
+        """
+        dCt = self._df["dCt"]
+        dCt.name = self.id()
+        return dCt
+
+    def ddCt(self):
+        """
+        Returns
+        -------
+        ddCt : pandas.DataFrame
+            A pandas DataFrame with all Delta-Delta-Ct values that the Assay has stored. 
+            All `"rel_{}"` columns are renamed to include the assay `id` to `"{id}_rel_{}"`.
+        """
+        # get all ddCt columns
+        ddCt = [ i for i in self._df.columns if "rel_" in i ]
+        id = self._id
+        # make new names and generate renaming dictionary 
+        new_names = [ f"{id}_{i}" for i in ddCt ]
+        new_names = {  old : new for new, old in zip(new_names, ddCt)  }
+
+        # get the data and rename
+        ddCt = self._df[ ddCt ]
+        if not isinstance(ddCt, pd.DataFrame):
+            ddCt = pd.DataFrame(ddCt)
+        ddCt = ddCt.rename(columns = new_names)
+        
+        return ddCt
+
+    # FUTURE FEATURE HERE
+    # def fc(self):
+        # some method to also return the fold change columns... 
+
     def link(self, Reader:Reader):
         """
         Links a `qpcr.Reader` object to the Assay.
@@ -584,6 +640,9 @@ class Assay(aux._ID):
         """
         name = f"rel_{normaliser_id}"
         self._df[name] = ddCt
+
+    # FUTURE FEATURE HERE
+    # some method to add fc columns here...
 
     def adopt(self, df : pd.DataFrame, force = False):
         """
@@ -1271,6 +1330,22 @@ class Results(aux._ID):
             if not named_identically:
                 aw.SoftWarning("Results:cannot_link")
 
+
+    def add_Ct(self, assay : Assay):
+        """
+        Adds a `"Ct"` column with Delta-Ct values from an `qpcr.Assay`.
+        It will store these as a new column using the Assay's `id` as header.
+
+        Parameters
+        -------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object from which to import.
+        """
+        id = assay.id()
+        Ct = assay.get()[ raw_col_names[1] ]
+        Ct.name = id
+        self.add(Ct)
+
     def add_dCt(self, assay : Assay):
         """
         Adds a `"dCt"` column with Delta-Ct values from an `qpcr.Assay`.
@@ -1281,9 +1356,7 @@ class Results(aux._ID):
         assay : qpcr.Assay
             An `qpcr.Assay` object from which to import.
         """
-        id = assay.id()
-        dCt = assay.get()["dCt"]
-        dCt.name = id
+        dCt = assay.dCt()
         self.add(dCt)
 
     def add_ddCt(self, assay : Assay):
@@ -1296,20 +1369,39 @@ class Results(aux._ID):
         assay : qpcr.Assay
             An `qpcr.Assay` object from which to import.
         """
-        id = assay.id()
-        df = assay.get()
-        # get the ddCt containing columns
-        rel_cols = [ i for i in df.columns if "rel_" in i ]
-        # generate new composite ids 
-        new_names = [ f"{id}_{i}" for i in rel_cols ]
-        # get ddCt columns 
-        df = df[rel_cols]
-        # rename the columns to include the assay id
-        df = df.rename( columns = { new : old for new, old in zip(new_names, rel_cols) } )
-
+        df = assay.ddCt()
         # add data
         self.add(df)
 
+    # FUTURE FEATURE HERE
+    # this feature will be for fold-change columns of second normalisation
+    # currently this is not yet supported but is supposed to be an implemented feature of the 
+    # Normaliser. The Normaliser is currently perfectly able to perform second normalisation but
+    # does not yet have an integrated method of properly storing the results and there is also not
+    # # yet a method for pairing assays together for second normalisation.
+    # def add_fc(self, assay : Assay):
+    #     """
+    #     Adds all `"fc_{}"` columns with Delta-Delta-Ct values from an `qpcr.Assay`.
+    #     It will store these as new columns using the Assay's `id` + the `_fc_{}` composite id.
+
+    #     Parameters
+    #     -------
+    #     assay : qpcr.Assay
+    #         An `qpcr.Assay` object from which to import.
+    #     """
+    #     id = assay.id()
+    #     df = assay.get()
+    #     # get the ddCt containing columns
+    #     rel_cols = [ i for i in df.columns if "fc_" in i ]
+    #     # generate new composite ids 
+    #     new_names = [ f"{id}_{i}" for i in rel_cols ]
+    #     # get ddCt columns 
+    #     df = df[rel_cols]
+    #     # rename the columns to include the assay id
+    #     df = df.rename( columns = { new : old for new, old in zip(new_names, rel_cols) } )
+
+    #     # add data
+    #     self.add(df)
 
     def names(self, as_set = False):
         """
@@ -1377,8 +1469,13 @@ class Results(aux._ID):
 
     def add(self, column:pd.Series, replace : bool = False):
         """
-        Adds a new column of either DeltaCt 
-        computed data or normalised DeltaCt data to the results dataframe.
+        Adds some new column of data.
+
+        Note
+        ----
+        The `column` argument has to be named for this to work. However, there are 
+        already implemented methods dedicated to adding specifically Delta-Ct, Delta-Delta-Ct or just
+        Ct values to the Results.
 
         Parameters
         ----------
@@ -1390,14 +1487,22 @@ class Results(aux._ID):
             no new data can be stored under that id. Either the new data must be renamed or
             `replace = True` must be set to overwrite the presently stored data. 
         """
-        if column.name in self._df.columns:
-            if not replace:  
-                aw.SoftWarning("Results:name_overlap", name = column.name)
+        if isinstance(column, pd.Series):
+            if column.name in self._df.columns:
+                if not replace:  
+                    aw.SoftWarning("Results:name_overlap", name = column.name)
+                else: 
+                    self._df[column.name] = column
             else: 
-                self._df[column.name] = column
+                self._df = self._df.join(column)
         else: 
-            self._df = self._df.join(column)
-        
+            for i in column.columns:
+                if i in self._df.columns: 
+                    if not replace: 
+                        aw.SoftWarning("Results:name_overlap", name = i )
+                col = column[i]
+                self._df[i] = col
+
     def merge(self, *Results):
         """
         Merges any number of other qpcr.Results objects into this one.
@@ -1414,7 +1519,6 @@ class Results(aux._ID):
             R_df = R.get()
 
             # get only the delta-delta-Ct columns
-            ref_cols = [ raw_col_names[0], "group", "group_name", defaults.default_dataset_header ]
             cols = [i for i in R_df.columns if i not in ref_cols]
             R_df = R_df[cols]
 
@@ -1488,7 +1592,6 @@ class Results(aux._ID):
 
         # get groups and corresponding assay columns 
         groups = aux.sorted_set(list(self._df["group"]))
-        ref_cols = [raw_col_names[0], "group", "group_name", default_dataset_header]
         assays = [c for c in self._df.columns if c not in ref_cols]
      
         # compute stats for all replicates per group
@@ -1570,8 +1673,8 @@ class Results(aux._ID):
         objects : list
             A list of qpcr.Results objects containing only a single dCt column each (retaining group columns etc.)
         """
-        shared_columns = [i for i in self._df.columns if i in ["group", "group_name", raw_col_names[0], "assay"]]
-        dct_columns = [i for i in self._df.columns if i not in ["group", "group_name", raw_col_names[0], "assay"]]
+        shared_columns = [i for i in self._df.columns if i in ref_cols]
+        dct_columns = [i for i in self._df.columns if i not in ref_cols]
         
         dfs = [self._df[shared_columns + [i]] for i in dct_columns]
         objects = [Results() for i in dfs]
@@ -1725,6 +1828,11 @@ class Analyser(aux._ID):
             An amplification efficiency factor. Default is `e = 1`, 
             which is then treated as `eff = 2 * e`, so `e = 1` corresponds to true duplication
             each cycle.
+
+        Returns
+        -------
+        efficiency : float
+            The current efficiency used.
 
         """
         if isinstance(e, (int, float)):
@@ -2033,7 +2141,7 @@ class Normaliser(aux._ID):
     
     def link(self, assays:(list or tuple or Analyser) = None, normalisers:(list or tuple or Analyser) = None):
         """
-        Links either normalisers or assays-of-interest `qpcr.Results` objects coming from the same `qpcr.Analyser`.
+        Links either normalisers or assays-of-interest `qpcr.Assay` objects coming from the same `qpcr.Analyser`.
 
         Parameters
         ----------
@@ -2063,8 +2171,8 @@ class Normaliser(aux._ID):
         ----------
         f : function
             The function may accept one list of `qpcr.Assay` objects, and must return 
-            either a `qpcr.Results` object directly or a `pandas.Dataframe` (that will be migrated to a `qpcr.Results`).
-            The returned dataframe must contain a `"dCt_combined"` column which stores the delta-Ct values ultimately used as 
+            either an `qpcr.Assay` object directly or a `pandas.Dataframe` (that will be migrated to an `qpcr.Assay`).
+            The returned dataframe must contain a `"dCt"` column which stores the delta-Ct values ultimately used as 
             "normaliser assay".  
         """
         
@@ -2087,7 +2195,7 @@ class Normaliser(aux._ID):
             and must return a numeric `pandas.Series` of the same length. 
             
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
-            and `n` is the corresponding `"dCt"` column from the combined normaliser.
+            and `n` is the corresponding `"dCt"` column from the normaliser.
         """
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
@@ -2098,12 +2206,15 @@ class Normaliser(aux._ID):
 
     def normalise(self, **kwargs):
         """
-        Normalises all linked assays against the combined pseudo-normaliser, and stores the results in a new Results object.
+        Normalises all linked assays against the combined pseudo-normaliser 
+        (by default, unless a custom `prep_func` has been specified), 
+        and stores the results in a new Results object.
 
         Parameters
         ----------
         **kwargs
-            Any additional keyword arguments that may be passed to a custom `norm_func`.
+            Any additional keyword arguments that may be passed to a custom 
+            `norm_func` and `prep_func` (both will receive the kwargs!).
         """
         if self._normaliser is None: 
             self._normaliser = self._prep_func(self._Normalisers, **kwargs)
@@ -2113,7 +2224,7 @@ class Normaliser(aux._ID):
             aw.SoftWarning("Normaliser:no_data_yet")
 
         # get combined dataframe
-        normaliser = self._normaliser.get()
+        # normaliser = self._normaliser.get()
 
         # setup _Results by passing in the common columns 
         # from the first Assays (since all Assays should have 
@@ -2126,30 +2237,33 @@ class Normaliser(aux._ID):
         for assay in self._Assays:
 
             # get data
-            assay_df = assay.get()
+            # assay_df = assay.get()
 
             # apply normalisation (delta-delta-Ct)
             normalised = self._norm_func_wrapper(
-                                                    assay_df, 
-                                                    normaliser, 
+                                                    assay, 
+                                                    self._normaliser, 
                                                     **kwargs
                                             )
 
-            # store results in _Results
-            self._store_to_Results(assay, normalised)
+            # # store results in _Results
+            # self._store_to_Results(assay, normalised)
 
             # and store results also in the Assay itself
             assay.add_ddCt( self._normaliser.id(), normalised )
 
+            # and store to results
+            self._Results.add_ddCt(assay)
+
     def _vet_normaliser(self):
         """
-        Checks if the normaliser is already a qpcr.Results object, and if not
+        Checks if the normaliser is already a qpcr.Assay object, and if not
         convert it to one. 
         """
-        if not isinstance(self._normaliser, Results):
-            tmp = Results()
+        if not isinstance(self._normaliser, Assay):
+            tmp = Assay()
+            tmp.adopt(self._normaliser)
             tmp.id("combined_normaliser")
-            tmp._df = self._normaliser
             self._normaliser = tmp
             
 
@@ -2163,36 +2277,47 @@ class Normaliser(aux._ID):
         self._Results.add(normalised)
 
 
-    def _norm_func_wrapper(self, sample_assay, normaliser, dCt_col="dCt", norm_col="dCt_combined", **kwargs):
+    def _norm_func_wrapper(self, sample_assay, normaliser, **kwargs):
         """
-        The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a normalised dataframe
+        The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a pandas series of normalised values
         """
         # for double normalised we want the same columns as dct and norm...
-        dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
 
-        tmp_df = normaliser.join(sample_assay, lsuffix="_s")
-        # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
-        results = self._norm_func(tmp_df[[dCt_col, norm_col]], **kwargs)
+        sample_dCt = sample_assay.dCt()
+        norm_dCt = normaliser.dCt()
+
+        tmp_df = pd.DataFrame( dict( s = sample_dCt, n = norm_dCt )  )
+
+        results = self._norm_func(tmp_df, **kwargs)
+
+        # this is the old call from before factoring out to Assays 
+        # dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
+
+        # tmp_df = normaliser.join(sample_assay, lsuffix="_s")
+        # # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
+        # results = self._norm_func(tmp_df[[dCt_col, norm_col]], **kwargs)
         return results
 
-    def _prep_columns(self, sample_assay, dCt_col, norm_col):
-        """
-        Returns the columns to use if named columns shall be used 
-        (named columns will be used for second-normalisation of entire runs)
-        Note
-        ----
-        Currently, second normalisation is not yet really implemented, so this is 
-        kinda not really used and would probably get overhauled when we 
-        try to seriously implement that at some point. 
-        """
-        if dCt_col == "named":
-            dCt_col = [i for i in sample_assay.columns if i not in ["group", "group_name", raw_col_names[0], "assay"]]
-            # assert len(dCt_col) == 1, f"length of dCt_col is: {len(dCt_col)}"
-            dCt_col = dCt_col[0]
+    # NOT USED ANYMORE
+    # Used to be used before factoring out data storage to the Assays 
+    # def _prep_columns(self, sample_assay, dCt_col, norm_col):
+    #     """
+    #     Returns the columns to use if named columns shall be used 
+    #     (named columns will be used for second-normalisation of entire runs)
+    #     Note
+    #     ----
+    #     Currently, second normalisation is not yet really implemented, so this is 
+    #     kinda not really used and would probably get overhauled when we 
+    #     try to seriously implement that at some point. 
+    #     """
+    #     if dCt_col == "named":
+    #         dCt_col = [i for i in sample_assay.columns if i not in ["group", "group_name", raw_col_names[0], "assay"]]
+    #         # assert len(dCt_col) == 1, f"length of dCt_col is: {len(dCt_col)}"
+    #         dCt_col = dCt_col[0]
 
-        if norm_col == "same": 
-            norm_col = dCt_col + "_s"
-        return dCt_col,norm_col
+    #     if norm_col == "same": 
+    #         norm_col = dCt_col + "_s"
+    #     return dCt_col,norm_col
 
     def _divide_by_normaliser(self, df, **kwargs):
         """
@@ -2201,8 +2326,10 @@ class Normaliser(aux._ID):
         Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
         (default _norm_func)
         """
-        dCt_col, norm_col = df.columns
-        s, n = df[dCt_col], df[norm_col]
+        s, n = df["s"], df["n"]
+        # this is the old call from before factoring out to Assays
+        # dCt_col, norm_col = df.columns
+        # s, n = df[dCt_col], df[norm_col]
         return s / n
 
     def _link_assays(self, assays):
@@ -2239,7 +2366,7 @@ class Normaliser(aux._ID):
     def _preprocess_normalisers(self, *args, **kwargs):
         """
         Averages the provided normalisers row-wise for all normalisers into a 
-        single combined normaliser, that will be stored as a Results instance.
+        single combined normaliser, that will be stored as a new Assay object.
         """
 
         # initialise new Results to store the dCt values form all normalisers
@@ -2252,24 +2379,31 @@ class Normaliser(aux._ID):
 
         # now add all dCt columns from all normalisers
         for norm in self._Normalisers:
-            dCt = norm.get()["dCt"]
-            dCt.name = norm.id()
-            combined.add(dCt)
+            combined.add_dCt(norm)
         
         # remove the non-dCt columns as they would interfere with
         # pre-processing. But we keep the "group" column because some
         # custom prep_func may want to use the group references.
-        combined.drop_cols("group_name", raw_col_names[0])
+        # i.e. we just replace any "Ct" columns that may have smuggled in if 
+        # a non-default process is used for assembly
+        combined.drop_cols( raw_col_names[1] )
 
         # now generate the combined normaliser
         combined_normaliser = self._average(combined)
-        combined_normaliser = combined_normaliser.rename("dCt_combined")
+        combined_normaliser = combined_normaliser.rename("dCt")
         combined.add(combined_normaliser)
+        
+        # now assemble the normaliser into a qpcr.Assay
+        combined = combined.get()
+        normaliser = Assay()
+        normaliser.adopt(combined)
+        normaliser.adopt_id(self._Normalisers[0])
 
-        self._normaliser = combined  
+
+        self._normaliser = normaliser  
         if len(self._Normalisers) > 1:
             self._update_combined_id()
-        
+  
         # forward combined_id to self and _Results 
         self.adopt_id(self._normaliser)
         self._Results.adopt_id(self._normaliser)
@@ -2283,6 +2417,7 @@ class Normaliser(aux._ID):
         """
         ids = [N.id() for N in self._Normalisers]
         ids = "+".join(ids)
+        self._normaliser._id_reset()
         self._normaliser.id(ids)
         
 
@@ -2293,8 +2428,11 @@ class Normaliser(aux._ID):
         (default preprocess_normalisers function)
         """
         tmp_df = combined.get()
+
+        # drop group as it is a numeric column 
+        # and would otherwise skew the average
         if "group" in tmp_df.columns:
-            tmp_df = tmp_df.drop(columns = ["group"]) # drop group as it is a numeric column and would otherwise skew the average
+            tmp_df = tmp_df.drop(columns = ["group"]) 
         tmp_df = tmp_df.mean(axis = 1, numeric_only = True)
 
         return tmp_df
