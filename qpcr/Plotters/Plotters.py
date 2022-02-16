@@ -1,6 +1,28 @@
 """
 This module is designed for streamlined data visualisation of the qpcr generated results
 It is designed to work directly with `qpcr.Results` objects. 
+
+## `Static` vs `Interactive` Figures
+----
+
+The `Plotters` are designed to produce two kinds of figures each, either a `"static"` or  an `"interactive"` figure. 
+The type of figure a specific Plotter should produce has to be specified using the `mode` argument. 
+
+### Static Figures
+_Static_  figures are made using `matplotlib` and they will open through whatever backend your matplotlib configuration 
+as specified. Static figures are primarily designed for printing into labjournals and offer a greater flexibility with 
+style customizibility (you can use `seaborn` styles for instance, or the matplotlib `rcparams` to style your figures). 
+
+### Interactive Figures
+_Interactive_  figures are made using `plotly` and they will open in your browser. Interactive Figures are primarily designed
+for cases where your figures contain a lot of data so having a static view on them might be insufficient. Interactive figures
+offer `plotly`'s native features like zooming, cropping, size-adjustments and so forth. It comes at the price of less flexibility
+with regard to styling. You can set plotly `templates`, but that's about it. However, also interactive figures are perfectly 
+adequate for your labjournal, and you may prefer using these for their dynamic figure size adjustments directly from your browser. 
+
+### Plotting `kwargs` 
+Both Static and Interactive Figures support a variety of keyword arguments that. You can check which kwargs are passable to each 
+type of figure in the documentation of each Plotter's `plot` method. 
 """
 
 import qpcr.__init__ as qpcr
