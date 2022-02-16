@@ -11,14 +11,15 @@
 ---
 
 
-This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` files all the way to finished visualisations of the results. 
+This project presents a python module designed to facilitate the analysis of qPCR data through established `Delta-Delta-Ct` analysis. To that end, this module provides a set of processing classes that may be assembled into a fully-fledged analysis pipeline, starting from raw `Ct` values stored in `csv` or `excel` files all the way to finished visualisations of the results. 
 
 User-friendliness and quick and easy workflows were of primary concern during development, so that this module is suitable for both non-experienced users as well as veteran coders. Virtually all steps within the analysis workflow are customizible to allow a streamlined analysis of any given dataset.
 
-The exported results are formatted to be readily imported into graphing software. However, this module also includes methods to readily generate both static and interactive figures for rapid data exploration. 
+The exported results are formatted to be readily imported into other analysis or graphing software.
 
 ### Installation
 This module can directly be installed via `pip`.
+
 ```
 pip install qpcr
 ```
@@ -26,6 +27,11 @@ pip install qpcr
 ### What does `qpcr` do?
 The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. It offers automated processes to read datafiles, filter out outlier Ct values, compute Delta-Ct, normalise assays against one another, and visualise the results. Hence, `qpcr` offers a full suite for automated Delta-Delta-Ct analyses.
 However, even if your analysis is not going to be Delta-Delta-Ct, you may wish to check out how the `qpcr.Readers` might help you faciliate your workflow, as they are streamlined to read diversely structured datafiles contianing both a single and multiple qPCR datasets. 
+
+#### Customisibility
+A technical note at this point. At it's core `qpcr` offers very versatile data manipulation through two processing classes called the `qpcr.Analyser` and the `qpcr.Normaliser`. The `qpcr.Analyser` performs actions on a single qPCR datasets / assay stored in a `qpcr.Assay` object (the central data storage unit of the `qpcr` module). 
+It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single assay is fully costumisible, so there is no restriction as such to what the Analyser will do to an Assay. 
+On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the assay is fully costumisible.  
 
 ### Example usage
 To facilitate data analysis, common workflows have been implemented in pre-defined `pipelines` that allow for quick data analysis with minimal user effort. An example analysis using the pre-defined `BasicPlus` pipeline:
