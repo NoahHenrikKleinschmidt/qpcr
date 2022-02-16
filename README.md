@@ -75,7 +75,8 @@ pipeline.run()
 
 # and at this point the results are already saved...
 ```
-![](https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/Example%20Results/colorful.jpg)
+
+![](https://github.com/NoahHenrikKleinschmidt/qpcr/blob/dev_next/Examples/Example%20Results/colorful.jpg)
 
 
 ### Getting started

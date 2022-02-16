@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="qpcr", 
-    version="2.1.1",
+    version="3.0.1",
     author="Noah H. Kleinschmidt",
     author_email="noah.kleinschmidt@students.unibe.ch",
     description="A module to perform analysis of qPCR data",
