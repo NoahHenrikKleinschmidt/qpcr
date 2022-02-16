@@ -1,0 +1,73 @@
+﻿Assay;Name;Type;Ct;@qpcr
+28S;NK1;Unknown;7.49;normaliser
+28S;NK1;Unknown;7.56;normaliser
+28S;NK2;Unknown;7.63;normaliser
+28S;NK2;Unknown;7.87;normaliser
+28S;NK3;Unknown;7.52;normaliser
+28S;NK3;Unknown;7.54;normaliser
+28S;NK4;Unknown;7.57;normaliser
+28S;NK4;Unknown;7.72;normaliser
+28S;NK5;Unknown;7.52;normaliser
+28S;NK5;Unknown;7.66;normaliser
+28S;NK6;Unknown;7.53;normaliser
+28S;NK6;Unknown;7.54;normaliser
+28S;NK7;Unknown;7.64;normaliser
+28S;NK7;Unknown;7.68;normaliser
+28S;NK8;Unknown;7.7;normaliser
+28S;NK8;Unknown;7.73;normaliser
+28S;NK9;Unknown;7.7;normaliser
+28S;NK9;Unknown;7.63;normaliser
+28S;NK10;Unknown;8.01;normaliser
+28S;NK10;Unknown;7.94;normaliser
+28S;NK11;Unknown;7.77;normaliser
+28S;NK11;Unknown;8.05;normaliser
+28S;NK12;Unknown;8.49;normaliser
+28S;NK12;Unknown;8.58;normaliser
+HNRNPL prot;NK1;Unknown;18.11;assay
+HNRNPL prot;NK1;Unknown;18.13;assay
+HNRNPL prot;NK2;Unknown;18;assay
+HNRNPL prot;NK2;Unknown;17.96;assay
+HNRNPL prot;NK3;Unknown;17.98;assay
+HNRNPL prot;NK3;Unknown;17.93;assay
+HNRNPL prot;NK4;Unknown;18.59;assay
+HNRNPL prot;NK4;Unknown;18.58;assay
+HNRNPL prot;NK5;Unknown;18.34;assay
+HNRNPL prot;NK5;Unknown;18.3;assay
+HNRNPL prot;NK6;Unknown;18.35;assay
+HNRNPL prot;NK6;Unknown;18.32;assay
+HNRNPL prot;NK7;Unknown;18.23;assay
+HNRNPL prot;NK7;Unknown;18.12;assay
+HNRNPL prot;NK8;Unknown;18.21;assay
+HNRNPL prot;NK8;Unknown;18.24;assay
+HNRNPL prot;NK9;Unknown;18.3;assay
+HNRNPL prot;NK9;Unknown;18.37;assay
+HNRNPL prot;NK10;Unknown;18.54;assay
+HNRNPL prot;NK10;Unknown;18.61;assay
+HNRNPL prot;NK11;Unknown;18.56;assay
+HNRNPL prot;NK11;Unknown;18.49;assay
+HNRNPL prot;NK12;Unknown;18.77;assay
+HNRNPL prot;NK12;Unknown;18.72;assay
+HNRNPL nmd;NK1;Unknown;25.94;assay
+HNRNPL nmd;NK1;Unknown;25.9;assay
+HNRNPL nmd;NK2;Unknown;25.71;assay
+HNRNPL nmd;NK2;Unknown;25.86;assay
+HNRNPL nmd;NK3;Unknown;25.74;assay
+HNRNPL nmd;NK3;Unknown;25.73;assay
+HNRNPL nmd;NK4;Unknown;23.5;assay
+HNRNPL nmd;NK4;Unknown;23.44;assay
+HNRNPL nmd;NK5;Unknown;23.36;assay
+HNRNPL nmd;NK5;Unknown;23.32;assay
+HNRNPL nmd;NK6;Unknown;23.8;assay
+HNRNPL nmd;NK6;Unknown;23.76;assay
+HNRNPL nmd;NK7;Unknown;22.65;assay
+HNRNPL nmd;NK7;Unknown;22.62;assay
+HNRNPL nmd;NK8;Unknown;22.6;assay
+HNRNPL nmd;NK8;Unknown;22.56;assay
+HNRNPL nmd;NK9;Unknown;22.55;assay
+HNRNPL nmd;NK9;Unknown;22.59;assay
+HNRNPL nmd;NK10;Unknown;22.18;assay
+HNRNPL nmd;NK10;Unknown;22.15;assay
+HNRNPL nmd;NK11;Unknown;22.25;assay
+HNRNPL nmd;NK11;Unknown;22.17;assay
+HNRNPL nmd;NK12;Unknown;22.37;assay
+HNRNPL nmd;NK12;Unknown;22.39;assay

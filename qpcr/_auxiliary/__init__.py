@@ -32,6 +32,16 @@ def sorted_set(some_list):
             list_set.append(i)
     return list_set
 
+def same_type(obj1, obj2):
+    """
+    Compares the datatypes from two data objects and returns True if they are the same
+    -> we use this to compare the types of the qpcr main classes since isinstance will not work for some reason...
+    """
+    type1 = type(obj1).__name__
+    type2 = type(obj2).__name__
+    same = type1 == type2
+    return same
+
 class _ID:
     """
     A meta_superclass that simply adds an ID getter-setter to itself

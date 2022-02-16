@@ -1,12 +1,36 @@
 """
-This module is designed for streamlined data visualisation of the `qpcr`-generated results
+This module is designed for streamlined data visualisation of the qpcr generated results
 It is designed to work directly with `qpcr.Results` objects. 
+
+## `Static` vs `Interactive` Figures
+----
+
+The `Plotters` are designed to produce two kinds of figures each, either a `"static"` or  an `"interactive"` figure. 
+The type of figure a specific Plotter should produce has to be specified using the `mode` argument. 
+
+### Static Figures
+_Static_  figures are made using `matplotlib` and they will open through whatever backend your matplotlib configuration 
+as specified. Static figures are primarily designed for printing into labjournals and offer a greater flexibility with 
+style customizibility (you can use `seaborn` styles for instance, or the matplotlib `rcparams` to style your figures). 
+
+### Interactive Figures
+_Interactive_  figures are made using `plotly` and they will open in your browser. Interactive Figures are primarily designed
+for cases where your figures contain a lot of data so having a static view on them might be insufficient. Interactive figures
+offer `plotly`'s native features like zooming, cropping, size-adjustments and so forth. It comes at the price of less flexibility
+with regard to styling. You can set plotly `templates`, but that's about it. However, also interactive figures are perfectly 
+adequate for your labjournal, and you may prefer using these for their dynamic figure size adjustments directly from your browser. 
+
+### Plotting `kwargs` 
+Both Static and Interactive Figures support a variety of keyword arguments that allow you to customise many of their 
+characteristics and their underlying data handling. You can check which kwargs are passable to each type of figure in 
+the documentation of each Plotter. 
 """
 
 import qpcr.__init__ as qpcr
 import qpcr.Pipes
 import qpcr._auxiliary.graphical as gx
 import qpcr._auxiliary as aux 
+import qpcr._auxiliary.defaults as defaults
 import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt
@@ -15,33 +39,13 @@ from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
 
-# setup some default settings for charts
+# setup default settings for charts
 
-_default_static_PreviewResults = dict(
-                                        color = "Lightgray",
-                                        rot = 0,
-                                        legend = False, 
-                                        frame = False,
-                                        title = "Preview of Results"
-                                    )
+_default_static_PreviewResults = defaults.static_PreviewResults
+_default_interactive_PreviewResults = defaults.interactive_PreviewResults
 
-_default_interactive_PreviewResults = dict(
-                                            template = "plotly_white",
-                                            title = "Preview of Results"
-                                        )
-
-
-_default_static_ReplicateBoxPlot = dict(
-                                        title = "Summary of Replicates",
-                                        linewidth = 0.8,
-                                        frame = False,
-                                        palette = "Blues"
-                                    )
-
-_default_interactive_ReplicateBoxPlot = dict(
-                                            template = "plotly_white",
-                                            title = "Summary of Replicates"
-                                        )
+_default_static_ReplicateBoxPlot = defaults.static_ReplicateBoxPlot
+_default_interactive_ReplicateBoxPlot = defaults.interactive_ReplicateBoxPlot
 
 
 # Concept: 
@@ -62,10 +66,11 @@ class Plotter:
     """
     A superclass that handles Data Linking and Parameter setup for FigureClasses
     (not for End-User usage)
+
     Parameters
     ----------
     mode : str
-        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).    
     """
     def __init__(self, mode = None):
         self._default_params = None
@@ -88,8 +93,8 @@ class Plotter:
         Results : qpcr.Results or pd.DataFrame
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         """
-
-        if type(Results).__name__ == type(qpcr.Results()).__name__:
+        
+        if aux.same_type(Results, qpcr.Results()):
             self._Results = Results
             self._data = self._Results.stats()
         elif isinstance(Results, pd.DataFrame):
@@ -193,7 +198,7 @@ class Plotter:
         if supersede:
             kwargs = dict(self._PARAMS, **kwargs)
         else:
-            kwargs = kwargs = dict(kwargs, **self._PARAMS)
+            kwargs = dict(kwargs, **self._PARAMS)
         
         if store:
             self._PARAMS = kwargs
@@ -320,6 +325,50 @@ class PreviewResults(Plotter):
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
 
+
+    Plotting Kwargs
+    ----
+    
+    #### `"static"` Kwargs
+    Static PreviewResults figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
+    |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
+    |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive PreviewResults figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
+
+
     """
     def __init__(self, mode:str):
         self._setup_default_params(
@@ -356,6 +405,8 @@ class PreviewResults(Plotter):
             try: 
                 q = query.format(ref_col = ref_col, q = assay)
                 tmp_df = data.query(q)
+                tmp_df = tmp_df.sort_values("group")
+
 
                 # now plot a new bar chart 
                 subplot = Coords.subplot()
@@ -434,9 +485,21 @@ class PreviewResults(Plotter):
             ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties()
             headers = aux.from_kwargs("headers", headings, kwargs, rm = True)
             show = aux.from_kwargs("show", True, kwargs, rm = True)
+            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+
+            if isinstance(padding, (list, tuple)):
+                hpad, vpad = padding
+            else: 
+                hpad, vpad = padding, None
 
             speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(rows = nrows, cols = ncols, specs = speclist, subplot_titles = headers)
+            fig = make_subplots(
+                                    rows = nrows, cols = ncols, 
+                                    specs = speclist, 
+                                    subplot_titles = headers,
+                                    horizontal_spacing = hpad,
+                                    vertical_spacing = vpad
+                            )
 
 
             Coords = gx.AxesCoords(fig, [], (ncols, nrows))
@@ -451,6 +514,13 @@ class PreviewResults(Plotter):
                         legend = {"title" : aux.from_kwargs("legend_title", ref_col, kwargs, rm = True),
                         },
                     )
+
+            # set default axes labels
+            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
+            fig.update_xaxes(title_text = xlabel)
+            
+            ylabel = aux.from_kwargs("ylabel", "DeltaDeltaCt", kwargs, rm = True) 
+            fig.update_yaxes(title_text = ylabel)
 
             idx = 0
             for assay in headings:
@@ -486,10 +556,6 @@ class ReplicateBoxPlot(Plotter):
     """
     Generate a boxplot figure summary for the input sample replicates.
     
-    Note
-    ----
-    This is embedded in the Filter class. Since this is designed to work with Assays and not with DeltaCt Results,
-    it redefines link to get() and not stats() the get required tables.
 
     Parameters
     ----------
@@ -498,6 +564,38 @@ class ReplicateBoxPlot(Plotter):
 
     mode : str
         The plotting mode (either `"interactive"` or `"static"`).
+
+
+    
+    Plotting Kwargs
+    ----
+    
+    #### `"static"` Kwargs
+    Static ReplicateBoxPlot figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
+    | title : `str`   |  The overall figure title   | `title = "My assays"    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive ReplicateBoxPlot figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "My run"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
+
+
+
     """
     def __init__(self, Filter = None, mode="interactive"):
         self._setup_default_params(
@@ -532,10 +630,7 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         """
-        # somehow isinstance would not work...
-        # future TODO: check out why isinstance didn't work here...
-        example = qpcr.Assay()
-        if type(Assay).__name__ == type(example).__name__:
+        if aux.same_type(Assay, qpcr.Assay()):
             self._Results = Assay
             data = self._Results.get()
         else:
@@ -555,7 +650,7 @@ class ReplicateBoxPlot(Plotter):
         Generates an interactive Boxplot summary of the input Ct values
         """
 
-        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
         template = aux.from_kwargs("template", None, kwargs, rm=True)
         title = aux.from_kwargs("title", None, kwargs, rm=True)
 
@@ -568,6 +663,14 @@ class ReplicateBoxPlot(Plotter):
         group_names = aux.sorted_set(data["group_name"])
 
         fig = go.Figure()
+
+        fig.update_layout(
+                            boxmode="group", 
+                            height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                            width = aux.from_kwargs("width", None, kwargs, rm = True),
+                            template = template, 
+                            title = title,
+                        )
 
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
@@ -586,13 +689,6 @@ class ReplicateBoxPlot(Plotter):
                                 **kwargs,
                             ),
                         )
-            
-           
-        fig.update_layout(
-                            boxmode="group", 
-                            template = template, 
-                            title = title,
-                        )
 
         if show:
             fig.show()
@@ -607,7 +703,7 @@ class ReplicateBoxPlot(Plotter):
 
         data = self._data
         
-        show = aux.from_kwargs("show", False, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
         figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
         title = aux.from_kwargs("title", None, kwargs, rm=True)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)

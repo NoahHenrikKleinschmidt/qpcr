@@ -1,19 +1,19 @@
 """
 This submodule defines a number of filters that can be used to 
-remove faulty reads prior to deltact analysis. 
+remove faulty replicates from `qpcr.Assay`s before before passing them to an `qpcr.Analyser`.
 
-Filters implemented are currently
----------------------------------
-RangeFilter 
-    Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
-    The user has the option of specifying another anchor and limits for the inclusion range.
+## Available Filters
+--------
+### RangeFilter 
+Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
+The user has the option of specifying another anchor and limits for the inclusion range.
 
-IQRFilter
-    Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
+### IQRFilter
+Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
 """
 
 from re import L
-import qpcr.__init__ as qpcr
+import qpcr
 import pandas as pd
 import numpy as np
 import qpcr._auxiliary.warnings as aw
@@ -23,7 +23,7 @@ import qpcr.Plotters as Plotters
 
 class Filter(aux._ID):
     """
-    The super filtering class that takes in a qpcr.Assay object and updates its dataframe to a filtered version.
+    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     """
     def __init__(self):
         super().__init__()
@@ -31,6 +31,11 @@ class Filter(aux._ID):
         self._report_loc = None
         self._id = type(self).__name__
         
+        # by default we ignore groups with NaN anchors
+        # like this we avoid Errors and don't filter out 
+        # any unicate groups like the diluent sample...
+        self._ignore_nan = True
+
         self._boxplot_mode = "interactive"
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -42,6 +47,27 @@ class Filter(aux._ID):
                                             "anchor" : [], "upper" : [], "lower" : []
                                         })
     
+    def plot_params(self, which = "both", **params):
+        """
+        Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+        This can also be passed directly while calling `Filter.plot`.
+
+        Parameters
+        ----------
+        which : str
+            Specifies which of the Boxplots to modify. 
+            This can be either `"both"`, `"pre"` or `"post"`.
+        **kwargs
+            Any accepted additional keyword arguments. 
+        """
+        if which == "both":
+            self._before_BoxPlotter.params(**params)
+            self._after_BoxPlotter.params(**params)
+        elif which == "pre":
+            self._before_BoxPlotter.params(**params)
+        elif which == "post":
+            self._after_BoxPlotter.params(**params)
+
     def get_stats(self):
         """
         Returns 
@@ -50,6 +76,15 @@ class Filter(aux._ID):
             The filtering statistics dataframe (a summary of filtering parameters used)
         """
         return self._filter_stats
+
+    def ignore_nan(self, bool):
+        """
+        Set a policy for how to deal with groups that have a `NaN` anchor.
+        If set to `True` such groups will be ignored and filtering will proceed.
+        If set to `False` the Filter will raise an Error!
+        """
+        self._ignore_nan = bool
+
 
     def plotmode(self, mode = "interactive"):
         """
@@ -90,12 +125,12 @@ class Filter(aux._ID):
 
     def link(self, Assay:qpcr.Assay):
         """
-        Links a qpcr.Assay to be filtered
+        Links a `qpcr.Assay` to be filtered
         
         Parameters
         ----------
-            Assay : qpcr.Assay
-                A qpcr.Assay object to be filtered.
+            Assay : `qpcr.Assay`
+                A `qpcr.Assay` object to be filtered.
         """
         self._Assay = Assay
         self._before_BoxPlotter.link(self._Assay)
@@ -107,15 +142,15 @@ class Filter(aux._ID):
         
         Parameters
         ----------
-        Assay : qpcr.Assay
-            A qpcr.Assay object to be filtered.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object to be filtered.
         **kwargs
             Any keyword arguments that should be passed to the plotting method.
         
         Returns
         -------
-        Assay : qpcr.Assay
-            A qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            A `qpcr.Assay` object containing only entries that passed the filter.
 
         """
         self.link(Assay)
@@ -133,8 +168,8 @@ class Filter(aux._ID):
         
         Returns
         -------
-        Assay : qpcr.Assay
-            An updated qpcr.Assay object containing only entries that passed the filter.
+        Assay : `qpcr.Assay`
+            An updated `qpcr.Assay` object containing only entries that passed the filter.
         """
         if self._Assay is not None:
             self._filter(**kwargs)
@@ -269,8 +304,8 @@ class RangeFilter(Filter):
         anchor 
             Supported types for `anchor` are: a numeric value (`int or float`),
             an `iterable` of same length as groups in the dataframe, 
-            a `dict` where keys must be group indices (starting from 0) and values are a numeric value to be used as anchor (`int or float`),
-            or a `function` that works with a pandas dataframe as stored by qpcr.Assay objects, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
             which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
         """
         self._anchor = anchor
@@ -278,7 +313,6 @@ class RangeFilter(Filter):
     def _filter(self, **kwargs):
         """
         Filters out any replicates that are out of range and updates the Assay's dataframe.
-        It stores the original in a new attribute called _orig_df.
         """
     
         df = self._Assay.get()
@@ -287,13 +321,22 @@ class RangeFilter(Filter):
         faulty_indices = []
         for group in groups:
             tmp = df.query(f"group == {group}")
+
+            # get anchor and check if its nan
             anchor = self._get_anchor(kwargs, group, tmp)
+            if self._ignore_nan and anchor != anchor: 
+                continue 
+
+            # generate inclusion range boundries
             upper, lower = self._set_bounds(anchor)
+
+            # get faulty indices
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
-
+        
+        # remove faulty indices
         self._filter_out(faulty_indices)
 
         if self._report_loc is not None: 
@@ -337,7 +380,7 @@ class IQRFilter(Filter):
         self._upper = 1.5
         self._lower = 1.5
 
-    def _filter(self):
+    def _filter(self, **kwargs):
         """
         Gets IQR for each group and finds outliers based on self._upper / lower
         """
@@ -349,10 +392,17 @@ class IQRFilter(Filter):
         for group in groups:
             tmp = df.query(f"group == {group}")
 
+            # get anchor
             anchor = np.nanmedian(tmp["Ct"])
+            # ignore Nan if so specified
+            if self._ignore_nan and anchor != anchor: 
+                continue
+
+            # generate inclusion range boundries
             first, third = np.nanquantile(tmp["Ct"], 0.26), np.nanquantile(tmp["Ct"], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
+            # get faulty replicates
             faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
@@ -381,100 +431,29 @@ class IQRFilter(Filter):
 
 if __name__ == "__main__":
     
-    files = ["Example Data/28S.csv", "Example Data/actin.csv", "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    normalisers = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv"]
+    assays = ["./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
+
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
-    analysers = []
+    reader = qpcr.DataReader()
+    assays = [ reader.read(i) for i in assays ]
+    normalisers = [ reader.read(i) for i in normalisers ]
 
-    reader = qpcr.SampleReader()
-    reader.replicates(6)
-    reader.names(groupnames)
+    filter = IQRFilter()
+    assays = [ filter.pipe(i) for i in assays ]
+    normalisers = [ filter.pipe(i) for i in normalisers ]
 
     analyser = qpcr.Analyser()
-    analyser.anchor("first")
-
-    iqr_filter = RangeFilter()
-    iqr_filter.plotmode("static")
-    iqr_filter.report(".")
-    # iqr_filter.set_lim(1.6)
-
-    for file in files: 
-        
-        sample = reader.read(file)
-        
-        # here comes in the filter...
-        sample = iqr_filter.pipe(sample)
-        # print(sample.get())
-
-        res = analyser.pipe(sample)
-        analysers.append(res)
-
-    iqr_filter.plot(show = False)
+    assays = [ analyser.pipe(i) for i in assays ]
+    normalisers = [ analyser.pipe(i) for i in normalisers ]
 
     normaliser = qpcr.Normaliser()
-    normaliser.link(normalisers = analysers[:2])
-    normaliser.link(samples = analysers[2:])
-
+    normaliser.link(assays, normalisers)
     normaliser.normalise()
-    
-    result = normaliser.get()
 
-    print("first result...")
-    print(result.get())
-    # print(result.stats())
-    
-    # just for fun, let's try to normalise nmd against prot...
+    filter.plot(show = True)
 
-    nmd = normaliser.get(copy=True)
-    prot = normaliser.get(copy=True)
-
-    nmd.drop_cols("HNRNPL_prot_rel_28S+actin", "assay")
-    nmd.rename_cols(
-        {"HNRNPL_nmd_rel_28S+actin" : "dCt"}
-        )
-    
-    nmd.id("nmd")
-
-    prot.drop_cols("HNRNPL_nmd_rel_28S+actin", "assay")
-    prot.rename_cols(
-        {"HNRNPL_prot_rel_28S+actin" : "dCt"}
-    
-        )
-
-    prot.id("prot")
-
-    # Alright: At the moment we cannot use a second_normaliser, 
-    # as it for whatever reason overwrites ALL Ct containing 
-    # columns with the last one??? >> happy bug hunting...
-
-    # UDPATE: It seems like nmd is used for normaliser instead of prot??
-    # 
-    # SOLUTION: Solution is: use copy.deepcopy() otherwise both nmd 
-    #           and prot are just referencing the same Results instance!
-
-    second_normaliser = qpcr.Normaliser()
-    second_normaliser.link(normalisers = [prot])
-    second_normaliser.link(samples = [nmd, prot])
-
-    second_normaliser.normalise()
-    
-    result = second_normaliser.get()
-
-    print("second result...")
-    print(result.get())
-
-    # p = Plotters.PreviewResults(mode = "interactive")
-    # p.link(result)
-    # p.plot()
-
-    p1 = Plotters.PreviewResults(mode = "static")
-    p1.link(result)
-    p1.plot()
-    
-    #  
-    # result.save("..")
-    
-    # result.add_names(samples)
-
-
-    exit(0)
+    prev = Plotters.PreviewResults("interactive")
+    prev.link( normaliser.get() )
+    prev.plot()

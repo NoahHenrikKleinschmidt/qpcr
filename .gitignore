@@ -1,9 +1,12 @@
 Example Data *
 Example Results *
 __pycache__
-__*
+__*/
 dist
 *.egg*
 *rex*
 build*
-html
+test*ipynb
+test*py
+html*
+testfiles
