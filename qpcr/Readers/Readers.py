@@ -260,16 +260,20 @@ class _CORE_Reader(aux._ID):
         if not full_valid_Ct_col:
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
         
-        self._id_reset()
-        self.id(aux.fileID(self._src))
+        if isinstance(self._src, str):
+            self._id_reset()
+            self.id(aux.fileID(self._src))
         self._df = df
 
     def _filesuffix(self):
         """
         Returns the file-suffix of the provided file
         """
-        suffix = self._src.split(".")[-1]
-        return suffix
+        try: 
+            suffix = self._src.split(".")[-1]
+            return suffix
+        except: 
+            pass
 
     def _make_new_Assay(self, name, df):
         """
