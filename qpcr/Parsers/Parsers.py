@@ -74,7 +74,7 @@ However, this flexibility is not available when calling Parsers indirectly throu
 
 | Decorator | Code-reference | Filetype                                 | Available for / Used by `qpcr.Readers`                                   |
 | --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
+| any except `qpcr:column` | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
 | @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
 | @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
 | @qpcr:group | qpcr:group | Horizontal Big Table files | `BigTableReader` |
