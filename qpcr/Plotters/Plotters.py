@@ -589,6 +589,7 @@ class ReplicateBoxPlot(Plotter):
     | ---- | ---- | ---- |
     |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
     | title : `str`   |  The overall figure title   | `title = "My run"`    |
+    | ylabel : `str`   |  The y-axis title   | `ylabel = "Raw Ct value"`    |
     |  height : `int`   |   Height of the figure   | `height = 50`    |
     |  width : `int`   |   Width of the figure   | `width = 50`    |
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
@@ -671,6 +672,10 @@ class ReplicateBoxPlot(Plotter):
                             template = template, 
                             title = title,
                         )
+
+        # add default ylabel
+        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True) 
+        fig.update_yaxes(title_text = ylabel)
 
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
