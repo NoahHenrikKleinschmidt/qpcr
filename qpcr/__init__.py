@@ -697,10 +697,14 @@ class Assay(aux._ID):
         names : list or pd.Series
             The given group names of all replicate groups.
         """
-        if as_set:
-            return aux.sorted_set(list(self._df["group_name"]))
+        if "group_name" in self._df.columns: 
+            if as_set:
+                return aux.sorted_set(list(self._df["group_name"]))
+            else: 
+                return self._df["group_name"]
         else: 
-            return self._df["group_name"]
+            aw.SoftWarning("Assay:setup_not_grouped")
+            return None
     
     def groups(self):
         """
@@ -711,7 +715,11 @@ class Assay(aux._ID):
         groups : list
             The given numeric group identifiers of all replicate groups.
         """
-        return sorted(list(set(self._df["group"])))
+        if "group" in self._df.columns:
+            return sorted(list(set(self._df["group"])))
+        else:
+            aw.SoftWarning("Assay:setup_not_grouped")
+            return None
 
     def replicates(self, replicates : (int or tuple or str) = None):
         """
