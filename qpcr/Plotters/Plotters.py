@@ -526,6 +526,8 @@ class PreviewResults(Plotter):
             for assay in headings:
                 row, col = Coords.get()
                 tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
+                tmp_df = tmp_df.sort_values("group")
+
                 # now plot a new bar chart 
                 fig.add_trace(
 
