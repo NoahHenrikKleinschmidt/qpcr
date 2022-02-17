@@ -312,7 +312,10 @@ class _CORE_Reader(aux._ID):
         """
         Returns the file-suffix of the provided file
         """
-        suffix = self._src.split(".")[-1]
+        try: 
+            suffix = self._src.split(".")[-1]
+        except: 
+            pass
         return suffix
 
 class Reader(_CORE_Reader):
@@ -767,7 +770,7 @@ class Assay(aux._ID):
         self._df["group"] = groups
         self._df["group_name"] = group_names
         
-        if infer_names:
+        if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
             
@@ -2474,7 +2477,7 @@ if __name__ == "__main__":
     assays = []
     for file in files: 
 
-        assay = reader.read(file, replicates = 6, names = groupnames)
+        assay = reader.read(file, replicates = "6,6,6,6", names = groupnames)
         assay = analyser.pipe(assay)
         assays.append(assay)
 
