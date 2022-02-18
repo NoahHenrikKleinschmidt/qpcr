@@ -151,6 +151,15 @@ default_ct_header = defaults.default_ct_header
 # in this case any cell would be selected as "nan" also matches the pattern
 dummy_blank = "$"
 
+
+# set up a regex pattern for floats. We require this to vet the Ct columns
+# during make_dataframes() calling, because there may be entries wihtin the 
+# Ct column where np.genfromtext crashes (like when it has spaces in it).
+# Somehow, more elgant tweaks directly at genfromtext would not work so we 
+# brute-force match with regex and replace faulty entires manually with "nan"
+# before calling genfromtext.
+float_pattern = re.compile("\d+\.?\d*")
+
 class _CORE_Parser:
     """
     This is the functional core for the irregular multi-assay file-reader classes.
@@ -586,10 +595,25 @@ class _CORE_Parser:
             assay_cts = self._data[ct_range, ct_col]
 
             # and convert to numeric data
+            # in case a simply astype(float) fails we resort to matching faulty entries
+            # individually with regex and then convert these to a readable "nan" format
+            # and then convert to float using np.genfromtext
             try: 
                 assay_cts = assay_cts.astype(float)
             except ValueError as e:
-                assay_cts = np.genfromtxt(  np.array(assay_cts, dtype=str)  )
+                
+                # convert to string first, for regex matching
+                assay_cts = np.array(assay_cts, dtype=str)
+
+                # first get the indices of all entries that are not floats
+                # and convert these manually to "nan"
+                faulties = np.argwhere(    [ float_pattern.match(i) is None for i in assay_cts ]   ) 
+                assay_cts[ faulties ] = "nan"
+
+                # now read the the ct values again as floats
+                assay_cts = np.genfromtxt(  assay_cts  )
+
+                # print some info about the faulty entries
                 bad_value = e.__str__().split(": ")[1]
                 aw.SoftWarning("Parser:found_non_readable_cts", assay = assay, bad_value = bad_value)
 
