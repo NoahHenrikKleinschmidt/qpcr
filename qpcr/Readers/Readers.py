@@ -68,6 +68,8 @@ __pdoc__ = {
 raw_col_names = defaults.raw_col_names
 supported_filetypes = defaults.supported_filetypes
 default_dataset_header = defaults.default_dataset_header
+default_id_header = defaults.default_id_header
+default_ct_header = defaults.default_ct_header
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -123,7 +125,7 @@ class _CORE_Reader(aux._ID):
         are headed by the label `"Ct"`. Both labels have to be on the same row. 
 
         If these labels do not match your excel file, you may
-        specify `name_label` and `Ct_label` as additional arguments.
+        specify `id_label` and `ct_label` as additional arguments.
         """
         suffix = self._filesuffix()
         # check for a valid input file
@@ -132,8 +134,16 @@ class _CORE_Reader(aux._ID):
 
         if suffix == "csv":
             try: 
-                self._csv_read()
-            except:
+                self._csv_read(**kwargs)
+            except Exception as e:
+
+                # users can force-regular reading mode
+                is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
+                if is_regular:
+                    # print out warning
+                    print(e)
+                    exit(1)
+
                 # setup parser
                 parser = Parsers.CsvParser()
                 self._prep_Parser(kwargs, parser)
@@ -249,20 +259,38 @@ class _CORE_Reader(aux._ID):
                                 self._src, 
                                 sep = self._delimiter, 
                                 header = self._header, 
-                                names = raw_col_names
+                                # names = raw_col_names
                             )
         except: 
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
         # check if a valid Ct column was found
-        Ct = raw_col_names[1]
-        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
-        if not full_valid_Ct_col:
-            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
+        Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
+        Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
         
-        if isinstance(self._src, str):
+        valid_data = Ct in df.columns and Id in df.columns
+        if not valid_data:
+            aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
+        else: 
+            # get only the relevant data columns 
+            df = df[[Id, Ct]]
+
+            # make sure to convert Ct values to float
+            df[Ct] = np.genfromtxt(  np.array(df[Ct], dtype=str)  )
+
+            # rename to qpcr default headers (id + Ct)
+            df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
+
+        # try to get a FileID, from the kwargs
+        # if that fails, try to get the one from fileID
+        id = aux.from_kwargs("id", None, kwargs, rm = True)
+        if id is not None:
+            self.id_reset()
+            self.id(id)
+        elif isinstance(self._src, str):
             self.id_reset()
             self.id(aux.fileID(self._src))
+
         self._df = df
 
     def _filesuffix(self):
@@ -363,7 +391,7 @@ class SingleReader(_CORE_Reader):
         that the replicates are headed by the label `"Name"` and the corresponding Ct values
         are headed by the label `"Ct"`. Both labels have to be on the same row. 
         If these labels do not match your excel file, you may
-        specify `name_label` and `Ct_label` as additional arguments.
+        specify `name_label` and `ct_label` as additional arguments.
 
         Parameters
         ----------
@@ -803,6 +831,22 @@ class MultiSheetReader(MultiReader):
     """
     def __init__(self):
         super().__init__()
+
+    def read(self, *args, **kwargs):
+        """
+        The `MultiSheetReader` **only** offers a `pipe` method!
+        Hence, neither `read` nor `parse` will work directly!
+        """
+        print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
+
+    def parse(self, *args, **kwargs):
+        """
+        The `MultiSheetReader` **only** offers a `pipe` method!
+        Hence, neither `read` nor `parse` will work directly!
+        """
+        print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
+
+
 
     def pipe(self, filename : str, **kwargs):
         """
@@ -1249,11 +1293,11 @@ if __name__ == "__main__":
     decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
 
     # reader = MultiReader()
-    # reader.read(multisheet_file, sheet_name = 1)
-    # reader.parse(decorator = "qpcr:assay")
+    # reader.read(decorated_excel, sheet_name = 1)
+    # reader.parse(decorator = True, ignore_empty = True, assay_pattern = "Rotor-Gene")
     # r = reader.get("assays")
     # print(r)
-    # exit(1) 
+
 
     # reader = MultiSheetReader()
     # reader.pipe(
@@ -1263,31 +1307,36 @@ if __name__ == "__main__":
     #         )
     # print(reader.get("Actin"))
 
-    bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
-    bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
+    # bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
+    # bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
 
-    reader = BigTableReader()
-
-
-    reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
-    reader.parse(ct_col = "Ct", assay_col = "Gene")
-    reader.make_Assays()
-    r = reader.get("assays")
-    print(r[0].get(), r[0].id())
-    reader.clear()
+    # reader = BigTableReader()
 
 
-    assays, normalisers = reader._DataReader(
-                                        filename = bigtable_horiztonal, 
-                                        kind = "horizontal", 
-                                        id_col = "tissue_number",
-                                        replicates = (3,4), 
-                                        names = ["Gapdh", "Sord1"]
-                                    )
-    r = normalisers
-    print(r[0].get())
+    # reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
+    # reader.parse(ct_col = "Ct", assay_col = "Gene")
+    # reader.make_Assays()
+    # r = reader.get("assays")
+    # print(r[0].get(), r[0].id())
+    # reader.clear()
 
-    reader = SingleReader()
-    reader.read( "./Example Data/actin.csv", replicates = 6 )
-    r = reader.make_Assay()
+
+    # assays, normalisers = reader._DataReader(
+    #                                     filename = bigtable_horiztonal, 
+    #                                     kind = "horizontal", 
+    #                                     id_col = "tissue_number",
+    #                                     replicates = (3,4), 
+    #                                     names = ["Gapdh", "Sord1"]
+    #                                 )
+    # r = normalisers
+    # print(r[0].get())
+
+    reader = qpcr.DataReader()
+    r = reader.read( "./Examples/Example Data/actin_nan.csv", replicates = None, id = "myActin")
+    # r = reader.make_Assay()
     print(r.get(), r.id())
+
+
+    # reader.read( "./Examples/Example Data/actin_nan.csv", replicates = 6, id_label = "Hii", id = "myActin", is_regular = True )
+    # r = reader.make_Assay()
+    # print(r.get(), r.id())
