@@ -8,6 +8,7 @@ WARNINGS = {
 
 "Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the csv file adheres to the two column structure required of csv input files.",
 "Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.\n\nAvailable assays from this file are: {assays}\n\nIf you wish to read all assays in this file use the qpcr.MultiReader instead!",
+"Reader:cannot_find_datacols" : "No data could be identified using the given column names!\nCurrently provided are id_label = '{id_label}' and ct_label = '{ct_label}'. Make sure to provide correct data column headers.",
 
 "Analyser:newlinked" : "You have linked a new dataset to your Analyser, your previous results have been cleared!\nIf this was not intended, use .get() to get your results before using .link()",
 "Analyser:not_newlinked" : "You have precomputed results in your Analyser, no new dataset was linked!\n\If you want to link new data anyway (and clear your current results) use force=True.",
