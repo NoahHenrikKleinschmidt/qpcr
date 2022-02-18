@@ -8,7 +8,8 @@
 
 ### Readers
       - `is_regular = True` can now be specified to force regular reading and avoid switching to Parsers.
-      - Add support to add id_label and ct_label also to the _csv_read of the _CORE_Reader
+      - Readers now support "regular" excel files
+      - "regular" files now support additional data columns because we added id_label and ct_label argument support to the basic _csv_read which allows to select which columns to extract from.
 
 # New planned features of *some future* release
 

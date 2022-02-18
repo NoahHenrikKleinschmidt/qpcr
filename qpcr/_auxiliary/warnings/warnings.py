@@ -6,7 +6,7 @@ It also defines two classes, a SoftWarning (which only prints the warning string
 # this dictionary stores all the warnings for qpcr
 WARNINGS = {
 
-"Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the csv file adheres to the two column structure required of csv input files.",
+"Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the file adheres to the structure required of regular input files.",
 "Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.\n\nAvailable assays from this file are: {assays}\n\nIf you wish to read all assays in this file use the qpcr.MultiReader instead!",
 "Reader:cannot_find_datacols" : "No data could be identified using the given column names!\nCurrently provided are id_label = '{id_label}' and ct_label = '{ct_label}'. Make sure to provide correct data column headers.",
 
