@@ -1,134 +1,19 @@
 
 # New features of *this* release
 
-New planned features for this next release are: 
 
-### 2. Anchor 
-- 2.1 This new release has fixed the "grouped" anchor default settings.
-- 2.2 Also it added a new feature that allows linking a custom `function` as anchor instead of an externally computed value or the default "first" or "grouped" arguments.
-- 2.3 Implement "mean" anchor 
-- 2.4 add `group` argument to to .anchor() to specify which group is supposed to be anchor...
-
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    2.1   |  x    |            |       |
-|    2.2   |   x   |             |       |
-|    2.3   |    x  |             |       |
-|    2.4   |    x  |             |       |
-
-### 3. New pipelines
-We added a new pipeline `Blueprint` which allows customization of Analyser, Normaliser, and SampleReader. Also the `ddCt` pipeline will simply compute 
-delta-delta-ct but expect `qpcr.Assay` objects as input and will NOT read files 
-directly.
-
-- 3.1 New Blueprint Pipeline
-- 3.2 New ddCt Pipeline 
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    3.1   |  x    |            |       |
-|    3.2   |   x   |            |       |
-
-### 4. Infer group names
-We add a method to the SampleReader which will adopt Replicate Group names based on their given sample column.  We will start with a simple inference which will only adopt group names if all replicates share the same name.
-
-- 4.1 identical group identifier
-- 4.2 infer number of replicates in case of identical group identifiers
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    4.1   |    x  |            |       |
-|    4.2   |   x   |            |       |
-
-
-### 5. Support Excel Files
-Now users can upload an excel file containing the replicates and their ct values.
-The qpcr.Reader will parse the excel sheet to find the replciates and their ct values and generate a pandas dataframe from them
-
-- 5.1 Support Excel File Reading
-- 5.2 Enable Excel Files for Qupid
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    5.1   |    x  |            |       |
-|    5.2   |      |           |  pushed back...      |
-
-
-### 6. Formula for unequal group lengths
-If the replicate groups are of unequal size (i.e. we have both triplicates and duplicates or whatever) then so far each group had to be manually specified in a tuple. Now users can input a string formula to automatically generate the corresponding tuple.
-For example, if we have four triplicates, four unicates, three duplicates, and one nonaplicates, then our tuple would have to look like this: `(3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 9)`. Users can either enter this manually or they can use a comprehensive formula now to describe: `"3:4,1:4,2:3,9"` which will be translated into the above tuple. 
-The formula is always `n:m` where `n` is the number of replicates in the group and `m` is the number of times this kind of group size is repeated afterward. Another example with triplicates, interspersed with a duplicate, and then triplicates again: `"3:5,2,3:3` (you get the idea...)
-
-- 6.1 a string formula method to supply unequal group sizes
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    6.1   |    x  |            |       |
-
-### 8. Support irregular input files
-Support irregular csv files where the assay must actually be extracted through parsing. The core of this is already done but still has to be implemented into `qpcr` proper.
-
-- 8.1 implement `qpcr.Parsers` for irregular files
-- 8.2 integrate Parsers with `qpcr.Reader`
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    8.1   |   x   |            |       |
-|    8.2   |  x    |            |       |
-
-### 7. Support MULTI-ASSAY FILES
-We simply let people add a little decorator in the cell above the assay declaration
-of the excel / csv file that will tell the program if it's a assay of interest or a normaliser. We'll use something like `@qpcr:assay` and `@qpcr:normaliser`.
-
-- 7.1 make a decorator extraction method to add to the _CORE_Parser
-- 7.2 add decorator support for multi-assay csv files
-- 7.3 add decorator support for multi-assay excel files
-- 7.4 make a new `qpcr.MultiReader` class to read multi-assay files
-      this will probably be some kind of `SampleReader`-level class
-- 7.5 make a new `MultiAssay` pipeline
-- 7.6 allow assays both per-column or per-row (transpose option to Parsers)
-- 7.7 integrate transpose reading option to qpcr.Reader
-- 7.8 Make a tutorial on how to use MULTI-ASSAY files !!!
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    7.1   |   x   |            |       |
-|    7.2   |   x   |            |       |
-|    7.3   |   x   |            |       |
-|    7.4  |   x   |            |       |
-|    7.5  |     |            |     x (pushed back to another release)  |
-|    7.6  |   x  |            |       |
-|    7.7  |  x   |            |       |
-|    7.8  |     |      x      |       |
-
-### 9. Filter nan policy
-Filters now by default ignore groups that have a nan median, since otherwise they would raise an Error...
-
-- 9.1 allow `ignore_nan` for Filters
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    9.1   |   x   |            |       |
-
-### 9. BigTableReader << CHECK
-A reader class that is able to work with multi-assay files that contain a single big table of assays with all ct values from all samples. We already have the algorithm
-for extracting the "big table" and stuff in the notebook `test_bigtable.ipynb`.
-
-
-### 10. Factor out Readers into their own submodule << CHECK 
-The files are soo diverse we make a new submodule just for the Readers...
-> We already factored out all the submodules
-
-### 11. Interactive preview can set paddings << CHECK
-
-### 12. Test if list comprehensions would markedly improve the speed of the Pipelines
-If we could markedly increase pipeline speed by following the list comprehension approach used by the `Getting Started` notebook First Look code example, then we should re-write the entire pipelines like this...
-> Check the pipelines have already been refactored
+### Plotters
+      - ReplicaetBoxPlot got default ylabel now
 
 
 # New features of *some future* release
 
 New planned features for any future release are:
+### Readers
+
+New support to read "regular" files that contain multiple columns. 
+- Add support to add id_col and ct_col also to the _csv_read of the _CORE_Reader
+- Implement support of this for the BigTableReader where there is an id_col that specifies the samples but the assays are in side-by-side columns, the input here would be a list of column headers for the assay_col argument.
 
 
 ### 1. Integration of `Qlipper` functionality 
