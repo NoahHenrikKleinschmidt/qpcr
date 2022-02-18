@@ -503,11 +503,12 @@ class Assay(aux._ID):
             try: 
                 self.replicates(self._replicates)
                 self.group()
-                if self._names is not None: 
-                    self.rename(self._names)
             except Exception as e:
-                print(e) 
                 aw.SoftWarning("Assay:setup_not_grouped")
+            
+            # and try to change names, provided that we could group yet...
+            if self._names is not None and self.groups() is not None: 
+                self.rename(self._names)
 
     def save(self, filename : str):
         """
@@ -703,7 +704,7 @@ class Assay(aux._ID):
             else: 
                 return self._df["group_name"]
         else: 
-            aw.SoftWarning("Assay:setup_not_grouped")
+            aw.SoftWarning("Assay:no_groupname_assignment")
             return None
     
     def groups(self):
@@ -800,7 +801,7 @@ class Assay(aux._ID):
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            aw.HardWarning("Assay:no_groupname_assignment", names = names)
+            aw.SoftWarning("Assay:no_groupname_assignment", names = names)
 
         # update "group_name"
         self._df["group_name"] = new_names
