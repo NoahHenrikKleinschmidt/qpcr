@@ -10,6 +10,7 @@
       - `is_regular = True` can now be specified to force regular reading and avoid switching to Parsers.
       - Readers now support "regular" excel files
       - "regular" files now support additional data columns because we added id_label and ct_label argument support to the basic _csv_read which allows to select which columns to extract from.
+      - BigTableReader can now read "hybrid" big tables that store replicate ids in one column and actual assay ct values in side-by-side columns. 
 
 # New planned features of *some future* release
 
