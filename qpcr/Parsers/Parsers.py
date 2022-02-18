@@ -598,33 +598,7 @@ class _CORE_Parser:
             # in case a simply astype(float) fails we resort to matching faulty entries
             # individually with regex and then convert these to a readable "nan" format
             # and then convert to float using np.genfromtext
-            try: 
-                assay_cts = assay_cts.astype(float)
-            except ValueError as e:
-                
-                # convert to string first, for regex matching
-                assay_cts = np.array(assay_cts, dtype=str)
-
-                try: 
-                    
-                    # we first try to just use genfromtext directly
-                    # since it takes a lot of time to do the regex matching
-                    # so we avoid it if possible...
-                    assay_cts = np.genfromtxt(  assay_cts  )
-                
-                except: 
-
-                    # first get the indices of all entries that are not floats
-                    # and convert these manually to "nan"
-                    faulties = np.argwhere(    [ float_pattern.match(i) is None for i in assay_cts ]   ) 
-                    assay_cts[ faulties ] = "nan"
-
-                    # now read the the ct values again as floats
-                    assay_cts = np.genfromtxt(  assay_cts  )
-
-                # print some info about the faulty entries
-                bad_value = e.__str__().split(": ")[1]
-                aw.SoftWarning("Parser:found_non_readable_cts", assay = assay, bad_value = bad_value)
+            assay_cts = self._convert_to_numeric(assay, assay_cts)
 
             # assemble the assay dataframe 
             assay_df = pd.DataFrame(
@@ -648,6 +622,47 @@ class _CORE_Parser:
                             )
 
             adx += 1
+
+    def _convert_to_numeric(self, id, array):
+        """
+        Converts a numpy array to floats. 
+        Either directly using np.genfromtext, or if this fails, 
+        by first prepping using regex and then np.genfromtext
+        
+        Parameters
+        -----------
+        array : np.ndarray
+            The array to convert. 
+        id : str
+            The associated identifier of the array to include in the error message
+            that is procuded denoting which faulty entries were set to NaN... 
+            (or just the first thereof, actually).
+        """
+        try: 
+            array = array.astype(float)
+        except ValueError as e:
+                # convert to string first, for regex matching
+            array = np.array(array, dtype=str)
+
+            try: 
+                    # we first try to just use genfromtext directly
+                    # since it takes a lot of time to do the regex matching
+                    # so we avoid it if possible...
+                array = np.genfromtxt(  array  )
+                
+            except: 
+                    # first get the indices of all entries that are not floats
+                    # and convert these manually to "nan"
+                faulties = np.argwhere(    [ float_pattern.match(i) is None for i in array ]   ) 
+                array[ faulties ] = "nan"
+
+                    # now read the the ct values again as floats
+                array = np.genfromtxt(  array  )
+
+                # print some info about the faulty entries
+            bad_value = e.__str__().split(": ")[1]
+            aw.SoftWarning("Parser:found_non_readable_cts", assay = id, bad_value = bad_value)
+        return array
 
     def _make_BigTable_range(self, **kwargs):
         """
