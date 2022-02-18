@@ -142,6 +142,8 @@ standard_ct_header = defaults.raw_col_names[1]
 
 default_group_name = defaults.default_group_name
 default_dataset_header = defaults.default_dataset_header
+default_id_header = defaults.default_id_header
+default_ct_header = defaults.default_ct_header
 
 # set a dummy default value for any np.nan values
 # in the column storing the assay headers
@@ -276,7 +278,7 @@ class _CORE_Parser:
                 assay_path = os.path.join(self.save_to(), f"{assay}.csv")
                 df.to_csv(assay_path, index = False)
 
-    def labels(self, id_label : str = "Name", ct_label : str = "Ct"):
+    def labels(self, id_label : str = default_id_header, ct_label : str = default_ct_header ):
         """
         Sets the headers for the relevant data columns for each assay within the datafile.
 
@@ -333,7 +335,6 @@ class _CORE_Parser:
                 _pattern = pattern
             # _pattern = pattern if _pattern is None else _pattern
             self._pattern = re.compile(_pattern, *flags)
-            print(self._pattern)
         return self._pattern
 
     def max_assay_name_length(self, length = 20):
