@@ -1383,10 +1383,15 @@ class BigTableReader(MultiReader):
             try: 
                 ct_col = ct_col.astype(float)
             except: 
+
                 ct_col = np.array( ct_col, dtype=str )
-                faulties = np.argwhere(    [  Parsers.float_pattern.match(i) is None for i in ct_col ]  ) 
-                ct_col[ faulties ] = "nan"
-                ct_col = np.genfromtxt(  ct_col  )
+                try: 
+                    ct_col = np.genfromtxt(  ct_col  )
+                except: 
+                    faulties = np.argwhere(    [  Parsers.float_pattern.match(i) is None for i in ct_col ]  ) 
+                    ct_col[ faulties ] = "nan"
+                    ct_col = np.genfromtxt(  ct_col  )
+
 
             # and assemble new dataframe
             tmp = pd.DataFrame(
