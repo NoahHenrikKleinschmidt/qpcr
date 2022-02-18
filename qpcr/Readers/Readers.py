@@ -280,22 +280,6 @@ class _CORE_Reader(aux._ID):
         except: 
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
-        # check if a valid Ct column was found
-        Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
-        Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
-        
-        valid_data = Ct in df.columns and Id in df.columns
-        if not valid_data:
-            aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
-        else: 
-            # get only the relevant data columns 
-            df = df[[Id, Ct]]
-
-            # make sure to convert Ct values to float
-            df[Ct] = np.genfromtxt(  np.array(df[Ct], dtype=str)  )
-
-            # rename to qpcr default headers (id + Ct)
-            df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
 
         # try to get a FileID, from the kwargs
         # if that fails, try to get the one from fileID
@@ -306,6 +290,9 @@ class _CORE_Reader(aux._ID):
         elif isinstance(self._src, str):
             self.id_reset()
             self.id(aux.fileID(self._src))
+        
+        # vet and crop the dataframe where necessary
+        df = self._vet_single_assay_df(kwargs, df)
 
         self._df = df
 
@@ -329,22 +316,6 @@ class _CORE_Reader(aux._ID):
         except: 
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
-        # check if a valid Ct column was found
-        Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
-        Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
-        
-        valid_data = Ct in df.columns and Id in df.columns
-        if not valid_data:
-            aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
-        else: 
-            # get only the relevant data columns 
-            df = df[[Id, Ct]]
-
-            # make sure to convert Ct values to float
-            df[Ct] = np.genfromtxt(  np.array(df[Ct], dtype=str)  )
-
-            # rename to qpcr default headers (id + Ct)
-            df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
 
         # try to get a FileID, from the kwargs
         # if that fails, try to get the one from fileID
@@ -356,7 +327,45 @@ class _CORE_Reader(aux._ID):
             self.id_reset()
             self.id(aux.fileID(self._src))
 
+        # vet and crop the dataframe where necessary
+        df = self._vet_single_assay_df(kwargs, df)
+
         self._df = df
+
+    def _vet_single_assay_df(self, kwargs, df):
+        """
+        Vets that both Id and Ct columns are present in the data 
+        and if so crops the df to the relevant columns, or checks if 
+        only two columns are present anyway and then assumes Id+Ct as these two.
+        """
+        
+        # check if we got exactly two columns only
+        if len( df.columns ) == 2:
+
+            # just get the current column names for later renaming
+            Id, Ct = df.columns
+
+        else: 
+
+            # check if a valid Ct column was found
+            Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
+            Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
+            
+            valid_data = Ct in df.columns and Id in df.columns
+            if not valid_data:
+                aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
+            else:
+                # get only the relevant data columns 
+                df = df[[Id, Ct]]
+
+        # make sure to convert Ct values to float
+        tmp_parser = Parsers.CsvParser()
+        Ct_col = df[Ct].to_numpy()
+        df[Ct] = tmp_parser._convert_to_numeric(self.id(), Ct_col)
+
+        # rename to qpcr default headers (id + Ct)
+        df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
+        return df
 
     def _filesuffix(self):
         """
@@ -1352,7 +1361,7 @@ class BigTableReader(MultiReader):
         # and convert all entries to numeric...
         tmp_parser = Parsers.CsvParser()
         for i in range( 1, df.shape[1] ):
-            df[ :, i ] = tmp_parser._convert_to_numeric( "", df[ :, i ] )
+            df[ :, i ] = tmp_parser._convert_to_numeric( "None (from BigTableReader)", df[ :, i ] )
 
         # convert to dataframe
         df = pd.DataFrame( df, columns = names )
