@@ -1,18 +1,21 @@
 
-# New features of *this* release
+# New implemented features of *this* release
 
-
+### core
+      - id_label attribute can now serve as secondary id to distinguish between related assays (i.e. transcript isoforms etc.). Labels can be manually set, Id can now be split into id+label (based on split or regex), id/label can be merged into id, id/label can be switched.
 ### Plotters
       - ReplicaetBoxPlot got default ylabel now
 
+### Readers
+      - `is_regular = True` can now be specified to force regular reading and avoid switching to Parsers.
+      - Add support to add id_label and ct_label also to the _csv_read of the _CORE_Reader
 
-# New features of *some future* release
+# New planned features of *some future* release
 
 New planned features for any future release are:
 ### Readers
 
 New support to read "regular" files that contain multiple columns. 
-- Add support to add id_col and ct_col also to the _csv_read of the _CORE_Reader
 - Implement support of this for the BigTableReader where there is an id_col that specifies the samples but the assays are in side-by-side columns, the input here would be a list of column headers for the assay_col argument.
 
 

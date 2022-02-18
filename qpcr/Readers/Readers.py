@@ -1292,44 +1292,44 @@ if __name__ == "__main__":
     multisheet_file = "/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx"
     decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
 
-    # reader = MultiReader()
-    # reader.read(decorated_excel, sheet_name = 1)
-    # reader.parse(decorator = True, ignore_empty = True, assay_pattern = "Rotor-Gene")
-    # r = reader.get("assays")
-    # print(r)
+    reader = MultiReader()
+    reader.read(decorated_excel, sheet_name = 1)
+    reader.parse(decorator = True, ignore_empty = True, assay_pattern = "Rotor-Gene")
+    reader.make_Assays()
+    r = reader.get("assays")
+    print(r[0].get())
+
+    reader = MultiSheetReader()
+    reader.pipe(
+                multisheet_file, 
+                # decorator = True, 
+                assay_pattern = "Rotor-Gene"
+            )
+    print(reader.get("Actin"))
+
+    bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
+    bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
+
+    reader = BigTableReader()
 
 
-    # reader = MultiSheetReader()
-    # reader.pipe(
-    #             multisheet_file, 
-    #             # decorator = True, 
-    #             assay_pattern = "Rotor-Gene"
-    #         )
-    # print(reader.get("Actin"))
-
-    # bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
-    # bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
-
-    # reader = BigTableReader()
+    reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
+    reader.parse(ct_col = "Ct", assay_col = "Gene")
+    reader.make_Assays()
+    r = reader.get("assays")
+    print(r[0].get(), r[0].id())
+    reader.clear()
 
 
-    # reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
-    # reader.parse(ct_col = "Ct", assay_col = "Gene")
-    # reader.make_Assays()
-    # r = reader.get("assays")
-    # print(r[0].get(), r[0].id())
-    # reader.clear()
-
-
-    # assays, normalisers = reader._DataReader(
-    #                                     filename = bigtable_horiztonal, 
-    #                                     kind = "horizontal", 
-    #                                     id_col = "tissue_number",
-    #                                     replicates = (3,4), 
-    #                                     names = ["Gapdh", "Sord1"]
-    #                                 )
-    # r = normalisers
-    # print(r[0].get())
+    assays, normalisers = reader._DataReader(
+                                        filename = bigtable_horiztonal, 
+                                        kind = "horizontal", 
+                                        id_col = "tissue_number",
+                                        replicates = (3,4), 
+                                        names = ["Gapdh", "Sord1"]
+                                    )
+    r = normalisers
+    print(r[0].get())
 
     reader = qpcr.DataReader()
     r = reader.read( "./Examples/Example Data/actin_nan.csv", replicates = None, id = "myActin")
