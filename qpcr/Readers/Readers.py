@@ -1345,8 +1345,17 @@ class BigTableReader(MultiReader):
         # and only the columns with matching indices.
         names = data[ 1, indices ]
         df = data[ 2:, indices ]
+
+        # convert to numeric
+        # we use the _convert_to_numeric method from the Parsers to do that
+        # we iterate over each column (except the first where the identifiers are stored)
+        # and convert all entries to numeric...
+        tmp_parser = Parsers.CsvParser()
+        for i in range( 1, df.shape[1] ):
+            df[ :, i ] = tmp_parser._convert_to_numeric( "", df[ :, i ] )
+
         # convert to dataframe
-        df = pd.DataFrame( df, columns = names, dtypes = [str, float] )
+        df = pd.DataFrame( df, columns = names )
         return df
 
     def _extract_from_hybrid_dataframe(self, data, to_extract):
@@ -1698,7 +1707,7 @@ if __name__ == "__main__":
                     id_col = "group", 
                     # ct_col = ["TLR1", "TLR4", "GAPDH"],
                     decorator = True, 
-                    sheet_name = 0
+                    sheet_name = 1
             )
     reader.parse()
     reader.make_Assays()
