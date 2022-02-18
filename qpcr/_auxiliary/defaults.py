@@ -21,6 +21,10 @@ raw_col_names = ["id", "Ct"]
 default_dataset_header = "assay"
 default_group_name = "group{}"
 
+# default assumed column names for Id and Ct values
+default_id_header = "Name"
+default_ct_header = "Ct"
+
 #  =================================================================
 #                       Default Figure settings
 #  =================================================================
