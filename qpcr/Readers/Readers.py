@@ -133,6 +133,8 @@ class _CORE_Reader(aux._ID):
             aw.HardWarning("MultiReader:empty_data", file = self._src)
 
         if suffix == "csv":
+            
+            # first try simple read of "regular files"
             try: 
                 self._csv_read(**kwargs)
             except Exception as e:
@@ -142,7 +144,7 @@ class _CORE_Reader(aux._ID):
                 if is_regular:
                     # print out warning
                     print(e)
-                    exit(1)
+                    return
 
                 # setup parser
                 parser = Parsers.CsvParser()
@@ -157,22 +159,34 @@ class _CORE_Reader(aux._ID):
                 self._get_single_assay(parser, assay_of_interest)
 
         elif suffix == "xlsx":
-            # setup parser
-            parser = Parsers.ExcelParser()
-            self._prep_Parser(kwargs, parser)
-            
-            # check for sheet_name
-            sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
 
-            # store assay-of-interest
-            assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
-            
-            # pipe the datafile through the parser
-            parser.read(self._src, sheet_name = sheet_name)
-            parser.parse(**kwargs)
+            try: 
+                self._excel_read(**kwargs)
+            except Exception as e:
 
-            # get the data
-            self._get_single_assay(parser, assay_of_interest)
+                # users can force-regular reading mode
+                is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
+                if is_regular:
+                    # print out warning
+                    print(e)
+                    return
+
+                # setup parser
+                parser = Parsers.ExcelParser()
+                self._prep_Parser(kwargs, parser)
+                
+                # check for sheet_name
+                sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+
+                # store assay-of-interest
+                assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
+                
+                # pipe the datafile through the parser
+                parser.read(self._src, sheet_name = sheet_name)
+                parser.parse(**kwargs)
+
+                # get the data
+                self._get_single_assay(parser, assay_of_interest)
 
     def names(self, names:(list or dict)):
         """
@@ -254,10 +268,60 @@ class _CORE_Reader(aux._ID):
         regular csv files.
         """
         df = None
+        # header = aux.from_kwargs("header", 0, kwargs, rm  = True)
         try: 
             df = pd.read_csv(
                                 self._src, 
                                 sep = self._delimiter, 
+                                header = self._header, 
+                                # names = raw_col_names
+                            )
+        except: 
+            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
+
+        # check if a valid Ct column was found
+        Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
+        Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
+        
+        valid_data = Ct in df.columns and Id in df.columns
+        if not valid_data:
+            aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
+        else: 
+            # get only the relevant data columns 
+            df = df[[Id, Ct]]
+
+            # make sure to convert Ct values to float
+            df[Ct] = np.genfromtxt(  np.array(df[Ct], dtype=str)  )
+
+            # rename to qpcr default headers (id + Ct)
+            df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
+
+        # try to get a FileID, from the kwargs
+        # if that fails, try to get the one from fileID
+        id = aux.from_kwargs("id", None, kwargs, rm = True)
+        if id is not None:
+            self.id_reset()
+            self.id(id)
+        elif isinstance(self._src, str):
+            self.id_reset()
+            self.id(aux.fileID(self._src))
+
+        self._df = df
+
+    def _excel_read(self, **kwargs):
+        """
+        Reads the given data file if it's an excel file
+
+        This is the basic default reading method for 
+        regular excel files.
+        """
+        df = None
+        sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+        # header = aux.from_kwargs("header", 0, kwargs, rm  = True)
+        try: 
+            df = pd.read_excel(
+                                self._src, 
+                                sheet_name = sheet_name, 
                                 header = self._header, 
                                 # names = raw_col_names
                             )
@@ -321,7 +385,7 @@ class SingleReader(_CORE_Reader):
 
     Input Data Files
     ----------------
-    Valid input files are either regular `csv` files, or  irregular `csv` or `excel` files, 
+    Valid input files are either regular `csv` or `excel` files, or  irregular `csv` or `excel` files, 
     that specify assays by one replicate identifier column and one Ct value column.
 
     Irregular input files may specify multiple assays as separate tables, 
@@ -330,13 +394,13 @@ class SingleReader(_CORE_Reader):
     or besides one another (requires `transpose = True`).
 
     #### Example of a "regular" single-assay datafile
-    |id|Ct|
-    |---|---|
-    | ctrl1| 5.67 |
-    | ctrl2| 5.79 |
-    | ctrl3 | 5.86 |
-    | condA1 | 5.34 |
-    | ... | ... |
+    |id|Ct| other data |
+    |---|---| --- |
+    | ctrl1| 5.67 | ... |
+    | ctrl2| 5.79 | ... |
+    | ctrl3 | 5.86 | ... |
+    | condA1 | 5.34 | ... |
+    | ... | ... | ... |
 
     #### Example of an "irregular" single-assay datafile
     |                     |                    |            |      |      |
@@ -354,7 +418,13 @@ class SingleReader(_CORE_Reader):
     ----
     This is the successor of the original `qpcr.Reader` (not the `qpcr.SampleReader`!).
     Hence, the `SingleReader` will return a pandas DataFrame of the dataset 
-    directly using `get` but not an `qpcr.Assay`.
+    directly using `get` but not an `qpcr.Assay`. 
+    An `qpcr.Assay` object will be returned after calling `make_Assay`, however. 
+    Furthermore, if the provided file cannot be read as a "regular" file the Reader will automatically
+    switch to parsing. However, if your file _is_ a regular input file, you can force regular reading 
+    by passing the argument `is_regular = True` to the `read` method, which will prevent parsing and allow 
+    you to figure out why regular reading may have failed instead (the Reader will not 
+    provide further insight into why regular reading failed if it switches to parsing).
 
     Parameters
     ----------
@@ -363,8 +433,10 @@ class SingleReader(_CORE_Reader):
         If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
         Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
         If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
-        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
-        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+        But they require identifying headers. By default it is assumed that replicate identifiers and Ct values are
+        stored in columns named `Name` and `Ct` but these can be changed using 
+        the `id_label` and `ct_label` arguments that can be passed as kwargs. 
+        Also the assay's `id` can be set as a kwarg. 
 
     **kwargs
         Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
@@ -373,7 +445,7 @@ class SingleReader(_CORE_Reader):
         super().__init__()
         self._src = filename
         self._delimiter = None
-        self._header = aux.from_kwargs("header", 0, kwargs, rm = True)
+        self._header = 0
         if self._src is not None:
             self.read(**kwargs)
 
@@ -386,27 +458,28 @@ class SingleReader(_CORE_Reader):
         If the data file is an Excel file replicates and their Ct values will be 
         extracted from the first excel sheet of the file by default. 
         A separate sheet can be specified using `sheet_name`.
-        
-        Note, this assumes by default
-        that the replicates are headed by the label `"Name"` and the corresponding Ct values
-        are headed by the label `"Ct"`. Both labels have to be on the same row. 
-        If these labels do not match your excel file, you may
-        specify `name_label` and `ct_label` as additional arguments.
 
         Parameters
         ----------
         filename : str
-            A filepath to an input datafile.
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. By default it is assumed that replicate identifiers and Ct values are
+            stored in columns named `Name` and `Ct` but these can be changed using 
+            the `id_label` and `ct_label` arguments that can be passed as kwargs. 
+            Also the assay's `id` can be set as a kwarg. 
         """
         self._src = filename
 
         self._replicates = aux.from_kwargs("replicates", None, kwargs)
         self._names = aux.from_kwargs("names", None, kwargs)
-
+        self._header = aux.from_kwargs("header", 0, kwargs, rm = True)
 
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
-        super().read(header = self._header, **kwargs)
+        super().read(**kwargs)
 
     def pipe(self, filename : str, **kwargs):
         """
@@ -749,7 +822,6 @@ class MultiReader(SingleReader, aux._ID):
             if aux.same_type(dataset, {}):
                 names = dataset.keys()
                 assays = dataset.values()
-                data = assays, names
             else:
                 names = [i.id() for i in dataset]
                 assays = dataset
@@ -1332,7 +1404,7 @@ if __name__ == "__main__":
     print(r[0].get())
 
     reader = qpcr.DataReader()
-    r = reader.read( "./Examples/Example Data/actin_nan.csv", replicates = None, id = "myActin")
+    r = reader.read( "./Examples/Example Data/actin.xlsx", header = 0, replicates = None, id = "myActin")
     # r = reader.make_Assay()
     print(r.get(), r.id())
 
