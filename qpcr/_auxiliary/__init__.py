@@ -88,9 +88,14 @@ class _ID:
         """
         if regex:
             by = re.compile(by)
-            id, label = by.search(self._id).groups()
+            split = by.search(self._id).groups()
         else: 
-            id, label = self._id.split(by)
+            split = self._id.split(by)
+        
+        if len(split) > 1:
+            id, label = split
+        else: 
+            id, label = split[0], None
         
         # set new id and label
         self._id = id
@@ -100,13 +105,22 @@ class _ID:
         """
         Merges the id and id_label together into just id, and places `by` 
         between them (default just an underscore). It resets the id_label.
+        If no label is present, nothing will happen.
         """
-        new_id = self._id + by + self._id_label
+        new_id = self._get_merged_id(by = by)
         self._id = new_id
 
         # reset the label settings
         self._id_label = None
         self._id_label_was_set = False
+
+    def get_merged_id(self, by : str = "_"):
+        """
+        Returns a merged id but does not adopt it!
+        """
+        label = by + self._id_label if self._id_label is not None else ""
+        new_id = self._id + label
+        return new_id
 
     def id_to_label(self):
         """
@@ -150,14 +164,22 @@ def fileID(filename):
 if __name__ == "__main__":
 
     obj1 = _ID()
-    obj1.id("here you go $ mylabel")
+    obj1.id("Hnrnp l_nmd")
+    obj1.split_id("_")
+    # obj1.id_to_label()
+    # obj1.id_to_label()
+    # obj1.merge_id()
     r = obj1.id()
     print(r)
-    obj1.split_id("([a-z ]+) \$ ([a-z]+)", True)
-    obj1.id_to_label()
-    r = obj1.id()
+
+    print("......")
+    obj2 = _ID()
+    obj2.id("Hnrnp l_prot")
+    obj2.split_id("_")
+    # obj2.id_to_label()
+    # obj2.id_to_label()
+    # obj2.merge_id()
+    r = obj2.get_merged_id()
     print(r)
-    obj1.id_to_label()
-    obj1.merge_id()
-    r = obj1.id()
+    r = obj2.id()
     print(r)
