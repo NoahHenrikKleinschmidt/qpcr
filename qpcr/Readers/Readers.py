@@ -412,6 +412,7 @@ class SingleReader(_CORE_Reader):
     | condA1 | 5.34 | ... |
     | ... | ... | ... |
 
+
     #### Example of an "irregular" single-assay datafile
     |                     |                    |            |      |      |
     | ------------------- | ------------------ | ---------- | ---- | ---- |
@@ -476,10 +477,13 @@ class SingleReader(_CORE_Reader):
             If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
             Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
             If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
-            But they require identifying headers. By default it is assumed that replicate identifiers and Ct values are
+            But they require identifying headers. 
+            By default it is assumed that replicate identifiers and Ct values are
             stored in columns named `Name` and `Ct` but these can be changed using 
             the `id_label` and `ct_label` arguments that can be passed as kwargs. 
-            Also the assay's `id` can be set as a kwarg. 
+            Note, if only two columns are present anyway, they are assumed to be Id (1st) and Ct (2nd) column, 
+            and inputs for `id_label` and `ct_label` are being ignored!
+            The assay's `id` can be set as a kwarg. By default the filename is adopted as id.  
         """
         self._src = filename
 
