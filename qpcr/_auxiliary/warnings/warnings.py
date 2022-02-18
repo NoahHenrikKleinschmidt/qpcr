@@ -73,6 +73,8 @@ WARNINGS = {
 
 "BigTableReader:no_cols" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nMake sure to specify valid columns to your data for these inputs! Currently ct_col = {ct_col} and assay_col = {assay_col}",
 "BigTableReader:cols_no_good" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nHowever, the currently specified columns cannot be found! Currently ct_col = {ct_col} and assay_col = {assay_col}",
+"BigTableReader:no_ct_cols" : "In order to parse a hybrid Big Table a 'ct_col' is required! Provide at least one valid column name to extract, or use decorators.",
+
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
 

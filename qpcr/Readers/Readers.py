@@ -1223,6 +1223,10 @@ class BigTableReader(MultiReader):
         # it's a dataframe if it's a "regular" big table
         if isinstance(self._data, pd.DataFrame):
 
+            # check if we got ct cols to extract
+            if self._ct_col is None: 
+                aw.HardWarning("BigTableReader:no_ct_cols", traceback = False)
+
             # we got a nice dataframe with columns in to extract directly
             data = self._extract_from_hybrid_dataframe(  data = self._data, to_extract = self._ct_col  )
             
@@ -1245,6 +1249,10 @@ class BigTableReader(MultiReader):
             # and use the same approach as for "regular" big tables...
             else: 
                 
+                # check if we got ct cols to extract
+                if self._ct_col is None: 
+                    aw.HardWarning("BigTableReader:no_ct_cols", traceback = False)
+
                 # transform the numpy array from the 
                 # hybrid bigtable to a pandas dataframe
                 data = self._convert_hybrid_nparray_to_dataframe()
@@ -1688,8 +1696,8 @@ if __name__ == "__main__":
                     hybrid_bigtable, 
                     kind = "hybrid", 
                     id_col = "group", 
-                    ct_col = ["TLR1", "TLR4", "GAPDH"],
-                    decorator = False, 
+                    # ct_col = ["TLR1", "TLR4", "GAPDH"],
+                    decorator = True, 
                     sheet_name = 0
             )
     reader.parse()
