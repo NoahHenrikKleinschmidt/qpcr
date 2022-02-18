@@ -605,13 +605,22 @@ class _CORE_Parser:
                 # convert to string first, for regex matching
                 assay_cts = np.array(assay_cts, dtype=str)
 
-                # first get the indices of all entries that are not floats
-                # and convert these manually to "nan"
-                faulties = np.argwhere(    [ float_pattern.match(i) is None for i in assay_cts ]   ) 
-                assay_cts[ faulties ] = "nan"
+                try: 
+                    
+                    # we first try to just use genfromtext directly
+                    # since it takes a lot of time to do the regex matching
+                    # so we avoid it if possible...
+                    assay_cts = np.genfromtxt(  assay_cts  )
+                
+                except: 
 
-                # now read the the ct values again as floats
-                assay_cts = np.genfromtxt(  assay_cts  )
+                    # first get the indices of all entries that are not floats
+                    # and convert these manually to "nan"
+                    faulties = np.argwhere(    [ float_pattern.match(i) is None for i in assay_cts ]   ) 
+                    assay_cts[ faulties ] = "nan"
+
+                    # now read the the ct values again as floats
+                    assay_cts = np.genfromtxt(  assay_cts  )
 
                 # print some info about the faulty entries
                 bad_value = e.__str__().split(": ")[1]
