@@ -107,25 +107,32 @@ __pdoc__ = {
 # important here is that they must specify a capturing group for the assay name.
 
 assay_patterns = {
-                    "all"           : r"([A-Za-z0-9.:, ()_\-/]+)",
-                    "Rotor-Gene"    : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
+                            "all"           : r"([A-Za-z0-9.:, ()_\-/]+)",
+                            "Rotor-Gene"    : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
                 }
 
+# also store default data-column 
+# headers associated with a Pattern
+assay_pattern_col_names = {
+                    
+                            "Rotor-Gene"    :   [   "Name" , "Ct"   ]
+                        }
+
 decorators = {
-                    "qpcr:all"          : "(@qpcr:|'@qpcr:)",
-                    "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
-                    "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
-                    "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
-                    "qpcr:column"       : "(@qpcr|'@qpcr)",
+                            "qpcr:all"          : "(@qpcr:|'@qpcr:)",
+                            "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
+                            "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
+                            "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
+                            "qpcr:column"       : "(@qpcr|'@qpcr)",
 
             }
 
 plain_decorators = {
-                    "qpcr:all"          : "@qpcr:",
-                    "qpcr:assay"        : "@qpcr:assay",
-                    "qpcr:normaliser"   : "@qpcr:normaliser",
-                    "qpcr:group"        : "@qpcr:group",
-                    "qpcr:column"       : "@qpcr",
+                            "qpcr:all"          : "@qpcr:",
+                            "qpcr:assay"        : "@qpcr:assay",
+                            "qpcr:normaliser"   : "@qpcr:normaliser",
+                            "qpcr:group"        : "@qpcr:group",
+                            "qpcr:column"       : "@qpcr",
             }
 
 # get the standard column headers to use for the 
@@ -168,6 +175,8 @@ class _CORE_Parser:
 
         # setup the labels for replicate ids and ct value column headers
         self.labels()
+        # and reset the ids_were_set variable to default False
+        self._ids_were_set = False
 
         # we must specify a maximum allowed length for the assay names before hand 
         # (since we're using numpy arrays for storing the names, which require enough open slots to store the characters)
@@ -208,6 +217,7 @@ class _CORE_Parser:
 
         self._assay_ct_start_indices = None         # indices of the ct headers
         self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
 
     def transpose(self):
         """
@@ -280,6 +290,7 @@ class _CORE_Parser:
         """
         self._id_label = id_label
         self._ct_label = ct_label
+        self._ids_were_set = True
 
     def assays(self):
         """
@@ -312,8 +323,17 @@ class _CORE_Parser:
         if pattern is not None: 
             # try to get the pattern from the predefined patterns via key
             _pattern = aux.from_kwargs(pattern, None, assay_patterns)
-            _pattern = pattern if _pattern is None else _pattern
+
+            # check if we got a hit, and if so,
+            # also import default data-column headers if possible
+            # (provided the Parser hasn't got any yet)
+            if _pattern is not None and not self._ids_were_set: 
+                self._id_label, self._ct_label = aux.from_kwargs(  pattern, (None, None), assay_pattern_col_names  )
+            elif _pattern is None:
+                _pattern = pattern
+            # _pattern = pattern if _pattern is None else _pattern
             self._pattern = re.compile(_pattern, *flags)
+            print(self._pattern)
         return self._pattern
 
     def max_assay_name_length(self, length = 20):
@@ -1182,12 +1202,15 @@ if __name__ == "__main__":
 
     # print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
 
-    # parser3 = ExcelParser()
-    # decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
-    # parser3.save_to("./__decorated_excelparser_pipe_nodec")
-    # parser3.assay_pattern("Rotor-Gene")
-    # parser3.pipe(decorated_excel)
-    # # print(parser3.get())
+    parser3 = ExcelParser()
+    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    parser3.save_to("./__decorated_excelparser_pipe_nodec")
+    # parser3.labels( "Type", "No.")
+    parser3.assay_pattern("Rotor-Gene")
+    parser3.pipe(decorated_excel)
+    print(parser3.get())
+
+    exit()
 
     # print("""\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n""")
 

@@ -2446,7 +2446,7 @@ class Normaliser(aux._ID):
         """
         ids = [N.id() for N in self._Normalisers]
         ids = "+".join(ids)
-        self._normaliser._id_reset()
+        self._normaliser.id_reset()
         self._normaliser.id(ids)
         
 

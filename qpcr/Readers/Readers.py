@@ -211,7 +211,7 @@ class _CORE_Reader(aux._ID):
             if assay_of_interest is None: 
                 aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
             self._df = parser.get(assay_of_interest)
-            self._id_reset()
+            self.id_reset()
             self.id(assay_of_interest)
 
         # if only one assay is present anyway, get that one
@@ -219,7 +219,7 @@ class _CORE_Reader(aux._ID):
 
             assay_of_interest = parser.assays()[0]
             self._df = parser.get(assay_of_interest)
-            self._id_reset()
+            self.id_reset()
             self.id(assay_of_interest)
 
     def _prep_Parser(self, kwargs, parser):
@@ -261,7 +261,7 @@ class _CORE_Reader(aux._ID):
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
         
         if isinstance(self._src, str):
-            self._id_reset()
+            self.id_reset()
             self.id(aux.fileID(self._src))
         self._df = df
 
