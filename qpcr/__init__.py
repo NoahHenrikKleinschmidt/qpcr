@@ -1160,7 +1160,7 @@ class SampleReader(Assay):
 
 #         return self._Assay
 
-class DataReader:
+class DataReader(aux._ID):
     """
     Handles reading a single file containing input data
     for `qpcr`. 
@@ -1180,6 +1180,7 @@ class DataReader:
 
     """
     def __init__(self):
+        super().__init__()
         self._replicates = None
         self._names = None
         self._Reader = None             # the functional core will be either a Reader
