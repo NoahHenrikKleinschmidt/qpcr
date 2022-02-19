@@ -1,17 +1,6 @@
 
 # New implemented features of *this* release
 
-### core
-      - id_label attribute can now serve as secondary id to distinguish between related assays (i.e. transcript isoforms etc.). Labels can be manually set, Id can now be split into id+label (based on split or regex), id/label can be merged into id, id/label can be switched.
-      - custom norm_func in Normaliser now has access to `group` column in the passed on dataframe.
-### Plotters
-      - ReplicaetBoxPlot got default ylabel now
-
-### Readers
-      - `is_regular = True` can now be specified to force regular reading and avoid switching to Parsers.
-      - Readers now support "regular" excel files
-      - "regular" files now support additional data columns because we added id_label and ct_label argument support to the basic _csv_read which allows to select which columns to extract from.
-      - BigTableReader can now read "hybrid" big tables that store replicate ids in one column and actual assay ct values in side-by-side columns. 
 
 # New planned features of *some future* release
 
@@ -29,6 +18,12 @@ New support to read "regular" files that contain multiple columns.
 
 ### 2. Merging Filter before-after figures together
 Currently before and after filtering figures are separate. It would be nice to have the before filtering figure (maybe with different color or with less opacity) be plotted and then to overlay the after-filtering on-top of that - all in the same figure...
+
+> UPDATE Idea: so, we let the ReplicateBoxplot be what it is right now, but instead add a new FilterBoxPlot plotter that makes subplots n x 2 where n is the number of assays, which will be on rows above each other. Then left to right is before and after. This is then just one big figure, which should hopefully more nicely display the before-after relations within the assays, but also respond to the same legend so we should hopefully be able to modulate all before and after replicates boxes with one click... 
+
+> Also, we should re-think if we maybe not only want to set the Ct values to NaN instead of truly dropping the indices entirely...
+
+
 
 ### 3. Statistical evaluation of results 
 Currently, no options are available for preforming t-tests and such on the results. It would be nice to have that functionality at some point. However, the main tricky part here is to decide which groups of replicates to compare against each other. One option would be to simply compare all and draw a comparison heatmap for all groups. But this is invariably computing more than necessary or desired. A sample-index file of sorts would be required here probably...
