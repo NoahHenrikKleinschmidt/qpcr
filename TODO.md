@@ -3,6 +3,7 @@
 
 ### core
       - id_label attribute can now serve as secondary id to distinguish between related assays (i.e. transcript isoforms etc.). Labels can be manually set, Id can now be split into id+label (based on split or regex), id/label can be merged into id, id/label can be switched.
+      - custom norm_func in Normaliser now has access to `group` column in the passed on dataframe.
 ### Plotters
       - ReplicaetBoxPlot got default ylabel now
 
