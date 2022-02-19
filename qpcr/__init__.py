@@ -78,6 +78,11 @@ We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser
 So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaCt` which performs the first $\Delta Ct$, and `qpcr.Normaliser.normalise` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
+> Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
+> exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \\frac{  \Delta Ct'_s  }{  \Delta Ct'_n  }$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate, 
+> and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \\frac{  n^{ a } } {  n^{ b } }$. 
+> Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
+
 ### The `anchor` and the "reference group"
 Next to the "groups of replicates", this is probably one of the most important terms. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? 
@@ -312,7 +317,10 @@ class _CORE_Reader(aux._ID):
         """
         Returns the file-suffix of the provided file
         """
-        suffix = self._src.split(".")[-1]
+        try: 
+            suffix = self._src.split(".")[-1]
+        except: 
+            pass
         return suffix
 
 class Reader(_CORE_Reader):
@@ -500,11 +508,12 @@ class Assay(aux._ID):
             try: 
                 self.replicates(self._replicates)
                 self.group()
-                if self._names is not None: 
-                    self.rename(self._names)
             except Exception as e:
-                print(e) 
                 aw.SoftWarning("Assay:setup_not_grouped")
+            
+            # and try to change names, provided that we could group yet...
+            if self._names is not None and self.groups() is not None: 
+                self.rename(self._names)
 
     def save(self, filename : str):
         """
@@ -694,21 +703,37 @@ class Assay(aux._ID):
         names : list or pd.Series
             The given group names of all replicate groups.
         """
-        if as_set:
-            return aux.sorted_set(list(self._df["group_name"]))
+        if "group_name" in self._df.columns: 
+            if as_set:
+                return aux.sorted_set(list(self._df["group_name"]))
+            else: 
+                return self._df["group_name"]
         else: 
-            return self._df["group_name"]
+            aw.SoftWarning("Assay:no_groupname_assignment")
+            return None
     
-    def groups(self):
+    def groups(self, as_set = True):
         """
         Returns a set of sample groups (numeric).
 
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
         Returns
         -------
         groups : list
             The given numeric group identifiers of all replicate groups.
         """
-        return sorted(list(set(self._df["group"])))
+        if "group" in self._df.columns:
+            groups = sorted(list(set(self._df["group"]))) if as_set else self._df["group"]
+            return groups
+        else:
+            aw.SoftWarning("Assay:setup_not_grouped")
+            return None
 
     def replicates(self, replicates : (int or tuple or str) = None):
         """
@@ -767,7 +792,7 @@ class Assay(aux._ID):
         self._df["group"] = groups
         self._df["group_name"] = group_names
         
-        if infer_names:
+        if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
             
@@ -789,7 +814,7 @@ class Assay(aux._ID):
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            aw.HardWarning("Assay:no_groupname_assignment", names = names)
+            aw.SoftWarning("Assay:no_groupname_assignment", names = names)
 
         # update "group_name"
         self._df["group_name"] = new_names
@@ -1135,7 +1160,7 @@ class SampleReader(Assay):
 
 #         return self._Assay
 
-class DataReader:
+class DataReader(aux._ID):
     """
     Handles reading a single file containing input data
     for `qpcr`. 
@@ -1155,6 +1180,7 @@ class DataReader:
 
     """
     def __init__(self):
+        super().__init__()
         self._replicates = None
         self._names = None
         self._Reader = None             # the functional core will be either a Reader
@@ -2209,11 +2235,12 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
-            and must return a numeric `pandas.Series` of the same length. 
+            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named "s") and a normaliser assay (named "n"),
+            as well as a group identifier column (named "group"). It must return a numeric `pandas.Series` of the same length. 
             
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `"dCt"` column from the normaliser.
+
         """
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
@@ -2302,9 +2329,10 @@ class Normaliser(aux._ID):
         # for double normalised we want the same columns as dct and norm...
 
         sample_dCt = sample_assay.dCt()
+        groups = sample_assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
-        tmp_df = pd.DataFrame( dict( s = sample_dCt, n = norm_dCt )  )
+        tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
         results = self._norm_func(tmp_df, **kwargs)
 
@@ -2435,7 +2463,7 @@ class Normaliser(aux._ID):
         """
         ids = [N.id() for N in self._Normalisers]
         ids = "+".join(ids)
-        self._normaliser._id_reset()
+        self._normaliser.id_reset()
         self._normaliser.id(ids)
         
 
@@ -2474,7 +2502,7 @@ if __name__ == "__main__":
     assays = []
     for file in files: 
 
-        assay = reader.read(file, replicates = 6, names = groupnames)
+        assay = reader.read(file, replicates = "6,6,6,6", names = groupnames)
         assay = analyser.pipe(assay)
         assays.append(assay)
 

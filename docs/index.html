@@ -87,6 +87,20 @@ Why just <code>DeltaCt</code> and not <code>DeltaDeltaCt</code>? Well, we call t
 We name it <code>normalisation</code>, and it is handled by a class called <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> using its native method <code><a title="qpcr.Normaliser.normalise" href="#qpcr.Normaliser.normalise">Normaliser.normalise()</a></code>.
 So, as far as the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module is concerned there is only <code><a title="qpcr.Analyser.DeltaCt" href="#qpcr.Analyser.DeltaCt">Analyser.DeltaCt()</a></code> which performs the first $\Delta Ct$, and <code><a title="qpcr.Normaliser.normalise" href="#qpcr.Normaliser.normalise">Normaliser.normalise()</a></code> which later handles the second "delta"-step to get to $\Delta \Delta Ct$.
 Of course, this means that the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> will need to have knowledge about which <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).</p>
+<blockquote>
+<p>Please, note at this point that, as described in more detail in the documentation of the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code>, Delta-Ct values are directly computed as
+exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \frac{
+\Delta Ct'_s
+}{
+\Delta Ct'_n
+}$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate,
+and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{
+a - b
+} \equiv \frac{
+n^{ a } } {
+n^{ b } }$.
+Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.</p>
+</blockquote>
 <h3 id="the-anchor-and-the-reference-group">The <code>anchor</code> and the "reference group"</h3>
 <p>Next to the "groups of replicates", this is probably one of the most important terms. The <code>anchor</code> is simply the intra-dataset reference used by the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code> to perform its first $\Delta Ct$.
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right?
@@ -218,6 +232,11 @@ Why just `DeltaCt` and not `DeltaDeltaCt`? Well, we call this second `Delta`-ste
 We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser` using its native method `qpcr.Normaliser.normalise`. 
 So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaCt` which performs the first $\Delta Ct$, and `qpcr.Normaliser.normalise` which later handles the second &#34;delta&#34;-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don&#39;t worry about that).
+
+&gt; Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
+&gt; exponential values $ \Delta Ct&#39; = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \\frac{  \Delta Ct&#39;_s  }{  \Delta Ct&#39;_n  }$, where $s$ is an assay of interest&#39;s Delta-Ct ($\Delta Ct&#39;$) value of some replicate, 
+&gt; and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \\frac{  n^{ a } } {  n^{ b } }$. 
+&gt; Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
 
 ### The `anchor` and the &#34;reference group&#34;
 Next to the &#34;groups of replicates&#34;, this is probably one of the most important terms. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
@@ -453,7 +472,10 @@ class _CORE_Reader(aux._ID):
         &#34;&#34;&#34;
         Returns the file-suffix of the provided file
         &#34;&#34;&#34;
-        suffix = self._src.split(&#34;.&#34;)[-1]
+        try: 
+            suffix = self._src.split(&#34;.&#34;)[-1]
+        except: 
+            pass
         return suffix
 
 class Reader(_CORE_Reader):
@@ -641,11 +663,12 @@ class Assay(aux._ID):
             try: 
                 self.replicates(self._replicates)
                 self.group()
-                if self._names is not None: 
-                    self.rename(self._names)
             except Exception as e:
-                print(e) 
                 aw.SoftWarning(&#34;Assay:setup_not_grouped&#34;)
+            
+            # and try to change names, provided that we could group yet...
+            if self._names is not None and self.groups() is not None: 
+                self.rename(self._names)
 
     def save(self, filename : str):
         &#34;&#34;&#34;
@@ -835,21 +858,37 @@ class Assay(aux._ID):
         names : list or pd.Series
             The given group names of all replicate groups.
         &#34;&#34;&#34;
-        if as_set:
-            return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        if &#34;group_name&#34; in self._df.columns: 
+            if as_set:
+                return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+            else: 
+                return self._df[&#34;group_name&#34;]
         else: 
-            return self._df[&#34;group_name&#34;]
+            aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;)
+            return None
     
-    def groups(self):
+    def groups(self, as_set = True):
         &#34;&#34;&#34;
         Returns a set of sample groups (numeric).
 
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
         Returns
         -------
         groups : list
             The given numeric group identifiers of all replicate groups.
         &#34;&#34;&#34;
-        return sorted(list(set(self._df[&#34;group&#34;])))
+        if &#34;group&#34; in self._df.columns:
+            groups = sorted(list(set(self._df[&#34;group&#34;]))) if as_set else self._df[&#34;group&#34;]
+            return groups
+        else:
+            aw.SoftWarning(&#34;Assay:setup_not_grouped&#34;)
+            return None
 
     def replicates(self, replicates : (int or tuple or str) = None):
         &#34;&#34;&#34;
@@ -908,7 +947,7 @@ class Assay(aux._ID):
         self._df[&#34;group&#34;] = groups
         self._df[&#34;group_name&#34;] = group_names
         
-        if infer_names:
+        if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
             
@@ -930,7 +969,7 @@ class Assay(aux._ID):
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+            aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
 
         # update &#34;group_name&#34;
         self._df[&#34;group_name&#34;] = new_names
@@ -1207,7 +1246,7 @@ class SampleReader(Assay):
         Returns
         -------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object containing the grouped and renamed data.
+            A `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
         self._Reader = Reader(filename, **kwargs)
         self._Reader.id(aux.fileID(filename))
@@ -1943,7 +1982,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object containing data.
+            A `qpcr.Assay` object containing data.
         
         &#34;&#34;&#34;
         self._Assay = Assay
@@ -1960,7 +1999,7 @@ class Analyser(aux._ID):
         Parameters
         ----------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -2350,11 +2389,12 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
-            and must return a numeric `pandas.Series` of the same length. 
+            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named &#34;s&#34;) and a normaliser assay (named &#34;n&#34;),
+            as well as a group identifier column (named &#34;group&#34;). It must return a numeric `pandas.Series` of the same length. 
             
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `&#34;dCt&#34;` column from the normaliser.
+
         &#34;&#34;&#34;
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
@@ -2443,9 +2483,10 @@ class Normaliser(aux._ID):
         # for double normalised we want the same columns as dct and norm...
 
         sample_dCt = sample_assay.dCt()
+        groups = sample_assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
-        tmp_df = pd.DataFrame( dict( s = sample_dCt, n = norm_dCt )  )
+        tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
         results = self._norm_func(tmp_df, **kwargs)
 
@@ -2576,7 +2617,7 @@ class Normaliser(aux._ID):
         &#34;&#34;&#34;
         ids = [N.id() for N in self._Normalisers]
         ids = &#34;+&#34;.join(ids)
-        self._normaliser._id_reset()
+        self._normaliser.id_reset()
         self._normaliser.id(ids)
         
 
@@ -2615,7 +2656,7 @@ if __name__ == &#34;__main__&#34;:
     assays = []
     for file in files: 
 
-        assay = reader.read(file, replicates = 6, names = groupnames)
+        assay = reader.read(file, replicates = &#34;6,6,6,6&#34;, names = groupnames)
         assay = analyser.pipe(assay)
         assays.append(assay)
 
@@ -2777,7 +2818,7 @@ within dataset against the <code>anchor</code>)</p></div>
         Parameters
         ----------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object containing data.
+            A `qpcr.Assay` object containing data.
         
         &#34;&#34;&#34;
         self._Assay = Assay
@@ -2794,7 +2835,7 @@ within dataset against the <code>anchor</code>)</p></div>
         Parameters
         ----------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+            A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
         
         **kwargs
             Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -3327,7 +3368,7 @@ The analysed <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> obj
     Parameters
     ----------
     Assay : qpcr.Assay
-        An `qpcr.Assay` object containing data.
+        A `qpcr.Assay` object containing data.
     
     &#34;&#34;&#34;
     self._Assay = Assay</code></pre>
@@ -3343,7 +3384,7 @@ The analysed <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> obj
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to be linked to the Analyser for DeltaCt computation.</dd>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object to be linked to the Analyser for DeltaCt computation.</dd>
 <dt><strong><code>**kwargs</code></strong></dt>
 <dd>Any additional keyword arguments to be passed to the <code>DeltaCt()</code> method.</dd>
 </dl>
@@ -3366,7 +3407,7 @@ The same <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> with co
     Parameters
     ----------
     Assay : qpcr.Assay
-        An `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
+        A `qpcr.Assay` object to be linked to the Analyser for DeltaCt computation.
     
     **kwargs
         Any additional keyword arguments to be passed to the `DeltaCt()` method.
@@ -3483,11 +3524,12 @@ group will be inferred automatically. Otherwise, default group names will be set
             try: 
                 self.replicates(self._replicates)
                 self.group()
-                if self._names is not None: 
-                    self.rename(self._names)
             except Exception as e:
-                print(e) 
                 aw.SoftWarning(&#34;Assay:setup_not_grouped&#34;)
+            
+            # and try to change names, provided that we could group yet...
+            if self._names is not None and self.groups() is not None: 
+                self.rename(self._names)
 
     def save(self, filename : str):
         &#34;&#34;&#34;
@@ -3677,21 +3719,37 @@ group will be inferred automatically. Otherwise, default group names will be set
         names : list or pd.Series
             The given group names of all replicate groups.
         &#34;&#34;&#34;
-        if as_set:
-            return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        if &#34;group_name&#34; in self._df.columns: 
+            if as_set:
+                return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+            else: 
+                return self._df[&#34;group_name&#34;]
         else: 
-            return self._df[&#34;group_name&#34;]
+            aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;)
+            return None
     
-    def groups(self):
+    def groups(self, as_set = True):
         &#34;&#34;&#34;
         Returns a set of sample groups (numeric).
 
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
         Returns
         -------
         groups : list
             The given numeric group identifiers of all replicate groups.
         &#34;&#34;&#34;
-        return sorted(list(set(self._df[&#34;group&#34;])))
+        if &#34;group&#34; in self._df.columns:
+            groups = sorted(list(set(self._df[&#34;group&#34;]))) if as_set else self._df[&#34;group&#34;]
+            return groups
+        else:
+            aw.SoftWarning(&#34;Assay:setup_not_grouped&#34;)
+            return None
 
     def replicates(self, replicates : (int or tuple or str) = None):
         &#34;&#34;&#34;
@@ -3750,7 +3808,7 @@ group will be inferred automatically. Otherwise, default group names will be set
         self._df[&#34;group&#34;] = groups
         self._df[&#34;group_name&#34;] = group_names
         
-        if infer_names:
+        if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
             
@@ -3772,7 +3830,7 @@ group will be inferred automatically. Otherwise, default group names will be set
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+            aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
 
         # update &#34;group_name&#34;
         self._df[&#34;group_name&#34;] = new_names
@@ -4217,16 +4275,23 @@ Note that this only works if all replicates have an identical sample name!</dd>
     self._df[&#34;group&#34;] = groups
     self._df[&#34;group_name&#34;] = group_names
     
-    if infer_names:
+    if infer_names: #and self._names is None:
         # infer group names
         self._infer_names()</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Assay.groups"><code class="name flex">
-<span>def <span class="ident">groups</span></span>(<span>self)</span>
+<span>def <span class="ident">groups</span></span>(<span>self, as_set=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a set of sample groups (numeric).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>as_set</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If <code>as_set = True</code> (default) it returns a set (as list without duplicates)
+of assigned group names for replicate groups.
+If <code>as_set = False</code> it returns the full group_name column (including all repeated entries).</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>groups</code></strong> :&ensp;<code>list</code></dt>
@@ -4236,16 +4301,28 @@ Note that this only works if all replicates have an identical sample name!</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def groups(self):
+<pre><code class="python">def groups(self, as_set = True):
     &#34;&#34;&#34;
     Returns a set of sample groups (numeric).
 
+    Parameters
+    ----------
+    as_set : bool
+        If `as_set = True` (default) it returns a set (as list without duplicates) 
+        of assigned group names for replicate groups.
+        If `as_set = False` it returns the full group_name column (including all repeated entries).
+    
     Returns
     -------
     groups : list
         The given numeric group identifiers of all replicate groups.
     &#34;&#34;&#34;
-    return sorted(list(set(self._df[&#34;group&#34;])))</code></pre>
+    if &#34;group&#34; in self._df.columns:
+        groups = sorted(list(set(self._df[&#34;group&#34;]))) if as_set else self._df[&#34;group&#34;]
+        return groups
+    else:
+        aw.SoftWarning(&#34;Assay:setup_not_grouped&#34;)
+        return None</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Assay.ignore"><code class="name flex">
@@ -4376,10 +4453,14 @@ If <code>as_set = False</code> it returns the full group_name column (including 
     names : list or pd.Series
         The given group names of all replicate groups.
     &#34;&#34;&#34;
-    if as_set:
-        return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+    if &#34;group_name&#34; in self._df.columns: 
+        if as_set:
+            return aux.sorted_set(list(self._df[&#34;group_name&#34;]))
+        else: 
+            return self._df[&#34;group_name&#34;]
     else: 
-        return self._df[&#34;group_name&#34;]</code></pre>
+        aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;)
+        return None</code></pre>
 </details>
 </dd>
 <dt id="qpcr.Assay.rename"><code class="name flex">
@@ -4415,7 +4496,7 @@ Group names only need to be specified once, and are applied to all replicate ent
     elif isinstance(names, dict):
         new_names = self._rename_per_key(names)
     else:
-        aw.HardWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
+        aw.SoftWarning(&#34;Assay:no_groupname_assignment&#34;, names = names)
 
     # update &#34;group_name&#34;
     self._df[&#34;group_name&#34;] = new_names
@@ -5075,11 +5156,12 @@ that can be accessed. This is designed in case multiple files should be read usi
         Parameters
         ----------
         f : function
-            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
-            and must return a numeric `pandas.Series` of the same length. 
+            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named &#34;s&#34;) and a normaliser assay (named &#34;n&#34;),
+            as well as a group identifier column (named &#34;group&#34;). It must return a numeric `pandas.Series` of the same length. 
             
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `&#34;dCt&#34;` column from the normaliser.
+
         &#34;&#34;&#34;
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
@@ -5168,9 +5250,10 @@ that can be accessed. This is designed in case multiple files should be read usi
         # for double normalised we want the same columns as dct and norm...
 
         sample_dCt = sample_assay.dCt()
+        groups = sample_assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
-        tmp_df = pd.DataFrame( dict( s = sample_dCt, n = norm_dCt )  )
+        tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
         results = self._norm_func(tmp_df, **kwargs)
 
@@ -5301,7 +5384,7 @@ that can be accessed. This is designed in case multiple files should be read usi
         &#34;&#34;&#34;
         ids = [N.id() for N in self._Normalisers]
         ids = &#34;+&#34;.join(ids)
-        self._normaliser._id_reset()
+        self._normaliser.id_reset()
         self._normaliser.id(ids)
         
 
@@ -5430,8 +5513,8 @@ If no <code>f</code> is provided, it returns the current <code>norm_func</code>.
 <dl>
 <dt><strong><code>f</code></strong> :&ensp;<code>function</code></dt>
 <dd>
-<p>The function may accept one <code>pandas.DataFrame</code> containing two numeric columns of delta-Ct values from a sample and a normaliser assay,
-and must return a numeric <code>pandas.Series</code> of the same length. </p>
+<p>The function may accept one <code>pandas.DataFrame</code> containing two numeric columns of delta-Ct values from a sample (named "s") and a normaliser assay (named "n"),
+as well as a group identifier column (named "group"). It must return a numeric <code>pandas.Series</code> of the same length. </p>
 <p>By default <code>s/n</code> is used, where <code>s</code> is a column of sample-assay deltaCt values,
 and <code>n</code> is the corresponding <code>"dCt"</code> column from the normaliser.</p>
 </dd>
@@ -5448,11 +5531,12 @@ and <code>n</code> is the corresponding <code>"dCt"</code> column from the norma
     Parameters
     ----------
     f : function
-        The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
-        and must return a numeric `pandas.Series` of the same length. 
+        The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named &#34;s&#34;) and a normaliser assay (named &#34;n&#34;),
+        as well as a group identifier column (named &#34;group&#34;). It must return a numeric `pandas.Series` of the same length. 
         
         By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
         and `n` is the corresponding `&#34;dCt&#34;` column from the normaliser.
+
     &#34;&#34;&#34;
     if aux.same_type(f, aux.fileID):
         self._norm_func = f
@@ -5768,7 +5852,7 @@ so make sure to only provide proper data input when manually assembling your <co
         Parameters
         ----------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object whose group_name column will be copied.
+            A `qpcr.Assay` object whose group_name column will be copied.
         &#34;&#34;&#34;
         if self.is_empty():
             self._df = Assay.get()
@@ -6363,7 +6447,7 @@ This step can only be performed once!</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object whose group_name column will be copied.</dd>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object whose group_name column will be copied.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -6378,7 +6462,7 @@ This step can only be performed once!</p>
     Parameters
     ----------
     Assay : qpcr.Assay
-        An `qpcr.Assay` object whose group_name column will be copied.
+        A `qpcr.Assay` object whose group_name column will be copied.
     &#34;&#34;&#34;
     if self.is_empty():
         self._df = Assay.get()
@@ -6908,7 +6992,7 @@ Its <code>read()</code> method directly returns a <code><a title="qpcr.Assay" hr
         Returns
         -------
         Assay : qpcr.Assay
-            An `qpcr.Assay` object containing the grouped and renamed data.
+            A `qpcr.Assay` object containing the grouped and renamed data.
         &#34;&#34;&#34;
         self._Reader = Reader(filename, **kwargs)
         self._Reader.id(aux.fileID(filename))
@@ -6988,7 +7072,7 @@ the <code>name_label</code> and <code>Ct_label</code> arguments that can be pass
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>Assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
-<dd>An <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing the grouped and renamed data.</dd>
+<dd>A <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> object containing the grouped and renamed data.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -7013,7 +7097,7 @@ the <code>name_label</code> and <code>Ct_label</code> arguments that can be pass
     Returns
     -------
     Assay : qpcr.Assay
-        An `qpcr.Assay` object containing the grouped and renamed data.
+        A `qpcr.Assay` object containing the grouped and renamed data.
     &#34;&#34;&#34;
     self._Reader = Reader(filename, **kwargs)
     self._Reader.id(aux.fileID(filename))
@@ -7249,7 +7333,10 @@ The standard qpcr.Reader inherits from this. </p>
         &#34;&#34;&#34;
         Returns the file-suffix of the provided file
         &#34;&#34;&#34;
-        suffix = self._src.split(&#34;.&#34;)[-1]
+        try: 
+            suffix = self._src.split(&#34;.&#34;)[-1]
+        except: 
+            pass
         return suffix</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -7412,10 +7499,12 @@ specify <code>name_label</code> and <code>Ct_label</code> as additional argument
 </section>
 </article>
 <nav id="sidebar">
+
 <a href="https://github.com/NoahHenrikKleinschmidt/qpcr">
 <img src="./qpcr_light.svg" width = "100%" >
 </a>
 <h1>Index</h1>
+
 <div class="toc">
 <ul>
 <li><a href="#terminology">Terminology</a><ul>

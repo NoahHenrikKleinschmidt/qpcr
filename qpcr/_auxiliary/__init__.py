@@ -4,7 +4,7 @@ that are not directly linked to qpcr Analysis per se.
 """
 import uuid
 import os 
-
+import re 
 
 def from_kwargs(key, default, kwargs, rm = False):
     """
@@ -49,8 +49,13 @@ class _ID:
     def __init__(self):
         self._id = uuid.uuid1() 
         self._id_was_set = False
+        self._id_label_was_set = False
+        self._id_label = None
     
     def id_was_set(self):
+        """
+        Returns True if an Id was set
+        """
         return self._id_was_set
 
     def id(self, id:str = None):
@@ -60,9 +65,75 @@ class _ID:
         if id is not None and not self.id_was_set():
             self._id = id
             self._id_was_set = True
-        else: 
-            return self._id
+        return self._id
     
+    def id_label(self, label:str = None):
+        """
+        Adds a label and gets the current label.
+        The label serves as a secondary id that helps distinguish
+        separate objects from each other that still belong together, 
+        like like qpcr.Assays that store data from transcript isoforms for instance.
+        """
+        if label is not None and not self.id_label_was_set():
+            self._id_label = label
+            self._id_label_was_set = True
+        return self._id_label
+
+    def split_id(self, by : str, regex = False):
+        """
+        Splits an id into id + label based on `by`.
+        `by` may either be a string by which to apply `split` to the id
+        or a `regex pattern` which includes exactly _two_ capturing groups (one for id, one for label).
+        Note, this requires `regex = True` and may render the original id irrestorable through merge_id !
+        """
+        if regex:
+            by = re.compile(by)
+            split = by.search(self._id).groups()
+        else: 
+            split = self._id.split(by)
+        
+        if len(split) > 1:
+            id, label = split
+        else: 
+            id, label = split[0], None
+        
+        # set new id and label
+        self._id = id
+        self._id_label = label
+
+    def merge_id(self, by : str = "_"):
+        """
+        Merges the id and id_label together into just id, and places `by` 
+        between them (default just an underscore). It resets the id_label.
+        If no label is present, nothing will happen.
+        """
+        new_id = self._get_merged_id(by = by)
+        self._id = new_id
+
+        # reset the label settings
+        self._id_label = None
+        self._id_label_was_set = False
+
+    def get_merged_id(self, by : str = "_"):
+        """
+        Returns a merged id but does not adopt it!
+        """
+        label = by + self._id_label if self._id_label is not None else ""
+        new_id = self._id + label
+        return new_id
+
+    def id_to_label(self):
+        """
+        Switches id and id_label
+        """
+        self._id, self._id_label = self._id_label, self._id
+
+    def id_label_was_set(self):
+        """
+        Returns True if an Id label was set
+        """
+        return self._id_label_was_set
+
     def adopt_id(self, obj):
         """
         Adopts the id of another objects that has an id() getter
@@ -70,10 +141,11 @@ class _ID:
         self._id = obj.id()
         self._id_was_set = False
     
-    def _id_reset(self):
+    def id_reset(self):
         """
-        Resets the memory if the id was already changed
+        Resets the memory if the id and id_label were already changed
         """
+        self._id_label_was_set = False
         self._id_was_set = False
 
 
@@ -86,3 +158,28 @@ def fileID(filename):
     if not isinstance(basename, str):
         basename = ".".join(basename)
     return basename
+
+
+
+if __name__ == "__main__":
+
+    obj1 = _ID()
+    obj1.id("Hnrnp l_nmd")
+    obj1.split_id("_")
+    # obj1.id_to_label()
+    # obj1.id_to_label()
+    # obj1.merge_id()
+    r = obj1.id()
+    print(r)
+
+    print("......")
+    obj2 = _ID()
+    obj2.id("Hnrnp l_prot")
+    obj2.split_id("_")
+    # obj2.id_to_label()
+    # obj2.id_to_label()
+    # obj2.merge_id()
+    r = obj2.get_merged_id()
+    print(r)
+    r = obj2.id()
+    print(r)

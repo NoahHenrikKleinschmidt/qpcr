@@ -81,17 +81,13 @@ pipeline.run()
 # and at this point the results are already saved...
 ```
 
-![](./Examples/Example%20Results/colorful.jpg)
+![](./Examples/Example%20Results/colorful.png)
 
 
 ### Getting started
 A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation at the [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html).
 
 
-#### Note
-This is the second version of this module but the first to be properly released. Architecture and functionality have been fundamentally re-developed since Version 1 (which can still be accessed via the `legacy_V1` branch of the project repository).
-Development of Version 1 is discontinued.
-
 #### Citation
-Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.1) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 

@@ -6,8 +6,9 @@ It also defines two classes, a SoftWarning (which only prints the warning string
 # this dictionary stores all the warnings for qpcr
 WARNINGS = {
 
-"Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the csv file adheres to the two column structure required of csv input files.",
+"Reader:cannot_read_csv" : "The file \"{file}\" could not be read!\nMake sure the file adheres to the structure required of regular input files.",
 "Reader:cannot_read_multifile" : "The file \"{file}\" appears to specify multiple assays!\nIf you wish to use this file for your input, please specify an assay name through the argument 'assay'.\n\nAvailable assays from this file are: {assays}\n\nIf you wish to read all assays in this file use the qpcr.MultiReader instead!",
+"Reader:cannot_find_datacols" : "No data could be identified using the given column names!\nCurrently provided are id_label = '{id_label}' and ct_label = '{ct_label}'. Make sure to provide correct data column headers.",
 
 "Analyser:newlinked" : "You have linked a new dataset to your Analyser, your previous results have been cleared!\nIf this was not intended, use .get() to get your results before using .link()",
 "Analyser:not_newlinked" : "You have precomputed results in your Analyser, no new dataset was linked!\n\If you want to link new data anyway (and clear your current results) use force=True.",
@@ -72,6 +73,8 @@ WARNINGS = {
 
 "BigTableReader:no_cols" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nMake sure to specify valid columns to your data for these inputs! Currently ct_col = {ct_col} and assay_col = {assay_col}",
 "BigTableReader:cols_no_good" : "In order to parse a vertical Big Table both a 'ct_col' and 'assay_col' have to be specified.\nHowever, the currently specified columns cannot be found! Currently ct_col = {ct_col} and assay_col = {assay_col}",
+"BigTableReader:no_ct_cols" : "In order to parse a hybrid Big Table a 'ct_col' is required! Provide at least one valid column name to extract, or use decorators.",
+
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
 

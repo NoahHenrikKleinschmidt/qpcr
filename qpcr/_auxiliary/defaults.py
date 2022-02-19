@@ -21,6 +21,10 @@ raw_col_names = ["id", "Ct"]
 default_dataset_header = "assay"
 default_group_name = "group{}"
 
+# default assumed column names for Id and Ct values
+default_id_header = "Name"
+default_ct_header = "Ct"
+
 #  =================================================================
 #                       Default Figure settings
 #  =================================================================
@@ -36,13 +40,13 @@ static_PreviewResults = dict(
                                 legend = False, 
                                 frame = False,
                                 title = "Preview of Results",
-                                ylabel  = "$\Delta\Delta$Ct",
+                                ylabel  = "norm. $\Delta\Delta$Ct",
                             )
 
 interactive_PreviewResults = dict(
                                     template = "plotly_white",
                                     title = "Preview of Results",
-                                    ylabel = "ΔΔCT"
+                                    ylabel = "norm. ΔΔCT"
                                 )
 
 # ReplicateBoxPlot

@@ -58,6 +58,7 @@ import os
 import numpy as np 
 from copy import deepcopy 
 from io import StringIO
+import re 
 
 
 __pdoc__ = {
@@ -68,6 +69,8 @@ __pdoc__ = {
 raw_col_names = defaults.raw_col_names
 supported_filetypes = defaults.supported_filetypes
 default_dataset_header = defaults.default_dataset_header
+default_id_header = defaults.default_id_header
+default_ct_header = defaults.default_ct_header
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 
@@ -123,7 +126,7 @@ class _CORE_Reader(aux._ID):
         are headed by the label `"Ct"`. Both labels have to be on the same row. 
 
         If these labels do not match your excel file, you may
-        specify `name_label` and `Ct_label` as additional arguments.
+        specify `id_label` and `ct_label` as additional arguments.
         """
         suffix = self._filesuffix()
         # check for a valid input file
@@ -131,9 +134,19 @@ class _CORE_Reader(aux._ID):
             aw.HardWarning("MultiReader:empty_data", file = self._src)
 
         if suffix == "csv":
+            
+            # first try simple read of "regular files"
             try: 
-                self._csv_read()
-            except:
+                self._csv_read(**kwargs)
+            except Exception as e:
+
+                # users can force-regular reading mode
+                is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
+                if is_regular:
+                    # print out warning
+                    print(e)
+                    return
+
                 # setup parser
                 parser = Parsers.CsvParser()
                 self._prep_Parser(kwargs, parser)
@@ -147,22 +160,34 @@ class _CORE_Reader(aux._ID):
                 self._get_single_assay(parser, assay_of_interest)
 
         elif suffix == "xlsx":
-            # setup parser
-            parser = Parsers.ExcelParser()
-            self._prep_Parser(kwargs, parser)
-            
-            # check for sheet_name
-            sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
 
-            # store assay-of-interest
-            assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
-            
-            # pipe the datafile through the parser
-            parser.read(self._src, sheet_name = sheet_name)
-            parser.parse(**kwargs)
+            try: 
+                self._excel_read(**kwargs)
+            except Exception as e:
 
-            # get the data
-            self._get_single_assay(parser, assay_of_interest)
+                # users can force-regular reading mode
+                is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
+                if is_regular:
+                    # print out warning
+                    print(e)
+                    return
+
+                # setup parser
+                parser = Parsers.ExcelParser()
+                self._prep_Parser(kwargs, parser)
+                
+                # check for sheet_name
+                sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+
+                # store assay-of-interest
+                assay_of_interest = aux.from_kwargs("assay", None, kwargs, rm=True)
+                
+                # pipe the datafile through the parser
+                parser.read(self._src, sheet_name = sheet_name)
+                parser.parse(**kwargs)
+
+                # get the data
+                self._get_single_assay(parser, assay_of_interest)
 
     def names(self, names:(list or dict)):
         """
@@ -211,7 +236,7 @@ class _CORE_Reader(aux._ID):
             if assay_of_interest is None: 
                 aw.HardWarning("Reader:cannot_read_multifile", file = self._src, assays = parser.assays(), traceback = False)
             self._df = parser.get(assay_of_interest)
-            self._id_reset()
+            self.id_reset()
             self.id(assay_of_interest)
 
         # if only one assay is present anyway, get that one
@@ -219,7 +244,7 @@ class _CORE_Reader(aux._ID):
 
             assay_of_interest = parser.assays()[0]
             self._df = parser.get(assay_of_interest)
-            self._id_reset()
+            self.id_reset()
             self.id(assay_of_interest)
 
     def _prep_Parser(self, kwargs, parser):
@@ -244,32 +269,113 @@ class _CORE_Reader(aux._ID):
         regular csv files.
         """
         df = None
+        # header = aux.from_kwargs("header", 0, kwargs, rm  = True)
         try: 
             df = pd.read_csv(
                                 self._src, 
                                 sep = self._delimiter, 
                                 header = self._header, 
-                                names = raw_col_names
+                                # names = raw_col_names
                             )
         except: 
             aw.HardWarning("Reader:cannot_read_csv", file = self._src)
 
-        # check if a valid Ct column was found
-        Ct = raw_col_names[1]
-        full_valid_Ct_col = len(  df[ df[Ct] == df[Ct] ]  ) == len(df)
-        if not full_valid_Ct_col:
-            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
+
+        # try to get a FileID, from the kwargs
+        # if that fails, try to get the one from fileID
+        id = aux.from_kwargs("id", None, kwargs, rm = True)
+        if id is not None:
+            self.id_reset()
+            self.id(id)
+        elif isinstance(self._src, str):
+            self.id_reset()
+            self.id(aux.fileID(self._src))
         
-        self._id_reset()
-        self.id(aux.fileID(self._src))
+        # vet and crop the dataframe where necessary
+        df = self._vet_single_assay_df(kwargs, df)
+
         self._df = df
+
+    def _excel_read(self, **kwargs):
+        """
+        Reads the given data file if it's an excel file
+
+        This is the basic default reading method for 
+        regular excel files.
+        """
+        df = None
+        sheet_name = aux.from_kwargs("sheet_name", 0, kwargs, rm = True)
+        # header = aux.from_kwargs("header", 0, kwargs, rm  = True)
+        try: 
+            df = pd.read_excel(
+                                self._src, 
+                                sheet_name = sheet_name, 
+                                header = self._header, 
+                                # names = raw_col_names
+                            )
+        except: 
+            aw.HardWarning("Reader:cannot_read_csv", file = self._src)
+
+
+        # try to get a FileID, from the kwargs
+        # if that fails, try to get the one from fileID
+        id = aux.from_kwargs("id", None, kwargs, rm = True)
+        if id is not None:
+            self.id_reset()
+            self.id(id)
+        elif isinstance(self._src, str):
+            self.id_reset()
+            self.id(aux.fileID(self._src))
+
+        # vet and crop the dataframe where necessary
+        df = self._vet_single_assay_df(kwargs, df)
+
+        self._df = df
+
+    def _vet_single_assay_df(self, kwargs, df):
+        """
+        Vets that both Id and Ct columns are present in the data 
+        and if so crops the df to the relevant columns, or checks if 
+        only two columns are present anyway and then assumes Id+Ct as these two.
+        """
+        
+        # check if we got exactly two columns only
+        if len( df.columns ) == 2:
+
+            # just get the current column names for later renaming
+            Id, Ct = df.columns
+
+        else: 
+
+            # check if a valid Ct column was found
+            Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
+            Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
+            
+            valid_data = Ct in df.columns and Id in df.columns
+            if not valid_data:
+                aw.HardWarning("Reader:cannot_find_datacols", id_label = Id, ct_label = Ct)
+            else:
+                # get only the relevant data columns 
+                df = df[[Id, Ct]]
+
+        # make sure to convert Ct values to float
+        tmp_parser = Parsers.CsvParser()
+        Ct_col = df[Ct].to_numpy()
+        df[Ct] = tmp_parser._convert_to_numeric(self.id(), Ct_col)
+
+        # rename to qpcr default headers (id + Ct)
+        df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
+        return df
 
     def _filesuffix(self):
         """
         Returns the file-suffix of the provided file
         """
-        suffix = self._src.split(".")[-1]
-        return suffix
+        try: 
+            suffix = self._src.split(".")[-1]
+            return suffix
+        except: 
+            pass
 
     def _make_new_Assay(self, name, df):
         """
@@ -289,7 +395,7 @@ class SingleReader(_CORE_Reader):
 
     Input Data Files
     ----------------
-    Valid input files are either regular `csv` files, or  irregular `csv` or `excel` files, 
+    Valid input files are either regular `csv` or `excel` files, or  irregular `csv` or `excel` files, 
     that specify assays by one replicate identifier column and one Ct value column.
 
     Irregular input files may specify multiple assays as separate tables, 
@@ -298,13 +404,14 @@ class SingleReader(_CORE_Reader):
     or besides one another (requires `transpose = True`).
 
     #### Example of a "regular" single-assay datafile
-    |id|Ct|
-    |---|---|
-    | ctrl1| 5.67 |
-    | ctrl2| 5.79 |
-    | ctrl3 | 5.86 |
-    | condA1 | 5.34 |
-    | ... | ... |
+    |id|Ct| other data |
+    |---|---| --- |
+    | ctrl1| 5.67 | ... |
+    | ctrl2| 5.79 | ... |
+    | ctrl3 | 5.86 | ... |
+    | condA1 | 5.34 | ... |
+    | ... | ... | ... |
+
 
     #### Example of an "irregular" single-assay datafile
     |                     |                    |            |      |      |
@@ -322,7 +429,13 @@ class SingleReader(_CORE_Reader):
     ----
     This is the successor of the original `qpcr.Reader` (not the `qpcr.SampleReader`!).
     Hence, the `SingleReader` will return a pandas DataFrame of the dataset 
-    directly using `get` but not an `qpcr.Assay`.
+    directly using `get` but not an `qpcr.Assay`. 
+    An `qpcr.Assay` object will be returned after calling `make_Assay`, however. 
+    Furthermore, if the provided file cannot be read as a "regular" file the Reader will automatically
+    switch to parsing. However, if your file _is_ a regular input file, you can force regular reading 
+    by passing the argument `is_regular = True` to the `read` method, which will prevent parsing and allow 
+    you to figure out why regular reading may have failed instead (the Reader will not 
+    provide further insight into why regular reading failed if it switches to parsing).
 
     Parameters
     ----------
@@ -331,8 +444,10 @@ class SingleReader(_CORE_Reader):
         If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
         Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
         If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
-        But they require identifying headers. By default `Name` and `Ct` are assumed but these can be changed using 
-        the `name_label` and `Ct_label` arguments that can be passed as kwargs (they will be forwarded to the `.read()` method). 
+        But they require identifying headers. By default it is assumed that replicate identifiers and Ct values are
+        stored in columns named `Name` and `Ct` but these can be changed using 
+        the `id_label` and `ct_label` arguments that can be passed as kwargs. 
+        Also the assay's `id` can be set as a kwarg. 
 
     **kwargs
         Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
@@ -341,7 +456,7 @@ class SingleReader(_CORE_Reader):
         super().__init__()
         self._src = filename
         self._delimiter = None
-        self._header = aux.from_kwargs("header", 0, kwargs, rm = True)
+        self._header = 0
         if self._src is not None:
             self.read(**kwargs)
 
@@ -354,27 +469,31 @@ class SingleReader(_CORE_Reader):
         If the data file is an Excel file replicates and their Ct values will be 
         extracted from the first excel sheet of the file by default. 
         A separate sheet can be specified using `sheet_name`.
-        
-        Note, this assumes by default
-        that the replicates are headed by the label `"Name"` and the corresponding Ct values
-        are headed by the label `"Ct"`. Both labels have to be on the same row. 
-        If these labels do not match your excel file, you may
-        specify `name_label` and `Ct_label` as additional arguments.
 
         Parameters
         ----------
         filename : str
-            A filepath to an input datafile.
+            A filepath to a raw data file.
+            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
+            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            But they require identifying headers. 
+            By default it is assumed that replicate identifiers and Ct values are
+            stored in columns named `Name` and `Ct` but these can be changed using 
+            the `id_label` and `ct_label` arguments that can be passed as kwargs. 
+            Note, if only two columns are present anyway, they are assumed to be Id (1st) and Ct (2nd) column, 
+            and inputs for `id_label` and `ct_label` are being ignored!
+            The assay's `id` can be set as a kwarg. By default the filename is adopted as id.  
         """
         self._src = filename
 
         self._replicates = aux.from_kwargs("replicates", None, kwargs)
         self._names = aux.from_kwargs("names", None, kwargs)
-
+        self._header = aux.from_kwargs("header", 0, kwargs, rm = True)
 
         if self._filesuffix() == "csv":
             self._delimiter = ";" if self._is_csv2() else ","
-        super().read(header = self._header, **kwargs)
+        super().read(**kwargs)
 
     def pipe(self, filename : str, **kwargs):
         """
@@ -717,7 +836,6 @@ class MultiReader(SingleReader, aux._ID):
             if aux.same_type(dataset, {}):
                 names = dataset.keys()
                 assays = dataset.values()
-                data = assays, names
             else:
                 names = [i.id() for i in dataset]
                 assays = dataset
@@ -799,6 +917,22 @@ class MultiSheetReader(MultiReader):
     """
     def __init__(self):
         super().__init__()
+
+    def read(self, *args, **kwargs):
+        """
+        The `MultiSheetReader` **only** offers a `pipe` method!
+        Hence, neither `read` nor `parse` will work directly!
+        """
+        print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
+
+    def parse(self, *args, **kwargs):
+        """
+        The `MultiSheetReader` **only** offers a `pipe` method!
+        Hence, neither `read` nor `parse` will work directly!
+        """
+        print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
+
+
 
     def pipe(self, filename : str, **kwargs):
         """
@@ -928,13 +1062,40 @@ class BigTableReader(MultiReader):
     >
     > Also, a word of warning with regard to replicate _assays_. The entries in the `assay` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same `qpcr.Assay` object. However, this will result in differently sized `Assays` which will cause problems downstream when you (or a `qpcr.Normaliser`) try to assemble a `qpcr.Results` object!
 
+    #### `Hybrid` Big Tables
+    Big Tables of this kind store Ct values of different assays in separate side-by-side columns, 
+    but they store the replicate identifiers as a separate column. Hence, they combine aspects of vertical and horizontal Big Tables.
+    
 
+    Example: 
+
+    |      | @qpcr:assay| @qpcr:normaliser |  |
+    | ------ | ------- | ------- | ----- |
+    | id     | assay 1 | assay 2 | other_data |
+    | group0 | 7.65    | 11.78   |     ...  |
+    | group0 | 7.87    | 11.56   |  ...     |
+    | group0 | 7.89    | 11.76   |   ...    |
+    | group1 | 7.56    | 11.98   |  ...     |
+    | group1 | 7.34    | 11.56   |   ...    |
+    | ...    | ...     | ...     |  ...     |
+
+
+    > Note
+    >
+    > Two options exist to read this kind of setup. 
+    > - A `list` of `ct_col` values can be passed which contains the column header of each assay.
+    > - The table can be `decorated`, in which case only decorated assays (columns) are extracted.
+    >
+    > Please, note that the two methods of reading this table are mutually exclusive! So,
+    > if you decorate your table you cannot pass specific assay headers to the `ct_col` argument anymore.
     """
     def __init__(self):
         super().__init__()
 
         self._assays = {}
         self._normalisers = {}
+
+        self._data = None
 
         self._Parser = None
         self._kind = None  # horizontal or vertical 
@@ -943,6 +1104,7 @@ class BigTableReader(MultiReader):
         self._assay_col = None
         self._is_regular = False    # store if the datafile was regular and does not 
                                     # have to be converted to a dataframe based on a numpy array...
+        self._hybrid_decorated = False  # because hybrid bigtables require decorator input separately for both read and parse, we store the info so it only needs to be passed during read...
     
     def pipe(self, filename : str, kind : str, id_col : str, **kwargs):
         """
@@ -959,7 +1121,7 @@ class BigTableReader(MultiReader):
             Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
         kind : str
             Specifies the kind of Big Table from the file. 
-            This may either be `"horizontal"` or `"vertical"`.
+            This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
         id_col : str
             The column header specifying the replicate identifiers 
             (or "assays" in case of `horizontal` big tables).
@@ -1007,7 +1169,7 @@ class BigTableReader(MultiReader):
             Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
         kind : str
             Specifies the kind of Big Table from the file. 
-            This may either be `"horizontal"` or `"vertical"`.
+            This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
         id_col : str
             The column header specifying the replicate identifiers 
             (or "assays" in case of `horizontal` big tables).
@@ -1033,6 +1195,12 @@ class BigTableReader(MultiReader):
 
         # if haven't got data, then we go to parsing...
 
+        # set is_horizontal to True for hybrid 
+        # tables that are decorated
+        if self._kind == "hybrid" and aux.from_kwargs("decorator", False, kwargs):
+            is_horizontal = True
+            self._hybrid_decorated = True
+
         # setup Parser to get data
         self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
 
@@ -1048,10 +1216,225 @@ class BigTableReader(MultiReader):
         
         if self._kind == "vertical":
             self._parse_vertical(**kwargs)
-        else: 
+        elif self._kind == "horizontal": 
             self._parse_horizontal(**kwargs)
-
+        elif self._kind == "hybrid":
+            decorator = aux.from_kwargs("decorator", self._hybrid_decorated, kwargs, rm = True)
+            self._parse_hybrid(decorator = decorator, **kwargs)
     
+    def _parse_hybrid(self, **kwargs):
+        """
+        Extracts assay datasets for hybrid big tables,
+        it gets first the id_col and then all ct_cols, 
+        and assembles new dfs of them into a dict
+        """
+        # first check the kind of data we got because it 
+        # can either be a pandas dataframe or a numpy ndarray
+        # depending on whether or not the file is regular and/or decorated
+
+        # it's a dataframe if it's a "regular" big table
+        if isinstance(self._data, pd.DataFrame):
+
+            # check if we got ct cols to extract
+            if self._ct_col is None: 
+                aw.HardWarning("BigTableReader:no_ct_cols", traceback = False)
+
+            # we got a nice dataframe with columns in to extract directly
+            data = self._extract_from_hybrid_dataframe(  data = self._data, to_extract = self._ct_col  )
+            
+            # since in this setting the data was not decorated, 
+            # we store all datasets into the assays
+            self._assays = data
+
+        # it's a numpy ndarray if it's an "irregular" big table
+        else: 
+            # check if the file is supposed to be decorated
+            decorator = aux.from_kwargs("decorator", False, kwargs)
+            if decorator: 
+
+                # in case it is decorated we extract 
+                # data based on the decorators
+                self._hybrid_bigtable_extract_by_decorator()
+            
+            # if we dont have decorated data, we must have received a list for 
+            # ct_col values to use. So we can just transform the np.ndarray to a datafram
+            # and use the same approach as for "regular" big tables...
+            else: 
+                
+                # check if we got ct cols to extract
+                if self._ct_col is None: 
+                    aw.HardWarning("BigTableReader:no_ct_cols", traceback = False)
+
+                # transform the numpy array from the 
+                # hybrid bigtable to a pandas dataframe
+                data = self._convert_hybrid_nparray_to_dataframe()
+
+                # we got a nice dataframe with columns in to extract directly
+                data = self._extract_from_hybrid_dataframe(  data = data, to_extract = self._ct_col  )
+                
+                # since in this setting the data was not decorated, 
+                # we store all datasets into the assays
+                self._assays = data
+
+    def _convert_hybrid_nparray_to_dataframe(self):
+        """
+        Converts a numpy array of a hybrid bigtable 
+        generated by one of the Parsers into a 
+        pandas DataFrame. It returns the DataFrame
+        """
+        # first get the row in which the id_col header is located
+        # this should be the second row because if it was the first, 
+        # then we would have gotten a "regular" table anyway, so there
+        # must actually be some decorators present, but the user decided
+        # to ignore them. But to be save, we specifically search again. 
+        starting_index = np.argwhere( self._data == self._id_col )
+
+        # and get the row index. We assume there is only one hit for the 
+        # id_col since if it were otherwise, the Parsers would have noticed
+        starting_index = starting_index.reshape(starting_index.size)
+        starting_index = starting_index[0]
+
+        # and now we can assemble the data for the dataframe
+        names = self._data[ starting_index, : ]
+        data = self._data[ (starting_index + 1):, : ]
+        data = pd.DataFrame( data, columns = names )
+
+        return data
+
+
+    def _generate_subset_dataframe(self, data, decorator):
+        """
+        Generates a pandas DataFrame of a subset of columns 
+        from a decorated hybrid big table. 
+
+        Note
+        ----
+        This is a downsized version of the `qpcr.Parsers` `find_assays` core.
+
+        Parameters
+        -------
+        data : np.ndarray
+            A numpy array to search in. The **first** row will be searched. 
+        """
+        
+        # compile decorator to search for 
+        decorator = Parsers.decorators[ decorator ]
+        decorator = re.compile( decorator )
+
+        # get first row of the data
+        array = data[ 0, : ]
+
+        # set up an index array for the columns that match
+        indices = np.zeros(len(array))
+
+        # iterate over all entries in the first row
+        idx = 0 
+        for entry in array:
+        # try: 
+            match = decorator.search(entry)
+            if match is not None: 
+                indices[idx] = 1
+        # except: 
+        #     continue
+            idx += 1
+
+        # get matching indices and reduce dimensionality
+        indices = np.argwhere(indices == 1)
+        indices = indices.reshape(indices.size)
+            
+        # now also add the id_col column to the set of relevant indices
+        # for this we search in the second row, but with exact matching.
+        array = data[ 1, : ]
+        id_col = np.argwhere( array == self._id_col )
+        id_col = id_col.reshape(id_col.size)
+
+        # and merge the id_col to the found indices
+        indices = np.concatenate( (id_col, indices) )
+        
+
+        # now get the datframe relevant subset and convert into a DataFrame
+        # we get all rows except the first (since there are the decorators)
+        # and only the columns with matching indices.
+        names = data[ 1, indices ]
+        df = data[ 2:, indices ]
+
+        # convert to numeric
+        # we use the _convert_to_numeric method from the Parsers to do that
+        # we iterate over each column (except the first where the identifiers are stored)
+        # and convert all entries to numeric...
+        tmp_parser = Parsers.CsvParser()
+        for i in range( 1, df.shape[1] ):
+            df[ :, i ] = tmp_parser._convert_to_numeric( "None (from BigTableReader)", df[ :, i ] )
+
+        # convert to dataframe
+        df = pd.DataFrame( df, columns = names )
+        return df
+
+    def _extract_from_hybrid_dataframe(self, data, to_extract):
+        """
+        Extracts datasets from a hybrid dataframe 
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The dataframe to extract from. This needs to include both the id_col and all ct_cols.
+        to_extract : str or list
+            The column names to of Ct columns extract (the id_col is referenced from self._id_col )
+
+        Returns 
+        -------
+        dfs : dict
+            A dictionary of all extracted assays (assay id as key, df as value).
+        """
+
+        # check which columns we should extract
+        # and convert to list if we only have a single one
+        # just so we can use a loop uniformly
+        if not isinstance(to_extract, (list,tuple)):
+            to_extract = [to_extract]
+
+
+        # get the id_column
+        id_col = data[ self._id_col ]
+        # and convert to string (just to be sure)
+        id_col = id_col.astype(str)
+
+         # setup a dict for the assay dataframes
+        dfs = {}
+
+        # iterate over all assays to extract
+        for col in to_extract:
+            # get ct values                
+            ct_col = data[ col ]
+            
+            # convert to float (i.e. introduce nan were necessary)
+            # to that end we use the same approach as the Parsers .make_dataframes()
+            try: 
+                ct_col = ct_col.astype(float)
+            except: 
+
+                ct_col = np.array( ct_col, dtype=str )
+                try: 
+                    ct_col = np.genfromtxt(  ct_col  )
+                except: 
+                    faulties = np.argwhere(    [  Parsers.float_pattern.match(i) is None for i in ct_col ]  ) 
+                    ct_col[ faulties ] = "nan"
+                    ct_col = np.genfromtxt(  ct_col  )
+
+
+            # and assemble new dataframe
+            tmp = pd.DataFrame(
+                                    {   # using qpcr default column headers
+                                        raw_col_names[0] : id_col, 
+                                        raw_col_names[1] : ct_col
+                                    }
+                                )
+            # and save dataframe
+            dfs[ col ] = tmp
+
+        # and store to data
+        return dfs
+
     def _parse_horizontal(self, **kwargs):
         """
         Extracts assay datasets for a horizontal big table
@@ -1088,14 +1471,15 @@ class BigTableReader(MultiReader):
         if self._kind == "vertical" and got_no_cols:
             aw.HardWarning("BigTableReader:no_cols", ct_col = self._ct_col, assay_col = self._assay_col)
             
-            # and test if the ones we have are good
-        if not self._test_cols_are_good():
-            aw.HardWarning("BigTableReader:cols_no_good", ct_col = self._ct_col, assay_col = self._assay_col)
-
         # convert to pandas dataframe in case 
         # the data had to be parsed
         if not self._is_regular:
             self._make_vertical_range_df()
+        
+        # and test if the ones we have are good
+        if not self._test_cols_are_good():
+            aw.HardWarning("BigTableReader:cols_no_good", ct_col = self._ct_col, assay_col = self._assay_col)
+
 
         df = self._data
         assay_col_header = self._assay_col
@@ -1238,18 +1622,49 @@ class BigTableReader(MultiReader):
         data = self.pipe(**kwargs)
         return data
 
+    def _hybrid_bigtable_extract_by_decorator(self):
+        """
+        Extracts assays and normalisers based 
+        on decorators from a decorated hybrid big table.
+        """
+        # find all assays first
+        data = self._generate_subset_dataframe( 
+                                                    data = self._data, 
+                                                    decorator = "qpcr:assay" 
+                                            )
+        # now that we have a nice dataframe 
+        # we can select all columns that are not the id_col as our ct_cols of interest
+        # and use the same _extract_from_hybrid_dataframe as for the undecorated hybrid tables.
+        ct_cols = [ i for i in data.columns if i != self._id_col ]
+        data = self._extract_from_hybrid_dataframe(  data = data, to_extract = ct_cols  )
+
+        # and save to the assays
+        self._assays = data
+
+        # now repeat the same for the normalisers
+        data = self._generate_subset_dataframe( 
+                                                    data = self._data, 
+                                                    decorator = "qpcr:normaliser" 
+                                            )
+        ct_cols = [ i for i in data.columns if i != self._id_col ]
+        data = self._extract_from_hybrid_dataframe(  data = data, to_extract = ct_cols  )
+
+        # and save to the normalisers
+        self._normalisers = data
+
 
 if __name__ == "__main__":
 
-    multisheet_file = "/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx"
-    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    # multisheet_file = "/Users/NoahHK/Downloads/Corti IPSCs July 2019_decorated.xlsx"
+    # decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
 
     # reader = MultiReader()
-    # reader.read(multisheet_file, sheet_name = 1)
-    # reader.parse(decorator = "qpcr:assay")
+    # reader.read(decorated_excel, sheet_name = 1)
+    # reader.parse(decorator = True, ignore_empty = True, assay_pattern = "Rotor-Gene")
+    # reader.make_Assays()
     # r = reader.get("assays")
-    # print(r)
-    # exit(1) 
+    # print(r[0].get())
+    # assert r is not None, "MultiReader failed somewhere..."
 
     # reader = MultiSheetReader()
     # reader.pipe(
@@ -1259,31 +1674,60 @@ if __name__ == "__main__":
     #         )
     # print(reader.get("Actin"))
 
-    bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
-    bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
+    # bigtable_horiztonal = "/Users/NoahHK/Downloads/Local_cohort_Adenoma_qPCR_rawdata_decorated.xlsx"
+    # bigtable_vertical = "/Users/NoahHK/Downloads/qPCR all plates.xlsx"
+
+    # reader = BigTableReader()
+
+
+    # reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
+    # reader.parse(ct_col = "Ct", assay_col = "Gene")
+    # reader.make_Assays()
+    # r = reader.get("assays")
+    # print(r[0].get(), r[0].id())
+    # reader.clear()
+
+
+    # assays, normalisers = reader._DataReader(
+    #                                     filename = bigtable_horiztonal, 
+    #                                     kind = "horizontal", 
+    #                                     id_col = "tissue_number",
+    #                                     replicates = (3,4), 
+    #                                     names = ["Gapdh", "Sord1"]
+    #                                 )
+    # r = normalisers
+    # print(r[0].get())
+
+    # reader = qpcr.DataReader()
+    # r = reader.read( "./Examples/Example Data/actin.xlsx", header = 0, replicates = None, id = "myActin")
+    # # r = reader.make_Assay()
+    # print(r.get(), r.id())
+
+
+    # reader.read( "./Examples/Example Data/actin_nan.csv", replicates = 6, id_label = "Hii", id = "myActin", is_regular = True )
+    # r = reader.make_Assay()
+    # print(r.get(), r.id())
+
+    hybrid_bigtable = "./Examples/Example Data/Big Table Files/hybrid_bigtable.xlsx"
+
+    # sheet 0 is not decorated 
+    # sheet 1 is decorated 
 
     reader = BigTableReader()
-
-
-    reader.read(bigtable_vertical, kind = "vertical", id_col = "Individual")
-    reader.parse(ct_col = "Ct", assay_col = "Gene")
+    reader.read(
+                    hybrid_bigtable, 
+                    kind = "hybrid", 
+                    id_col = "group", 
+                    # ct_col = ["TLR1", "TLR4", "GAPDH"],
+                    decorator = True, 
+                    sheet_name = 1
+            )
+    reader.parse()
     reader.make_Assays()
-    r = reader.get("assays")
-    print(r[0].get(), r[0].id())
-    reader.clear()
+    r = reader.assays()
+    print(r)
+    print(r[0][0].get())
 
-
-    assays, normalisers = reader._DataReader(
-                                        filename = bigtable_horiztonal, 
-                                        kind = "horizontal", 
-                                        id_col = "tissue_number",
-                                        replicates = (3,4), 
-                                        names = ["Gapdh", "Sord1"]
-                                    )
-    r = normalisers
-    print(r[0].get())
-
-    reader = SingleReader()
-    reader.read( "./Example Data/actin.csv", replicates = 6 )
-    r = reader.make_Assay()
-    print(r.get(), r.id())
+    print(r[0][0].get().dtypes)
+    r = reader.normalisers()
+    print(r)

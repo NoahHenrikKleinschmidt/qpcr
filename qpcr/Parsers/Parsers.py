@@ -74,7 +74,7 @@ However, this flexibility is not available when calling Parsers indirectly throu
 
 | Decorator | Code-reference | Filetype                                 | Available for / Used by `qpcr.Readers`                                   |
 | --------- | -------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| @qpcr:all | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
+| any except `qpcr:column` | qpcr:all       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader` |
 | @qpcr:assay | qpcr:assay       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
 | @qpcr:normaliser | qpcr:normaliser       | Irregular single- or multi-assay files. | `SingleReader`, `MultiReader`, `MultiSheetReader`  |
 | @qpcr:group | qpcr:group | Horizontal Big Table files | `BigTableReader` |
@@ -107,25 +107,32 @@ __pdoc__ = {
 # important here is that they must specify a capturing group for the assay name.
 
 assay_patterns = {
-                    "all"           : r"([A-Za-z0-9.:, ()_\-/]+)",
-                    "Rotor-Gene"    : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
+                            "all"           : r"([A-Za-z0-9.:, ()_\-/]+)",
+                            "Rotor-Gene"    : r"Quantitative analysis of .+(?<=\()([A-Za-z0-9.:, _\-/]+)",
                 }
 
+# also store default data-column 
+# headers associated with a Pattern
+assay_pattern_col_names = {
+                    
+                            "Rotor-Gene"    :   [   "Name" , "Ct"   ]
+                        }
+
 decorators = {
-                    "qpcr:all"          : "(@qpcr:|'@qpcr:)",
-                    "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
-                    "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
-                    "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
-                    "qpcr:column"       : "(@qpcr|'@qpcr)",
+                            "qpcr:all"          : "(@qpcr:|'@qpcr:)",
+                            "qpcr:assay"        : "(@qpcr:assay\s{0,}|'@qpcr:assay\s{0,})",
+                            "qpcr:normaliser"   : "(@qpcr:normaliser\s{0,}|'@qpcr:normaliser\s{0,})",     
+                            "qpcr:group"        : "(@qpcr:group\s{0,}|'@qpcr:group\s{0,})",
+                            "qpcr:column"       : "(@qpcr|'@qpcr)",
 
             }
 
 plain_decorators = {
-                    "qpcr:all"          : "@qpcr:",
-                    "qpcr:assay"        : "@qpcr:assay",
-                    "qpcr:normaliser"   : "@qpcr:normaliser",
-                    "qpcr:group"        : "@qpcr:group",
-                    "qpcr:column"       : "@qpcr",
+                            "qpcr:all"          : "@qpcr:",
+                            "qpcr:assay"        : "@qpcr:assay",
+                            "qpcr:normaliser"   : "@qpcr:normaliser",
+                            "qpcr:group"        : "@qpcr:group",
+                            "qpcr:column"       : "@qpcr",
             }
 
 # get the standard column headers to use for the 
@@ -135,12 +142,23 @@ standard_ct_header = defaults.raw_col_names[1]
 
 default_group_name = defaults.default_group_name
 default_dataset_header = defaults.default_dataset_header
+default_id_header = defaults.default_id_header
+default_ct_header = defaults.default_ct_header
 
 # set a dummy default value for any np.nan values
 # in the column storing the assay headers
 # we do this in case the "all" assay_pattern is used without decorators
 # in this case any cell would be selected as "nan" also matches the pattern
 dummy_blank = "$"
+
+
+# set up a regex pattern for floats. We require this to vet the Ct columns
+# during make_dataframes() calling, because there may be entries wihtin the 
+# Ct column where np.genfromtext crashes (like when it has spaces in it).
+# Somehow, more elgant tweaks directly at genfromtext would not work so we 
+# brute-force match with regex and replace faulty entires manually with "nan"
+# before calling genfromtext.
+float_pattern = re.compile("\d+\.?\d*")
 
 class _CORE_Parser:
     """
@@ -168,6 +186,8 @@ class _CORE_Parser:
 
         # setup the labels for replicate ids and ct value column headers
         self.labels()
+        # and reset the ids_were_set variable to default False
+        self._ids_were_set = False
 
         # we must specify a maximum allowed length for the assay names before hand 
         # (since we're using numpy arrays for storing the names, which require enough open slots to store the characters)
@@ -208,6 +228,7 @@ class _CORE_Parser:
 
         self._assay_ct_start_indices = None         # indices of the ct headers
         self._assay_ct_end_indices = None           # indices of the last entry of the ct columns
+
 
     def transpose(self):
         """
@@ -266,7 +287,7 @@ class _CORE_Parser:
                 assay_path = os.path.join(self.save_to(), f"{assay}.csv")
                 df.to_csv(assay_path, index = False)
 
-    def labels(self, id_label : str = "Name", ct_label : str = "Ct"):
+    def labels(self, id_label : str = default_id_header, ct_label : str = default_ct_header ):
         """
         Sets the headers for the relevant data columns for each assay within the datafile.
 
@@ -280,6 +301,7 @@ class _CORE_Parser:
         """
         self._id_label = id_label
         self._ct_label = ct_label
+        self._ids_were_set = True
 
     def assays(self):
         """
@@ -312,7 +334,15 @@ class _CORE_Parser:
         if pattern is not None: 
             # try to get the pattern from the predefined patterns via key
             _pattern = aux.from_kwargs(pattern, None, assay_patterns)
-            _pattern = pattern if _pattern is None else _pattern
+
+            # check if we got a hit, and if so,
+            # also import default data-column headers if possible
+            # (provided the Parser hasn't got any yet)
+            if _pattern is not None and not self._ids_were_set: 
+                self._id_label, self._ct_label = aux.from_kwargs(  pattern, (None, None), assay_pattern_col_names  )
+            elif _pattern is None:
+                _pattern = pattern
+            # _pattern = pattern if _pattern is None else _pattern
             self._pattern = re.compile(_pattern, *flags)
         return self._pattern
 
@@ -565,12 +595,10 @@ class _CORE_Parser:
             assay_cts = self._data[ct_range, ct_col]
 
             # and convert to numeric data
-            try: 
-                assay_cts = assay_cts.astype(float)
-            except ValueError as e:
-                assay_cts = np.genfromtxt(  np.array(assay_cts, dtype=str)  )
-                bad_value = e.__str__().split(": ")[1]
-                aw.SoftWarning("Parser:found_non_readable_cts", assay = assay, bad_value = bad_value)
+            # in case a simply astype(float) fails we resort to matching faulty entries
+            # individually with regex and then convert these to a readable "nan" format
+            # and then convert to float using np.genfromtext
+            assay_cts = self._convert_to_numeric(assay, assay_cts)
 
             # assemble the assay dataframe 
             assay_df = pd.DataFrame(
@@ -594,6 +622,49 @@ class _CORE_Parser:
                             )
 
             adx += 1
+            
+            if adx == len( self._assay_names ): break
+
+    def _convert_to_numeric(self, id, array):
+        """
+        Converts a numpy array to floats. 
+        Either directly using np.genfromtext, or if this fails, 
+        by first prepping using regex and then np.genfromtext
+        
+        Parameters
+        -----------
+        array : np.ndarray
+            The array to convert. 
+        id : str
+            The associated identifier of the array to include in the error message
+            that is procuded denoting which faulty entries were set to NaN... 
+            (or just the first thereof, actually).
+        """
+        try: 
+            array = array.astype(float)
+        except ValueError as e:
+                # convert to string first, for regex matching
+            array = np.array(array, dtype=str)
+
+            try: 
+                    # we first try to just use genfromtext directly
+                    # since it takes a lot of time to do the regex matching
+                    # so we avoid it if possible...
+                array = np.genfromtxt(  array  )
+                
+            except: 
+                    # first get the indices of all entries that are not floats
+                    # and convert these manually to "nan"
+                faulties = np.argwhere(    [ float_pattern.match(i) is None for i in array ]   ) 
+                array[ faulties ] = "nan"
+
+                    # now read the the ct values again as floats
+                array = np.genfromtxt(  array  )
+
+                # print some info about the faulty entries
+            bad_value = e.__str__().split(": ")[1]
+            aw.SoftWarning("Parser:found_non_readable_cts", assay = id, bad_value = bad_value)
+        return array
 
     def _make_BigTable_range(self, **kwargs):
         """
@@ -824,7 +895,7 @@ class _CORE_Parser:
         """
         Generates the array in which header entries should be searched for
         """
-        
+  
         if row is None and col is not None: 
             array = self._data[:, col] if not self._transpose else self._data[col, :]
         elif row is not None and col is None:
@@ -833,7 +904,7 @@ class _CORE_Parser:
             array = self._data[row, col] if not self._transpose else self._data[col, row]
         else:
             aw.HardWarning("Parser:invalid_range")
-
+    
         # re-format to str and reset "nan" to dummy_blank
         array = array.astype(str)
         array[ np.argwhere(array == "nan") ] = dummy_blank
@@ -923,6 +994,51 @@ class _CORE_Parser:
             adx += 1
         return end_indices
 
+class ArrayParser(_CORE_Parser):
+    """
+    Handles only parsing of irregular files that contain multiple assays.
+    However, it does not read any specific filetype but requires a `numpy.ndarray`
+    as input for it's `read` method.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def read(self, data):
+        """
+        Accepts a numpy array for its data source.
+
+        Parameters
+        -------
+        data : np.ndarray
+            A numpy array of some data to parse.
+        """
+        self._data = data
+
+    def pipe(self, data, **kwargs):
+        """
+        Accepts a numpy array for its data 
+        source, and parses for assay datasets.
+
+        Parameters
+        -------
+        data : np.ndarray
+            A numpy array of some data to parse.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        """
+        self.read(data)
+        self.parse(**kwargs)
+        assays = self.get()
+        
+        if self._save_loc is not None: 
+            self.save()
+        
+        return assays
 
 class CsvParser(_CORE_Parser):
     """
@@ -995,7 +1111,9 @@ class CsvParser(_CORE_Parser):
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv()")
             df = pd.read_csv(contents, header = None, sep = delimiter)
 
-        df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
+        drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
+        if drop_nan: 
+            df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = df.to_numpy()
 
         self._data = data
@@ -1086,6 +1204,9 @@ class ExcelParser(_CORE_Parser):
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel()")
 
+        drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
+        if drop_nan: 
+            data = data.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = data.to_numpy()
 
         self._data = data
@@ -1182,12 +1303,15 @@ if __name__ == "__main__":
 
     # print("""\n\n\n ========================= \n All good with decorated CsvParser using pipe \n ========================= \n\n\n""")
 
-    # parser3 = ExcelParser()
-    # decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
-    # parser3.save_to("./__decorated_excelparser_pipe_nodec")
-    # parser3.assay_pattern("Rotor-Gene")
-    # parser3.pipe(decorated_excel)
-    # # print(parser3.get())
+    parser3 = ExcelParser()
+    decorated_excel = "./__parser_data/excel 3.9.19_decorated.xlsx"
+    parser3.save_to("./__decorated_excelparser_pipe_nodec")
+    # parser3.labels( "Type", "No.")
+    parser3.assay_pattern("Rotor-Gene")
+    parser3.pipe(decorated_excel)
+    print(parser3.get())
+
+    exit()
 
     # print("""\n\n\n ========================= \n All good with decorated ExcelParser using pipe without dec\n ========================= \n\n\n""")
 
