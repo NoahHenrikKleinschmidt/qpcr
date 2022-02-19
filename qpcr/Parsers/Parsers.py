@@ -992,6 +992,51 @@ class _CORE_Parser:
             adx += 1
         return end_indices
 
+class ArrayParser(_CORE_Parser):
+    """
+    Handles only parsing of irregular files that contain multiple assays.
+    However, it does not read any specific filetype but requires a `numpy.ndarray`
+    as input for it's `read` method.
+    """
+    def __init__():
+        super().__init__()
+
+    def read(self, data):
+        """
+        Accepts a numpy array for its data source.
+
+        Parameters
+        -------
+        data : np.ndarray
+            A numpy array of some data to parse.
+        """
+        self._data = data
+
+    def pipe(self, data, **kwargs):
+        """
+        Accepts a numpy array for its data 
+        source, and parses for assay datasets.
+
+        Parameters
+        -------
+        data : np.ndarray
+            A numpy array of some data to parse.
+        **kwargs
+            Any additional keyword argument that will be passed to any of the wrapped methods.
+        Returns
+        -------
+        assays : dict
+            A dictionary of all the extracted assays from the datafile storing the data as pandas DataFrames.
+            Individual assays can also be accessed using the `get` method.
+        """
+        self.read(data)
+        self.parse(**kwargs)
+        assays = self.get()
+        
+        if self._save_loc is not None: 
+            self.save()
+        
+        return assays
 
 class CsvParser(_CORE_Parser):
     """
