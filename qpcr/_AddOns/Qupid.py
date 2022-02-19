@@ -28,7 +28,6 @@ BigTableReader_read                 To read bigtable files
     assays and normalisers, except for the SingleReader_read_regular which only returns
     a single qpcr.Assay object.
 """
-
 import streamlit as st
 import qpcr 
 import qpcr._auxiliary as aux
@@ -455,6 +454,10 @@ class QupidReader:
 
             assays.extend( a )
             normalisers.extend ( n )
+
+            # clear memory after each sheet
+            reader.clear()
+            reader._Parser.clear()
 
         return assays, normalisers
 
