@@ -622,6 +622,8 @@ class _CORE_Parser:
                             )
 
             adx += 1
+            
+            if adx == len( self._assay_names ): break
 
     def _convert_to_numeric(self, id, array):
         """
@@ -893,7 +895,7 @@ class _CORE_Parser:
         """
         Generates the array in which header entries should be searched for
         """
-        
+  
         if row is None and col is not None: 
             array = self._data[:, col] if not self._transpose else self._data[col, :]
         elif row is not None and col is None:
@@ -902,7 +904,7 @@ class _CORE_Parser:
             array = self._data[row, col] if not self._transpose else self._data[col, row]
         else:
             aw.HardWarning("Parser:invalid_range")
-
+    
         # re-format to str and reset "nan" to dummy_blank
         array = array.astype(str)
         array[ np.argwhere(array == "nan") ] = dummy_blank
@@ -998,7 +1000,7 @@ class ArrayParser(_CORE_Parser):
     However, it does not read any specific filetype but requires a `numpy.ndarray`
     as input for it's `read` method.
     """
-    def __init__():
+    def __init__(self):
         super().__init__()
 
     def read(self, data):
@@ -1109,7 +1111,9 @@ class CsvParser(_CORE_Parser):
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv()")
             df = pd.read_csv(contents, header = None, sep = delimiter)
 
-        df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
+        drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
+        if drop_nan: 
+            df = df.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = df.to_numpy()
 
         self._data = data
@@ -1200,6 +1204,9 @@ class ExcelParser(_CORE_Parser):
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
             aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel()")
 
+        drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
+        if drop_nan: 
+            data = data.dropna(axis = 0, how = "all").reset_index(drop=True)
         data = data.to_numpy()
 
         self._data = data
