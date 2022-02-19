@@ -81,7 +81,7 @@ pipeline.run()
 # and at this point the results are already saved...
 ```
 
-![](./Examples/Example%20Results/colorful.jpg)
+![](./Examples/Example%20Results/colorful.png)
 
 
 ### Getting started
