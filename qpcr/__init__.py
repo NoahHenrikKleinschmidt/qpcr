@@ -78,6 +78,11 @@ We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser
 So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaCt` which performs the first $\Delta Ct$, and `qpcr.Normaliser.normalise` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
+> Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
+> exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \frac{  \Delta Ct'_s  }{  \Delta Ct'_n  }$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate, 
+> and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \frac{  n^{ a } } {  n^{ b } }$. 
+> Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
+
 ### The `anchor` and the "reference group"
 Next to the "groups of replicates", this is probably one of the most important terms. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample, right? 
@@ -707,17 +712,25 @@ class Assay(aux._ID):
             aw.SoftWarning("Assay:no_groupname_assignment")
             return None
     
-    def groups(self):
+    def groups(self, as_set = True):
         """
         Returns a set of sample groups (numeric).
 
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
         Returns
         -------
         groups : list
             The given numeric group identifiers of all replicate groups.
         """
         if "group" in self._df.columns:
-            return sorted(list(set(self._df["group"])))
+            groups = sorted(list(set(self._df["group"]))) if as_set else self._df["group"]
+            return groups
         else:
             aw.SoftWarning("Assay:setup_not_grouped")
             return None
@@ -2221,11 +2234,12 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample and a normaliser assay, 
-            and must return a numeric `pandas.Series` of the same length. 
+            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named "s") and a normaliser assay (named "n"),
+            as well as a group identifier column (named "group"). It must return a numeric `pandas.Series` of the same length. 
             
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `"dCt"` column from the normaliser.
+
         """
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
@@ -2314,9 +2328,10 @@ class Normaliser(aux._ID):
         # for double normalised we want the same columns as dct and norm...
 
         sample_dCt = sample_assay.dCt()
+        groups = sample_assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
-        tmp_df = pd.DataFrame( dict( s = sample_dCt, n = norm_dCt )  )
+        tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
         results = self._norm_func(tmp_df, **kwargs)
 
