@@ -89,16 +89,14 @@ So, as far as the <code><a title="qpcr" href="#qpcr">qpcr</a></code> module is c
 Of course, this means that the <code><a title="qpcr.Normaliser" href="#qpcr.Normaliser">Normaliser</a></code> will need to have knowledge about which <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code> objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).</p>
 <blockquote>
 <p>Please, note at this point that, as described in more detail in the documentation of the <code><a title="qpcr.Analyser" href="#qpcr.Analyser">Analyser</a></code>, Delta-Ct values are directly computed as
-exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct =
-rac{
+exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \frac{
 \Delta Ct'_s
 }{
 \Delta Ct'_n
 }$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate,
 and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{
 a - b
-} \equiv
-rac{
+} \equiv \frac{
 n^{ a } } {
 n^{ b } }$.
 Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.</p>
@@ -236,8 +234,8 @@ So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaC
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don&#39;t worry about that).
 
 &gt; Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
-&gt; exponential values $ \Delta Ct&#39; = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \frac{  \Delta Ct&#39;_s  }{  \Delta Ct&#39;_n  }$, where $s$ is an assay of interest&#39;s Delta-Ct ($\Delta Ct&#39;$) value of some replicate, 
-&gt; and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \frac{  n^{ a } } {  n^{ b } }$. 
+&gt; exponential values $ \Delta Ct&#39; = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \\frac{  \Delta Ct&#39;_s  }{  \Delta Ct&#39;_n  }$, where $s$ is an assay of interest&#39;s Delta-Ct ($\Delta Ct&#39;$) value of some replicate, 
+&gt; and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \\frac{  n^{ a } } {  n^{ b } }$. 
 &gt; Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
 
 ### The `anchor` and the &#34;reference group&#34;
