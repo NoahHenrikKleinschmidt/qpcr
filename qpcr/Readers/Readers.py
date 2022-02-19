@@ -1232,7 +1232,6 @@ class BigTableReader(MultiReader):
         # can either be a pandas dataframe or a numpy ndarray
         # depending on whether or not the file is regular and/or decorated
 
-        print(kwargs)
         # it's a dataframe if it's a "regular" big table
         if isinstance(self._data, pd.DataFrame):
 
@@ -1472,14 +1471,15 @@ class BigTableReader(MultiReader):
         if self._kind == "vertical" and got_no_cols:
             aw.HardWarning("BigTableReader:no_cols", ct_col = self._ct_col, assay_col = self._assay_col)
             
-            # and test if the ones we have are good
-        if not self._test_cols_are_good():
-            aw.HardWarning("BigTableReader:cols_no_good", ct_col = self._ct_col, assay_col = self._assay_col)
-
         # convert to pandas dataframe in case 
         # the data had to be parsed
         if not self._is_regular:
             self._make_vertical_range_df()
+        
+        # and test if the ones we have are good
+        if not self._test_cols_are_good():
+            aw.HardWarning("BigTableReader:cols_no_good", ct_col = self._ct_col, assay_col = self._assay_col)
+
 
         df = self._data
         assay_col_header = self._assay_col
