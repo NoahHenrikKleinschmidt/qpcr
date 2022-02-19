@@ -40,13 +40,13 @@ static_PreviewResults = dict(
                                 legend = False, 
                                 frame = False,
                                 title = "Preview of Results",
-                                ylabel  = "$\Delta\Delta$Ct",
+                                ylabel  = "norm. $\Delta\Delta$Ct",
                             )
 
 interactive_PreviewResults = dict(
                                     template = "plotly_white",
                                     title = "Preview of Results",
-                                    ylabel = "ΔΔCT"
+                                    ylabel = "norm. ΔΔCT"
                                 )
 
 # ReplicateBoxPlot
