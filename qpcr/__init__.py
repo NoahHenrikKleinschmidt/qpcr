@@ -2235,9 +2235,14 @@ class Normaliser(aux._ID):
         Parameters
         ----------
         f : function
-            The function may accept one `pandas.DataFrame` containing two numeric columns of delta-Ct values from a sample (named "s") and a normaliser assay (named "n"),
-            as well as a group identifier column (named "group"). It must return a numeric `pandas.Series` of the same length. 
+            The function may accept two `qpcr.Assay` objects (named `assay` and `normaliser` which will be forwarded from the `qpcr.Normaliser`). 
+            The function may also accept one `pandas.DataFrame` (named `df`) containing two numeric columns of delta-Ct values from a sample-assay (named "s") and a normaliser-assay (named "n"),
+            as well as a group identifier column (named "group"). 
+            Whatever inputs it works with, it must return a named numeric `pandas.Series` of the same length as entries in the Assays' dataframes. 
             
+            ##### Note
+            Support for the dataframe direct usage will be dropped at some point in the future. 
+
             By default `s/n` is used, where `s` is a column of sample-assay deltaCt values, 
             and `n` is the corresponding `"dCt"` column from the normaliser.
 
@@ -2328,13 +2333,19 @@ class Normaliser(aux._ID):
         """
         # for double normalised we want the same columns as dct and norm...
 
+
+
+        # FUTURE DROP HERE
+        # In the future we will not be creating the tmp_df 
+        # directly anymore, but intead will only pass assay and normaliser. 
+
         sample_dCt = sample_assay.dCt()
         groups = sample_assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
         tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
-        results = self._norm_func(tmp_df, **kwargs)
+        results = self._norm_func(df = tmp_df, assay = sample_assay, normaliser = normaliser, **kwargs)
 
         # this is the old call from before factoring out to Assays 
         # dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
@@ -2372,6 +2383,8 @@ class Normaliser(aux._ID):
         Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
         (default _norm_func)
         """
+
+
         s, n = df["s"], df["n"]
         # this is the old call from before factoring out to Assays
         # dCt_col, norm_col = df.columns
