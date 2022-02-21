@@ -820,7 +820,7 @@ class Assay(aux._ID):
         self._df["group_name"] = new_names
         self._renamed = True
 
-    def ignore(self, entries:tuple):
+    def ignore(self, entries:tuple, drop = False):
         """
         Remove lines based on index from the dataframe.
         This is useful when removing corrupted data entries.
@@ -829,8 +829,17 @@ class Assay(aux._ID):
         ----------
         entries : tuple
             Tuple of row indices from the dataframe to drop.
+        drop : bool 
+            If True the provided entries will be entirely removed from the 
+            dataset. If False, ignore entries will be set to NaN. 
         """
-        self._df = self._df.drop(index = list(entries))
+        if drop:
+            self._df = self._df.drop(index = list(entries))
+        else: 
+            Cts = self.Ct()
+            Cts = np.array( Cts )
+            Cts[ entries ] = np.nan
+            self._df["Ct"] = Cts
     
     def _reps_from_formula(self, replicates):
         """

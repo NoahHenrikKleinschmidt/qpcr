@@ -36,6 +36,10 @@ class Filter(aux._ID):
         # any unicate groups like the diluent sample...
         self._ignore_nan = True
 
+        # by default we set outliers to NaN and 
+        # don't drop them anymore
+        self._drop_outliers = False
+
         self._boxplot_mode = "interactive"
         self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
         self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
@@ -85,6 +89,12 @@ class Filter(aux._ID):
         """
         self._ignore_nan = bool
 
+    def drop_outliers(self, bool):
+        """
+        If True, will completely remove outlier Ct values from the dataset.
+        If False, will set outliers to NaN
+        """
+        self._drop_outliers = bool
 
     def plotmode(self, mode = "interactive"):
         """
@@ -271,7 +281,7 @@ Details:
         """
         # exclude faulty entries
         if len(faulty_indices) > 0:
-            self._Assay.ignore(faulty_indices)
+            self._Assay.ignore(faulty_indices, drop = self._drop_outliers)
     
     def _save_stats(self, assay, group, anchor, upper, lower):
         """
