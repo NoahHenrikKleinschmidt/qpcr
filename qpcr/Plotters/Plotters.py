@@ -398,6 +398,7 @@ class PreviewResults(Plotter):
         start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
         show = aux.from_kwargs("show", True, kwargs, rm = True)
+        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
 
         edgecolor = aux.from_kwargs("edgecolor", "black", kwargs, rm = True)
         edgewidth = aux.from_kwargs("edgewidth", 0.3, kwargs, rm = True)
@@ -438,6 +439,9 @@ class PreviewResults(Plotter):
                             xlabel = aux.from_kwargs("xlabel", None, kwargs),
                             ylabel = aux.from_kwargs("ylabel", "$\Delta\Delta$Ct", kwargs),        
                         )
+
+                if rot is not None: 
+                    plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha="left", rotation_mode="anchor") 
 
                 if not show_spines:
                     subplot.spines["right"].set_visible(False)
@@ -1055,7 +1059,7 @@ class FilterSummary(Plotter):
             
             # format the subplot
             ax.set(title = header, ylabel = ylabel, xlabel = xlabel)
-            if rot is not None: 
+            if rot is not None:
                 plt.setp( ax.xaxis.get_majorticklabels(), rotation = -rot, ha="left", rotation_mode="anchor") 
             if not show_legend: 
                 ax.legend().remove()
