@@ -29,6 +29,31 @@ def make_layout(df, ref_column:str):
         ncols = ncols+1
         return ncols, nrows
 
+def make_layout_from_list( ref_list ):
+    """
+    Generates a subplot layout based on a list instead of dataframe column
+    """
+    ref_col = list(set(ref_list))
+    ref_length = len(ref_col)
+
+    if ref_length == 1: 
+        return (1, 1)
+
+    if ref_length % 2 == 0:
+        nrows = 2
+        if ref_length % 4 == 0 and ref_length > 4:
+            nrows = 4
+    elif ref_length % 6 == 0:
+            nrows = 6
+    else: 
+        nrows = 3
+
+    ncols = int(np.ceil(ref_length / nrows))
+    if ncols * nrows >= ref_length:
+        return ncols, nrows
+    else:
+        ncols = ncols+1
+        return ncols, nrows
 
 def make_speclist(maxrows, maxcols, spectype):
     """

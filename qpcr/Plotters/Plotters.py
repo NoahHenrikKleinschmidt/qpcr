@@ -47,6 +47,12 @@ _default_interactive_PreviewResults = defaults.interactive_PreviewResults
 _default_static_ReplicateBoxPlot = defaults.static_ReplicateBoxPlot
 _default_interactive_ReplicateBoxPlot = defaults.interactive_ReplicateBoxPlot
 
+_default_static_FilterSummary = defaults.static_FilterSummary
+_default_interactive_FilterSummary = defaults.interactive_FilterSummary
+
+
+# get default colnames Id + Ct
+raw_col_names = defaults.raw_col_names
 
 # Concept: 
 # Plotter: 
@@ -559,6 +565,12 @@ class ReplicateBoxPlot(Plotter):
     Generate a boxplot figure summary for the input sample replicates.
     
 
+    Note
+    ------
+    This used to be the core of making filter summary figures. However, this has now
+    been replaced by a dedicated `FilterSummary` figure class. Hence, support for linking
+    `qpcr.Filters` directly to this figure class will be dropped in a future release!
+
     Parameters
     ----------
     Filter : qpcr.Filters.Filter
@@ -567,8 +579,6 @@ class ReplicateBoxPlot(Plotter):
     mode : str
         The plotting mode (either `"interactive"` or `"static"`).
 
-
-    
     Plotting Kwargs
     ----
     
@@ -597,8 +607,6 @@ class ReplicateBoxPlot(Plotter):
     |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
 
-
-
     """
     def __init__(self, Filter = None, mode="interactive"):
         self._setup_default_params(
@@ -608,12 +616,20 @@ class ReplicateBoxPlot(Plotter):
         # __init__ is going to require default_params to be already set!
         super().__init__(mode=mode)
         self._data = None
+        if Filter is not None: 
+            wa.SoftWarning("Versions:Deprecation", old = "ReplicateBoxPlot for use with Filters", new = "FilterSummary" )
         self._Filter = Filter
         self._filter_stats = None
     
+    # FUTURE DROP HERE
     def filter(self, Filter):
         """
         Links a Filter object for which a report figure shall be generated
+
+        Note
+        -------
+        Support for linking Filters to use this Figure class to visualse Filter Summaries will be 
+        dropped in a future release! Use the dedicated `FilterSummary` figure class instead!
 
         Parameters
         ----------
@@ -621,12 +637,20 @@ class ReplicateBoxPlot(Plotter):
             A qpcr.Filters.Filter object.
 
         """
+        wa.SoftWarning("Versions:Deprecation", old = "ReplicateBoxPlot for use with Filters", new = "FilterSummary" )
         self._Filter = Filter
+
+    def clear(self):
+        """
+        Will clear the currently stored Assay data
+        """
+        self._data = None
 
     def link(self, Assay:qpcr.Assay):
         """
         Links an Assay object to the BoxPlotter.
         This will simply add the Ct column to the current overall data!
+        Hence, repeated linking of Assay objects will add data and NOT replace any existing.
 
         Parameters
         ----------
@@ -652,6 +676,7 @@ class ReplicateBoxPlot(Plotter):
         """
         Generates an interactive Boxplot summary of the input Ct values
         """
+        kwargs = self.update_params(kwargs)
 
         show = aux.from_kwargs("show", True, kwargs, rm = True)
         template = aux.from_kwargs("template", None, kwargs, rm=True)
@@ -707,7 +732,7 @@ class ReplicateBoxPlot(Plotter):
         """
         Generates a static Boxplot summary of the input Ct values
         """
-
+        kwargs = self.update_params(kwargs)
         data = self._data
         
         show = aux.from_kwargs("show", True, kwargs, rm = True)
@@ -764,6 +789,292 @@ class ReplicateBoxPlot(Plotter):
             fig.show()
 
         return fig 
+
+
+class FilterSummary(Plotter):
+    """
+    Generates a summary figure of the replicate
+    Ct values for each assay before and after filtering.
+
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
+
+    
+    #### `"static"` Kwargs
+    Static ReplicateBoxPlot figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's run"    |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct values"` |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
+
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive PreviewResults figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's run"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = "Raw Ct values"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
+    |  colors : `list`   |   List of two colors for _before_ and _after_ filtering boxes. | `colors = ["red", "green"]`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |  headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default `"y+x+name"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
+
+
+    """
+    def __init__(self, mode):
+        self._setup_default_params(
+                                    static = _default_static_FilterSummary,
+                                    interactive = _default_interactive_FilterSummary
+                                )
+        super().__init__( mode = mode)
+        self._before = qpcr.Results()
+        self._after = qpcr.Results()
+
+    def clear(self):
+        """
+        Clears the pre- and post-filtering Ct value records.
+        """
+        self._before = qpcr.Results()
+        self._after = qpcr.Results()
+
+    def add_before(self, assay : qpcr.Assay ):
+        """
+        Add a pre-filtered set of Ct values
+        from an `qpcr.Assay` object. 
+
+        Parameters
+        ----------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object
+        """
+        # setup groups and stuff information 
+        if self._before.is_empty():
+            self._before.adopt_names( assay )
+            self._after.adopt_names( assay )
+
+        self._before.add_Ct( assay )
+    
+    def add_after(self, assay : qpcr.Assay ):
+        """
+        Add a post-filtered set of Ct values
+        from an `qpcr.Assay` object. 
+
+        Parameters
+        ----------
+        assay : qpcr.Assay
+            An `qpcr.Assay` object
+        """
+        self._after.add_Ct( assay )
+
+
+    def _interactive_plot(self, **kwargs):
+        """
+        Generates an interactive Filter Summary Figure
+        """
+        kwargs = self.update_params(kwargs)
+
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        template = aux.from_kwargs("template", None, kwargs, rm=True)
+        title = aux.from_kwargs("title", None, kwargs, rm=True)
+        padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+        
+        # setup color scheme
+        colors = aux.from_kwargs("colors", ["darkblue", "crimson"], kwargs, rm = True)
+        before_color, after_color = colors
+
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
+
+        # get the data
+        before = self._before.get()
+        after = self._after.get()
+
+        # get the number of assays to visualse
+        assays = [ i for i in before.columns if i not in [ "group", "group_name", raw_col_names[0]] ]
+        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+
+        # each assay will be on its own plot,
+        ncols, nrows = gx.make_layout_from_list( assays )
+        
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad,
+                        )
+        
+        fig.update_layout(
+                            boxmode="group", 
+                            height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                            width = aux.from_kwargs("width", None, kwargs, rm = True),
+                            template = template, 
+                            title = title,
+                        )
+
+        # add default ylabel
+        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True) 
+        fig.update_yaxes(title_text = ylabel)
+        
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+
+        show_legend = True
+        # now iterate over each assay and make a BoxPlot
+        for assay in assays : 
+            
+            # get before and after filter datasets for each assay
+            pre_Cts = before[ ["group", "group_name", assay] ]
+            post_Cts = after[ ["group", "group_name", assay] ]
+            
+            row, col = Coords.get()
+
+            # pre-filter boxes 
+            fig.add_trace(
+                            go.Box(
+                                x = pre_Cts["group_name"],
+                                y = pre_Cts[ assay ],
+                                name = "Before",
+                                hoverinfo = "y+x+name",
+                                marker_color = before_color,
+                                legendgroup='group1',
+                                showlegend = show_legend,
+                                **kwargs,
+                            ),
+                            row, col
+                        )
+            # post-filter boxes
+            fig.add_trace(
+                            go.Box(
+                                x = post_Cts["group_name"],
+                                y = post_Cts[ assay ],
+                                name = "After",
+                                hoverinfo = "y+x+name",
+                                marker_color = after_color,
+                                legendgroup='group1',
+                                showlegend = show_legend,
+                                **kwargs,
+                            ),
+                            row, col
+                        )
+
+            Coords.increment()
+
+            # set show_legend to False after the first assay,
+            # to avoid repetitive legends...
+            show_legend = False
+
+        fig.update_layout( showlegend = True )
+        if show:
+            fig.show()
+
+        return fig 
+
+
+    def _static_plot(self, **kwargs):
+        """
+        Generates a static Filter Summary Fig
+        """
+        kwargs = self.update_params(kwargs)
+
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
+        title = aux.from_kwargs("title", None, kwargs, rm=True)
+        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True)
+        xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True)
+        rot = aux.from_kwargs("rot",None, kwargs, rm = True)
+        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
+        
+        # get the data
+        before = self._before.get()
+        after = self._after.get()
+
+        # get the number of assays to visualse
+        assays = [ i for i in before.columns if i not in [ "group", "group_name", raw_col_names[0]] ]
+        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+
+        # each assay will be on its own plot
+        ncols, nrows = gx.make_layout_from_list( assays )
+
+        ncols, nrows = aux.from_kwargs("subplots", (ncols, nrows), kwargs, rm=True)
+
+
+        fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
+        
+        # possibly nrows and ncols should be switched...
+        Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+
+        show_legend = True
+        for assay, header in zip( assays, headers ): 
+
+            # get before and after filter datasets for each assay
+            pre_Cts = before[ ["group", "group_name", assay] ]
+            post_Cts = after[ ["group", "group_name", assay] ]
+
+            pre_Cts["kind"] = [ "before" for i in pre_Cts["group"] ]
+            post_Cts["kind"] = [ "after" for i in post_Cts["group"] ]
+
+            # assemble data to one dataframe
+            df = pd.concat( (pre_Cts, post_Cts) )
+
+            # get the new subplot
+            try: 
+                ax = Coords.subplot()
+            except: 
+                print("We ran out of axes ... ")
+                break
+
+            # main box plot
+            sns.boxplot(
+                        data = df, 
+                        x = "group_name",
+                        y = assay,
+                        hue = "kind",
+                        ax = ax,
+                        **kwargs
+                    )
+            
+            # format the subplot
+            ax.set(title = header, ylabel = ylabel, xlabel = xlabel)
+            if rot is not None: 
+                plt.setp( ax.xaxis.get_majorticklabels(), rotation = -rot, ha="left", rotation_mode="anchor") 
+            if not show_legend: 
+                ax.legend().remove()
+            else:
+                ax.legend( bbox_to_anchor=(1,1), loc = None, frameon = False )
+            show_legend = False
+
+            Coords.increment()
+
+        if not show_spines: 
+            sns.despine()
+
+        fig.suptitle(title)
+
+        plt.tight_layout()
+        if show: 
+            plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':

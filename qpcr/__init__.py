@@ -1367,7 +1367,7 @@ class Results(aux._ID):
     def adopt_names(self, Assay:Assay):
         """
         Links an instance of Assay to be used as reference for group_names
-        It copies the group_name column to the results storing dataframe.
+        It copies the `group` and `group_name` columns to the results storing dataframe.
         This step can only be performed once!
 
         Parameters

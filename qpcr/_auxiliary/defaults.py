@@ -62,3 +62,17 @@ interactive_ReplicateBoxPlot = dict(
                                         template = "plotly_white",
                                         title = "Summary of Replicates"
                                     )
+
+# FilterSummary
+# --------------------------------
+static_FilterSummary = dict(
+                                    title = "Filtering Summary",
+                                    linewidth = 0.8,
+                                    frame = True,
+                                    palette = "coolwarm"
+                                )
+
+interactive_FilterSummary = dict(
+                                        template = "plotly_white",
+                                        title = "Filtering Summary"
+                                    )
