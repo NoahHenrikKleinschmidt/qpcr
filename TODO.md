@@ -2,6 +2,15 @@
 # New implemented features of *this* release
 
 
+### Plotters
+      - FilterSummary
+      New FilterSummary Plotter generates subplot figure for each assay showing before-after boxes of all replicate Ct values per group. 
+      - PreviewResults static is now anchored rotating labels...
+### core
+      - Norm_func can access directly two assay objects 
+      - f of normalise also accesses directly an assay object
+
+
 # New planned features of *some future* release
 
 New planned features for any future release are:
@@ -24,7 +33,6 @@ Currently before and after filtering figures are separate. It would be nice to h
 > Also, we should re-think if we maybe not only want to set the Ct values to NaN instead of truly dropping the indices entirely...
 
 
-
 ### 3. Statistical evaluation of results 
 Currently, no options are available for preforming t-tests and such on the results. It would be nice to have that functionality at some point. However, the main tricky part here is to decide which groups of replicates to compare against each other. One option would be to simply compare all and draw a comparison heatmap for all groups. But this is invariably computing more than necessary or desired. A sample-index file of sorts would be required here probably...
 
@@ -43,31 +51,9 @@ Currently the workflow is only designed for a single normalisation. Comparing th
 > Let the assays split their id to id + label attributes. So "HNRNPL nmd" and "HNRNPL prot" can be split into id "HNRNPL" and label "nmd" + "prot", respectively. Then develop a class / function, whatever, that will pair up assays according to the same id but different labels. The splitting should be available through both simple `.split` and `regex`...
 
 
-### 5. New pipelines with more versatile customization
-Two new pipelines are supposed to join the current Basic ones: The `Blueprint` (<< CHECK) pipeline and the `Framework` pipeline. They are just again both doing essentially the same as the Basic ones, except that Blueprint allows to link an externally set up SampleReader, Analyser, and Normaliser as desired, while using default settings for anything that was not explicitly set. Framework on the otherhand really requires the user to explicitly set all of these, it only provides the workflow framework.
-
-
 ### 6. Estimation of qPCR efficiency
 There are some nice papers describing how they estimated qPCR amiplification efficiency based on linreg around the linear window (which we use currently just to get the optimal threshold through R^2). The slope of the optimal window should also be the corresponding efficiency. Let's test this out and add a method to replace the default `efficiency = 2` with a properly computed one. Let's try to get the slopes of our window ranges as well during the optimal threshold search, and check if we can truly use these. In the paper they keep using a log-scale to do things, so, maybe we'll have to do the same. Let's see...
 
-
-### 7. Multi-Assay Excel support << CHECK ^^
-We want to be able to read and split multi-assay containing excel files into individual csv files that adhere to the structure of input files for the `qpcr` module. We want to make 
-a stand-alone web-app for this as well... 
-### 1. Qupid 
-New Qupid web-app for easy access to the analysis pipeline for non-experienced users. 
-
-- 1.1 Make a new Qupid web-app
-- 1.2 Make functional Cores within `qpcr` for Qupid
-- 1.3 factor out _Qupid classes into _Qupid submodule
-- 1.4 Make Qupid work with Parsers (currently they don't like the StringIO as self._src, so we need to maybe some _QupidParser classes that will use similar hacks as the _Qupid_SampleReader...)
-
-| Point | Done | In progress | Stuck |
-| ----- | ---- | ----------- | ----- |
-|    1.1   |      |     x       |       |
-|    1.2   |      |    x (currently broken, haven't looked at it yet)         |       |
-|    1.3   |   dropped   |             |       |
-|    1.4   |      |             |       |
 
 ### 8. __str__ methods 
 At some point we should add some `__str__` methdos to all classes ...
