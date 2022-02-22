@@ -593,8 +593,8 @@ class Blueprint(BasicPlus):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:
@@ -853,8 +853,8 @@ class ddCt(Blueprint):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:

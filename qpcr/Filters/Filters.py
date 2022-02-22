@@ -49,26 +49,18 @@ class Filter(aux._ID):
                                             "anchor" : [], "upper" : [], "lower" : []
                                         })
     
-    def plot_params(self, which = "both", **params):
+    def plot_params(self, **params):
         """
         Allows to pre-specify plotting parameters of the FilterSummary Figure.
         This can also be passed directly while calling `Filter.plot`.
 
         Parameters
         ----------
-        which : str
-            Specifies which of the Boxplots to modify. 
-            This can be either `"both"`, `"pre"` or `"post"`.
         **kwargs
             Any accepted additional keyword arguments. 
         """
-        if which == "both":
-            self._before_BoxPlotter.params(**params)
-            self._after_BoxPlotter.params(**params)
-        elif which == "pre":
-            self._before_BoxPlotter.params(**params)
-        elif which == "post":
-            self._after_BoxPlotter.params(**params)
+        self._BoxPlotter.params(**params)
+            
 
     def get_stats(self):
         """
@@ -470,7 +462,9 @@ if __name__ == "__main__":
     normaliser.link(assays, normalisers)
     normaliser.normalise()
 
-    filter.plot(show = True)
+    fig = filter.plot(show = False)
+
+    print( type( fig ))
 
     # prev = Plotters.PreviewResults("interactive")
     # prev.link( normaliser.get() )
