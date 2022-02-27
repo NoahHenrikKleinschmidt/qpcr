@@ -38,6 +38,7 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
+import numpy as np 
 
 # setup default settings for charts
 
@@ -50,6 +51,8 @@ _default_interactive_ReplicateBoxPlot = defaults.interactive_ReplicateBoxPlot
 _default_static_FilterSummary = defaults.static_FilterSummary
 _default_interactive_FilterSummary = defaults.interactive_FilterSummary
 
+_default_static_PreviewDots = defaults.static_PreviewDots
+_default_interactive_PreviewDots = defaults.interactive_PreviewDots
 
 # get default colnames Id + Ct
 raw_col_names = defaults.raw_col_names
@@ -83,6 +86,7 @@ class Plotter:
         self._PARAMS = {} #: _PARAMS will store the plotting parameter kwargs from both _default_params and any additional user specified parameters
         self._Results = None
         self._data = None
+        self._rep_data = None
         self._id = type(self).__name__
         self._MODE = "interactive" if mode is None else mode
         self._fig = None
@@ -103,6 +107,7 @@ class Plotter:
         if aux.same_type(Results, qpcr.Results()):
             self._Results = Results
             self._data = self._Results.stats()
+            self._rep_data = self._Results.get()
         elif isinstance(Results, pd.DataFrame):
             self._Results = None
             self._data = Results
@@ -350,6 +355,7 @@ class PreviewResults(Plotter):
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
     |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
     |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
     |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
     |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
@@ -373,7 +379,6 @@ class PreviewResults(Plotter):
     | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
     |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
-
 
     """
     def __init__(self, mode:str):
@@ -399,6 +404,10 @@ class PreviewResults(Plotter):
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
         show = aux.from_kwargs("show", True, kwargs, rm = True)
         rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+
+        # set a seaborn style
+        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        sns.set_style( style )
 
         edgecolor = aux.from_kwargs("edgecolor", "black", kwargs, rm = True)
         edgewidth = aux.from_kwargs("edgewidth", 0.3, kwargs, rm = True)
@@ -433,7 +442,7 @@ class PreviewResults(Plotter):
                                 fmt = ".", markersize = 0, capsize = 3, 
                                 ecolor = aux.from_kwargs("ecolor", "black", kwargs),
                             )
-
+            
                 subplot.set(
                             title = assay if headers is None else headers[idx],
                             xlabel = aux.from_kwargs("xlabel", None, kwargs),
@@ -595,6 +604,8 @@ class ReplicateBoxPlot(Plotter):
     |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
     |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
     | title : `str`   |  The overall figure title   | `title = "My assays"    |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
+    |   color : `str or list`   | The fillcolor for the boxes.   | `color = "yellow"`     |
     |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
 
     <br></br>
@@ -687,10 +698,7 @@ class ReplicateBoxPlot(Plotter):
         title = aux.from_kwargs("title", None, kwargs, rm=True)
 
         data = self._data
-        
-        # currently unused (needs to be integrated in the future..., see TODO below)
-        # filter_stats = self._Filter.get_stats()
-
+    
         groups = aux.sorted_set(data["group"])
         group_names = aux.sorted_set(data["group_name"])
 
@@ -711,11 +719,7 @@ class ReplicateBoxPlot(Plotter):
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
             
-            # future TODO: 
-            # currently the inclusion-range is NOT yet represented.
-            # It appears as if boxplot cannot use precomputed mean-sd when x and y are specified... (hypothesis of mine)
-            # so we'd need an alternative way of plotting this stuff so we can include it...
-             
+            
             fig.add_trace(
                             go.Box(
                                 x = tmp_df["assay"],
@@ -739,20 +743,16 @@ class ReplicateBoxPlot(Plotter):
         kwargs = self.update_params(kwargs)
         data = self._data
         
+        # set a seaborn style
+        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        sns.set_style( style )
+
         show = aux.from_kwargs("show", True, kwargs, rm = True)
         figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
         title = aux.from_kwargs("title", None, kwargs, rm=True)
+        palette = gx.generate_palette(kwargs)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
         ncols, nrows = aux.from_kwargs("subplots", gx.make_layout(data, "assay"), kwargs, rm=True)
-
-        # future TODO: 
-        # currently the inclusion-range is NOT yet represented.
-        # It appears as if boxplot cannot use precomputed mean-sd when x and y are specified... (hypothesis of mine)
-        # so we'd need an alternative way of plotting this stuff so we can include it...
-            
-        # filter_stats = self._Filter.get_stats()
-
-        # sns.set_style("whitegrid")
 
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
@@ -771,6 +771,7 @@ class ReplicateBoxPlot(Plotter):
             sns.boxplot(
                         data=tmp, 
                         x = "assay", y = "Ct", hue="group_name", 
+                        palette = palette, 
                         ax = ax, 
                         **kwargs
                     )
@@ -819,9 +820,10 @@ class FilterSummary(Plotter):
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct values"` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
+    |   color : `str or list`   | The color for the boxes.   | `color = ["yellow", "green"]`     |
     |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
-
-
+  
     <br></br>
     #### `"interactive"` Kwargs
     Interactive PreviewResults figures accept the following kwargs:
@@ -1007,7 +1009,12 @@ class FilterSummary(Plotter):
         xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True)
         rot = aux.from_kwargs("rot",None, kwargs, rm = True)
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        
+        palette = gx.generate_palette(kwargs)
+
+        # set a seaborn style
+        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        sns.set_style( style )
+
         # get the data
         before = self._before.get()
         after = self._after.get()
@@ -1053,6 +1060,7 @@ class FilterSummary(Plotter):
                         x = "group_name",
                         y = assay,
                         hue = "kind",
+                        palette = palette, 
                         ax = ax,
                         **kwargs
                     )
@@ -1079,6 +1087,309 @@ class FilterSummary(Plotter):
             plt.show()
 
         return fig
+
+
+class PreviewDots(Plotter):
+    """
+    Generate a Preview of all results from all Assays in subplots, plotting individual values
+    in a Dot Plot rather than Bar Plot.
+
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
+
+    Plotting Kwargs
+    ----
+    
+    #### `"static"` Kwargs
+    Static PreviewDots figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
+    |   color : `str or list`   | The fillcolor for the individual dots from replicate groups   | `color = "yellow"`     |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `swarmplot()`.     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive PreviewDots figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.     |      |
+
+    """
+    def __init__(self, mode:str):
+        self._setup_default_params(
+                                    static = _default_static_PreviewDots, 
+                                    interactive = _default_interactive_PreviewDots
+                                )
+        # __init__ is going to require default_params to be already set!
+        super().__init__(mode)
+
+    def _static_plot(self, **kwargs):
+        """
+        The static Preview Results Figure
+        """
+
+        kwargs = self.update_params(kwargs)
+        data = self._rep_data
+
+        # get assays to plot
+        assays = [ i for i in data.columns if i not in [ "group", "group_name", raw_col_names[0] ] ]
+
+        # generate subplot layout
+        ncols, nrows = gx.make_layout_from_list( assays )
+
+        # get kwargs incompatible with the main plotting method
+        title = aux.from_kwargs("title", None, kwargs, rm = True)
+        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
+        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
+        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
+        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+        alpha = aux.from_kwargs("alpha", 1, kwargs, rm = True)
+        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
+        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
+
+        # generate a custom color palette in case color kwarg is provided
+        palette = gx.generate_palette(kwargs)
+
+        # set a seaborn style
+        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        sns.set_style( style )
+
+        # make figure
+        figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
+        fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
+        fig.suptitle( title )
+
+        # setup Coords
+        Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+        idx = 0
+        for assay in assays: 
+
+            try: 
+                tmp_df = data[ ["group", "group_name", assay] ]
+                tmp_df = tmp_df.sort_values("group")
+
+                # now plot a new violin chart 
+                subplot = Coords.subplot()
+
+                if show_violins:
+                    sns.violinplot(
+                                    x = tmp_df["group_name"],
+                                    y = tmp_df[ assay ],
+                                    color = None,
+                                    inner = None, 
+                                    palette = palette,
+                                    ax = subplot,
+
+                                )
+                    for i in subplot.collections:
+                        i.set_alpha( alpha * 0.3 )
+
+                sns.stripplot(
+                                x = tmp_df["group_name"],
+                                y = tmp_df[ assay ],
+                                palette = palette,
+                                alpha = alpha,
+                                ax = subplot,
+                                **kwargs
+                            )
+            
+                subplot.set(
+                            title = assay if headers is None else headers[idx],
+                            xlabel = xlabel,
+                            ylabel = ylabel,        
+                        )
+
+                # adjust xtick rotation   
+                if rot is not None: 
+                    plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha="left", rotation_mode="anchor") 
+
+                if not show_spines:
+                    subplot.spines["right"].set_visible(False)
+                    subplot.spines["top"].set_visible(False)
+                    subplot.spines["left"].set_linewidth(1.05)
+                    subplot.spines["bottom"].set_linewidth(1.05)
+
+                # add ABCD... label to subplot
+                if label_subplots:
+                    self._add_subplot_label(idx, subplot, start_character)         
+
+                Coords.increment()
+                idx += 1
+            except Exception as e:
+                raise e 
+                break
+        
+        plt.tight_layout()
+
+        if show:
+            plt.show()
+
+        # print("<<< Static Check >>>")
+
+        return fig 
+
+    def _add_subplot_label(self, idx, subplot, start_character):
+        """
+        Adds A B C ... to upper left corner of a subplot...
+        It will start labelling at any arbitrary start_character
+        """
+        subplot_label = chr(ord(start_character)+idx)
+        subplot.annotate(
+                            xy = (-0.1,1.03), 
+                            text = subplot_label, 
+                            xycoords = "axes fraction",
+                            weight = "bold", fontsize = 12
+                        )
+
+    def _interactive_plot(self, **kwargs):
+        """
+        The interactive Preview Results Figure
+        """
+
+        kwargs = self.update_params(kwargs)
+        data = self._rep_data
+
+        # get assays to plot
+        assays = [ i for i in data.columns if i not in [ "group", "group_name", raw_col_names[0] ] ]
+        
+        # get the info of groups present in the data
+        # for later use as xtick labels
+        group_names = data[ ["group", "group_name"] ]
+        group_names = group_names.sort_values( "group" )
+        group_names = aux.sorted_set( group_names[ "group_name"] )
+        ticks = np.arange( len(group_names) )
+
+        # make subplot layout
+        ncols, nrows = gx.make_layout_from_list( assays )
+
+        try: 
+            # get incompaltible kwargs 
+            headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+            show = aux.from_kwargs("show", True, kwargs, rm = True)
+            show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
+
+            # setup padding
+            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+            if isinstance(padding, (list, tuple)):
+                hpad, vpad = padding
+            else: 
+                hpad, vpad = padding, None
+
+            # make figure
+            speclist = gx.make_speclist(nrows, ncols, "xy")
+            fig = make_subplots(
+                                    rows = nrows, cols = ncols, 
+                                    specs = speclist, 
+                                    subplot_titles = headers,
+                                    horizontal_spacing = hpad,
+                                    vertical_spacing = vpad
+                            )
+
+            # setup subplot coords handling
+            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+
+            # setup figure
+            fig.update_layout(
+                                title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
+                                height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                                width = aux.from_kwargs("width", None, kwargs, rm = True),
+                                margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                                autosize = True, 
+                                template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
+                                # legend = {  "title" : aux.from_kwargs("legend_title", "Assay", kwargs, rm = True),  },
+                                showlegend = False
+                            )
+
+            # set default axes labels
+            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
+            fig.update_xaxes(title_text = xlabel)
+            
+            ylabel = aux.from_kwargs("ylabel", "", kwargs, rm = True) 
+            fig.update_yaxes(title_text = ylabel)
+
+            idx = 0
+            for assay, header in zip( assays, headers ):
+                
+                row, col = Coords.get()
+
+                tmp_df = data[ ["group", "group_name", assay] ]
+                tmp_df = tmp_df.sort_values("group")
+
+                # now plot a new violin chart 
+                fig.add_trace(
+
+                    go.Violin(
+                                    name = header,
+                                    y = tmp_df[ assay ], x = tmp_df[ "group" ], 
+                                    points = "all",
+                                    pointpos = 0,
+                                    hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
+                                    **kwargs
+                            ), 
+                                    row, col
+                        )
+
+                # remove violins if not desired (leaving only dot plot)
+                if not show_violins: 
+                    fig.update_traces(
+                                        fillcolor="rgba(0,0,0,0)", 
+                                        line_width = 0, 
+                                        selector=dict(type='violin'),
+                                    )
+
+
+                # update x axis to categorical group names
+                fig.update_layout(
+                                    { 
+                                        f"xaxis{idx+1}" : dict(
+                                                                tickmode = 'array',
+                                                                tickvals = ticks,
+                                                                ticktext = group_names,
+                                                        )         
+                                    }
+                                )
+
+                Coords.increment()
+
+                idx += 1
+
+            if show:
+                fig.show()
+
+            # print("<<< Interactive Check >>>")
+            return fig 
+        except Exception as e: 
+            raise e 
 
 
 if __name__ == '__main__':

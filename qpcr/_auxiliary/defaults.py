@@ -40,13 +40,13 @@ static_PreviewResults = dict(
                                 legend = False, 
                                 frame = False,
                                 title = "Preview of Results",
-                                ylabel  = "norm. $\Delta\Delta$Ct",
+                                ylabel  = "norm. Fold Change",
                             )
 
 interactive_PreviewResults = dict(
                                     template = "plotly_white",
                                     title = "Preview of Results",
-                                    ylabel = "norm. ΔΔCT"
+                                    ylabel = "norm. Fold Change"
                                 )
 
 # ReplicateBoxPlot
@@ -76,3 +76,20 @@ interactive_FilterSummary = dict(
                                         template = "plotly_white",
                                         title = "Filtering Summary"
                                     )
+
+# PreviewDots
+# -------------------------------
+
+static_PreviewDots = dict(
+                                    title = "Preview of Results",
+                                    ylabel = "norm. Fold Change",
+                                    linewidth = 0.8,
+                                    frame = False,
+                                    palette = "Blues"
+                    )
+                
+interactive_PreviewDots = dict(
+                                    title = "Preview of Results",
+                                    ylabel = "norm. Fold Change",
+                                    template = "plotly_white",
+                            )
