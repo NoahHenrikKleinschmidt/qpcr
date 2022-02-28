@@ -1755,10 +1755,12 @@ class Results(aux._ID):
         """
         Removes unnnecessary columns from the df during self._df setup with link()
         """
-        # drop the Ct column
+        # drop the Ct columns
+        relcols = [i for i in self._df.columns if "rel_" in i]
         self.drop_cols(
-                        raw_col_names[1], "dCt"
+                        raw_col_names[1], "dCt", *relcols
                     )
+
 
 
     def _add_stats_names(self, samples):
