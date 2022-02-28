@@ -107,7 +107,7 @@ class _ID:
         between them (default just an underscore). It resets the id_label.
         If no label is present, nothing will happen.
         """
-        new_id = self._get_merged_id(by = by)
+        new_id = self.get_merged_id(by = by)
         self._id = new_id
 
         # reset the label settings
