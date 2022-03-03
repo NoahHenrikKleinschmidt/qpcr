@@ -78,10 +78,6 @@ We name it `normalisation`, and it is handled by a class called `qpcr.Normaliser
 So, as far as the `qpcr` module is concerned there is only `qpcr.Analyser.DeltaCt` which performs the first $\Delta Ct$, and `qpcr.Normaliser.normalise` which later handles the second "delta"-step to get to $\Delta \Delta Ct$. 
 Of course, this means that the `qpcr.Normaliser` will need to have knowledge about which `qpcr.Assay` objects contain actual assays-of-interest and which ones contain normaliser-assays (specifying that is easy, though, so don't worry about that).
 
-> Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
-> exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \\frac{  \Delta Ct'_s  }{  \Delta Ct'_n  }$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate, 
-> and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \\frac{  n^{ a } } {  n^{ b } }$. 
-> Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
 
 ### The `anchor` and the "reference group"
 Next to the "groups of replicates", this is probably one of the most important terms. The `anchor` is simply the intra-dataset reference used by the `qpcr.Analyser` to perform its first $\Delta Ct$. 
@@ -111,6 +107,25 @@ Actually, we try to phase out the term "sample" and it currently mainly appears 
 
 ## Some more basics 
 ----
+
+#### The values stored by `qpcr`
+Please, note at this point that, as described in more detail in the documentation of the `qpcr.Analyser`, Delta-Ct values are directly computed as 
+exponential values $ \Delta Ct' = 2^{ - \Delta Ct}$, while normalisation later performs $ \mathrm{norm. } \Delta\Delta Ct = \\frac{  \Delta Ct'_s  }{  \Delta Ct'_n  }$, where $s$ is an assay of interest's Delta-Ct ($\Delta Ct'$) value of some replicate, 
+and $n$ is the corresponding value of the normaliser assay. This is based on the mathemathical equivalence of $n^{  a - b  } \equiv \\frac{  n^{ a } } {  n^{ b } }$. 
+Hence, while the documentation will continuously use the terms $\Delta Ct$ and $\Delta\Delta Ct$, they are in fact the exponential deriviative of the conventional values.
+
+#### Modes of `normalisation`
+The `qpcr.Normaliser` supports custom functions for normalisation. However, it also comes with three built-in methods to normalise sample-assays against normalisers.
+These are accessible via the `mode` argument of the `qpcr.Normaliser.normalise` method, which can be set to `"pair-wise"` (default), `"combinatoric"`, or `"permutative"`. 
+The default option `"pair-wise"` is computationally the fastest and will rigidly normalise replicates against their corresponding partner from the normaliser. I.e. first against first, 
+second against second, etc. This mode is appropriate for multiplex qPCR experiments. For qPCR reactions that were pipetted individually, there is not reason to strictly only pair first
+with first, second with second etc. For these cases there are other two options `"combinatoric"` and `"permutative"`. `"combinatoric"` normalisation will calculate all possible group-wise 
+combinations of a sample-assay replicate with all available normaliser replicates of the same group. I.e. first against first, and against second, etc. This will generate $n^2$ values where 
+$n$ is the number of replicates within a group. This mode is appropriate for small-scale datasets but will substantially increase computation times for larger datasets.   
+`"permutative"` on the other hand will reflect the equivalence of replicates within a group through random permutations wihtin the normaliser replicates. Hence, 
+first may be normalised against first, or second, etc. This normalisation method may by used iteratively to increase the accuracy. Replacement during permutations are allowed (although disabled by default).
+If replacement is desired by the user, the probability of each replicate to be chosen will be weighted based on a fitted normal distribution. This method is appropriate for larger datasets for which combinatoric normalisation
+is not desired. 
 
 ### `pipeline`s 
 A `pipeline` is essentially any workflow that starts from one or multiple input datafiles and ultimately pops out some results table you are happy with.
@@ -151,6 +166,7 @@ import qpcr.Parsers as Parsers
 import qpcr.Readers as Readers
 import os
 import numpy as np 
+import scipy.stats as stats
 from copy import deepcopy 
 from io import StringIO
 import re
@@ -537,6 +553,62 @@ class Assay(aux._ID):
             The stored dataframe
         """
         return self._df
+
+
+    def tile(self, n : int = 1):
+        """
+        Expands the dataframe to the square number of entries for each group.
+        This is useful for combinatoric normalisation wherein each replicate is normalised
+        against each replicate group-wise from the normaliser, instead of only its supposed partner value.
+        
+        Parameters
+        -------
+        n : int
+            The number of tiles to produce. By default `1 tile` will effectively *square* the number of entries within the dataframe.
+        """
+        df = self.get()
+        groups = self.groups()
+
+        new = None
+
+        for group in groups: 
+            subset = df.query(f"group == {group}")
+            length = len(subset) * n
+            subset = pd.concat( [subset for i in range(length) ], ignore_index = True )
+            if new is None:
+                new = subset
+            else:
+                new = pd.concat( [new, subset], ignore_index = True )
+
+        self.adopt( new, force = True)
+
+    def stack(self, n : int = 2):
+        """
+        Expands the dataframe entry-wise `n` times. 
+
+        Parameters
+        -------
+        n : int
+            The number of stacks to produce. `1 stack` will introduce one more copy of each replicate.
+            Note, `n == 1` will keep the current entries!
+        """
+        df = self.get()
+        groups = self.groups()
+
+        n = int(n)
+
+        new = None
+        if n > 1:
+            for group in groups: 
+                subset = df.query(f"group == {group}")
+                length = n
+                subset = pd.concat( [subset for i in range(length) ], ignore_index = True )
+                if new is None:
+                    new = subset
+                else:
+                    new = pd.concat( [new, subset], ignore_index = True )
+
+            self.adopt( new, force = True)
 
     def Ct(self):
         """
@@ -2149,6 +2221,10 @@ class Normaliser(aux._ID):
         self._prep_func = self._preprocess_normalisers
         self._norm_func = self._divide_by_normaliser
 
+        # store the state if a custom norm func was provided
+        self._norm_func_is_set = False
+
+
     def clear(self):
         """
         Will clear the presently stored results
@@ -2258,12 +2334,13 @@ class Normaliser(aux._ID):
         """
         if aux.same_type(f, aux.fileID):
             self._norm_func = f
+            self._norm_func_is_set = True
         elif f is None:
             return f
         else: 
             aw.HardWarning("Normaliser:cannot_set_norm_func", func = f)
 
-    def normalise(self, **kwargs):
+    def normalise(self, mode = "pair-wise", **kwargs):
         """
         Normalises all linked assays against the combined pseudo-normaliser 
         (by default, unless a custom `prep_func` has been specified), 
@@ -2271,6 +2348,18 @@ class Normaliser(aux._ID):
 
         Parameters
         ----------
+        mode : str
+            The normalisation mode to use. This can be either `pair-wise` (default), 
+            or `combinatoric`, or `permutative`.
+            `pair-wise` will normalise replicates only by their partner (i.e. first against first, 
+            second by second, etc.). `combinatoric` will normalise all possible combinations of a replicate 
+            with all partner replicates of the same group from a normaliser (i.e. first against first, then second, then third, etc.).
+            This will generate `n^2` normalised Delta-Delta-Ct values, where `n` is the number of replicates in a group.
+            `permutative` will scramble the normaliser replicates randomly and then normalise pair-wise. This mode supports 
+            a parameter `k` which specifies the times this process should be repeated, thus generating `n * k` normalised Delta-Delta-Ct values.
+            Also, through setting `replace = True` replacement may be allowed during normaliser scrambling.
+            Note, this setting will be ignored if a custom `norm_func` is provided.
+
         **kwargs
             Any additional keyword arguments that may be passed to a custom 
             `norm_func` and `prep_func` (both will receive the kwargs!).
@@ -2281,15 +2370,28 @@ class Normaliser(aux._ID):
 
         if self._Assays == [] or self._normaliser is None:
             aw.SoftWarning("Normaliser:no_data_yet")
+            
+        # check which kind of norm_func we should use
+        if not self._norm_func_is_set:
+            # pair-wise is already default so we don't check...
+            if mode == "combinatoric":
+                self._norm_func = self._tile_normalise
+                tiled = deepcopy(self._Assays[0])
+                tiled.tile()
+                self._Results.adopt_names( tiled )
+                del tiled 
+            elif mode == "permutative":
+                self._norm_func = self._permutate_normalise
+                n = aux.from_kwargs("k", 1, kwargs)
+                tiled = deepcopy(self._Assays[0])
+                tiled.stack(n)
+                self._Results.adopt_names( tiled )
+                del tiled 
+            elif mode == "pair-wise":
+                self._Results.adopt_names( self._Assays[0] )
+        else:
+            self._Results.adopt_names( self._Assays[0] )
 
-        # get combined dataframe
-        # normaliser = self._normaliser.get()
-
-        # setup _Results by passing in the common columns 
-        # from the first Assays (since all Assays should have 
-        # the same id, group, and group_name columns, if they
-        # come from the same experiment...)
-        self._Results.adopt_names(self._Assays[0])
         self._Results.drop_cols()
 
         # perform normalisation for each assay 
@@ -2300,8 +2402,8 @@ class Normaliser(aux._ID):
 
             # apply normalisation (delta-delta-Ct)
             normalised = self._norm_func_wrapper(
-                                                    assay, 
-                                                    self._normaliser, 
+                                                    assay = assay, 
+                                                    normaliser = self._normaliser, 
                                                     **kwargs
                                             )
 
@@ -2336,25 +2438,23 @@ class Normaliser(aux._ID):
         self._Results.add(normalised)
 
 
-    def _norm_func_wrapper(self, sample_assay, normaliser, **kwargs):
+    def _norm_func_wrapper(self, assay, normaliser, **kwargs):
         """
         The wrapper that will apply the _norm_func to the sample and normaliser dataframes and return a pandas series of normalised values
         """
         # for double normalised we want the same columns as dct and norm...
 
-
-
         # FUTURE DROP HERE
         # In the future we will not be creating the tmp_df 
         # directly anymore, but intead will only pass assay and normaliser. 
 
-        sample_dCt = sample_assay.dCt()
-        groups = sample_assay.groups( as_set = False )
+        sample_dCt = assay.dCt()
+        groups = assay.groups( as_set = False )
         norm_dCt = normaliser.dCt()
 
         tmp_df = pd.DataFrame( dict( group = groups, s = sample_dCt, n = norm_dCt )  )
 
-        results = self._norm_func(df = tmp_df, assay = sample_assay, normaliser = normaliser, **kwargs)
+        results = self._norm_func(df = tmp_df, assay = assay, normaliser = normaliser, **kwargs)
 
         # this is the old call from before factoring out to Assays 
         # dCt_col, norm_col = self._prep_columns(sample_assay, dCt_col, norm_col)
@@ -2363,6 +2463,112 @@ class Normaliser(aux._ID):
         # # tmp_df = sample_assay.join(normaliser, rsuffix = "_n")
         # results = self._norm_func(tmp_df[[dCt_col, norm_col]], **kwargs)
         return results
+
+    def _tile_normalise(self, assay, normaliser, **kwargs):
+        """
+        Normalises assays and normalisers group wise, iteratively normalising
+        each individual replicate against all replicates from the normaliser.
+        This generates `n**2` normalised Delta-Delta-Ct values where `n` is the
+        group size. 
+        """
+
+        # get the untiled data
+        adf = assay.get()
+        groups = assay.groups()
+        ndf = normaliser.get()
+        
+        # get the column to draw data from
+        col = aux.from_kwargs("col", "dCt", kwargs)
+
+        # tile the assay
+        assay.tile() 
+
+        # generate results array
+        ddCts = np.zeros( len( assay.get() ) )
+       
+        # now compute ddCt
+        idx = 0
+        for group in groups: 
+
+            a_dCt = adf.query( f"group == {group}" )[ col ].to_numpy()
+            n_dCt = ndf.query( f"group == {group}" )[ col ].to_numpy()
+            
+            for a in a_dCt:
+                for n in n_dCt:
+
+                    r = a / n
+                    
+                    try: 
+                        ddCts[idx] = r 
+                    except: 
+                        break 
+
+                    idx += 1
+
+        ddCts = pd.Series( ddCts )       
+        ddCts.name = "ddCt"
+        return ddCts
+        
+    
+    def _permutate_normalise(self, assay, normaliser, **kwargs):
+        """
+        Scrambles randomly the normaliser's replicate values group-wise 
+        """
+        # get the untiled data
+        adf = assay.get()
+        groups = assay.groups()
+        ndf = normaliser.get()
+        
+        # get the column to draw data from
+        col = aux.from_kwargs("col", "dCt", kwargs)
+
+        # stack the assay
+        # get the number of permutations to perform
+        n = aux.from_kwargs("k", 1, kwargs)  
+        assay.stack(n) 
+
+        # get replace argument for random choice
+        replace = aux.from_kwargs("replace", False, kwargs)
+
+        # generate results array
+        ddCts = np.zeros( len( assay.get() ) )
+       
+        # now compute ddCt
+        idx = 0
+        for group in groups: 
+            for i in range(n):
+                a_dCt = adf.query( f"group == {group}" )[ col ].to_numpy()
+                n_dCt = ndf.query( f"group == {group}" )[ col ].to_numpy()
+                
+                # randomly scramble the normaliser replicates
+                np.random.seed( defaults.default_seed )
+                if replace:
+                    # in case of replacement, we generate a normal 
+                    # distribution from the replicate values and weigh
+                    # the random.choice with the given probabilities of the values 
+                    # being chosen. Since the probabilities do not themselves correspond to 1
+                    # we normalise against the limited available subset to generate a probabilities
+                    # array that sums up to 1.
+                    mu, sd = stats.norm.fit(n_dCt)
+                    probs = stats.norm.pdf(n_dCt, loc = mu, scale = sd)
+                    probs = probs / np.sum(probs)
+                    n_dCt = np.random.choice( n_dCt, size = n_dCt.size, replace = replace, p = probs )
+                else:
+                    n_dCt = np.random.choice( n_dCt, size = n_dCt.size, replace = replace )
+                length = a_dCt.size
+                r = a_dCt / n_dCt
+                        
+                try: 
+                    ddCts[idx : idx + length] = r 
+                except: 
+                    break 
+
+                idx += length
+
+        ddCts = pd.Series( ddCts )       
+        ddCts.name = "ddCt"
+        return ddCts
+
 
     # NOT USED ANYMORE
     # Used to be used before factoring out data storage to the Assays 
