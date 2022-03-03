@@ -25,6 +25,14 @@ default_group_name = "group{}"
 default_id_header = "Name"
 default_ct_header = "Ct"
 
+
+#  =================================================================
+#                       Default core settings
+#  =================================================================
+
+# default seed for randomised processes
+default_seed = 11299114
+
 #  =================================================================
 #                       Default Figure settings
 #  =================================================================
