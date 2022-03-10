@@ -466,11 +466,15 @@ class Blueprint(BasicPlus):
                         filters = filters
                     )
         
-        self._Normaliser.prune(
-                                assays = assays, 
-                                normalisers = normalisers, 
-                                results = results
-                            )
+        try: 
+            self._Normaliser.prune(
+                                    assays = assays, 
+                                    normalisers = normalisers, 
+                                    results = results
+                                )
+        except: 
+            pass
+        
         if cores: 
             self._Reader = None
             self._Analyser = None
