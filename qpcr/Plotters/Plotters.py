@@ -572,7 +572,8 @@ class PreviewResults(Wrapper):
 
 class AssayBars(Plotter):
     """
-    Generate a Preview of all results from all Assays in subplots (per assay) as Bar Charts.
+    Generate a Preview of all results from all Assays in subplots as Bar Charts.
+    Each assay will be shown in a separate subplot.
 
     Parameters
     ----------
@@ -584,7 +585,7 @@ class AssayBars(Plotter):
     ----
     
     #### `"static"` Kwargs
-    Static PreviewResults figures accept the following kwargs:
+    Static AssayBars figures accept the following kwargs:
     
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -606,7 +607,7 @@ class AssayBars(Plotter):
 
     <br></br>
     #### `"interactive"` Kwargs
-    Interactive PreviewResults figures accept the following kwargs:
+    Interactive AssayBars figures accept the following kwargs:
 
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1063,7 +1064,7 @@ class FilterSummary(Plotter):
 
     
     #### `"static"` Kwargs
-    Static ReplicateBoxPlot figures accept the following kwargs:
+    Static FilterSummary figures accept the following kwargs:
     
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1080,7 +1081,7 @@ class FilterSummary(Plotter):
   
     <br></br>
     #### `"interactive"` Kwargs
-    Interactive PreviewResults figures accept the following kwargs:
+    Interactive FilterSummary figures accept the following kwargs:
 
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1347,7 +1348,7 @@ class FilterSummary(Plotter):
 class AssayDots(Plotter):
     """
     Generate a Preview of all results from all Assays in subplots, plotting individual values
-    in a Dot Plot rather than Bar Plot.
+    in a Dot Plot rather than Bar Plot. Each assay will be shown in a separate subplot.
 
     Parameters
     ----------
@@ -1359,7 +1360,7 @@ class AssayDots(Plotter):
     ----
     
     #### `"static"` Kwargs
-    Static PreviewDots figures accept the following kwargs:
+    Static AssayDots figures accept the following kwargs:
     
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1379,7 +1380,7 @@ class AssayDots(Plotter):
 
     <br></br>
     #### `"interactive"` Kwargs
-    Interactive PreviewDots figures accept the following kwargs:
+    Interactive AssayDots figures accept the following kwargs:
 
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1650,7 +1651,56 @@ class AssayDots(Plotter):
 
 class GroupBars(Plotter):
     """
-    Generates a Bar plot figure with a separate subplot for each group
+    Generates a Bar plot figure with a separate subplot for each group. 
+
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+
+    Plotting Kwargs
+    ----
+    
+    #### `"static"` Kwargs
+    Static GroupBars figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
+    |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
+    |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
+    |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive GroupBars figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
+
     """
     def __init__(self, mode : str):
         self._setup_default_params(
@@ -1866,7 +1916,7 @@ class GroupDots(Plotter):
     ----
     
     #### `"static"` Kwargs
-    Static PreviewDots figures accept the following kwargs:
+    Static GroupDots figures accept the following kwargs:
     
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -1886,7 +1936,7 @@ class GroupDots(Plotter):
 
     <br></br>
     #### `"interactive"` Kwargs
-    Interactive PreviewDots figures accept the following kwargs:
+    Interactive GroupDots figures accept the following kwargs:
 
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
