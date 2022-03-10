@@ -1183,7 +1183,7 @@ class FilterSummary(Plotter):
                                 subplot_titles = headers,
                                 horizontal_spacing = hpad,
                                 vertical_spacing = vpad,
-                                sharex = True
+                                # sharex = True
                         )
         
         fig.update_layout(
@@ -2092,13 +2092,13 @@ class GroupDots(Plotter):
         # setup the _assays concatenated dataframe   
         _assays = group_df[ [ "group", assays[0] ] ]
         _assays = _assays.rename( columns = { assays[0] : "value" } )
-        _assays["assay"] = [ assays[0] for i in _assays ]
+        _assays["assay"] = [ assays[0] for i in _assays["group"] ]
 
         # now iteratively add all remaining assays
         for assay in assays[1:]:
             tmp_df = group_df[ [ "group", assay ] ]
             tmp_df = tmp_df.rename( columns = { assay : "value" } )
-            tmp_df["assay"] = [ assay for i in tmp_df ]
+            tmp_df["assay"] = [ assay for i in tmp_df["group"] ]
             _assays = pd.concat( [_assays, tmp_df], ignore_index = True)
                 
         # remove the group col, and sort
@@ -2135,7 +2135,7 @@ class GroupDots(Plotter):
         # get the groups
         groups = data["group"].unique()
         names = data["group_name"].unique()
-        ticks = np.arange( len(names) )
+        ticks = np.arange( len(assays) )
 
         # make subplot layout
         ncols, nrows = gx.make_layout_from_list( groups )
