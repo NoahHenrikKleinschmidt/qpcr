@@ -971,6 +971,8 @@ class ReplicateBoxPlot(Plotter):
         ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True) 
         fig.update_yaxes(title_text = ylabel)
 
+        fig.update_xaxes(showgrid=True)
+
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
             
@@ -1232,7 +1234,7 @@ class FilterSummary(Plotter):
                                 name = "After",
                                 hoverinfo = "y+x+name",
                                 marker_color = after_color,
-                                legendgroup='group1',
+                                legendgroup='group2',
                                 showlegend = show_legend,
                                 **kwargs,
                             ),
