@@ -11,7 +11,10 @@ def generate_palette(kwargs):
     palette = aux.from_kwargs("palette", None, kwargs, rm = True)
     color = aux.from_kwargs("color", None, kwargs, rm = True)
     if color is not None: 
-        palette = sns.color_palette( color )
+        try: 
+            palette = sns.color_palette( color )
+        except:
+            palette = color
     return palette
 
 
