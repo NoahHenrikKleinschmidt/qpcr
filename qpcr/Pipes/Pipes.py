@@ -466,11 +466,15 @@ class Blueprint(BasicPlus):
                         filters = filters
                     )
         
-        self._Normaliser.prune(
-                                assays = assays, 
-                                normalisers = normalisers, 
-                                results = results
-                            )
+        try: 
+            self._Normaliser.prune(
+                                    assays = assays, 
+                                    normalisers = normalisers, 
+                                    results = results
+                                )
+        except: 
+            pass
+        
         if cores: 
             self._Reader = None
             self._Analyser = None
@@ -593,8 +597,8 @@ class Blueprint(BasicPlus):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:
@@ -853,8 +857,8 @@ class ddCt(Blueprint):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:

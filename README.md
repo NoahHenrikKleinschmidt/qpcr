@@ -51,7 +51,7 @@ assay_files = [
 
 # define our experimental parameters
 reps = 6
-group_names = ["WT-", "WT+", "KO-", "KO+"] 
+group_names = ["WT (-)", "WT (+)", "KO (-)", "KO (+)"] 
 
 # setting up the pipeline
 pipeline = BasicPlus()
@@ -89,5 +89,5 @@ A set of basic introductory tutorials is available as `jupyter notebooks` in the
 
 
 #### Citation
-Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.1) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.2) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
