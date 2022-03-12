@@ -1857,7 +1857,7 @@ class GroupBars(Plotter):
                         margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
                         autosize = True, 
                         template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                        legend = {"title" : aux.from_kwargs("legend_title", ref_col, kwargs, rm = True),
+                        legend = {"title" : aux.from_kwargs("legend_title", "group name", kwargs, rm = True),
                         },
                     )
 
