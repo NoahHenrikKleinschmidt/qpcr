@@ -2243,148 +2243,148 @@ class GroupDots(Plotter):
             raise e 
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    files = ["Example Data/28S.csv", "Example Data/28S_again.csv", "Example Data/actin.csv",
-    "Example Data/actin2.csv",
-    "Example Data/actin3.csv",
-    "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
-    groupnames = ["wt-", "wt+", "ko-", "ko+"]
+    # files = ["Example Data/28S.csv", "Example Data/28S_again.csv", "Example Data/actin.csv",
+    # "Example Data/actin2.csv",
+    # "Example Data/actin3.csv",
+    # "Example Data/HNRNPL_nmd.csv", "Example Data/HNRNPL_prot.csv"]
+    # groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
-    # setup figures
-    a = PreviewResults(mode = "static")
-    b = PreviewResults(mode = "interactive")
+    # # setup figures
+    # a = PreviewResults(mode = "static")
+    # b = PreviewResults(mode = "interactive")
 
-    a.params(
-          frame = True, labeltype = "a", show = False
-    )
-    b.params(
-        show = False, template = "plotly"  
-    )
+    # a.params(
+    #       frame = True, labeltype = "a", show = False
+    # )
+    # b.params(
+    #     show = False, template = "plotly"  
+    # )
 
-    # predefined pipeline use
-    pipe = qpcr.Pipes.Basic()
-    pipe.link(files)
-    pipe.add_normalisers(files[:2])
-    pipe.replicates(6)
-    pipe.names(groupnames)
-
-
-    print()
-    print("==== Multiple (ALL) Samples ====")
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot(color = "green")
-    except: 
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot()
-    except: print("Interactive Failed!")
-
-    print()
-    print("==== Multiple (7) Samples ====")
-    pipe.link(files[:7])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot(show = False)
-    except: 
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot(template = "plotly")
-    except: print("Interactive Failed!")
-
-    print()
-    print("==== Multiple (6) Samples ====")
-    pipe.link(files[:6])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot()
-    except: 
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot()
-    except: print("Interactive Failed!")
-
-    print()
-    print("==== Multiple (4) Samples ====")
-    pipe.link(files[:4])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot()
-    except: 
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot()
-    except: print("Interactive Failed!")
-
-    print()
-    print("==== Multiple (3) Samples ====")
-    pipe.link(files[:3])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot()
-    except Exception as e: 
-        print(e)
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot()
-    except Exception as e: 
-        print("Interactive Failed!")
-        raise e
-
-    print()
-    print("==== Multiple (2) Samples ====")
-    pipe.link(files[:2])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot(show = False)
-    except Exception as e: 
-        print(e)
-        print("Static Failed!")
-
-    try:
-        b.link(result)
-        b.plot(show = False)
-    except Exception as e: 
-        print("Interactive Failed!")
-        raise e
+    # # predefined pipeline use
+    # pipe = qpcr.Pipes.Basic()
+    # pipe.link(files)
+    # pipe.add_normalisers(files[:2])
+    # pipe.replicates(6)
+    # pipe.names(groupnames)
 
 
-    print()
-    print("==== One (1) Sample ====")
-    pipe.link([files[0]])
-    pipe.run()
-    result = pipe.get(kind = "obj")
-    try:
-        a.link(result)
-        a.plot()
-    except: 
-        print("Static Failed!")
+    # print()
+    # print("==== Multiple (ALL) Samples ====")
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot(color = "green")
+    # except: 
+    #     print("Static Failed!")
 
-    try:
-        b.link(result)
-        b.plot()
-    except: print("Interactive Failed!")
-    exit(0)
+    # try:
+    #     b.link(result)
+    #     b.plot()
+    # except: print("Interactive Failed!")
+
+    # print()
+    # print("==== Multiple (7) Samples ====")
+    # pipe.link(files[:7])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot(show = False)
+    # except: 
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot(template = "plotly")
+    # except: print("Interactive Failed!")
+
+    # print()
+    # print("==== Multiple (6) Samples ====")
+    # pipe.link(files[:6])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot()
+    # except: 
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot()
+    # except: print("Interactive Failed!")
+
+    # print()
+    # print("==== Multiple (4) Samples ====")
+    # pipe.link(files[:4])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot()
+    # except: 
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot()
+    # except: print("Interactive Failed!")
+
+    # print()
+    # print("==== Multiple (3) Samples ====")
+    # pipe.link(files[:3])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot()
+    # except Exception as e: 
+    #     print(e)
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot()
+    # except Exception as e: 
+    #     print("Interactive Failed!")
+    #     raise e
+
+    # print()
+    # print("==== Multiple (2) Samples ====")
+    # pipe.link(files[:2])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot(show = False)
+    # except Exception as e: 
+    #     print(e)
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot(show = False)
+    # except Exception as e: 
+    #     print("Interactive Failed!")
+    #     raise e
+
+
+    # print()
+    # print("==== One (1) Sample ====")
+    # pipe.link([files[0]])
+    # pipe.run()
+    # result = pipe.get(kind = "obj")
+    # try:
+    #     a.link(result)
+    #     a.plot()
+    # except: 
+    #     print("Static Failed!")
+
+    # try:
+    #     b.link(result)
+    #     b.plot()
+    # except: print("Interactive Failed!")
+    # exit(0)
