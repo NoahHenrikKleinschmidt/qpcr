@@ -80,8 +80,8 @@ pipeline.run()
 
 # and at this point the results are already saved...
 ```
+![colorful](https://user-images.githubusercontent.com/89252165/158015384-d26fcfec-0ad6-44bc-a771-35a5dd43a380.png)
 
-![](./Examples/Example%20Results/colorful.png)
 
 
 ### Getting started
