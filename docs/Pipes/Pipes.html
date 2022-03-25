@@ -504,11 +504,15 @@ class Blueprint(BasicPlus):
                         filters = filters
                     )
         
-        self._Normaliser.prune(
-                                assays = assays, 
-                                normalisers = normalisers, 
-                                results = results
-                            )
+        try: 
+            self._Normaliser.prune(
+                                    assays = assays, 
+                                    normalisers = normalisers, 
+                                    results = results
+                                )
+        except: 
+            pass
+        
         if cores: 
             self._Reader = None
             self._Analyser = None
@@ -631,8 +635,8 @@ class Blueprint(BasicPlus):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:
@@ -891,8 +895,8 @@ class ddCt(Blueprint):
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:
@@ -1405,11 +1409,15 @@ Optionally, <code><a title="qpcr.SampleReader" href="../index.html#qpcr.SampleRe
                         filters = filters
                     )
         
-        self._Normaliser.prune(
-                                assays = assays, 
-                                normalisers = normalisers, 
-                                results = results
-                            )
+        try: 
+            self._Normaliser.prune(
+                                    assays = assays, 
+                                    normalisers = normalisers, 
+                                    results = results
+                                )
+        except: 
+            pass
+        
         if cores: 
             self._Reader = None
             self._Analyser = None
@@ -1532,8 +1540,8 @@ Optionally, <code><a title="qpcr.SampleReader" href="../index.html#qpcr.SampleRe
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:
@@ -1732,11 +1740,15 @@ but keep the Normaliser itself!</dd>
                     filters = filters
                 )
     
-    self._Normaliser.prune(
-                            assays = assays, 
-                            normalisers = normalisers, 
-                            results = results
-                        )
+    try: 
+        self._Normaliser.prune(
+                                assays = assays, 
+                                normalisers = normalisers, 
+                                results = results
+                            )
+    except: 
+        pass
+    
     if cores: 
         self._Reader = None
         self._Analyser = None
@@ -2500,8 +2512,8 @@ pipeline to allow customisation.</p>
                         filter.report(self._save_to)
 
                 # save filter summary fig
-                figs = filter.plot()
-                self._Figures.extend(figs)
+                fig = filter.plot()
+                self._Figures.append(fig)
 
         # plot results
         if have_plotters:

@@ -51,7 +51,7 @@ assay_files = [
 
 # define our experimental parameters
 reps = 6
-group_names = ["WT-", "WT+", "KO-", "KO+"] 
+group_names = ["WT (-)", "WT (+)", "KO (-)", "KO (+)"] 
 
 # setting up the pipeline
 pipeline = BasicPlus()
