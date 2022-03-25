@@ -36,37 +36,31 @@ class Filter(aux._ID):
         # any unicate groups like the diluent sample...
         self._ignore_nan = True
 
+        # by default we set outliers to NaN and 
+        # don't drop them anymore
+        self._drop_outliers = False
+
         self._boxplot_mode = "interactive"
-        self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-        self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-        self._before_BoxPlotter.params(title = "Pre-Filter Summary")
-        self._after_BoxPlotter.params(title = "Post-Filter Summary")
+        self._BoxPlotter = Plotters.FilterSummary( mode = self._boxplot_mode )
+        self._BoxPlotter.params(title = "Filter Summary")
 
         self._filter_stats = pd.DataFrame({
                                             "assay" : [], "group" : [], 
                                             "anchor" : [], "upper" : [], "lower" : []
                                         })
     
-    def plot_params(self, which = "both", **params):
+    def plot_params(self, **params):
         """
-        Allows to pre-specify plotting parameters of the ReplicateBoxPlot.
+        Allows to pre-specify plotting parameters of the FilterSummary Figure.
         This can also be passed directly while calling `Filter.plot`.
 
         Parameters
         ----------
-        which : str
-            Specifies which of the Boxplots to modify. 
-            This can be either `"both"`, `"pre"` or `"post"`.
         **kwargs
             Any accepted additional keyword arguments. 
         """
-        if which == "both":
-            self._before_BoxPlotter.params(**params)
-            self._after_BoxPlotter.params(**params)
-        elif which == "pre":
-            self._before_BoxPlotter.params(**params)
-        elif which == "post":
-            self._after_BoxPlotter.params(**params)
+        self._BoxPlotter.params(**params)
+            
 
     def get_stats(self):
         """
@@ -85,6 +79,12 @@ class Filter(aux._ID):
         """
         self._ignore_nan = bool
 
+    def drop_outliers(self, bool):
+        """
+        If True, will completely remove outlier Ct values from the dataset.
+        If False, will set outliers to NaN
+        """
+        self._drop_outliers = bool
 
     def plotmode(self, mode = "interactive"):
         """
@@ -96,14 +96,13 @@ class Filter(aux._ID):
             Can be either "interactive" (plotly) or "static" (matplotlib), or None to disable plotting.
         """
         self._boxplot_mode = mode
-        self._before_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-        self._after_BoxPlotter = Plotters.ReplicateBoxPlot(Filter = self, mode = self._boxplot_mode)
-        self._before_BoxPlotter.params(title = "Pre-Filter Summary")
-        self._after_BoxPlotter.params(title = "Post-Filter Summary")
+        self._BoxPlotter = Plotters.FilterSummary(mode = self._boxplot_mode)
+        self._BoxPlotter.params(title = "Filter Summary")
 
     def plot(self, **kwargs):
         """
         Generates a boxplot summary plot. 
+
         Note
         ----
         This is designed to be done AFTER all samples have passed the filter.
@@ -113,15 +112,13 @@ class Filter(aux._ID):
         **kwargs
             Any keyword arguments that should be passed to the plotting method.
         """
-        figs = []
-        filenames = [f"{self.id()}_before", f"{self.id()}_after"]
-        for plotter, filename in zip([self._before_BoxPlotter, self._after_BoxPlotter], filenames):
-            fig = plotter.plot(**kwargs)
-            figs.append(fig)
-            if self._report_loc is not None and self._boxplot_mode is not None: 
-                suffix = plotter.suffix()
-                plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
-        return figs
+        plotter = self._BoxPlotter
+        fig = plotter.plot(**kwargs)
+        if self._report_loc is not None and self._boxplot_mode is not None: 
+            filename = f"{self.id()}_summary"
+            suffix = plotter.suffix()
+            plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
+        return fig
 
     def link(self, Assay:qpcr.Assay):
         """
@@ -133,7 +130,6 @@ class Filter(aux._ID):
                 A `qpcr.Assay` object to be filtered.
         """
         self._Assay = Assay
-        self._before_BoxPlotter.link(self._Assay)
 
     def pipe(self, Assay:qpcr.Assay, **kwargs):
         """
@@ -173,7 +169,6 @@ class Filter(aux._ID):
         """
         if self._Assay is not None:
             self._filter(**kwargs)
-            self._after_BoxPlotter.link(self._Assay)
             return self._Assay
         else: 
             aw.HardWarning("Filter:no_assay")
@@ -271,7 +266,7 @@ Details:
         """
         # exclude faulty entries
         if len(faulty_indices) > 0:
-            self._Assay.ignore(faulty_indices)
+            self._Assay.ignore(faulty_indices, drop = self._drop_outliers)
     
     def _save_stats(self, assay, group, anchor, upper, lower):
         """
@@ -314,7 +309,11 @@ class RangeFilter(Filter):
         """
         Filters out any replicates that are out of range and updates the Assay's dataframe.
         """
-    
+
+        plotter = self._BoxPlotter
+
+        plotter.add_before( self._Assay )
+
         df = self._Assay.get()
         groups = self._Assay.groups()
 
@@ -338,6 +337,9 @@ class RangeFilter(Filter):
         
         # remove faulty indices
         self._filter_out(faulty_indices)
+
+        plotter.add_after( self._Assay )
+
 
         if self._report_loc is not None: 
             self._write_report(faulty_indices, details = {
@@ -384,6 +386,10 @@ class IQRFilter(Filter):
         """
         Gets IQR for each group and finds outliers based on self._upper / lower
         """
+
+        plotter = self._BoxPlotter
+
+        plotter.add_before( self._Assay )
     
         df = self._Assay.get()
         groups = self._Assay.groups()
@@ -409,6 +415,9 @@ class IQRFilter(Filter):
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)        
         
         self._filter_out(faulty_indices)
+
+        plotter.add_after( self._Assay )
+
 
         if self._report_loc is not None: 
             self._write_report(faulty_indices, details = {
@@ -437,10 +446,11 @@ if __name__ == "__main__":
     groupnames = ["wt-", "wt+", "ko-", "ko+"]
 
     reader = qpcr.DataReader()
-    assays = [ reader.read(i) for i in assays ]
-    normalisers = [ reader.read(i) for i in normalisers ]
+    assays = [ reader.read(i, replicates = 6) for i in assays ]
+    normalisers = [ reader.read(i, replicates = 6) for i in normalisers ]
 
-    filter = IQRFilter()
+    filter = RangeFilter()
+    # filter.plotmode("static")
     assays = [ filter.pipe(i) for i in assays ]
     normalisers = [ filter.pipe(i) for i in normalisers ]
 
@@ -452,8 +462,10 @@ if __name__ == "__main__":
     normaliser.link(assays, normalisers)
     normaliser.normalise()
 
-    filter.plot(show = True)
+    fig = filter.plot(show = False)
 
-    prev = Plotters.PreviewResults("interactive")
-    prev.link( normaliser.get() )
-    prev.plot()
+    print( type( fig ))
+
+    # prev = Plotters.PreviewResults("interactive")
+    # prev.link( normaliser.get() )
+    # prev.plot()
