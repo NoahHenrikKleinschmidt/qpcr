@@ -2929,7 +2929,7 @@ class Calibrator(aux._ID):
         else: 
             aw.SoftWarning("Calibrator:cannot_adopt", effs = effs, eff_type = type(effs).__name__ )
     
-    def dilution( self, step : float or np.ndarray = None ):
+    def dilution( self, step : float or np.ndarray or tuple = None ):
         """
         Gets or sets the dilution steps used. This must be a `float` fraction
         e.g. `0.5` for a `1 : 2` dilution series or `0.1` for a `1 : 10` series etc.
@@ -3103,10 +3103,15 @@ class Calibrator(aux._ID):
         they should be inferred from the dataset...
         """
         if step is not None: 
-            unknown_datatype = not isinstance( step, (float, int, np.ndarray, pd.Series ) )
+            unknown_datatype = not isinstance( step, (float, int, np.ndarray, pd.Series, tuple, list ) )
             if unknown_datatype:
                 aw.HardWarning("Calibration:cannot_interpret_dilution", step = step, step_type = type(step).__name__ )
             
+            # check if we need to convert to numpy array
+            # because we have an iterable without math operations support.
+            if isinstance( step, (tuple, list) ):
+                step = np.array( step )
+
             # check for an ndarray and make sure to invert if 
             # the dilution steps are given as 2 4 instead of
             # 0.5 0.25 etc., also do the same for a single number...
