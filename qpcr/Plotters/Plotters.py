@@ -34,6 +34,7 @@ import qpcr._auxiliary.defaults as defaults
 import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import plotly
@@ -41,6 +42,10 @@ import seaborn as sns
 import numpy as np 
 
 # setup default settings for charts
+
+# FUTURE DROP HERE
+# These are no longer refereced like this but directly from the defaults...
+# we will remove them in a future version...
 
 _default_static_PreviewBars = defaults.static_PreviewBars
 _default_interactive_PreviewBars = defaults.interactive_PreviewBars
@@ -594,6 +599,7 @@ class AssayBars(Plotter):
     | title : `str`   |  The overall figure title   | `title = "Today's results"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
@@ -627,8 +633,8 @@ class AssayBars(Plotter):
     """
     def __init__(self, mode:str):
         self._setup_default_params(
-                                    static = _default_static_PreviewBars, 
-                                    interactive = _default_interactive_PreviewBars
+                                    static = defaults.static_PreviewBars, 
+                                    interactive = defaults.interactive_PreviewBars
                                 )
         # __init__ is going to require default_params to be already set!
         super().__init__(mode)
@@ -880,8 +886,8 @@ class ReplicateBoxPlot(Plotter):
     """
     def __init__(self, Filter = None, mode="interactive"):
         self._setup_default_params(
-                                    static = _default_static_ReplicateBoxPlot, 
-                                    interactive = _default_interactive_ReplicateBoxPlot
+                                    static = defaults.static_ReplicateBoxPlot, 
+                                    interactive = defaults.interactive_ReplicateBoxPlot
                                 )
         # __init__ is going to require default_params to be already set!
         super().__init__(mode=mode)
@@ -1076,6 +1082,7 @@ class FilterSummary(Plotter):
     | title : `str`   |  The overall figure title   | `title = "Today's run"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct values"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
     |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
     |   color : `str or list`   | The color for the boxes.   | `color = ["yellow", "green"]`     |
@@ -1103,8 +1110,8 @@ class FilterSummary(Plotter):
     """
     def __init__(self, mode):
         self._setup_default_params(
-                                    static = _default_static_FilterSummary,
-                                    interactive = _default_interactive_FilterSummary
+                                    static = defaults.static_FilterSummary,
+                                    interactive = defaults.interactive_FilterSummary
                                 )
         super().__init__( mode = mode)
         self._before = qpcr.Results()
@@ -1371,6 +1378,7 @@ class AssayDots(Plotter):
     | title : `str`   |  The overall figure title   | `title = "Today's results"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
@@ -1402,8 +1410,8 @@ class AssayDots(Plotter):
     """
     def __init__(self, mode:str):
         self._setup_default_params(
-                                    static = _default_static_PreviewDots, 
-                                    interactive = _default_interactive_PreviewDots
+                                    static = defaults.static_PreviewDots, 
+                                    interactive = defaults.interactive_PreviewDots
                                 )
         # __init__ is going to require default_params to be already set!
         super().__init__(mode)
@@ -1673,6 +1681,7 @@ class GroupBars(Plotter):
     | title : `str`   |  The overall figure title   | `title = "Today's results"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
@@ -1706,8 +1715,8 @@ class GroupBars(Plotter):
     """
     def __init__(self, mode : str):
         self._setup_default_params(
-                                    static = _default_static_PreviewBars, 
-                                    interactive = _default_interactive_PreviewBars
+                                    static = defaults.static_PreviewBars, 
+                                    interactive = defaults.interactive_PreviewBars
                                 )
         super().__init__( mode = mode )
     
@@ -1927,6 +1936,7 @@ class GroupDots(Plotter):
     | title : `str`   |  The overall figure title   | `title = "Today's results"    |
     | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
     | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
     |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
@@ -1958,8 +1968,8 @@ class GroupDots(Plotter):
     """
     def __init__(self, mode:str):
         self._setup_default_params(
-                                    static = _default_static_PreviewDots, 
-                                    interactive = _default_interactive_PreviewDots
+                                    static = defaults.static_PreviewDots, 
+                                    interactive = defaults.interactive_PreviewDots
                                 )
         # __init__ is going to require default_params to be already set!
         super().__init__(mode)
@@ -2241,6 +2251,326 @@ class GroupDots(Plotter):
             return fig 
         except Exception as e: 
             raise e 
+
+
+class EfficiencyCurves(Plotter):
+    """
+    Generates a Figure for the linear regressions used for Assay efficiency 
+    calculations. This FigureClass specifically works with the `qpcr.Calibrator` 
+    class. 
+
+    Parameters
+    ----------
+    mode : str
+        The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
+    
+    Plotting Kwargs
+    ----
+
+    #### `"static"` Kwargs
+    Static EfficiencyCurves figures accept the following kwargs:
+    
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
+    | title : `str`   |  The overall figure title   | `title = "Today's efficiencies"    |
+    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Log Dilution"` |
+    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct Values"` |
+    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
+    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
+    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
+    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
+    |   edgecolor : `str or list`   | The edgecolor for the individual dots for the datapoints.   | `edgecolor = "black"`     |
+    |   edgewidth : `float`   |  The width of the edge of individual dots.  | `edgewidth = 0.5`     |
+    |   linecolor : `str or list`   | The color for regression line.   | `linecolor = "crimson"`     |
+    |   linewidth : `float`   |  The width of the regression line.  | `edgewidth = 0.5`     |
+    |  **kwargs    | Any additional kwargs that can be passed to `seaborn`'s `scatterplot` and `lineplot` (both!).     |      |
+
+    <br></br>
+    #### `"interactive"` Kwargs
+    Interactive EfficiencyCurves figures accept the following kwargs:
+
+    |   Argument  |  Description    |  Example    |
+    | ---- | ---- | ---- |
+    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
+    | title : `str`   |  The overall figure title   | `title = "Today's efficiencies"`    |
+    | xlabel : `str`   |  The x axis label   | `xlabel = "Log Dilution"`    |
+    | ylabel : `str`   |  The y axis label   | `ylabel = My super Ct values"`    |
+    |  height : `int`   |   Height of the figure   | `height = 50`    |
+    |  width : `int`   |   Width of the figure   | `width = 50`    |
+    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
+    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
+    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
+    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y+x"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
+    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Scatter()`.     |      |
+
+
+    """
+    def __init__(self, mode : str ):
+        self._setup_default_params(
+                                    static = defaults.static_EfficiencyCurves, 
+                                    interactive = defaults.interactive_EfficiencyCurves
+                                )
+        super().__init__( mode = mode )
+        self._Calibrator = None
+
+    def link( self, calibrator : qpcr.Calibrator ):
+        """
+        Links a `qpcr.Calibrator` object to source data from.
+
+        Note
+        -----
+        Only a `qpcr.Calibrator` that has actually *de novo*
+        computed efficiencies will have data to plot, and only for 
+        the newly computed effiencies! 
+
+        Parameters
+        ----------
+        calibrator : qpcr.Calibrator
+            A `qpcr.Calibrator` object that has computed new efficiencies.
+        """
+        self._Calibrator = calibrator
+    
+    def _static_plot(self, **kwargs):
+        """
+        Generates a static Effiency Regression Figure
+        """
+        kwargs = self.update_params(kwargs)
+        data = self._Calibrator._computed_values
+        headers = list(  data.keys()  )
+
+        title = aux.from_kwargs("title", None, kwargs, rm = True)
+        headers = aux.from_kwargs("headers", headers, kwargs, rm = True)
+        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
+        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
+        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+
+        palette = gx.generate_palette(kwargs)
+
+        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
+        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
+
+        # set a seaborn style
+        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        sns.set_style( style )
+
+        edgecolor = aux.from_kwargs("edgecolor", "white", kwargs, rm = True)
+        edgewidth = aux.from_kwargs("edgewidth", None, kwargs, rm = True)
+
+        linecolor = aux.from_kwargs("linecolor", "black", kwargs, rm = True)
+        linewidth = aux.from_kwargs("linewidth", 1, kwargs, rm = True)
+
+        ncols, nrows = gx.make_layout_from_list( headers )
+
+        fig, axs = plt.subplots( nrows = nrows, ncols = ncols)
+        fig.suptitle( title )
+        Coords = gx.AxesCoords( fig, axs, subplots = (nrows, ncols) )
+
+        idx = 0 
+        for id, obj in data.items(): 
+            
+            ax = Coords.subplot()
+
+            # get data to plot              
+            dilutions, cts = obj.values()
+            eff = obj.efficiency()
+            model = obj.model()
+            Rsquare = model.rvalue ** 2
+
+            # plot the regression line
+            yvals = model.slope * dilutions + model.intercept
+            sns.lineplot(
+                                x = dilutions,
+                                y = yvals,
+                                color = linecolor,
+                                linewidth = linewidth,
+                                ax = ax,
+                                **kwargs
+                    )
+
+            # plot the original data
+            sns.scatterplot(
+                                x = dilutions,
+                                y = cts,
+                                palette = palette, 
+                                edgecolor = edgecolor,
+                                linewidth = edgewidth,
+                                ax = ax,
+                                **kwargs
+                            )
+
+            # add additional info to a legend
+            ax.legend( handles = [
+                                    # R^2 Value
+                                    Line2D(  [0], [0], 
+                                            color = "black", 
+                                            visible = False, 
+                                            label = f"$R^2$ \t = {Rsquare:.4f}"
+                                        ),
+                                    # Efficiency Value
+                                    Line2D(  [0], [0], 
+                                            color = "black", 
+                                            visible = False, 
+                                            label = f"$eff.$\t= {eff:.4f}"
+                                        )
+                                ], 
+                                loc = "upper right",
+                                frameon = False 
+                    )
+
+            # some formatting...
+            ax.set(
+                    title = id, 
+                    xlabel = xlabel,
+                    ylabel = ylabel,
+                )
+
+            if rot is not None: 
+                align = "center" if rot == 0 else "left"
+                plt.setp( ax.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+
+            # add ABCD... label to subplot
+            if label_subplots:
+                self._add_subplot_label(idx, ax, start_character)         
+
+            if not show_spines:
+                sns.despine()
+            
+            idx += 1
+            Coords.increment()
+
+        plt.tight_layout()
+        if show: 
+            plt.show()
+
+        return fig 
+
+    def _interactive_plot(self, **kwargs):
+        """
+        Generates an interactive EfficiencyCurves figure
+        """
+        kwargs = self.update_params(kwargs)
+        data = self._Calibrator._computed_values
+        headers = list(  data.keys()  )
+
+        title = aux.from_kwargs("title", None, kwargs, rm = True)
+        headers = aux.from_kwargs("headers", headers, kwargs, rm = True)
+        show = aux.from_kwargs("show", True, kwargs, rm = True)
+        padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
+
+        # make new ncols and nrows based on the headers list
+        nrows, ncols = gx.make_layout_from_list(headers)
+
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad
+                        )
+
+
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+
+        fig.update_layout(
+                    title = title, 
+                    height = aux.from_kwargs("height", None, kwargs, rm = True), 
+                    width = aux.from_kwargs("width", None, kwargs, rm = True),
+                    margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                    autosize = True, 
+                    template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
+                    # legend = {"title" : aux.from_kwargs("legend_title", "Assay", kwargs, rm = True), },
+                )
+
+        # set default axes labels
+        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True) 
+        fig.update_xaxes(title_text = xlabel)
+        
+        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True) 
+        fig.update_yaxes(title_text = ylabel)
+
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+
+        # iterate over the data...
+        idx = 0 
+        for id, obj in data.items():
+
+            row, col = Coords.get()
+
+            # get data to plot              
+            dilutions, cts = obj.values()
+            eff = obj.efficiency()
+            model = obj.model()
+            Rsquare = model.rvalue ** 2
+
+            # plot the original data
+            fig.add_trace(
+                            go.Scatter(
+                                name = id,
+                                x = dilutions,
+                                y = cts,  
+                                mode = "markers",
+                                showlegend = False,
+                                hoverinfo = aux.from_kwargs("hoverinfo", "y+x", kwargs, rm = True), 
+                                **kwargs
+                            ), 
+                            row, col
+                        )
+            
+            # plot the regression line
+            yvals = model.slope * dilutions + model.intercept
+
+            fig.add_trace(
+                            go.Scatter(
+                                name = id,
+                                x = dilutions,
+                                y = yvals,  
+                                mode = "lines",
+                                showlegend = False,
+                                **kwargs
+                            ), 
+                            row, col
+                        )
+
+
+            # add infos as annotations (because custom legends don't work here)
+            # NOTE: The xref x{idx} is a pretty nice lifehack to essentially 
+            #       emulate the ax behaviour from matplotib.subplots... 
+            xref = "x" if idx == 0 else f"x{idx+1}"
+            yref = "y" if idx == 0 else f"y{idx+1}"
+            info_text = f"R^2 = {Rsquare:.4f}<br>eff. = {eff:.4f}"
+
+            fig.add_annotation(
+                            dict(
+                                    x = 0, 
+                                    y = np.max( cts ), 
+                                    xref = xref, 
+                                    yref = yref, 
+                                    text = info_text, 
+                                    showarrow = False
+                                )
+                            )
+
+            Coords.increment()
+            idx += 1
+
+        if show: 
+            fig.show()
+
+        return fig 
+
 
 
 # if __name__ == '__main__':
