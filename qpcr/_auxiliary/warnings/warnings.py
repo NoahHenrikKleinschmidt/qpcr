@@ -40,8 +40,12 @@ WARNINGS = {
 
 "Calibrator:unknown_savemode" : "Unknown mode = '{mode}' could not be interpreted!",
 "Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a proper json file.",
-"Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({type(effs).__name__}). Make sure to provide a dictionary",
-"Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({type(step).__name__})! Specify either a float or np.ndarray...",
+"Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({eff_type}). Make sure to provide a dictionary",
+"Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({step_type})! Specify either a float or np.ndarray...",
+"Calibrator:cannot_process_assay" : "The Assay '{id}' could not be processed! Neither a matching pre-computed efficiency could be assigned nor a new one computed! Check again your datafile and Calibrator setup!",
+"Calibrator:could_not_assign" : "No efficiencies could be found for Assay '{id}'!\nMake sure to have loaded / precomputed proper effiencies with matching Ids.",
+"Calibrator:could_not_infer_dilution" : "Could not infer dilutions! Please, set a dilution step using dilution()",
+
 
 
 "SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
