@@ -37,6 +37,13 @@ WARNINGS = {
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
+
+"Calibrator:unknown_savemode" : "Unknown mode = '{mode}' could not be interpreted!",
+"Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a proper json file.",
+"Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({type(effs).__name__}). Make sure to provide a dictionary",
+"Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({type(step).__name__})! Specify either a float or np.ndarray...",
+
+
 "SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
 
 "Plotter:unknown_data" : "Unknown data linkage!\nOnly qpcr.Results or pd.DataFrame objects are allowed!\nReceived: {obj}",

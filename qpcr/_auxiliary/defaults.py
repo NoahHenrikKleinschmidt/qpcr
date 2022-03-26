@@ -33,6 +33,16 @@ default_ct_header = "Ct"
 # default seed for randomised processes
 default_seed = 11299114
 
+
+#  =================================================================
+#                       Default Calibrator settings
+#  =================================================================
+
+# the default prefix for calibrator replicates that must be specified 
+# within the group names.
+calibrator_prefix = "calibrator"
+
+
 #  =================================================================
 #                       Default Figure settings
 #  =================================================================
@@ -105,3 +115,19 @@ interactive_FilterSummary = dict(
                                         template = "plotly_white",
                                         title = "Filtering Summary"
                                     )
+
+# EfficiencyCurves
+# --------------------------------
+static_EfficiencyCurves = dict(
+                                    title = "Efficiency Computations",
+                                    xlabel = "Log Dilution",
+                                    ylabel = "Ct",
+                                    palette = "Blues",
+                                    style = "dark",   
+                            )
+
+interactive_EfficiencyCurves = dict(
+                                    title = "Efficiency Computations",
+                                    xlabel = "Log Dilution",
+                                    ylabel = "Ct",
+                            )

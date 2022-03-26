@@ -170,6 +170,7 @@ import scipy.stats as stats
 from copy import deepcopy 
 from io import StringIO
 import re
+import json
 
 __pdoc__ = {
     "_CORE_Reader" : True
@@ -519,6 +520,10 @@ class Assay(aux._ID):
         # store names 
         self._names = group_names
 
+        # setup the amplification efficiency
+        self._efficiency = 1.0 
+        self._eff = 2 * self._efficiency
+
         # if we got data, try to read it 
         if self._df is not None: 
             try: 
@@ -530,6 +535,25 @@ class Assay(aux._ID):
             # and try to change names, provided that we could group yet...
             if self._names is not None and self.groups() is not None: 
                 self.rename(self._names)
+
+    def efficiency( self, eff : float = None ):
+        """
+        Gets or sets the amplification efficiency of the Assay.
+
+        Parameters
+        -------
+        eff : float
+            A new efficiency to assign to the assay.
+
+        Returns
+        -------
+        float 
+            The currently assigned efficiency.
+        """
+        if isinstance( eff, (float, int) ):
+            self._efficiency = float( eff ) 
+            self._eff = 2 * self._efficiency
+        return self._efficiency 
 
     def save(self, filename : str):
         """
@@ -1891,6 +1915,8 @@ class Analyser(aux._ID):
         self._ref_group = 0
         self._ref_group_col = "group" # used in case of "mean" anchor where the ref_group must be located either from a numeric (group) or string (group_name) id
         
+        self._eff_src = self._Assay         # By default use the efficencies stored in the Assay directly 
+                                            # this is set to self if self.efficiency() is called...
         self._efficiency = 1                # the formal effiency in percent
         self._eff = 2 * self._efficiency    # the actual doubplciation factor used for calculation
         self._deltaCt_function = self._get_deltaCt_function(exp = True)
@@ -1915,6 +1941,11 @@ class Analyser(aux._ID):
         
         """
         self._Assay = Assay
+
+        # check if no efficiency was specifically set for the Analyser
+        # and if not so, use the Assay's efficiency...
+        if self._eff_src is not self: 
+            self._eff_src = self._Assay
 
     def pipe(self, Assay:Assay, **kwargs) -> Results:
         """
@@ -1949,6 +1980,12 @@ class Analyser(aux._ID):
         Sets an efficiency factor for externally calculated qPCR amplification efficiency.
         By default `efficiency = 1` (100%) is assumed.
 
+        Note
+        ----
+        By default the efficiency is now (`qpcr 3.2.0`) handled by the `qpcr.Assay` objects directly.
+        The Analyser will directly read the efficiency from the `qpcr.Assay`s. However,
+        it is still possible to set the efficiency via the `qpcr.Analyser` in this fashion.
+
         Parameters
         ----------
         e : float
@@ -1965,6 +2002,9 @@ class Analyser(aux._ID):
         if isinstance(e, (int, float)):
             self._efficiency = float( e )
             self._eff = 2 * self._efficiency
+            # and update the efficiency source 
+            # to self instead of the assay...
+            self._eff_src = self 
         return self._efficiency
 
     def anchor(self, anchor : (str or float or function) = None, group : (int or str) = 0):
@@ -2176,7 +2216,7 @@ class Analyser(aux._ID):
         Calculates deltaCt exponentially
         """
         factor = s - r 
-        return self._eff **(-factor)
+        return self._eff_src._eff **(-factor)
 
     def _simple_DCt(self, s, r, **kwargs):
         """
@@ -2571,28 +2611,6 @@ class Normaliser(aux._ID):
         ddCts.name = "ddCt"
         return ddCts
 
-
-    # NOT USED ANYMORE
-    # Used to be used before factoring out data storage to the Assays 
-    # def _prep_columns(self, sample_assay, dCt_col, norm_col):
-    #     """
-    #     Returns the columns to use if named columns shall be used 
-    #     (named columns will be used for second-normalisation of entire runs)
-    #     Note
-    #     ----
-    #     Currently, second normalisation is not yet really implemented, so this is 
-    #     kinda not really used and would probably get overhauled when we 
-    #     try to seriously implement that at some point. 
-    #     """
-    #     if dCt_col == "named":
-    #         dCt_col = [i for i in sample_assay.columns if i not in ["group", "group_name", raw_col_names[0], "assay"]]
-    #         # assert len(dCt_col) == 1, f"length of dCt_col is: {len(dCt_col)}"
-    #         dCt_col = dCt_col[0]
-
-    #     if norm_col == "same": 
-    #         norm_col = dCt_col + "_s"
-    #     return dCt_col,norm_col
-
     def _divide_by_normaliser(self, df, **kwargs):
         """
         Performs normalisation of sample s against normaliser n
@@ -2600,8 +2618,6 @@ class Normaliser(aux._ID):
         Note, that the dataframe must ONLY contain these two columns, first the dCt sample, then the normaliser!
         (default _norm_func)
         """
-
-
         s, n = df["s"], df["n"]
         # this is the old call from before factoring out to Assays
         # dCt_col, norm_col = df.columns
@@ -2714,6 +2730,536 @@ class Normaliser(aux._ID):
         return tmp_df
 
 
+# FUTURE MOVE HERE
+# NOTE: This should be moved to the Curves submodule once it will be made in a future
+#       version to work directly with absorption and fluorescense curves.
+class _EfficiencyCurve(aux._ID):
+    """
+    A helper class that will handle dilutions, ct values and the linreg model
+    when newly computing efficiencies from assays.
+    """
+    def __init__(self, dilutions, ct_values, model, efficiency):
+        super().__init__()
+        self._dilutions = dilutions
+        self._ct_values = ct_values
+        self._model = model
+        self._efficiency = efficiency
+    
+    def values(self):
+        """
+        Returns
+        ------
+        dilutions : np.ndarray
+            The dilutions (x-values) used for efficiency calculation.
+        ct_value : np.ndarray
+            The underlying Ct values (y-values) used for efficiency calculation.
+        """
+        return self._dilutions, self._ct_values
+    
+    def model(self):
+        """
+        Returns
+        -------
+        model : stats.LinregressResult
+            The linear regression model used for efficiency calculation.
+        """
+        return self._model
+    
+    def efficiency(self):
+        """
+        Returns
+        -------
+        eff : float
+            The efficiency calculated from the stored data.
+        """
+        return self._efficiency
+    
+
+class Calibrator(aux._ID):
+    """
+    Calculates qPCR primer efficiency based on a dilution series.
+    The dilution series may either be represented as an entire assay
+    or as a subset of groups within an assay denoted as `calibrator : {some_name}`.
+    In this mode, calibrator replicates will be removed after calibration is done.
+
+    It is possible to specify the dilution steps directly in the groupnames as:
+    `calibrator: {some_name}: dil` where `dil` is the inverse dilution step, e.g.
+    `calibrator: my_sample: 2` for a `1 : 2` dilution or `calibrator: my_sample: 100`
+    for a `1 : 100`. Note, this will have to be present in **each** groupname! 
+
+    Alternatively, if no dilution is specified in the groupnames or they cannot be inferred
+    for some other reason, it is possible to supply a dilution step via 
+    the `qpcr.Calibrator.dilution` method. 
+    """
+    def __init__(self):
+        super().__init__()
+        self._eff_dict = {}             # stores the efficiencies as assay_id : efficiency
+        self._computed_values = {}      # stores newly computed efficiency data as:
+                                        # assay_id :  _EfficiencyCurve(...)
+                                        #             The _EfficiencyCurve object stores:
+                                        #             - dilutions
+                                        #             - Ct values
+                                        #             - the Linreg model
+        self._dilution_step = None      # the dilution step(s) used 
+        self._manual_dilution_set = False 
+
+    def save( self, filename : str, mode : str = "write" ):
+        """
+        Saves the calculated efficiencies to a `json` file.
+
+        Parameters
+        -------
+        filename : str
+            The filepath in which to store the efficiencies.
+        
+        mode : str
+            Can be either `"write"` to fully overwrite an existing file,
+            with the newly computed data, or `"append"` to only add newly 
+            computed efficiencies.
+        """
+        if mode == "write":
+            self._save( filename, self._eff_dict )
+
+        elif mode == "append":
+            current = self._load(filename)
+            new = { **current, **self._eff_dict }
+            self._save( filename, new )
+
+        else: 
+            aw.SoftWarning("Calibrator:unknown_savemode", mode = mode )
+
+    def load(self, filename):
+        """
+        Loads a `json` file of previously computed efficiencies.
+
+        Parameters
+        -------
+        filename : str
+            The filepath to load efficiencies from.
+        """
+        try: 
+            current = self._load(filename)
+            self.adopt( current )
+            return current
+        except: 
+            aw.HardWarning("Calibrator:unknown_filetype", filename = filename )
+
+    def get( self, which = "efficiencies" ):
+        """
+        Returns
+        -------
+        dict
+            Either the stored efficiencies (if 
+            `which = "efficiencies"`) or 
+            the computed values of newly computed
+            efficiencies (if `which = "values"`).
+        """
+        if which == "efficiencies":
+            return self.efficiencies()
+        elif which == "values":
+            return self.computed_values()
+       
+    def efficiencies( self ):
+        """
+        Returns
+        ------
+        dict
+            The currently stored efficienies.
+        """
+        return self._eff_dict
+    
+    def computed_values( self ):
+        """
+        Returns
+        ------
+        dict
+            The currently stored values from newly
+            computed efficiencies.
+        """ 
+        return self._computed_values
+    
+    def merge( self, *filenames, outfile = None, adopt = True ):
+        """
+        Merges multiple efficiency files together into a single one.
+
+        Parameters
+        -------
+        filenames : iterable
+            Filepaths to load data from which should be merged together.
+        
+        outfile : str 
+            The filepath in which to store the merged efficiencies.
+            Not saved if set to `None`.
+        
+        adopt : bool
+            Will adopt the merged dictionary as its own if `True` (default).
+
+        Returns
+        -------
+        all_effiencies : dict
+            The merged dictionary of all efficiencies from all files.
+        """
+        all_efficiencies = {}
+        for filename in filenames: 
+            new = self._load( filename )
+            all_efficiencies = { **all_efficiencies, **new }
+
+        if outfile is not None: 
+            self._save( outfile, all_efficiencies )
+
+        if adopt:
+            self.adopt( all_efficiencies ) 
+
+        return all_efficiencies
+    
+    def adopt( self, effs : dict ):
+        """
+        Adopts an externally generated dictionary of `assay : efficiency`
+        structure as its own.
+
+        Parameters
+        -------
+        effs : dict
+            A dictionary where keys are Assay Ids (`str`) 
+            and values are `float` efficiencies.
+        """
+        if aux.same_type( effs, {} ):
+            self._eff_dict = effs
+        else: 
+            aw.SoftWarning("Calibrator:cannot_adopt", effs = effs, eff_type = type(effs).__name__ )
+    
+    def dilution( self, step : float or np.ndarray = None ):
+        """
+        Gets or sets the dilution steps used. This must be a `float` fraction
+        e.g. `0.5` for a `1 : 2` dilution series or `0.1` for a `1 : 10` series etc.
+        If there are multiple steps because there is a gap in the dilution series. It is 
+        necessary to supply a step for each group individually e.g. `[1,0.5,0.25,0.0625,0.03125]`.
+        if there are 5 dilution steps (originally six but 0.125 was discarded).
+
+        Note, both of the above also work with the inverse dilutions e.g. `2` or `[1,2,4,16,32]`.
+        
+        By default the `qpcr.Calibrator` tries to infer the dilutions automatically.
+        This only works, however, if the calibrator groupnames specify `calibrator: {some name} : dil` where
+        `dil` is the inverse dilution step (e.g. `calibrator: my_sample: 2` for a `1 : 2` dilution). Note,
+        it is important that the dilution step is given as the inverse (i.e. *not* as `1:2 or 1/2` or something else! )
+
+        Parameters
+        ----------
+        step : float or np.ndarray
+            The dilution step used.  
+
+        Returns
+        -------
+        float or np.ndarray
+            The currently used dilution step.
+        """
+        if step is not None: 
+
+            unknown_datatype = not isinstance( step, (float, int, np.ndarray) )
+            if unknown_datatype:
+                aw.HardWarning("Calibration:cannot_interpret_dilution", step = step, step_type = type(step).__name__ )
+            
+            # check for an ndarray and make sure to invert if 
+            # the dilution steps are given as 2 4 instead of
+            # 0.5 0.25 etc., also do the same for a single number...
+
+            is_inverse_array = isinstance( step, np.ndarray ) and any( step > 1 )
+            is_inverse_number = isinstance( step, (float, int) ) and step > 1
+            need_inverse = is_inverse_array or is_inverse_number
+            
+            if need_inverse:
+                step = 1 / step
+            
+            # and store new steps
+            self._dilution_step = step
+            self._manual_dilution_set = True 
+
+        return self._dilution_step
+        
+    def pipe( self, assay : Assay ):
+        """
+        A wrapper for calibrate / assign.
+
+        This method will first try to assign pre-computed efficiencies
+        and if no matching ones are found it will try to calculate a new efficiency
+        from the assay. 
+
+        Parameters
+        ----------
+        assay : qpcr.Assay
+            A `qpcr.Assay` object.
+        """
+        if self._eff_dict != {}:
+            try:
+                assay = self.assign( assay )
+                if assay.efficiency() is None: 
+                    assay = self.calibrate( assay )
+            except: 
+                aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+        else:
+            try: 
+                assay = self.calibrate( assay )
+            except:
+                aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+
+        return assay
+
+    def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
+        """
+        Computes an efficiency from an `qpcr.Assay` object.
+    
+        This method will try to compute a new efficiency. To do this, it will check autonomously if
+        `calibrator : {}` replicates are present and use these for computation. If none are 
+        found it will assume the entire assay is to be used as calibrator.
+
+        Note
+        ----
+        Calibrators are searched for through the group `names` not the replicate ids!
+
+        Parameters
+        ----------
+        assay : qpcr.Assay
+            A `qpcr.Assay` object.
+
+        remove_calibrators : bool
+            If calibrators are present in the assay alongside other groups, 
+            remove the calibrator replicates after efficiency calculation. 
+        """
+
+        # get the assay's groupnames and check for the calibrator prefix.
+        names = assay.names( as_set = False ).unique()
+
+        # check if any groups are declared as calibrators
+        calibrators = np.array( [ self._has_calibrator_prefix(i) for i in names ] )
+        has_calibrators = any( calibrators )
+
+        # now get the relevant dataframe for the computation
+        # this will either be the entire df (if no calibrator groups are present)
+        # or just the subset of calibrators
+        df = assay.get()
+        if has_calibrators:
+            df = self._subset_calibrators(names, calibrators, df)
+
+        # now sort the dataframe by Ct values as they need to strictly
+        # increase for dilution series.
+        ct_name = defaults.raw_col_names[1]
+        df = df.sort_values( ct_name ).reset_index()
+        df = df.rename( columns = { "index" : "orig_index" } )
+
+
+        # now generate dilution steps ( i.e. "concentrations" )
+        # to do that we first need to check if dilutions have not
+        # been supplied, and then try to infer them based on the groupnames
+        # if we got an input for dilution() we use  that to generate a 
+        # dilution steps array...
+
+        # NOTE: The non-log-scaled dilutions are now stored in self._dilution_steps
+        #       while the log-scaled versions are returned. Hence, the dilutions 
+        #       variable below is the log-scaled version!
+        if not self._manual_dilution_set: 
+            dilutions = self._infer_dilution_steps(df)
+        else:
+            dilutions = self._generate_dilution_steps(df)
+    
+        # now interpolate a line through the log dilutions and the ct values
+        cts = df[ ct_name ].to_numpy()
+        regression_line = stats.linregress( x = dilutions, y = cts )
+
+        # and now compute the efficiency from the regression line
+        efficiency = self._compute_efficiency(regression_line)
+
+        # and now assign the efficiency to the assay
+        assay.efficiency( efficiency )
+
+        # save the efficiency in self._eff_dict
+        self._eff_dict[ assay.id() ] = assay.efficiency()
+
+        # and, finally, save the computed values and the efficiency
+        self._save_computation( assay, dilutions, cts, regression_line )
+
+        # now remove the calibrators from the assay
+        if remove_calibrators: 
+            self._remove_calibrators(assay, df)
+
+        return assay 
+    
+    def assign( self, assay : Assay ):
+        """
+        Assigns an efficiency to an `qpcr.Assay` based on its Id.
+        This requires that an efficiency corresponding to the Assay's Id
+        is present in the currently loaded / computed effiencies.
+
+        Parameters
+        ----------
+        assay : qpcr.Assay
+            A `qpcr.Assay` object.
+        """
+        eff = self._get_efficiency( assay )
+        if eff is not None:
+            # set assay's efficiency
+            assay.efficiency( eff )
+        else:
+            aw.SoftWarning("Calibrator:could_not_assign", id = assay.id() )
+        return assay
+
+
+    def _remove_calibrators(self, assay, df):
+        """
+        Drops all calibrator replicates from the dataframe of the Assay.
+
+        Note
+        -------
+        This leaves the index unchanged! Possible we might wish to also reset the 
+        index during this step...
+        """
+        to_remove = df["orig_index"].to_numpy()
+        index = np.zeros( assay.n() )
+        for i in to_remove: index[i] = 1 
+        index = np.argwhere( index == 1 )
+        index = np.squeeze( index )
+        assay.ignore( index, drop = True )
+
+    def _save_computation(self, assay, dilutions, ct_values, linreg):
+        """
+        Creates a new entry in self._computed_values for the newly computed
+        efficiency.
+        """
+        self._computed_values[ assay.id() ] = _EfficiencyCurve( 
+                                                                dilutions = dilutions, 
+                                                                ct_values = ct_values, 
+                                                                model = linreg,
+                                                                efficiency = assay.efficiency() 
+                                                            )
+        # also add the Id of the Assay to the _EfficiencyCurve
+        self._computed_values[ assay.id() ].id( assay.id() )
+
+
+    def _compute_efficiency(self, regression_line):
+        """
+        Calculates the efficiency from the regression line slope.
+        """
+        slope = regression_line.slope
+        efficiency = -1 / slope
+        efficiency = np.exp( efficiency  )
+        efficiency -= 1 
+        efficiency = round( efficiency, 4 )
+        return efficiency
+
+    def _subset_calibrators(self, names, calibrators, df):
+        """
+        Generates a dataframe subset containing only calibrator replicates.
+        """
+        # generate a total query formula for all found calibrators
+        q = names[ calibrators ]
+        q = "' or group_name == '".join(q)
+        q = "group_name == '" + q + "'"
+        df = df.query( q )
+        return df
+
+    def _infer_dilution_steps(self, df):
+        """
+        Infers the dilution steps from the group names if they are specified 
+        as `calibrator: some_name: dilution` e.g. `calibrator: mysample: 5`. 
+        """
+        try: 
+            # get dilution steps from groupnames in format calibrator: name : dil
+            steps = df["group_name"].apply(   lambda x: float( x.split(":")[2] )   ) 
+            steps = steps.to_numpy()
+
+            # preprocess to get proper format
+            self.dilution( steps )    
+            self._manual_dilution_set = False # ensure that manual setting remains False
+            
+            # get and transform to log-scale
+            dilutions = self.dilution()
+            dilutions = np.log(dilutions)
+            return dilutions 
+        except: 
+            aw.HardWarning("Calibrator:could_not_infer_dilution")
+
+    def _generate_dilution_steps(self, df):
+        """
+        Generates a numpy ndarray of log-scaled dilution steps
+        for the calibrators.
+        """
+        # generate steps range
+        # we shall use the concept of (dilution)^m to generate 
+        # the dilution steps. To get m we use a re-anchored df["group"]
+        # column
+        self._reset_groups(df)
+        steps = df[ "group" ]
+        counts = df["group"].value_counts( sort = False )
+        repeats = steps.size if aux.same_type( self.dilution(), 0.0 ) else counts
+
+        # repeat the dilution steps to match the group replicate numbers
+        dilutions = np.repeat( self.dilution(), repeats ) 
+
+        # scale steps to match the dilution series
+        dilutions = dilutions ** steps
+
+        # save dilutions
+        self.dilution( dilutions )
+        self._manual_dilution_set = False # ensure that manual setting remains False
+
+        # and transform to log scale 
+        dilutions = np.log( dilutions )
+
+        return dilutions
+
+    def _reset_groups(self, df):
+        """
+        Resets the numeric group identifiers to start continuously from 0.
+        This method sets the initial group to 0 and then successively resets any
+        gaps to match e.g. a 0,1,3 -> 0,1,2...
+        """
+
+        # get counts of each group_name in the df
+        counts = df["group_name"].value_counts( sort = False )
+
+        # generate new numeric identifiers for each group
+        new_groups = np.arange( len(counts) )
+
+        # transform to match the right repeats
+        new_groups = np.repeat( new_groups, counts )
+        
+        # and set new groups
+        df["group"] = new_groups
+
+    def _has_calibrator_prefix( self, string ):
+        """
+        Checks if the calibrator prefix is the start of a string
+        The string is a replicate group name in this case...
+        """
+        calibrator_prefix = defaults.calibrator_prefix
+        return string.startswith( calibrator_prefix )
+
+    def _get_efficiency( self, assay : Assay ):
+        """
+        Returns the efficiency from the currently loaded effiencies
+        that corresponds to the assay's Id. Returns None if no match is present.
+        """
+        id = assay.id()
+        effs = self.get()
+
+        if id not in effs.keys():
+            return None
+        else:
+            return effs[ id ]
+
+    def _load(self, filename):
+        """
+        Loads a json file but does not adobt the data as its own yet.
+        Returns a dictionary.
+        """
+        current = json.load( open(filename, "r") )
+        return current
+
+    def _save(self, filename, dict_to_save ):
+        """
+        Saves a dictionary to a json file.
+        """
+        json.dump( dict_to_save , open(filename, "w") )
+
 if __name__ == "__main__":
     
     files = ["./Examples/Example Data/28S.csv", "./Examples/Example Data/actin.csv", "./Examples/Example Data/HNRNPL_nmd.csv", "./Examples/Example Data/HNRNPL_prot.csv"]
@@ -2733,6 +3279,7 @@ if __name__ == "__main__":
     for file in files: 
 
         assay = reader.read(file, replicates = "6,6,6,6", names = groupnames)
+        analyser.efficiency( 1.05 )
         assay = analyser.pipe(assay)
         assays.append(assay)
 
