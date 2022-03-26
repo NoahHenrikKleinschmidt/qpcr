@@ -2802,6 +2802,7 @@ class Calibrator(aux._ID):
                                         #             - the Linreg model
         self._dilution_step = None      # the dilution step(s) used 
         self._manual_dilution_set = False 
+        self._orig_dilution = None 
 
     def save( self, filename : str, mode : str = "write" ):
         """
@@ -2950,31 +2951,19 @@ class Calibrator(aux._ID):
 
         Returns
         -------
-        float or np.ndarray
+        dilution : float or np.ndarray
             The currently used dilution step.
         """
-        if step is not None: 
+        
+        dilution = self._dilution(step)
+        self._orig_dilution = self._dilution_step
 
-            unknown_datatype = not isinstance( step, (float, int, np.ndarray) )
-            if unknown_datatype:
-                aw.HardWarning("Calibration:cannot_interpret_dilution", step = step, step_type = type(step).__name__ )
-            
-            # check for an ndarray and make sure to invert if 
-            # the dilution steps are given as 2 4 instead of
-            # 0.5 0.25 etc., also do the same for a single number...
-
-            is_inverse_array = isinstance( step, np.ndarray ) and any( step > 1 )
-            is_inverse_number = isinstance( step, (float, int) ) and step > 1
-            need_inverse = is_inverse_array or is_inverse_number
-            
-            if need_inverse:
-                step = 1 / step
-            
-            # and store new steps
-            self._dilution_step = step
+        # if the dilution is now set to a valid
+        # value we set the _manual_dilution_set check to True
+        if dilution is not None:
             self._manual_dilution_set = True 
+        return dilution
 
-        return self._dilution_step
         
     def pipe( self, assay : Assay ):
         """
@@ -3037,15 +3026,19 @@ class Calibrator(aux._ID):
         # this will either be the entire df (if no calibrator groups are present)
         # or just the subset of calibrators
         df = assay.get()
+
         if has_calibrators:
             df = self._subset_calibrators(names, calibrators, df)
 
+        # get Ct column name
+        ct_name = defaults.raw_col_names[1]
+        # drop NaN cols as they are incompatible with linregress anyway...
+        df = df[ df[ ct_name] == df[ ct_name ] ]
+
         # now sort the dataframe by Ct values as they need to strictly
         # increase for dilution series.
-        ct_name = defaults.raw_col_names[1]
         df = df.sort_values( ct_name ).reset_index()
         df = df.rename( columns = { "index" : "orig_index" } )
-
 
         # now generate dilution steps ( i.e. "concentrations" )
         # to do that we first need to check if dilutions have not
@@ -3063,8 +3056,8 @@ class Calibrator(aux._ID):
     
         # now interpolate a line through the log dilutions and the ct values
         cts = df[ ct_name ].to_numpy()
-        regression_line = stats.linregress( x = dilutions, y = cts )
 
+        regression_line = stats.linregress( x = dilutions, y = cts )
         # and now compute the efficiency from the regression line
         efficiency = self._compute_efficiency(regression_line)
 
@@ -3102,6 +3095,33 @@ class Calibrator(aux._ID):
             aw.SoftWarning("Calibrator:could_not_assign", id = assay.id() )
         return assay
 
+    def _dilution(self, step = None ):
+        """
+        The functional core of self.dilution() the only difference is
+        that self.dilution also sets a boolean attribute self._manual_dilution_set to True...
+        Which signals that the manually supplied dilutions should be used rather than that 
+        they should be inferred from the dataset...
+        """
+        if step is not None: 
+            unknown_datatype = not isinstance( step, (float, int, np.ndarray, pd.Series ) )
+            if unknown_datatype:
+                aw.HardWarning("Calibration:cannot_interpret_dilution", step = step, step_type = type(step).__name__ )
+            
+            # check for an ndarray and make sure to invert if 
+            # the dilution steps are given as 2 4 instead of
+            # 0.5 0.25 etc., also do the same for a single number...
+
+            is_inverse_array = isinstance( step, (np.ndarray, pd.Series) ) and any( step > 1 )
+            is_inverse_number = isinstance( step, (float, int) ) and step > 1
+            need_inverse = is_inverse_array or is_inverse_number
+            
+            if need_inverse:
+                step = 1 / step
+            
+            # and store new steps
+            self._dilution_step = step
+
+        return self._dilution_step
 
     def _remove_calibrators(self, assay, df):
         """
@@ -3167,12 +3187,12 @@ class Calibrator(aux._ID):
             steps = steps.to_numpy()
 
             # preprocess to get proper format
-            self.dilution( steps )    
-            self._manual_dilution_set = False # ensure that manual setting remains False
+            self._dilution( steps )    
             
             # get and transform to log-scale
-            dilutions = self.dilution()
+            dilutions = self._dilution()
             dilutions = np.log(dilutions)
+            self._reset_dilution()
             return dilutions 
         except: 
             aw.HardWarning("Calibrator:could_not_infer_dilution")
@@ -3189,22 +3209,33 @@ class Calibrator(aux._ID):
         self._reset_groups(df)
         steps = df[ "group" ]
         counts = df["group"].value_counts( sort = False )
-        repeats = steps.size if aux.same_type( self.dilution(), 0.0 ) else counts
+        repeats = steps.size if isinstance( self._dilution(), float ) else counts
 
         # repeat the dilution steps to match the group replicate numbers
-        dilutions = np.repeat( self.dilution(), repeats ) 
+        dilutions = np.repeat( self._dilution(), repeats ) 
 
         # scale steps to match the dilution series
         dilutions = dilutions ** steps
 
         # save dilutions
-        self.dilution( dilutions )
-        self._manual_dilution_set = False # ensure that manual setting remains False
+        self._dilution( dilutions )
 
         # and transform to log scale 
         dilutions = np.log( dilutions )
 
+        # and reset the diltion back to the what was 
+        # originally set (or None from init)
+        self._reset_dilution()
         return dilutions
+
+    def _reset_dilution( self ):
+        """
+        Resets the to the default dilution step to ensure
+        the same starting conditions are met for each assay 
+        as it is passed through the Calibrator.
+        """
+        self._dilution_step = self._orig_dilution
+
 
     def _reset_groups(self, df):
         """
@@ -3279,7 +3310,6 @@ if __name__ == "__main__":
     for file in files: 
 
         assay = reader.read(file, replicates = "6,6,6,6", names = groupnames)
-        analyser.efficiency( 1.05 )
         assay = analyser.pipe(assay)
         assays.append(assay)
 
@@ -3363,3 +3393,29 @@ if __name__ == "__main__":
 #     # #result.add_names(samples)
 
 #     # print(result.stats())
+
+
+if __name__ == "__main__":
+    
+    srcfile = "__eff_data/Excel eff calculation.xlsx"
+
+
+    reader = DataReader()
+
+    assays, _ = reader.read( srcfile, multi_assay = True, assay_pattern = "Rotor-Gene" )
+
+    from qpcr.Plotters import EfficiencyCurves
+
+    plotter = EfficiencyCurves( "static" )
+
+    calibrator = Calibrator()
+
+    calibrator.dilution( 0.5 )
+
+    assays = [ calibrator.calibrate(i) for i in assays ]
+
+    print( [ assay.efficiency() for assay in assays ])
+
+    plotter.link( calibrator )
+    plotter.plot() 
+    print( calibrator.get() )
