@@ -2803,21 +2803,30 @@ class Calibrator(aux._ID):
         self._dilution_step = None      # the dilution step(s) used 
         self._manual_dilution_set = False 
         self._orig_dilution = None 
+        
+        self._loaded_file = None
 
-    def save( self, filename : str, mode : str = "write" ):
+
+    def save( self, filename : str = None , mode : str = "write" ):
         """
-        Saves the calculated efficiencies to a `json` file.
+        Saves the calculated efficiencies to a `csv` file.
 
         Parameters
         -------
         filename : str
-            The filepath in which to store the efficiencies.
+            The filepath in which to store the efficiencies. If a file
+            was already loaded then by default the same file will be 
+            used to save values again.
         
         mode : str
             Can be either `"write"` to fully overwrite an existing file,
             with the newly computed data, or `"append"` to only add newly 
             computed efficiencies.
         """
+        
+        if filename is None and self._loaded_file is not None: 
+            filename = self._loaded_file
+
         if mode == "write":
             self._save( filename, self._eff_dict )
 
@@ -2831,7 +2840,7 @@ class Calibrator(aux._ID):
 
     def load(self, filename):
         """
-        Loads a `json` file of previously computed efficiencies.
+        Loads a `csv` file of previously computed efficiencies.
 
         Parameters
         -------
@@ -2841,6 +2850,7 @@ class Calibrator(aux._ID):
         try: 
             current = self._load(filename)
             self.adopt( current )
+            self._loaded_file = filename
             return current
         except: 
             aw.HardWarning("Calibrator:unknown_filetype", filename = filename )
@@ -3293,17 +3303,23 @@ class Calibrator(aux._ID):
 
     def _load(self, filename):
         """
-        Loads a json file but does not adobt the data as its own yet.
+        Loads a csv file but does not adobt the data as its own yet.
         Returns a dictionary.
         """
-        current = json.load( open(filename, "r") )
+        # current = json.load( open(filename, "r") )
+        current = pd.read_csv( filename )
+        current = current.to_dict( "split" )[ "data" ]
+        current = { id : eff for id, eff in current }
         return current
 
     def _save(self, filename, dict_to_save ):
         """
-        Saves a dictionary to a json file.
+        Saves a dictionary to a csv file.
         """
-        json.dump( dict_to_save , open(filename, "w") )
+        # json.dump( dict_to_save , open(filename, "w") )
+        df = pd.DataFrame( dict_to_save, index = ["eff"] )
+        df = df.transpose().reset_index()
+        df.to_csv( filename, index = False )
 
 if __name__ == "__main__":
     

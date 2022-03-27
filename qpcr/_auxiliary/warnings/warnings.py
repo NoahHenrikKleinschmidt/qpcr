@@ -39,7 +39,7 @@ WARNINGS = {
 
 
 "Calibrator:unknown_savemode" : "Unknown mode = '{mode}' could not be interpreted!",
-"Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a proper json file.",
+"Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a comma-separated csv file.",
 "Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({eff_type}). Make sure to provide a dictionary",
 "Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({step_type})! Specify either a float or np.ndarray...",
 "Calibrator:cannot_process_assay" : "The Assay '{id}' could not be processed! Neither a matching pre-computed efficiency could be assigned nor a new one computed! Check again your datafile and Calibrator setup!",
