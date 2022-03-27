@@ -2823,7 +2823,7 @@ class Calibrator(aux._ID):
             with the newly computed data, or `"append"` to only add newly 
             computed efficiencies.
         """
-        
+
         if filename is None and self._loaded_file is not None: 
             filename = self._loaded_file
 
@@ -3364,8 +3364,6 @@ if __name__ == "__main__":
     result = normaliser.get()
     print(result.stats())
 
-
-
     # alternatively we could link the analyser directly 
     # to get the Assay from there like
 
@@ -3425,27 +3423,27 @@ if __name__ == "__main__":
 #     # print(result.stats())
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    srcfile = "__eff_data/Excel eff calculation.xlsx"
+#     srcfile = "__eff_data/Excel eff calculation.xlsx"
 
 
-    reader = DataReader()
+#     reader = DataReader()
 
-    assays, _ = reader.read( srcfile, multi_assay = True, assay_pattern = "Rotor-Gene" )
+#     assays, _ = reader.read( srcfile, multi_assay = True, assay_pattern = "Rotor-Gene" )
 
-    from qpcr.Plotters import EfficiencyCurves
+#     from qpcr.Plotters import EfficiencyCurves
 
-    plotter = EfficiencyCurves( "static" )
+#     plotter = EfficiencyCurves( "static" )
 
-    calibrator = Calibrator()
+#     calibrator = Calibrator()
 
-    calibrator.dilution( (1,2,4,8,16,32,64) )
+#     calibrator.dilution( (1,2,4,8,16,32,64) )
 
-    assays = [ calibrator.calibrate(i) for i in assays ]
+#     assays = [ calibrator.calibrate(i) for i in assays ]
 
-    print( [ assay.efficiency() for assay in assays ])
+#     print( [ assay.efficiency() for assay in assays ])
 
-    plotter.link( calibrator )
-    plotter.plot() 
-    print( calibrator.get() )
+#     plotter.link( calibrator )
+#     plotter.plot() 
+#     print( calibrator.get() )
