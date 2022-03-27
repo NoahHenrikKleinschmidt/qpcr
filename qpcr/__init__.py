@@ -3018,6 +3018,7 @@ class Calibrator(aux._ID):
         # get the assay's groupnames and check for the calibrator prefix.
         names = assay.names( as_set = False ).unique()
 
+
         # check if any groups are declared as calibrators
         calibrators = np.array( [ self._has_calibrator_prefix(i) for i in names ] )
         has_calibrators = any( calibrators )
@@ -3053,7 +3054,8 @@ class Calibrator(aux._ID):
             dilutions = self._infer_dilution_steps(df)
         else:
             dilutions = self._generate_dilution_steps(df)
-    
+        
+        
         # now interpolate a line through the log dilutions and the ct values
         cts = df[ ct_name ].to_numpy()
 
@@ -3071,7 +3073,9 @@ class Calibrator(aux._ID):
         self._save_computation( assay, dilutions, cts, regression_line )
 
         # now remove the calibrators from the assay
-        if remove_calibrators: 
+        # but only do so in case there were calibrators found!
+        # If the entire assay was used, we do not delete the entries...
+        if has_calibrators and remove_calibrators: 
             self._remove_calibrators(assay, df)
 
         return assay 
@@ -3211,6 +3215,7 @@ class Calibrator(aux._ID):
         # we shall use the concept of (dilution)^m to generate 
         # the dilution steps. To get m we use a re-anchored df["group"]
         # column
+
         self._reset_groups(df)
         steps = df[ "group" ]
         counts = df["group"].value_counts( sort = False )
@@ -3219,9 +3224,13 @@ class Calibrator(aux._ID):
         # repeat the dilution steps to match the group replicate numbers
         dilutions = np.repeat( self._dilution(), repeats ) 
 
-        # scale steps to match the dilution series
-        dilutions = dilutions ** steps
-
+        # if we only had a single value for the dilution we 
+        # also need to now scale the dilutions to generate the
+        # actual dilution scale. If we already got a dilution series
+        # as input, we must not do this as we otherwise doubly scale...
+        if isinstance( self._dilution(), float ):
+            dilutions = dilutions ** steps
+   
         # save dilutions
         self._dilution( dilutions )
 
@@ -3415,7 +3424,7 @@ if __name__ == "__main__":
 
     calibrator = Calibrator()
 
-    calibrator.dilution( 0.5 )
+    calibrator.dilution( (1,2,4,8,16,32,64) )
 
     assays = [ calibrator.calibrate(i) for i in assays ]
 
