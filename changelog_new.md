@@ -13,3 +13,5 @@ Accompanying the `Calibrator` is a new plotter that can visualise the linear reg
 ### Assays and Efficiency
 Efficiency is now directly handled by the `qpcr.Assay` objects (`qpcr.Analyser` can still receive `.efficiency` as before, but this will be dropped at some point...)
 
+### `Results.preview()` shortcut
+A `Plotters.PreviewResults` can now directly be called from the `qpcr.Results` without having to import and setting up manually. The new `qpcr.Results.preview()` method calls on `PreviewResults` object to plot the stored data and returns the produced figure.
