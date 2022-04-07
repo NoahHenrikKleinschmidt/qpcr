@@ -27,7 +27,7 @@ the documentation of each Plotter.
 """
 
 import qpcr.__init__ as qpcr
-import qpcr.Pipes
+# import qpcr.Pipes
 import qpcr._auxiliary.graphical as gx
 import qpcr._auxiliary as aux 
 import qpcr._auxiliary.defaults as defaults
@@ -2253,7 +2253,7 @@ class GroupDots(Plotter):
             raise e 
 
 
-class EfficiencyCurves(Plotter):
+class EfficiencyLines(Plotter):
     """
     Generates a Figure for the linear regressions used for Assay efficiency 
     calculations. This FigureClass specifically works with the `qpcr.Calibrator` 
@@ -2268,7 +2268,7 @@ class EfficiencyCurves(Plotter):
     ----
 
     #### `"static"` Kwargs
-    Static EfficiencyCurves figures accept the following kwargs:
+    Static EfficiencyLines figures accept the following kwargs:
     
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -2292,7 +2292,7 @@ class EfficiencyCurves(Plotter):
 
     <br></br>
     #### `"interactive"` Kwargs
-    Interactive EfficiencyCurves figures accept the following kwargs:
+    Interactive EfficiencyLines figures accept the following kwargs:
 
     |   Argument  |  Description    |  Example    |
     | ---- | ---- | ---- |
@@ -2312,8 +2312,8 @@ class EfficiencyCurves(Plotter):
     """
     def __init__(self, mode : str ):
         self._setup_default_params(
-                                    static = defaults.static_EfficiencyCurves, 
-                                    interactive = defaults.interactive_EfficiencyCurves
+                                    static = defaults.static_EfficiencyLines, 
+                                    interactive = defaults.interactive_EfficiencyLines
                                 )
         super().__init__( mode = mode )
         self._Calibrator = None
@@ -2453,7 +2453,7 @@ class EfficiencyCurves(Plotter):
 
     def _interactive_plot(self, **kwargs):
         """
-        Generates an interactive EfficiencyCurves figure
+        Generates an interactive EfficiencyLines figure
         """
         kwargs = self.update_params(kwargs)
         data = self._Calibrator._computed_values

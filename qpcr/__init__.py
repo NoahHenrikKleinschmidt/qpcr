@@ -2864,7 +2864,7 @@ class Calibrator(aux._ID):
         else: 
             aw.SoftWarning("Calibrator:unknown_savemode", mode = mode )
 
-    def load(self, filename):
+    def load(self, filename, merge : bool = True, supersede : bool = False ):
         """
         Loads a `csv` file of previously computed efficiencies.
 
@@ -2872,9 +2872,18 @@ class Calibrator(aux._ID):
         -------
         filename : str
             The filepath to load efficiencies from.
+        merge : bool
+            In case efficiencies are already loaded, merge the
+            new and existing ones. If `False` the current ones will
+            be replaced completely.
+        supersede : bool 
+            In case efficiencies of the same assay are already loaded
+            they will be overwritten by the newly incoming ones if `supersede = True`.
         """
         try: 
             current = self._load(filename)
+            if merge:
+                current = { **self._eff_dict, **current } if supersede else { **current, **self._eff_dict }
             self.adopt( current )
             self._loaded_file = filename
             return current
