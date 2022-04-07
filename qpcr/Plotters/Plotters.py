@@ -935,7 +935,7 @@ class ReplicateBoxPlot(Plotter):
         """
         if aux.same_type(Assay, qpcr.Assay()):
             self._Results = Assay
-            data = self._Results.get()
+            data = self._Results.get( copy = True )
         else:
             wa.HardWarning("Plotter:unknown_data", obj = Assay)
 
