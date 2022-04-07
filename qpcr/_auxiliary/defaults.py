@@ -116,9 +116,9 @@ interactive_FilterSummary = dict(
                                         title = "Filtering Summary"
                                     )
 
-# EfficiencyCurves
+# EfficiencyLines
 # --------------------------------
-static_EfficiencyCurves = dict(
+static_EfficiencyLines = dict(
                                     title = "Efficiency Computations",
                                     xlabel = "Log Dilution",
                                     ylabel = "Ct",
@@ -126,7 +126,7 @@ static_EfficiencyCurves = dict(
                                     style = "dark",   
                             )
 
-interactive_EfficiencyCurves = dict(
+interactive_EfficiencyLines = dict(
                                     title = "Efficiency Computations",
                                     xlabel = "Log Dilution",
                                     ylabel = "Ct",
