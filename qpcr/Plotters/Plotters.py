@@ -1299,15 +1299,16 @@ class FilterSummary(Plotter):
         # possibly nrows and ncols should be switched...
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
 
+        # set a kind column for grouping in the boxplots
+        before[ "kind" ] = "before" 
+        after[ "kind" ] = "after"
+
         show_legend = True
         for assay, header in zip( assays, headers ): 
 
             # get before and after filter datasets for each assay
-            pre_Cts = before[ ["group", "group_name", assay] ]
-            post_Cts = after[ ["group", "group_name", assay] ]
-
-            pre_Cts["kind"] = [ "before" for i in pre_Cts["group"] ]
-            post_Cts["kind"] = [ "after" for i in post_Cts["group"] ]
+            pre_Cts = before[ ["group", "group_name", "kind", assay] ]
+            post_Cts = after[ ["group", "group_name", "kind", assay] ]
 
             # assemble data to one dataframe
             df = pd.concat( (pre_Cts, post_Cts) )
