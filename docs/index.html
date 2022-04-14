@@ -3180,7 +3180,7 @@ class Calibrator(aux._ID):
         return dilution
 
         
-    def pipe( self, assay : Assay, remove_calibrators : bool = True ):
+    def pipe( self, assay : Assay, remove_calibrators : bool = True, ignore_uncalibrated : bool = False ):
         &#34;&#34;&#34;
         A wrapper for calibrate / assign.
 
@@ -3195,6 +3195,14 @@ class Calibrator(aux._ID):
         remove_calibrators : bool
             If calibrators are present in the assay alongside other groups, 
             remove the calibrator replicates after assignment or efficiency calculation. 
+        ignore_uncalibrated : bool
+            If `True` assays that could neither be newly calibrated nor be assigned an existing
+            efficiency will be ignored. Otherwise, and error will be raised. 
+
+        Returns
+        -------
+        assay : qpcr.Assay
+            The now calibrated `qpcr.Assay`.
         &#34;&#34;&#34;
         if self._eff_dict != {}:
             # first try to assign (will leave the assay unchanged if nothing is found)
@@ -3205,13 +3213,18 @@ class Calibrator(aux._ID):
                 try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
                 except: 
-                    aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                    if not ignore_uncalibrated:
+                        aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                    else: 
+                        aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
         else:
             try: 
                 assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
             except:
-                aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
-
+                if not ignore_uncalibrated:
+                    aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                else: 
+                    aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
         return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
@@ -6176,7 +6189,7 @@ the <code><a title="qpcr.Calibrator.dilution" href="#qpcr.Calibrator.dilution">C
         return dilution
 
         
-    def pipe( self, assay : Assay, remove_calibrators : bool = True ):
+    def pipe( self, assay : Assay, remove_calibrators : bool = True, ignore_uncalibrated : bool = False ):
         &#34;&#34;&#34;
         A wrapper for calibrate / assign.
 
@@ -6191,6 +6204,14 @@ the <code><a title="qpcr.Calibrator.dilution" href="#qpcr.Calibrator.dilution">C
         remove_calibrators : bool
             If calibrators are present in the assay alongside other groups, 
             remove the calibrator replicates after assignment or efficiency calculation. 
+        ignore_uncalibrated : bool
+            If `True` assays that could neither be newly calibrated nor be assigned an existing
+            efficiency will be ignored. Otherwise, and error will be raised. 
+
+        Returns
+        -------
+        assay : qpcr.Assay
+            The now calibrated `qpcr.Assay`.
         &#34;&#34;&#34;
         if self._eff_dict != {}:
             # first try to assign (will leave the assay unchanged if nothing is found)
@@ -6201,13 +6222,18 @@ the <code><a title="qpcr.Calibrator.dilution" href="#qpcr.Calibrator.dilution">C
                 try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
                 except: 
-                    aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                    if not ignore_uncalibrated:
+                        aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                    else: 
+                        aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
         else:
             try: 
                 assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
             except:
-                aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
-
+                if not ignore_uncalibrated:
+                    aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                else: 
+                    aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
         return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
@@ -7041,7 +7067,7 @@ Not saved if set to <code>None</code>.</dd>
 </details>
 </dd>
 <dt id="qpcr.Calibrator.pipe"><code class="name flex">
-<span>def <span class="ident">pipe</span></span>(<span>self, assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>, remove_calibrators: bool = True)</span>
+<span>def <span class="ident">pipe</span></span>(<span>self, assay: <a title="qpcr.Assay" href="#qpcr.Assay">Assay</a>, remove_calibrators: bool = True, ignore_uncalibrated: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A wrapper for calibrate / assign.</p>
@@ -7055,12 +7081,20 @@ from the assay. </p>
 <dt><strong><code>remove_calibrators</code></strong> :&ensp;<code>bool</code></dt>
 <dd>If calibrators are present in the assay alongside other groups,
 remove the calibrator replicates after assignment or efficiency calculation.</dd>
+<dt><strong><code>ignore_uncalibrated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If <code>True</code> assays that could neither be newly calibrated nor be assigned an existing
+efficiency will be ignored. Otherwise, and error will be raised.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>assay</code></strong> :&ensp;<code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code></dt>
+<dd>The now calibrated <code><a title="qpcr.Assay" href="#qpcr.Assay">Assay</a></code>.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def pipe( self, assay : Assay, remove_calibrators : bool = True ):
+<pre><code class="python">def pipe( self, assay : Assay, remove_calibrators : bool = True, ignore_uncalibrated : bool = False ):
     &#34;&#34;&#34;
     A wrapper for calibrate / assign.
 
@@ -7075,6 +7109,14 @@ remove the calibrator replicates after assignment or efficiency calculation.</dd
     remove_calibrators : bool
         If calibrators are present in the assay alongside other groups, 
         remove the calibrator replicates after assignment or efficiency calculation. 
+    ignore_uncalibrated : bool
+        If `True` assays that could neither be newly calibrated nor be assigned an existing
+        efficiency will be ignored. Otherwise, and error will be raised. 
+
+    Returns
+    -------
+    assay : qpcr.Assay
+        The now calibrated `qpcr.Assay`.
     &#34;&#34;&#34;
     if self._eff_dict != {}:
         # first try to assign (will leave the assay unchanged if nothing is found)
@@ -7085,13 +7127,18 @@ remove the calibrator replicates after assignment or efficiency calculation.</dd
             try:
                 assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
             except: 
-                aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                if not ignore_uncalibrated:
+                    aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+                else: 
+                    aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
     else:
         try: 
             assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
         except:
-            aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
-
+            if not ignore_uncalibrated:
+                aw.HardWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
+            else: 
+                aw.SoftWarning(&#34;Calibrator:cannot_process_assay&#34;, id = assay.id() )
     return assay</code></pre>
 </details>
 </dd>

@@ -3014,7 +3014,7 @@ class Calibrator(aux._ID):
         return dilution
 
         
-    def pipe( self, assay : Assay, remove_calibrators : bool = True ):
+    def pipe( self, assay : Assay, remove_calibrators : bool = True, ignore_uncalibrated : bool = False ):
         """
         A wrapper for calibrate / assign.
 
@@ -3029,6 +3029,14 @@ class Calibrator(aux._ID):
         remove_calibrators : bool
             If calibrators are present in the assay alongside other groups, 
             remove the calibrator replicates after assignment or efficiency calculation. 
+        ignore_uncalibrated : bool
+            If `True` assays that could neither be newly calibrated nor be assigned an existing
+            efficiency will be ignored. Otherwise, and error will be raised. 
+
+        Returns
+        -------
+        assay : qpcr.Assay
+            The now calibrated `qpcr.Assay`.
         """
         if self._eff_dict != {}:
             # first try to assign (will leave the assay unchanged if nothing is found)
@@ -3039,13 +3047,18 @@ class Calibrator(aux._ID):
                 try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
                 except: 
-                    aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                    if not ignore_uncalibrated:
+                        aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                    else: 
+                        aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
         else:
             try: 
                 assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
             except:
-                aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
-
+                if not ignore_uncalibrated:
+                    aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                else: 
+                    aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
         return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
