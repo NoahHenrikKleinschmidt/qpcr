@@ -89,5 +89,5 @@ A set of basic introductory tutorials is available as `jupyter notebooks` in the
 
 
 #### Citation
-Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.2) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.4) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
