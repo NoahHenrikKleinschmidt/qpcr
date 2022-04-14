@@ -11,5 +11,5 @@ license: "GPL-3.0"
 message: "When using this package to analyse your data, please, cite accordingly. Good luck with your research!"
 repository-code: "https://github.com/NoahHenrikKleinschmidt/qpcr.git"
 title: "qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput"
-version: "3.1.4"
+version: "3.1.5"
 ...
