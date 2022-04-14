@@ -179,6 +179,17 @@ class Pipeline:
         elif kind == &#34;obj&#34;:
             return self._Results
     
+    def results( self ):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        Results : qpcr.Results
+            The `qpcr.Results` object storing the pipelines data.
+            Note, this is equivalent to `get( kind = &#34;obj&#34; )`.
+        &#34;&#34;&#34;
+        return self._Results
+
+
     def link(self, assays:(list or str) = None, normalisers:(list or str) = None):
         &#34;&#34;&#34;
         Links new assays-of-interest / sample assays and/or normaliser assays 
@@ -1073,6 +1084,7 @@ For customization check out the <code><a title="qpcr.Pipes.Pipes.Blueprint" href
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.normalisers" href="#qpcr.Pipes.Pipes.Pipeline.normalisers">normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.prune" href="#qpcr.Pipes.Pipes.Pipeline.prune">prune</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.replicates" href="#qpcr.Pipes.Pipes.Pipeline.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Pipes.Pipes.Pipeline.results" href="#qpcr.Pipes.Pipes.Pipeline.results">results</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.run" href="#qpcr.Pipes.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.save_to" href="#qpcr.Pipes.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.softlink" href="#qpcr.Pipes.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -1341,6 +1353,7 @@ For customization check out the <code><a title="qpcr.Pipes.Pipes.Blueprint" href
 <li><code><a title="qpcr.Pipes.Pipes.Basic.names" href="#qpcr.Pipes.Pipes.Pipeline.names">names</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Basic.normalisers" href="#qpcr.Pipes.Pipes.Pipeline.normalisers">normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Basic.replicates" href="#qpcr.Pipes.Pipes.Pipeline.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Pipes.Pipes.Basic.results" href="#qpcr.Pipes.Pipes.Pipeline.results">results</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Basic.run" href="#qpcr.Pipes.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Basic.save_to" href="#qpcr.Pipes.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Basic.softlink" href="#qpcr.Pipes.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -1778,6 +1791,7 @@ but keep the Normaliser itself!</dd>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.names" href="#qpcr.Pipes.Pipes.Pipeline.names">names</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.normalisers" href="#qpcr.Pipes.Pipes.Pipeline.normalisers">normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.replicates" href="#qpcr.Pipes.Pipes.Pipeline.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Pipes.Pipes.BasicPlus.results" href="#qpcr.Pipes.Pipes.Pipeline.results">results</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.run" href="#qpcr.Pipes.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.save_to" href="#qpcr.Pipes.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.BasicPlus.softlink" href="#qpcr.Pipes.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -1917,6 +1931,17 @@ that ensure that elementary required inputs are provided.</p>
         elif kind == &#34;obj&#34;:
             return self._Results
     
+    def results( self ):
+        &#34;&#34;&#34;
+        Returns
+        -------
+        Results : qpcr.Results
+            The `qpcr.Results` object storing the pipelines data.
+            Note, this is equivalent to `get( kind = &#34;obj&#34; )`.
+        &#34;&#34;&#34;
+        return self._Results
+
+
     def link(self, assays:(list or str) = None, normalisers:(list or str) = None):
         &#34;&#34;&#34;
         Links new assays-of-interest / sample assays and/or normaliser assays 
@@ -2321,6 +2346,31 @@ or a <code>tuple</code> (uneven group sizes, e.g. <code>(3,2,3)</code> if the se
     self._replicates = replicates</code></pre>
 </details>
 </dd>
+<dt id="qpcr.Pipes.Pipes.Pipeline.results"><code class="name flex">
+<span>def <span class="ident">results</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Results</code></strong> :&ensp;<code><a title="qpcr.Results" href="../index.html#qpcr.Results">Results</a></code></dt>
+<dd>The <code><a title="qpcr.Results" href="../index.html#qpcr.Results">Results</a></code> object storing the pipelines data.
+Note, this is equivalent to <code>get( kind = "obj" )</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def results( self ):
+    &#34;&#34;&#34;
+    Returns
+    -------
+    Results : qpcr.Results
+        The `qpcr.Results` object storing the pipelines data.
+        Note, this is equivalent to `get( kind = &#34;obj&#34; )`.
+    &#34;&#34;&#34;
+    return self._Results</code></pre>
+</details>
+</dd>
 <dt id="qpcr.Pipes.Pipes.Pipeline.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>self, **kwargs)</span>
 </code></dt>
@@ -2554,6 +2604,7 @@ pipeline to allow customisation.</p>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.normalisers" href="#qpcr.Pipes.Pipes.Pipeline.normalisers">normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.prune" href="#qpcr.Pipes.Pipes.Blueprint.prune">prune</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.replicates" href="#qpcr.Pipes.Pipes.Pipeline.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Pipes.Pipes.Blueprint.results" href="#qpcr.Pipes.Pipes.Pipeline.results">results</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.run" href="#qpcr.Pipes.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.save_to" href="#qpcr.Pipes.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Blueprint.softlink" href="#qpcr.Pipes.Pipes.Pipeline.softlink">softlink</a></code></li>
@@ -2617,6 +2668,7 @@ pipeline to allow customisation.</p>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.normalisers" href="#qpcr.Pipes.Pipes.Pipeline.normalisers">normalisers</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.prune" href="#qpcr.Pipes.Pipes.Pipeline.prune">prune</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.replicates" href="#qpcr.Pipes.Pipes.Pipeline.replicates">replicates</a></code></li>
+<li><code><a title="qpcr.Pipes.Pipes.Pipeline.results" href="#qpcr.Pipes.Pipes.Pipeline.results">results</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.run" href="#qpcr.Pipes.Pipes.Pipeline.run">run</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.save_to" href="#qpcr.Pipes.Pipes.Pipeline.save_to">save_to</a></code></li>
 <li><code><a title="qpcr.Pipes.Pipes.Pipeline.softlink" href="#qpcr.Pipes.Pipes.Pipeline.softlink">softlink</a></code></li>

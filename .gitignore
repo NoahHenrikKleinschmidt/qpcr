@@ -10,3 +10,4 @@ test*ipynb
 test*py
 html*
 testfiles
+.vscode

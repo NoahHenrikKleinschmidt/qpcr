@@ -141,6 +141,17 @@ class Pipeline:
         elif kind == "obj":
             return self._Results
     
+    def results( self ):
+        """
+        Returns
+        -------
+        Results : qpcr.Results
+            The `qpcr.Results` object storing the pipelines data.
+            Note, this is equivalent to `get( kind = "obj" )`.
+        """
+        return self._Results
+
+
     def link(self, assays:(list or str) = None, normalisers:(list or str) = None):
         """
         Links new assays-of-interest / sample assays and/or normaliser assays 

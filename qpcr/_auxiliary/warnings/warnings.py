@@ -37,6 +37,17 @@ WARNINGS = {
 "Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
+
+"Calibrator:unknown_savemode" : "Unknown mode = '{mode}' could not be interpreted!",
+"Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a comma-separated csv file.",
+"Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({eff_type}). Make sure to provide a dictionary",
+"Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({step_type})! Specify either a float or np.ndarray...",
+"Calibrator:cannot_process_assay" : "The Assay '{id}' could not be processed! Neither a matching pre-computed efficiency could be assigned nor a new one computed! Check again your datafile and Calibrator setup!",
+"Calibrator:could_not_assign" : "No efficiencies could be found for Assay '{id}'!\nMake sure to have loaded / precomputed proper effiencies with matching Ids.",
+"Calibrator:could_not_infer_dilution" : "Could not infer dilutions! Please, set a dilution step using dilution()",
+
+
+
 "SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
 
 "Plotter:unknown_data" : "Unknown data linkage!\nOnly qpcr.Results or pd.DataFrame objects are allowed!\nReceived: {obj}",
@@ -77,6 +88,7 @@ WARNINGS = {
 
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
+"blank" : "{msg}",
 
 }
 
