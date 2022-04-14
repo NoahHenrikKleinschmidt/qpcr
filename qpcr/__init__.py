@@ -1254,50 +1254,6 @@ class SampleReader(Assay):
             
         return self._Assay
 
-# class _Qupid_SampleReader(SampleReader):
-#     """
-#     Sets up a Reader+Assay pipeline that reads in a datafile and handles the 
-#     stored raw data in a pandas dataframe. 
-#     Its `read()` method directly returns a `qpcr.Assay` object that can be piped to Analyser. 
-#     Note
-#     ----
-#     This is the Qupid applicable version of the SampleReader
-#     """
-#     def __init__(self):
-#         super().__init__()
-        
-
-#     def read(self, file):
-#         """
-#         Reads one raw datafile (csv format).
-
-#         Parameters
-#         ----------
-#         file
-#             An UploadedFile object from streamlit.
-
-#         Returns
-#         -------
-#         Assay : qpcr.Assay
-#             A `qpcr.Assay` object containing the grouped and renamed data.
-#         """
-#         self._Reader = _Qupid_Reader(file)
-#         self._Reader.id(aux.fileID(file.name)) # use the .name method to get the filename
-
-#         self._Assay = Assay(self._Reader)
-#         self._Assay.adopt_id(self._Reader)
-
-#         if self._replicates is not None:
-#             self._Assay.replicates(self._replicates)
-#             self._Assay.group()
-#         else: 
-#             aw.HardWarning("SampleReader:no_reps_yet")
-
-#         if self._names is not None:
-#             self._Assay.rename(self._names)
-
-#         return self._Assay
-
 class DataReader(aux._ID):
     """
     Handles reading a single file containing input data
@@ -2057,6 +2013,8 @@ class Analyser(aux._ID):
             The current efficiency used.
 
         """
+        # deprecation warning
+        aw.SoftWarning( "blank", msg = "The use of efficiency() from the Analyser is deprecated and will be dropped in a future version! Please, set efficiencies directly in the Assay." )
         if isinstance(e, (int, float)):
             self._efficiency = float( e )
             self._eff = 2 * self._efficiency

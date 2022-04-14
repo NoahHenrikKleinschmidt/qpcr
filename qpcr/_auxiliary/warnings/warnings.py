@@ -88,6 +88,7 @@ WARNINGS = {
 
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
+"blank" : "{msg}",
 
 }
 
