@@ -1364,6 +1364,15 @@ class DataReader(aux._ID):
             to costumizibility through the kwargs. If you require streamlined datareading
             use dedicated `qpcr.Readers` and/or `qpcr.Parsers` directly.
         """
+        if isinstance( filename, list ):
+            return [ self.read( i, 
+                                multi_assay = multi_assay, 
+                                big_table = big_table, 
+                                decorator = decorator, 
+                                reset = reset, 
+                                **kwargs ) 
+                    for i in filename ]
+                    
         self._src = filename
         # vet filesuffix
         suffix = self._filesuffix()
