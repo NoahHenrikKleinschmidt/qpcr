@@ -1984,10 +1984,13 @@ class Analyser(aux._ID):
             The same `qpcr.Assay` with computed Delta-Ct values. 
 
         """
-        self.link(Assay)
-        self.DeltaCt(**kwargs)
-        assay = self.get()
-        return assay
+        if isinstance( Assay, list ):
+            return [ self.pipe( A ) for A in Assay ]
+        else:
+            self.link(Assay)
+            self.DeltaCt(**kwargs)
+            assay = self.get()
+            return assay
 
     def efficiency(self, e:float = None):
         """
@@ -2473,6 +2476,41 @@ class Normaliser(aux._ID):
 
             # and store to results
             self._Results.add_ddCt(assay)
+
+    def pipe( self, assays : list, normalisers : list, mode = "pair-wise", **kwargs ):
+        """
+        A wrapper for `Normaliser.link` and `Normaliser.normalise`
+
+        Parameters
+        ----------
+        assays : list 
+            A list of  `qpcr.Assay` objects.
+        normalisers : list
+            A list of `qpcr.Assay` objects.
+        mode : str
+            The normalisation mode to use. This can be either `pair-wise` (default), 
+            or `combinatoric`, or `permutative`.
+            `pair-wise` will normalise replicates only by their partner (i.e. first against first, 
+            second by second, etc.). `combinatoric` will normalise all possible combinations of a replicate 
+            with all partner replicates of the same group from a normaliser (i.e. first against first, then second, then third, etc.).
+            This will generate `n^2` normalised Delta-Delta-Ct values, where `n` is the number of replicates in a group.
+            `permutative` will scramble the normaliser replicates randomly and then normalise pair-wise. This mode supports 
+            a parameter `k` which specifies the times this process should be repeated, thus generating `n * k` normalised Delta-Delta-Ct values.
+            Also, through setting `replace = True` replacement may be allowed during normaliser scrambling.
+            Note, this setting will be ignored if a custom `norm_func` is provided.
+
+        **kwargs
+            Any additional keyword arguments that may be passed to a custom 
+            `norm_func` and `prep_func` (both will receive the kwargs!).
+        Returns
+        -------
+        results : qpcr.Results
+            A `qpcr.Results` object of the assembled results.
+        """
+        self.link( assays = assays, normalisers = normalisers )
+        self.normalise()
+        return self.get()
+
 
     def _vet_normaliser(self):
         """
@@ -3038,28 +3076,31 @@ class Calibrator(aux._ID):
         assay : qpcr.Assay
             The now calibrated `qpcr.Assay`.
         """
-        if self._eff_dict != {}:
-            # first try to assign (will leave the assay unchanged if nothing is found)
-            eff = self._get_efficiency( assay )
-            if eff is not None: 
-                assay = self.assign( assay, remove_calibrators = remove_calibrators )
-            else: 
-                try:
+        if isinstance( assay, list ):
+            return [ self.pipe( A ) for A in assay ]
+        else:
+            if self._eff_dict != {}:
+                # first try to assign (will leave the assay unchanged if nothing is found)
+                eff = self._get_efficiency( assay )
+                if eff is not None: 
+                    assay = self.assign( assay, remove_calibrators = remove_calibrators )
+                else: 
+                    try:
+                        assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
+                    except: 
+                        if not ignore_uncalibrated:
+                            aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                        else: 
+                            aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
+            else:
+                try: 
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                except: 
+                except:
                     if not ignore_uncalibrated:
                         aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
                     else: 
                         aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-        else:
-            try: 
-                assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-            except:
-                if not ignore_uncalibrated:
-                    aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
-                else: 
-                    aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-        return assay
+            return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
         """
