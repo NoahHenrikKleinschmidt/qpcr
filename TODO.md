@@ -1,16 +1,3 @@
-
-# New implemented features of *this* release
-
-
-### Plotters
-      - FilterSummary
-      New FilterSummary Plotter generates subplot figure for each assay showing before-after boxes of all replicate Ct values per group. 
-      - PreviewResults static is now anchored rotating labels...
-### core
-      - Norm_func can access directly two assay objects 
-      - f of normalise also accesses directly an assay object
-
-
 # New planned features of *some future* release
 
 New planned features for any future release are:
@@ -25,16 +12,15 @@ New support to read "regular" files that contain multiple columns.
 
 - 1.6 support reading `rex` files directly by `Qlipper`. Should be easy enough locally, but might be difficult to do via streamlit... We'll need to figure out a way to get a FileIO from the UploadedFile ...
 
-### 2. Merging Filter before-after figures together
-Currently before and after filtering figures are separate. It would be nice to have the before filtering figure (maybe with different color or with less opacity) be plotted and then to overlay the after-filtering on-top of that - all in the same figure...
-
-> UPDATE Idea: so, we let the ReplicateBoxplot be what it is right now, but instead add a new FilterBoxPlot plotter that makes subplots n x 2 where n is the number of assays, which will be on rows above each other. Then left to right is before and after. This is then just one big figure, which should hopefully more nicely display the before-after relations within the assays, but also respond to the same legend so we should hopefully be able to modulate all before and after replicates boxes with one click... 
-
-> Also, we should re-think if we maybe not only want to set the Ct values to NaN instead of truly dropping the indices entirely...
 
 
 ### 3. Statistical evaluation of results 
 Currently, no options are available for preforming t-tests and such on the results. It would be nice to have that functionality at some point. However, the main tricky part here is to decide which groups of replicates to compare against each other. One option would be to simply compare all and draw a comparison heatmap for all groups. But this is invariably computing more than necessary or desired. A sample-index file of sorts would be required here probably...
+
+> UPDATE: 
+> Let's go first with a "baseline"-comparison multiple-T-Test for each Assay internally, where we compare against the anchor. 
+> Then let's do the same as a pairwise comparison between a baseline assay and a second assay.
+> Then, let's also do an ANOVA implementation where we merge the assays and check if there is significant variance between the groups. 
 
 ### 4. Double-normalisation
 Currently the workflow is only designed for a single normalisation. Comparing the levels of transcript A from condition X against the same of condition Y (i.e. get the fold-change) is not directly difficult but currently not implemented due to the same problem for the statistical evaluation - missing knowledge which groups of replicates to pair together...
@@ -51,15 +37,8 @@ Currently the workflow is only designed for a single normalisation. Comparing th
 > Let the assays split their id to id + label attributes. So "HNRNPL nmd" and "HNRNPL prot" can be split into id "HNRNPL" and label "nmd" + "prot", respectively. Then develop a class / function, whatever, that will pair up assays according to the same id but different labels. The splitting should be available through both simple `.split` and `regex`...
 
 
-### 6. Estimation of qPCR efficiency
-There are some nice papers describing how they estimated qPCR amiplification efficiency based on linreg around the linear window (which we use currently just to get the optimal threshold through R^2). The slope of the optimal window should also be the corresponding efficiency. Let's test this out and add a method to replace the default `efficiency = 2` with a properly computed one. Let's try to get the slopes of our window ranges as well during the optimal threshold search, and check if we can truly use these. In the paper they keep using a log-scale to do things, so, maybe we'll have to do the same. Let's see...
-
-
 ### 8. __str__ methods 
 At some point we should add some `__str__` methdos to all classes ...
-
-### 11. Add vectorized support or pipe methods
-Pipe methods and such should also be able to work directly with a list of input files ...
 
 
 
