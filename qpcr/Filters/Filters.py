@@ -149,9 +149,12 @@ class Filter(aux._ID):
             A `qpcr.Assay` object containing only entries that passed the filter.
 
         """
-        self.link(Assay)
-        self.filter(**kwargs)
-        return self._Assay    
+        if isinstance( Assay, list ):
+            return [ self.pipe( assay ) for assay in Assay ]
+        else:
+            self.link(Assay)
+            self.filter(**kwargs)
+            return self._Assay    
 
     def filter(self, **kwargs):
         """
