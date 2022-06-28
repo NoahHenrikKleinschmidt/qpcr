@@ -60,29 +60,27 @@ pipeline.save_to("./Example Results")
 pipeline.replicates(reps)
 pipeline.names(group_names)
 
-# set up a preview of results
-preview = PreviewResults(mode = "static")
-colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
-preview.params( # setting some custom style
-                color = colors, 
-                edgecolor = "black", 
-                edgewidth = 1, 
-                figsize = (8,4)
-            )
-pipeline.add_plotters(preview)
-
 # feed in our data
 pipeline.add_assays(assay_files)
 pipeline.add_normalisers(normaliser_files)
 
 # run the pipeline
 pipeline.run()
-
 # and at this point the results are already saved...
+
+# show a preview of our results with some customization
+results = pipeline.results()
+
+colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
+fig = results.preview( 
+                        color = colors, 
+                        edgecolor = "black", 
+                        edgewidth = 1, 
+                        figsize = (8,4)
+                    )
 ```
 
 ![](./Examples/Example%20Results/colorful.png)
-
 
 ### Getting started
 A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation at the [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html).
