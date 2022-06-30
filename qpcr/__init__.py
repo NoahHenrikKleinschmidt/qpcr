@@ -715,6 +715,17 @@ class Assay(aux._ID):
         
         return ddCt
 
+    def ddCt_cols( self ):
+        """
+        Returns
+        -------
+        cols
+            A generator of all rel_{} columns within the assay's dataframe.
+        """
+        for i in self._df.columns: 
+            if "rel_" in i:
+                yield i
+
     # FUTURE FEATURE HERE
     # def fc(self):
         # some method to also return the fold change columns... 
@@ -834,7 +845,7 @@ class Assay(aux._ID):
         """
         if "group_name" in self._df.columns: 
             if as_set:
-                return aux.sorted_set(list(self._df["group_name"]))
+                return list( self._df["group_name"].unique() ) 
             else: 
                 return self._df["group_name"]
         else: 
@@ -858,7 +869,7 @@ class Assay(aux._ID):
             The given numeric group identifiers of all replicate groups.
         """
         if "group" in self._df.columns:
-            groups = sorted(list(set(self._df["group"]))) if as_set else self._df["group"]
+            groups = list( self._df["group"].unique() ) if as_set else self._df["group"]
             return groups
         else:
             aw.SoftWarning("Assay:setup_not_grouped")
@@ -998,7 +1009,8 @@ class Assay(aux._ID):
         Infers the replicate groups based on the replicate ids in case all replicates of the same group have the same name.
         """
         names = self._df[raw_col_names[0]]
-        names_set = aux.sorted_set(names)
+        names_set = names.unique()
+        # names_set = aux.sorted_set(names)
         groups = [i for i in range(len(names_set))]
         for name, group in zip(names_set, groups):
             names = names.replace(name, group)
@@ -1022,7 +1034,8 @@ class Assay(aux._ID):
         """
         if "group" not in self._df.columns:
             names = self._df[raw_col_names[0]]
-            names_set = aux.sorted_set(names)
+            names_set = names.unique()
+            # names_set = aux.sorted_set(names)
             first_name = names_set[0]
             group0 = self._df.query(f"{raw_col_names[0]} == '{first_name}'")[raw_col_names[0]]
             entries = len(group0)
@@ -1038,7 +1051,8 @@ class Assay(aux._ID):
         to update groupnames, based on key (old name) : value (new name) indexing. 
         Before applying it checks if all groups are covered by new names
         """
-        current_names = aux.sorted_set(self._df["group_name"])
+        current_names = self.names()
+        # current_names = aux.sorted_set(self._df["group_name"])
         all_groups_covered = len(names) == len(current_names)
         if all_groups_covered:
             current_names = list(self._df["group_name"])
@@ -1056,7 +1070,8 @@ class Assay(aux._ID):
         to update groupnames to new names based on index (using a the order 
         of groups as is currently present in "group_name"). 
         """
-        current_names_set = aux.sorted_set(self._df["group_name"])
+        current_names_set = self.names()
+        # current_names_set = aux.sorted_set(self._df["group_name"])
         all_groups_covered = len(names) == len(current_names_set)
         if all_groups_covered:
             current_names = list(self._df["group_name"])
@@ -1372,7 +1387,7 @@ class DataReader(aux._ID):
                                 reset = reset, 
                                 **kwargs ) 
                     for i in filename ]
-                    
+
         self._src = filename
         # vet filesuffix
         suffix = self._filesuffix()
@@ -1561,8 +1576,29 @@ class Results(aux._ID):
         """
         if self._df is not None:
             names = self._df["group_name"]
-            if as_set: names = aux.sorted_set(names)
+            if as_set: names = list( names.unique() ) 
             return names
+        return None
+
+    def groups(self, as_set = True):
+        """
+        Returns a set of sample groups (numeric).
+
+        Parameters
+        ----------
+        as_set : bool
+            If `as_set = True` (default) it returns a set (as list without duplicates) 
+            of assigned group names for replicate groups.
+            If `as_set = False` it returns the full group_name column (including all repeated entries).
+        
+        Returns
+        -------
+        groups : list
+            The given numeric group identifiers of all replicate groups.
+        """
+        if self._df is not None: 
+            groups = list( self._df["group"].unique() ) if as_set else self._df["group"]
+            return groups
         return None
 
     def get(self):
@@ -1738,7 +1774,7 @@ class Results(aux._ID):
             self._stats_df = None
 
         # get groups and corresponding assay columns 
-        groups = aux.sorted_set(list(self._df["group"]))
+        groups = self.groups()
         assays = [c for c in self._df.columns if c not in ref_cols]
      
         # compute stats for all replicates per group
@@ -1888,7 +1924,8 @@ class Results(aux._ID):
         repetition of group_names for each group of replicates...
         """
         self._stats_results["group_name"] = []
-        group_names = aux.sorted_set(list(self._df["group_name"]))
+        group_names = self.names( as_set = True )
+        # group_names = aux.sorted_set(list(self._df["group_name"]))
         for group_name in group_names:
             self._stats_results["group_name"].extend([group_name] * len(samples))
 
