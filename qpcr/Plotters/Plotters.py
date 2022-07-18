@@ -26,8 +26,8 @@ characteristics and their underlying data handling. You can check which kwargs a
 the documentation of each Plotter. 
 """
 
-import qpcr.__init__ as qpcr
-# import qpcr.Pipes
+import qpcr.main as main
+
 import qpcr._auxiliary.graphical as gx
 import qpcr._auxiliary as aux 
 import qpcr.defaults as defaults
@@ -40,25 +40,6 @@ from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
 import numpy as np 
-
-# setup default settings for charts
-
-# FUTURE DROP HERE
-# These are no longer refereced like this but directly from the defaults...
-# we will remove them in a future version...
-
-_default_static_PreviewBars = defaults.static_PreviewBars
-_default_interactive_PreviewBars = defaults.interactive_PreviewBars
-
-_default_static_PreviewDots = defaults.static_PreviewDots
-_default_interactive_PreviewDots = defaults.interactive_PreviewDots
-
-_default_static_ReplicateBoxPlot = defaults.static_ReplicateBoxPlot
-_default_interactive_ReplicateBoxPlot = defaults.interactive_ReplicateBoxPlot
-
-_default_static_FilterSummary = defaults.static_FilterSummary
-_default_interactive_FilterSummary = defaults.interactive_FilterSummary
-
 
 # get default colnames Id + Ct
 raw_col_names = defaults.raw_col_names
@@ -103,7 +84,7 @@ class Plotter:
         self._fig = None
         self._set_plot()
 
-    def link(self, Results:(qpcr.Results or pd.DataFrame)):
+    def link(self, Results:(main.Results or pd.DataFrame)):
         """
         Links a Results object or pandas DataFrame of the same architecture
         as one handled by a Results object to the Plotter. 
@@ -115,7 +96,7 @@ class Plotter:
             A qpcr.Results Object or a pandas DataFrame of the same architecture.
         """
         
-        if aux.same_type(Results, qpcr.Results()):
+        if aux.same_type(Results, main.Results()):
             self._Results = Results
             self._data = self._Results.stats()
             self._rep_data = self._Results.get()
@@ -390,7 +371,7 @@ class Wrapper:
         return plotter
 
 
-    def link(self, Results:(qpcr.Results or pd.DataFrame)):
+    def link(self, Results:(main.Results or pd.DataFrame)):
         """
         Links a Results object or pandas DataFrame of the same architecture
         as one handled by a Results object to the Plotter. 
@@ -922,7 +903,7 @@ class ReplicateBoxPlot(Plotter):
         """
         self._data = None
 
-    def link(self, Assay:qpcr.Assay):
+    def link(self, Assay:main.Assay):
         """
         Links an Assay object to the BoxPlotter.
         This will simply add the Ct column to the current overall data!
@@ -933,7 +914,7 @@ class ReplicateBoxPlot(Plotter):
         Assay : qpcr.Assay
             A qpcr.Assay object.
         """
-        if aux.same_type(Assay, qpcr.Assay()):
+        if type(Assay).__name__ == "Assay" :
             self._Results = Assay
             data = self._Results.get( copy = True )
         else:
@@ -1114,17 +1095,17 @@ class FilterSummary(Plotter):
                                     interactive = defaults.interactive_FilterSummary
                                 )
         super().__init__( mode = mode)
-        self._before = qpcr.Results()
-        self._after = qpcr.Results()
+        self._before = main.Results()
+        self._after = main.Results()
 
     def clear(self):
         """
         Clears the pre- and post-filtering Ct value records.
         """
-        self._before = qpcr.Results()
-        self._after = qpcr.Results()
+        self._before = main.Results()
+        self._after = main.Results()
 
-    def add_before(self, assay : qpcr.Assay ):
+    def add_before(self, assay : main.Assay ):
         """
         Add a pre-filtered set of Ct values
         from an `qpcr.Assay` object. 
@@ -1141,7 +1122,7 @@ class FilterSummary(Plotter):
 
         self._before.add_Ct( assay )
     
-    def add_after(self, assay : qpcr.Assay ):
+    def add_after(self, assay : main.Assay ):
         """
         Add a post-filtered set of Ct values
         from an `qpcr.Assay` object. 
@@ -2319,7 +2300,7 @@ class EfficiencyLines(Plotter):
         super().__init__( mode = mode )
         self._Calibrator = None
 
-    def link( self, calibrator : qpcr.Calibrator ):
+    def link( self, calibrator : main.Calibrator ):
         """
         Links a `qpcr.Calibrator` object to source data from.
 
