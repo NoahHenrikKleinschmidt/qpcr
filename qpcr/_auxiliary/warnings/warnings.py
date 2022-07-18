@@ -33,8 +33,8 @@ WARNINGS = {
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
 "Normaliser:empty_data" : "Assay {s} was not added because it did not contain any results data!", 
-"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
-"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
+"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Assay objects are allowed!",
+"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
 
 
@@ -90,6 +90,8 @@ WARNINGS = {
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
 "blank" : "{msg}",
 
+"Generic:DataExistsError" : "Data already exists and could not be re-set. Use force=True (if available) or setup a new instance.",
+
 }
 
 class SoftWarning:
@@ -124,3 +126,76 @@ class HardWarning:
         else:
             print("\nError:", self._message, sep = "\n")
             exit(1)
+
+
+def warning(key):
+    """
+    Returns the the warning message for a given key.
+    """
+    return WARNINGS.get( key, None )
+
+
+class DataExistError(AttributeError):
+    def __init__(self, msg : str = None, **attrs ):
+        self.attr = attrs
+        self.msg = msg
+    
+    def __str__(self):
+        if self.msg is None: 
+            s = WARNINGS["Generic:DataExistsError"]
+        else:
+            s = WARNINGS[self.msg].format( **self.attr )
+        return s 
+
+# new qpcr4 system of custom Exceptions
+class ClassError(Exception):
+    """
+    A generic Meta-Error for the specific classes of qpcr
+    """
+    def __init__(self, warning, **attrs):
+        self.msg = warning
+        self.attr = attrs
+
+    def __repr__(self):
+        return self.__str__()        
+class AssayError(ClassError):
+    def __str__(self):
+        s = f"Assay:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class AnalyserError(ClassError):
+    def __str__(self):
+        s = f"Analyser:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class NormaliserError(ClassError):
+    def __str__(self):
+        s = f"Normaliser:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class ResultsError(ClassError):
+    def __str__(self):
+        s = f"Results:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class CalibratorError(ClassError):
+    def __str__(self):
+        s = f"Calibrator:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class MultiReaderError(ClassError):
+    def __str__(self):
+        s = f"MultiReader:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
