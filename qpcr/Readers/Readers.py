@@ -52,7 +52,7 @@ import pandas as pd
 import qpcr
 import qpcr._auxiliary as aux
 from qpcr._auxiliary import warnings as aw
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
 import qpcr.Parsers as Parsers
 import os
 import numpy as np 
@@ -68,9 +68,9 @@ __pdoc__ = {
 # migrate default settings from __init__
 raw_col_names = defaults.raw_col_names
 supported_filetypes = defaults.supported_filetypes
-default_dataset_header = defaults.default_dataset_header
-default_id_header = defaults.default_id_header
-default_ct_header = defaults.default_ct_header
+default_dataset_header = defaults.dataset_header
+default_id_header = defaults.id_header
+default_ct_header = defaults.ct_header
 class _CORE_Reader(aux._ID):
     """
     The class handling the core functions of the Reader class. 

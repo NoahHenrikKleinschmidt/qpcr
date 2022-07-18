@@ -30,7 +30,7 @@ import qpcr.__init__ as qpcr
 # import qpcr.Pipes
 import qpcr._auxiliary.graphical as gx
 import qpcr._auxiliary as aux 
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
 import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt

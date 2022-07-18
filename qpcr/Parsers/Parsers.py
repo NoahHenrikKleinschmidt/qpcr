@@ -89,7 +89,7 @@ However, this flexibility is not available when calling Parsers indirectly throu
 
 import qpcr
 import qpcr._auxiliary as aux
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
 import qpcr._auxiliary.warnings as aw
 import pandas as pd
 import numpy as np
@@ -140,10 +140,10 @@ plain_decorators = {
 standard_id_header = defaults.raw_col_names[0]
 standard_ct_header = defaults.raw_col_names[1]
 
-default_group_name = defaults.default_group_name
-default_dataset_header = defaults.default_dataset_header
-default_id_header = defaults.default_id_header
-default_ct_header = defaults.default_ct_header
+default_group_name = defaults.group_name
+default_dataset_header = defaults.dataset_header
+default_id_header = defaults.id_header
+default_ct_header = defaults.ct_header
 
 # set a dummy default value for any np.nan values
 # in the column storing the assay headers

@@ -5,7 +5,7 @@ This is the `qpcr.Results` class whose function is to accumulate results from va
 
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
 from qpcr.main.Assay import Assay
 import logging
 import re
