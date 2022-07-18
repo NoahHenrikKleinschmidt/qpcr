@@ -15,32 +15,41 @@ supported_filetypes = ["csv", "xlsx"]
 #                       Default Inference settings
 #  =================================================================
 
-# default column names for raw Ct data files (don't change this!)
 raw_col_names = ["id", "Ct"]
+"""default column names for raw Ct data files (don't change this!)"""
 
-default_dataset_header = "assay"
-default_group_name = "group{}"
+dataset_header = "assay"
+"""Default assumed column name for dataset/assay entries in BigTables"""
+
+group_name = "group{}"
+"""Default name to use when group names cannot be inferred"""
 
 # default assumed column names for Id and Ct values
-default_id_header = "Name"
-default_ct_header = "Ct"
+id_header = "Name"
+"""Default assumed column name for replicate id entries"""
+ct_header = "Ct"
+"""Default assumed column name for replicate Ct entries"""
 
+setup_cols = ["id", "group", "group_name"]
+"""Default Assay dataset columns that supply metadata, and not specific values like Ct values."""
 
 #  =================================================================
 #                       Default core settings
 #  =================================================================
 
-# default seed for randomised processes
-default_seed = 11299114
+seed = 11299114
+"""default seed for randomised processes"""
+
+strict_id = False
+"""Set to True if object ids may strictly only be set once!"""
 
 
 #  =================================================================
 #                       Default Calibrator settings
 #  =================================================================
 
-# the default prefix for calibrator replicates that must be specified 
-# within the group names.
 calibrator_prefix = "calibrator"
+"""the default prefix for calibrator replicates that must be specified within the group names."""
 
 
 #  =================================================================
