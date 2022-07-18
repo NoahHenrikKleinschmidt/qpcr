@@ -5,6 +5,7 @@ that are not directly linked to qpcr Analysis per se.
 import uuid
 import os 
 import re 
+import qpcr._auxiliary.defaults as defaults
 
 def from_kwargs(key, default, kwargs, rm = False):
     """
@@ -51,22 +52,39 @@ class _ID:
         self._id_was_set = False
         self._id_label_was_set = False
         self._id_label = None
+
+        self._id_func = self._strict_id if defaults.strict_id else self._relaxed_id
     
+    def id( self, id : str = None ):
+        """
+        Adds a string identifier or returns the given id
+        """
+        return self._id_func( id )
+
     def id_was_set(self):
         """
         Returns True if an Id was set
         """
         return self._id_was_set
-
-    def id(self, id:str = None):
+    
+    def _strict_id(self, id:str = None):
         """
         Adds a string identifier or returns the given id
         """
         if id is not None and not self.id_was_set():
             self._id = id
             self._id_was_set = True
+        return self._id 
+
+    def _relaxed_id( self, id:str = None ):
+        """
+        Adds a string identifier or returns the given id
+        """
+        if id is not None:
+            self._id = id
+            self._id_was_set = True
         return self._id
-    
+
     def id_label(self, label:str = None):
         """
         Adds a label and gets the current label.
