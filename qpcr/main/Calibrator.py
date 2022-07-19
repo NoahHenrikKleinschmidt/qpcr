@@ -2,9 +2,9 @@
 This is the `qpcr.Calibrator` class that is able to compute qPCR amplification efficiencies from `qpcr.Assay` objects.
 """
 
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr.defaults as defaults
 
 import pandas as pd
 import numpy as np

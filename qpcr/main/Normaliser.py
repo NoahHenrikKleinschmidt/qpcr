@@ -3,9 +3,9 @@ This is the `qpcr.Normaliser` class whose function is to compute Fold-Changes of
 from assays and normalisers using `qpcr.Assay` objects.
 """
 
-import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
+import qpcr._auxiliary as aux
 
 from qpcr.main.Assay import Assay
 from qpcr.main.Results import Results

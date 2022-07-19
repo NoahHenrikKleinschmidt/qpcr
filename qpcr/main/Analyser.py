@@ -3,9 +3,9 @@ This is the `qpcr.Analyser` whose function is to perform dataset-internal
 normalisation to compute the first-step Delta-Ct Values within an `qpcr.Assay` object.
 """
 
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr.defaults as defaults
 import pandas as pd
 from qpcr.main.Assay import Assay
 

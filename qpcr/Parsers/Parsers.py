@@ -88,8 +88,8 @@ However, this flexibility is not available when calling Parsers indirectly throu
 """
 
 import qpcr
-import qpcr._auxiliary as aux
 import qpcr.defaults as defaults
+import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 import pandas as pd
 import numpy as np

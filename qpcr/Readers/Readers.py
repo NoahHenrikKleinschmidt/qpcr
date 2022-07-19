@@ -49,9 +49,9 @@ types of "big tables").
 
 import pandas as pd
 import qpcr
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 from qpcr._auxiliary import warnings as aw
-import qpcr.defaults as defaults
 import qpcr.Parsers as Parsers
 import os
 import numpy as np 

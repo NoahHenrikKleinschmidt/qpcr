@@ -29,8 +29,8 @@ the documentation of each Plotter.
 import qpcr.main as main
 
 import qpcr._auxiliary.graphical as gx
-import qpcr._auxiliary as aux 
 import qpcr.defaults as defaults
+import qpcr._auxiliary as aux 
 import qpcr._auxiliary.warnings as wa
 import pandas as pd 
 import matplotlib.pyplot as plt

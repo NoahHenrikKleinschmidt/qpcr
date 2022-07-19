@@ -3,9 +3,9 @@ This is the `qpcr.Results` class whose function is to accumulate results from va
 `qpcr.Assay` objects and summarize them.
 """
 
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr.defaults as defaults
 import qpcr.main as main
 
 import logging

@@ -3,9 +3,9 @@ This is the `qpcr.DataReader` that serves as a general Hub for the `qpcr.Readers
 and allows versatile file reading.
 """
 
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr._auxiliary.defaults as defaults
 from qpcr import Readers 
 
 import logging 
