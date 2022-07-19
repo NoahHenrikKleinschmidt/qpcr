@@ -5,7 +5,7 @@ that are not directly linked to qpcr Analysis per se.
 import uuid
 import os 
 import re 
-import qpcr._auxiliary.defaults as defaults
+import qpcr.defaults as defaults
 
 def from_kwargs(key, default, kwargs, rm = False):
     """
