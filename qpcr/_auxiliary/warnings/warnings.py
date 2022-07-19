@@ -207,6 +207,12 @@ class PlotterError(ClassError):
         s = f"[{self.msg}] {s}"
         return s 
 
+class ReaderError(ClassError):
+    def __str__(self):
+        s = f"Reader:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
 
 class MultiReaderError(ClassError):
     def __str__(self):
@@ -214,3 +220,32 @@ class MultiReaderError(ClassError):
         s = WARNINGS[s].format(**self.attr)
         s = f"[{self.msg}] {s}"
         return s 
+
+class MultiSheetReaderError(ClassError):
+    def __str__(self):
+        s = f"MultiReader:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class BigTableReaderError(ClassError):
+    def __str__(self):
+        s = f"BigTableReader:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class ParserError(ClassError):
+    def __str__(self):
+        s = f"Parser:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class PipeError(ClassError):
+    def __str__(self):
+        s = f"Pipeline:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+

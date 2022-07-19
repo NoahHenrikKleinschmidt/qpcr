@@ -87,6 +87,7 @@ However, this flexibility is not available when calling Parsers indirectly throu
 > - If you are using `excel` you may have to add a single tick `'` in front of your decorators.
 """
 
+import logging
 import qpcr
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
@@ -203,11 +204,6 @@ class _CORE_Parser:
         # set up a BigTable data range
         self._bigtable_range = None
 
-        # setup a warning for decorators without patterns warning that it will set to default
-        # we do this here in case the MultiSheetReader calls read+parse here multiple times
-        # but we don't need to know that it defaults every time.
-        self._WARNING_decorators_but_no_patterns = aw.SoftWarning("Parser:decorators_but_no_pattern", once = True)
-
     def prune(self):
         """
         Completely resets the Parser, clearing all data and preset-specifics such as the assay_pattern.
@@ -281,7 +277,8 @@ class _CORE_Parser:
         The files will simply be named according to the assay name (i.e. `ActinB.csv` for instance).
         """
         if self._save_loc is None:
-            aw.SoftWarning("Parser:no_save_loc")
+            e = aw.ParserError( "no_save_loc" )
+            logging.error( e )
         else:
             for assay, df in self._dfs.items():
                 assay_path = os.path.join(self.save_to(), f"{assay}.csv")
@@ -410,9 +407,12 @@ class _CORE_Parser:
         """
         # ignore if no assays were found (default is false, unless we use multi-assay multi-sheet files)
         ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
+
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
-            aw.HardWarning("Parser:invalid_decorator", d = decorator, all_d = list(decorators.keys()))
+            e = aw.ParserError("invalid_decorator", d = decorator, all_d = list(decorators.keys()))
+            logging.error( e ) 
+            raise e 
 
         decorator_pattern = re.compile( decorators[decorator] )
         decorator_indices, decorator_names = self.find_assays(col = col, pattern = decorator_pattern, **kwargs )
@@ -421,13 +421,13 @@ class _CORE_Parser:
         found_indices = decorator_indices.size > 0
         if not found_indices:
             if not ignore_empty: # if none were found either raise error or ignore
-                aw.HardWarning("Parser:no_decorators_found")
+                raise aw.ParserError("no_decorators_found")
             else: 
                 return
 
         # if no assay_pattern was specified then default to generic "all" to get full cell contents
         if self.assay_pattern() is None:
-            self._WARNING_decorators_but_no_patterns.trigger()
+            logging.info( aw.ParserError( "decorators_but_no_pattern" )  )
             self.assay_pattern("all")
 
         assay_indices = decorator_indices
@@ -485,7 +485,7 @@ class _CORE_Parser:
         
         custom_pattern = aux.from_kwargs("pattern", None, kwargs)
         if self._pattern is None and custom_pattern is None: 
-            aw.HardWarning("Parser:no_pattern_yet")
+            raise aw.ParserError("no_pattern_yet")
 
         pattern_to_use = self._pattern if custom_pattern is None else custom_pattern
 
@@ -511,7 +511,8 @@ class _CORE_Parser:
             # unless we use multi-assay multi-sheet files)
             ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
             if not ignore_empty:
-                aw.HardWarning("Parser:no_assays_found", traceback = False)
+                e =  aw.ParserError("no_assays_found")
+                SystemExit( e )
 
         names = names[indices]
         names = names.reshape(len(names))
@@ -610,8 +611,10 @@ class _CORE_Parser:
 
             if not allow_nan_ct:
                 if not isinstance(default_to, (int, float)): 
-                    aw.HardWarning("Parser:no_ct_nan_default", d = default_to)
-                
+                    e = aw.ParserError("no_ct_nan_default", d = default_to)
+                    logging.error( e )
+                    raise e 
+
                 # apply defaulting lambda function
                 assay_df[ standard_ct_header ] = assay_df[ standard_ct_header ].apply(
                                                                                         lambda x: x if x == x else default_to
@@ -663,7 +666,8 @@ class _CORE_Parser:
 
                 # print some info about the faulty entries
             bad_value = e.__str__().split(": ")[1]
-            aw.SoftWarning("Parser:found_non_readable_cts", assay = id, bad_value = bad_value)
+            e = aw.ParserError("found_non_readable_cts", assay = id, bad_value = bad_value)
+            logging.error( e )
         return array
 
     def _make_BigTable_range(self, **kwargs):
@@ -690,7 +694,10 @@ class _CORE_Parser:
 
         # vet that we actually found the big table
         if idx.size == 0:
-            aw.HardWarning("Parser:no_bigtable_header", header = ref_col_header)
+            e = aw.ParserError("no_bigtable_header", header = ref_col_header)
+            logging.critical( e )
+            SystemError( e )
+
         idx = idx.reshape(idx.size)
         start, col = idx
 
@@ -730,7 +737,10 @@ class _CORE_Parser:
         # get and vet replicates
         replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
         if replicates is None: 
-            aw.HardWarning("Parser:bigtable_no_replicates", traceback = False)
+            e = aw.ParserError("bigtable_no_replicates" )
+            logging.error( e )
+            SystemExit( e )
+
         replicates, names = self._vet_replicates(ignore_empty, replicates, array, **kwargs)
 
         
@@ -859,7 +869,10 @@ class _CORE_Parser:
         # find decorated starting columns
         indices = np.argwhere(array == decorator)
         if indices.size == 0 and not ignore_empty:
-            aw.HardWarning("Parser:no_decorators_found", traceback = False)
+            e = aw.ParserError( "no_decorators_found" )
+            logging.error( e )
+            SystemExit( e )
+
 
         # get only column indices            
         indices = indices[ : , 1 ]
@@ -877,14 +890,19 @@ class _CORE_Parser:
         elif aux.same_type(replicates, ()):
             all_covered = groups == len(replicates)
             if not all_covered:
-                aw.HardWarning("Assay:reps_dont_cover", n_samples = groups, reps = replicates, traceback = False)
+                e = aw.AssayError( "reps_dont_cover", n_samples = groups, reps = replicates )
+                logging.error( e ) 
+                SystemExit( e )
+
             
         # get names for assays
         group_names = aux.from_kwargs("names", None, kwargs)
 
         # vet that names cover
         if group_names is not None and len(group_names) != len(replicates):
-            aw.HardWarning("Assay:groupnames_dont_colver", traceback = False, current_groups = f"None, but needs to be {len(replicates)} names.", new_received = group_names)
+            e = aw.AssayError("groupnames_dont_colver", current_groups = f"None, but needs to be {len(replicates)} names.", new_received = group_names)
+            logging.error( e )
+            SystemExit( e )
         
         # return tranformed replicates
         return replicates, group_names
@@ -903,8 +921,10 @@ class _CORE_Parser:
         elif row is not None and col is not None:
             array = self._data[row, col] if not self._transpose else self._data[col, row]
         else:
-            aw.HardWarning("Parser:invalid_range")
-    
+            e = aw.ParserError("invalid_range")
+            logging.critical( e )
+            raise e 
+
         # re-format to str and reset "nan" to dummy_blank
         array = array.astype(str)
         array[ np.argwhere(array == "nan") ] = dummy_blank
@@ -966,7 +986,9 @@ class _CORE_Parser:
         # check again, and raise Error if still no matches are found
         no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
         if no_matches:
-            aw.HardWarning("Parser:no_data_found", label = label)
+            e = aw.ParserError("no_data_found", label = label )
+            logging.error( e )
+            SystemExit( e )
 
         matching_rows = all_found[matching_rows]
         return matching_rows
@@ -1075,8 +1097,9 @@ class CsvParser(_CORE_Parser):
             self.read(filename, **kwargs)
         except: 
             self.read(filename)
-            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv")
-        
+            e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv")
+            logging.error( e )
+
         self.parse(**kwargs)
         assays = self.get()
         
@@ -1108,7 +1131,8 @@ class CsvParser(_CORE_Parser):
         try: 
             df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
         except: 
-            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_csv()")
+            e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv()")
+            logging.error( e )
             df = pd.read_csv(contents, header = None, sep = delimiter)
 
         drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
@@ -1202,7 +1226,9 @@ class ExcelParser(_CORE_Parser):
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
         except: 
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
-            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel()")
+            
+            e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel()")
+            logging.error( e )
 
         drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
         if drop_nan: 
@@ -1237,7 +1263,8 @@ class ExcelParser(_CORE_Parser):
             self.read(filename, **kwargs)
         except: 
             self.read(filename)
-            aw.SoftWarning("Parser:incompatible_read_kwargs", func = "pandas.read_excel")
+            e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel")
+            logging.error( e )
 
         self.parse(**kwargs)
         assays = self.get()

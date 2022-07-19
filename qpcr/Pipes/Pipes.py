@@ -9,18 +9,14 @@ This is designed for lightweight users that do not wish to employ specialised pi
 > affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
 """
 
+import logging
 import qpcr
-import matplotlib.pyplot as plt
-import pandas as pd 
-import statistics as stats
 import qpcr._auxiliary.warnings as aw
 import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
 import qpcr.Readers as Readers
-import re
 import os 
-import difflib
 
 class Pipeline:
     """
@@ -104,7 +100,9 @@ class Pipeline:
 
         # vet if there are at least one normaliser and assay present
         if self._Normalisers == [] or self._Assays == []:
-            aw.HardWarning("Pipeline:no_data")
+            e = aw.PipeError( "no_data" )
+            logging.critical( e )
+            raise e 
 
         self._run(**kwargs)
     
@@ -249,7 +247,9 @@ class Pipeline:
             
                 # if no files are found, raise error
                 if len(datafiles) == 0:
-                    aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+                    e = aw.PipeError( "no_data_input", file = files )
+                    logging.critical( e )
+                    SystemExit( e )
             
                 # combine paths with parent directory
                 datafiles = [os.path.join(files,n) for n in datafiles]
@@ -262,7 +262,9 @@ class Pipeline:
                 return [files]
 
             else: 
-                aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+                e = aw.PipeError( "no_data_input", file = files )
+                logging.critical( e )
+                SystemExit( e )
         
         # else check if we got a list or tuple of files
         elif isinstance(files, (list or tuple)):
@@ -270,8 +272,9 @@ class Pipeline:
         
         # raise error for anything else...
         else: 
-            aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
-
+            e = aw.PipeError( "no_data_input", file = files )
+            logging.critical( e )
+            SystemExit( e )
 
     def _run(self, **kwargs):
         """
