@@ -40,6 +40,7 @@ from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
 import numpy as np 
+import logging
 
 # get default colnames Id + Ct
 raw_col_names = defaults.raw_col_names
@@ -80,7 +81,7 @@ class Plotter:
         self._data = None
         self._rep_data = None
         self._id = type(self).__name__
-        self._MODE = "interactive" if mode is None else mode
+        self._MODE = defaults.plotmode if mode is None else mode
         self._fig = None
         self._set_plot()
 
@@ -104,7 +105,9 @@ class Plotter:
             self._Results = None
             self._data = Results
         else:
-            wa.HardWarning("Plotter:unknown_data", obj = Results)
+            e = wa.PlotterError( "unknown_data", obj = Results )
+            logging.critical( e )
+            raise e 
 
     def plot(self, **kwargs):
         """
@@ -541,7 +544,7 @@ class PreviewResults(Wrapper):
         The kind of Plotter to call. This can be any of the four wrapped 
         Plotters, e.g. `kind = "GroupBars"`.
     """
-    def __init__(self, mode : str, kind : str = "AssayBars" ):
+    def __init__(self, mode : str = None, kind : str = "AssayBars" ):
 
         super().__init__( kind = kind, mode = mode )
         
@@ -612,7 +615,7 @@ class AssayBars(Plotter):
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
 
     """
-    def __init__(self, mode:str):
+    def __init__(self, mode:str = None):
         self._setup_default_params(
                                     static = defaults.static_PreviewBars, 
                                     interactive = defaults.interactive_PreviewBars
@@ -865,7 +868,7 @@ class ReplicateBoxPlot(Plotter):
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
 
     """
-    def __init__(self, Filter = None, mode="interactive"):
+    def __init__(self, mode : str = None):
         self._setup_default_params(
                                     static = defaults.static_ReplicateBoxPlot, 
                                     interactive = defaults.interactive_ReplicateBoxPlot
@@ -873,29 +876,6 @@ class ReplicateBoxPlot(Plotter):
         # __init__ is going to require default_params to be already set!
         super().__init__(mode=mode)
         self._data = None
-        if Filter is not None: 
-            wa.SoftWarning("Versions:Deprecation", old = "ReplicateBoxPlot for use with Filters", new = "FilterSummary" )
-        self._Filter = Filter
-        self._filter_stats = None
-    
-    # FUTURE DROP HERE
-    def filter(self, Filter):
-        """
-        Links a Filter object for which a report figure shall be generated
-
-        Note
-        -------
-        Support for linking Filters to use this Figure class to visualse Filter Summaries will be 
-        dropped in a future release! Use the dedicated `FilterSummary` figure class instead!
-
-        Parameters
-        ----------
-        Filter : qpcr.Filters.Filter
-            A qpcr.Filters.Filter object.
-
-        """
-        wa.SoftWarning("Versions:Deprecation", old = "ReplicateBoxPlot for use with Filters", new = "FilterSummary" )
-        self._Filter = Filter
 
     def clear(self):
         """
@@ -918,7 +898,9 @@ class ReplicateBoxPlot(Plotter):
             self._Results = Assay
             data = self._Results.get( copy = True )
         else:
-            wa.HardWarning("Plotter:unknown_data", obj = Assay)
+            e = wa.PlotterError("unknown_data", obj = Assay )
+            logging.critical( e )
+            raise e
 
         # add itentifier column
         data["assay"] = [self._Results.id() for i in range(len(data))]
@@ -1089,7 +1071,7 @@ class FilterSummary(Plotter):
 
 
     """
-    def __init__(self, mode):
+    def __init__(self, mode = None ):
         self._setup_default_params(
                                     static = defaults.static_FilterSummary,
                                     interactive = defaults.interactive_FilterSummary
@@ -1116,9 +1098,9 @@ class FilterSummary(Plotter):
             An `qpcr.Assay` object
         """
         # setup groups and stuff information 
-        if self._before.is_empty():
-            self._before.adopt_names( assay )
-            self._after.adopt_names( assay )
+        if self._before.is_empty:
+            self._before.setup_cols( assay )
+            self._after.setup_cols( assay )
 
         self._before.add_Ct( assay )
     
@@ -1390,7 +1372,7 @@ class AssayDots(Plotter):
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.     |      |
 
     """
-    def __init__(self, mode:str):
+    def __init__(self, mode:str = None ):
         self._setup_default_params(
                                     static = defaults.static_PreviewDots, 
                                     interactive = defaults.interactive_PreviewDots
@@ -1695,7 +1677,7 @@ class GroupBars(Plotter):
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
 
     """
-    def __init__(self, mode : str):
+    def __init__(self, mode : str = None ):
         self._setup_default_params(
                                     static = defaults.static_PreviewBars, 
                                     interactive = defaults.interactive_PreviewBars
@@ -1948,7 +1930,7 @@ class GroupDots(Plotter):
     |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.     |      |
 
     """
-    def __init__(self, mode:str):
+    def __init__(self, mode:str = None):
         self._setup_default_params(
                                     static = defaults.static_PreviewDots, 
                                     interactive = defaults.interactive_PreviewDots
@@ -2292,7 +2274,7 @@ class EfficiencyLines(Plotter):
 
 
     """
-    def __init__(self, mode : str ):
+    def __init__(self, mode : str = None ):
         self._setup_default_params(
                                     static = defaults.static_EfficiencyLines, 
                                     interactive = defaults.interactive_EfficiencyLines

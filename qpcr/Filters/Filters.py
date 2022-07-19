@@ -17,9 +17,11 @@ import qpcr
 import pandas as pd
 import numpy as np
 import qpcr._auxiliary.warnings as aw
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import os 
 import qpcr.Plotters as Plotters
+import logging
 
 class Filter(aux._ID):
     """
@@ -40,7 +42,7 @@ class Filter(aux._ID):
         # don't drop them anymore
         self._drop_outliers = False
 
-        self._boxplot_mode = "interactive"
+        self._boxplot_mode = defaults.plotmode
         self._BoxPlotter = Plotters.FilterSummary( mode = self._boxplot_mode )
         self._BoxPlotter.params(title = "Filter Summary")
 
@@ -86,7 +88,7 @@ class Filter(aux._ID):
         """
         self._drop_outliers = bool
 
-    def plotmode(self, mode = "interactive"):
+    def plotmode(self, mode ):
         """
         Set graph mode if a summary Boxplot shall be made
 
@@ -95,6 +97,7 @@ class Filter(aux._ID):
         mode : str
             Can be either "interactive" (plotly) or "static" (matplotlib), or None to disable plotting.
         """
+        if mode is None: mode = defaults.plotmode
         self._boxplot_mode = mode
         self._BoxPlotter = Plotters.FilterSummary(mode = self._boxplot_mode)
         self._BoxPlotter.params(title = "Filter Summary")
@@ -174,7 +177,9 @@ class Filter(aux._ID):
             self._filter(**kwargs)
             return self._Assay
         else: 
-            aw.HardWarning("Filter:no_assay")
+            e = aw.FilterError( "no_assay" )
+            logging.critical( e )
+            raise e 
 
     def report(self, directory = None):
         """
@@ -333,7 +338,8 @@ class RangeFilter(Filter):
             upper, lower = self._set_bounds(anchor)
 
             # get faulty indices
-            faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
+            Ct = defaults.raw_col_names[1]
+            faulty_replicates = tmp.query(f"{Ct} < {lower} or {Ct} > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
@@ -366,8 +372,9 @@ class RangeFilter(Filter):
         """
         Set anchor for inclusion range
         """
+        Ct = defaults.raw_col_names[1]
         if self._anchor is None:
-            anchor = np.median(tmp["Ct"])
+            anchor = np.median(tmp[Ct])
         elif type(self._anchor) == type(print):
             anchor = self._anchor(tmp, **kwargs)
         elif isinstance(self._anchor, (list, tuple, dict)):
@@ -396,23 +403,24 @@ class IQRFilter(Filter):
     
         df = self._Assay.get()
         groups = self._Assay.groups()
-
+        Ct = defaults.raw_col_names[1]
+        
         faulty_indices = []
         for group in groups:
             tmp = df.query(f"group == {group}")
 
             # get anchor
-            anchor = np.nanmedian(tmp["Ct"])
+            anchor = np.nanmedian(tmp[Ct])
             # ignore Nan if so specified
             if self._ignore_nan and anchor != anchor: 
                 continue
 
             # generate inclusion range boundries
-            first, third = np.nanquantile(tmp["Ct"], 0.26), np.nanquantile(tmp["Ct"], 0.76)
+            first, third = np.nanquantile(tmp[Ct], 0.26), np.nanquantile(tmp[Ct], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
             # get faulty replicates
-            faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
+            faulty_replicates = tmp.query(f"{Ct} < {lower} or {Ct} > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)        

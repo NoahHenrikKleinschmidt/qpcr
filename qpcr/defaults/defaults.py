@@ -56,6 +56,9 @@ calibrator_prefix = "calibrator"
 #                       Default Figure settings
 #  =================================================================
 
+plotmode = "static"
+"""The default setting for interactive or static figures"""
+
 # AssayDots / GroupDots
 # -------------------------------
 
