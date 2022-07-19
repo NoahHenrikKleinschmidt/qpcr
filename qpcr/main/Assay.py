@@ -42,9 +42,6 @@ import qpcr._auxiliary.warnings as aw
 from copy import deepcopy
 
 raw_col_names = defaults.raw_col_names
-
-logging.basicConfig( level = logging.DEBUG )
-
 class Assay(aux._ID):
     """
     The central storing unit of single datasets that were read from datafiles.
