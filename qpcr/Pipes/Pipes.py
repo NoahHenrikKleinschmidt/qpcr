@@ -428,8 +428,8 @@ class BasicPlus(Basic):
 
 class Blueprint(BasicPlus):
     """
-    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `BasicPlus` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
-    Optionally, `qpcr.SampleReader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
+    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `BasicPlus` pipeline, but allows full costumization of Reader, Analyser, and Normaliser objects.
+    Optionally, `Reader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
     """
     def __init__(self):
         super().__init__()
@@ -498,14 +498,14 @@ class Blueprint(BasicPlus):
             if normaliser:
                 self._Normaliser = None
 
-    def Reader(self, Reader : qpcr.SampleReader = None):
+    def Reader(self, Reader = None):
         """
-        Links a `qpcr.SampleReader` object to the pipeline.
+        Links one of the `qpcr.Readers` to the pipeline.
 
         Parameters
         ----------
-        Reader : qpcr.SampleReader
-            A `qpcr.SampleReader` object
+        Reader
+            A `qpcr.Readers` object
         """
         if Reader is not None: 
             self._Reader = Reader
@@ -539,7 +539,7 @@ class Blueprint(BasicPlus):
     
     def _setup_cores(self):
         """
-        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
             self.Reader(qpcr.DataReader())
@@ -648,7 +648,7 @@ class _Qupid_Blueprint(Blueprint):
 
     def _setup_cores(self):
         """
-        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
             self.Reader(qpcr._Qupid_SampleReader())
