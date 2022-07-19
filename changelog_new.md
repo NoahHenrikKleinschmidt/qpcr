@@ -14,7 +14,7 @@ data handling. Among them are:
 - `qpcr.read(...)` to wrap a standard `qpcr.DataReader` and its `read` method
 - `qpcr.analyse(...)` to wrap a standard `qpcr.Analyser` and its `pipe` method
 - `qpcr.normalise(...)` to wrap a standard `qpcr.Normalaliser` and its `pipe method.
-
+- `qpcr.plot(...)` to allow quick visualisation from several `qpcr` classes such as `qpcr.Results` or `qpcr.Assay`.
 ### New stats
 The `qpcr.Results.stats()` dataframe now also includes `IQR` (by default, but adjustable to any two quantiles), and `CI` (assuming a normal distribution, default at 95% but also adjustable).
 
@@ -27,8 +27,8 @@ The `qpcr.SampleReader` was dropped from `qpcr`.
 ### `qpcr.Results.split` drop
 The `split` method that previously generated a number of `qpcr.Results` objects from a single one based on its `_rel_` columns has been dropped. 
 
-### Method changes
-Some attributes such as the `qpcr.Assay.dCt` or `qpcr.Results.is_empty` are now properties and now longer callable methods.
+### Attribute changes
+Some attributes such as the `qpcr.Assay.dCt` or `qpcr.Results.is_empty` are now properties and now longer callable methods. Also, the `qpcr.Results.adopt_names` method is now called `setup_cols`.
 
 ### Bugfixes and Code Refactorizations
 The huge `__init__` method was refactored into a proper `main` submodule. Also the `defaults` were refactored into their own submodule instead of being part of `_auxiliary`. Also the `id` policy has been changed to allow repetitive `.id(...)` calling without requiring the use of `.id_reset()`. 
