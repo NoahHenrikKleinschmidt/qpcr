@@ -193,6 +193,21 @@ class CalibratorError(ClassError):
         s = f"[{self.msg}] {s}"
         return s 
 
+class FilterError(ClassError):
+    def __str__(self):
+        s = f"Filter:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+class PlotterError(ClassError):
+    def __str__(self):
+        s = f"Plotter:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.msg}] {s}"
+        return s 
+
+
 class MultiReaderError(ClassError):
     def __str__(self):
         s = f"MultiReader:{self.msg}"
