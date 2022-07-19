@@ -276,6 +276,13 @@ class Plotter:
         print("The plot function that will handle interactive plotting...")
         print("Surprised to see this?, \nPerhaps your desired plotting methods are not named properly. Make sure to name your method _interactive_plot()!")
 
+    def __qplot__( self, **kwargs ):
+        """
+        The method each class must define in order to be able to interact with the `qpcr.plot` direct link.
+        This is primarily intended for non-Plotter objects.
+        """
+        return self.plot
+
     def _prep_properties(self, kwargs):
         """
         Setup ncols, nrows, subplot titles (headers), x, y, and sterr, columns for figure...
@@ -405,6 +412,13 @@ class Wrapper:
         """
         fig = self._Plotter.plot( **kwargs )
         return fig 
+
+    def __qplot__( self, **kwargs ):
+        """
+        The method each class must define in order to be able to interact with the `qpcr.plot` direct link.
+        This is primarily intended for non-Plotter objects.
+        """
+        return self.plot
 
     def id(self, id:str = None):
         """
@@ -2536,6 +2550,27 @@ class EfficiencyLines(Plotter):
         return fig 
 
 
+def plot( obj, mode = None, **kwargs ):
+    """
+    A generic plotting shortcut to visualise the data from a `qpcr` class object, if it supports visualisation.
+
+    Parameters
+    ----------
+    obj 
+        The object to visualise from.
+    mode : str
+        The plotting mode to use. This can be either "static" (matplotlib) or "interactive" (plotly)
+    **kwargs
+        Any additional keyword arguments.
+
+    Returns
+    -------
+    fig
+        The figure produced.
+    """
+    func = obj.__qplot__()
+    fig = func( mode = mode, **kwargs )
+    return fig
 
 # if __name__ == '__main__':
 

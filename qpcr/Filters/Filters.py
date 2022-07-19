@@ -122,6 +122,9 @@ class Filter(aux._ID):
             plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
         return fig
 
+    def __qplot__( self, **kwargs ):
+        return self.plot
+
     def link(self, Assay:qpcr.Assay):
         """
         Links a `qpcr.Assay` to be filtered
@@ -446,6 +449,59 @@ class IQRFilter(Filter):
         upper, lower = anchor + iqr * self._upper, anchor - iqr * self._lower
         return upper,lower
 
+
+
+
+def filter( assay, mode: str = "range", lim: (float or tuple) = None, anchor = None, ignore_nan : bool = True, drop_outliers : bool = False ):
+    """
+    Filter a single or multiple `qpcr.Assay` objects using default `Filter` setups.
+
+    Parameters
+    ----------
+    assay : qpcr.Assay or list
+        A single `qpcr.Assay` object or a list thereof.
+    
+    mode : str
+        Either `"range"` to call a `RangeFilter` that uses a static range to filter values, or `"iqr"` to call a `IQRFilter` that uses the Interquantile Range
+        to filter values. 
+    
+    lim : float or tuple
+        The filtering limits for the inclusion range. Any values outside of these will be filtered out. For the `RangeFilter` these are absolute values around the `anchor` (+/- 1 by default)
+        while for the `IQRFilter` these are scalars (+- 1.5 by default) for the IQR. If a single `float` is supplied the limits are interpreted symmetrically, while a `tuple` is read as first lower bound, then upper bound.
+    
+    anchor : 
+            Only used for `RangeFilters`. Supported types for `anchor` are: a numeric value (`int or float`),
+            an `iterable` of same length as groups in the dataframe, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
+            which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
+    
+    ignore_nan : bool
+        Ignore NaN values when computing inclusion ranges. If set to `False` a single NaN value will render the entire replicate group unfilterable!
+    
+    drop_outliers : bool
+        If `True` entries are actually dropped from the dataframe. By default any entries that do not match the inclusion range are set to NaN.
+
+
+    Parameters
+    ----------
+    assay : qpcr.Assay or list
+        The same as input but with filtered dataframes.
+    """
+    f = RangeFilter() if mode == "range" else IQRFilter
+
+    if lim is not None:
+        if isinstance(lim, (tuple, list, np.ndarray)): 
+            f.set_lim( upper = lim[0], lower = lim[1] )
+        else: 
+            f.set_lim( lim = lim )
+    if mode == "range" and anchor is not None:
+        f.set_anchor( anchor = anchor )
+
+    f.ignore_nan( ignore_nan )
+    f.drop_outliers( drop_outliers ) 
+
+    return f.pipe( assay )
 
 
 if __name__ == "__main__":

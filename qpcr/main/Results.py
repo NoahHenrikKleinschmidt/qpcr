@@ -31,7 +31,7 @@ class Results(aux._ID):
             self.id( id )
 
         self._df = pd.DataFrame()
-        self._stats_df = None
+        self._stats_df = pd.DataFrame()
     
     def __str__(self):
         _length = len( str(self._df).split("\n")[0] ) 
@@ -150,10 +150,16 @@ class Results(aux._ID):
         self._df[ key ] = value 
 
     def __getitem__( self, key ):
-        return self._df[ key ]
-    
+        if key in self._df.columns:
+            return self._df[ key ]
+        if key in self._stats_df.columns:
+            return self._stats_df[ key ]
+        
     def __delitem__( self, key ):
-        del self._df[ key ]
+        if key in self._df.columns:
+            del self._df[ key ]
+        if key in self._stats_df.columns:
+            del self._stats_df[ key ]
 
     def merge( self, *Results, all_cols : bool = False ):
         """
@@ -334,7 +340,7 @@ class Results(aux._ID):
             self._df = self._df.query(ref_query.format(group = group))
 
             # also drop from stats df
-            if self._stats_df is not None:
+            if not len(self._stats_df) == 0:
                 self._stats_df = self._stats_df.query(ref_query.format(group = group))
     
     def drop_rel(self):
@@ -346,7 +352,7 @@ class Results(aux._ID):
         self.rename_cols(to_change)
 
         # also recompute the stats df with new names...
-        if self._stats_df is not None: 
+        if not len(self._stats_df) == 0: 
             self.stats(recompute = True)
 
     def stats( self, recompute = False, iqr_limits : tuple = None, ci_level : float = 0.95 ):
@@ -380,11 +386,11 @@ class Results(aux._ID):
                             "stdev" : lambda x: np.nanstd( x, axis = 0), 
                             "median" : lambda x: np.nanmedian(x, axis = 0),
                             f"IQR_{iqr_limits}" : lambda x: np.nanquantile(x, iqr_limits[1], axis = 0) - np.nanquantile(x, iqr_limits[0], axis = 0),  
-                            f"CI_{ci_level}" : lambda x: t.interval( ci_level, len(x)-1, loc = np.nanmean(x, axis = 0), scale = sem(x, nan_policy = "omit" ) ),
+                            f"CI_{ci_level}" : lambda x: [ i for i in np.array( t.interval( ci_level, len(x)-1, loc = np.nanmean(x, axis = 0), scale = sem(x, nan_policy = "omit" ) ) ).transpose() ],
                         }
         
         # if stats_df is already present, return but sorted according to assays, not groups (nicer for user to inspect)
-        if self._stats_df is not None and not recompute:
+        if not len(self._stats_df) == 0 and not recompute:
             return self._stats_df
 
         self._stats_df = pd.DataFrame()
@@ -399,7 +405,9 @@ class Results(aux._ID):
             
             # compute all statistics
             for label, func in _stats.items():
-                _stat[ label ] = func(_subset)
+                s = func(_subset)
+                logging.debug( f"{label}: {s}" )
+                _stat[ label ] = s
             
             # fill in with groups and group names and assay identifiers in the right length
             _stat[ "group" ] = group
@@ -445,7 +453,7 @@ class Results(aux._ID):
             self._save_single(path, _df, "_df")
         if stats:
             # compute stats if none have been computed yet...
-            if self._stats_df is None:
+            if len(self._stats_df) == 0:
                 self.stats()
             self._save_single(path, self._stats_df, "_stats")
 
@@ -474,6 +482,9 @@ class Results(aux._ID):
         preview_results.link( self )
         fig = preview_results.plot()
         return fig 
+
+    def __qplot__( self, **kwargs ):
+        return self.preview
 
     @property
     def ddCt_cols( self ):

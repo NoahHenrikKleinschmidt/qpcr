@@ -422,6 +422,9 @@ class Calibrator(aux._ID):
         fig = plotter.plot( **kwargs )
         return fig 
 
+    def __qplot__( self, **kwargs ):
+        return self.plot
+
     @property
     def efficiencies( self ):
         """

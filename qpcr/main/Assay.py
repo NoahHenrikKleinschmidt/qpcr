@@ -200,6 +200,8 @@ Amplif. Eff.: {self._efficiency}
         fig = plotter.plot( **kwargs )
         return fig 
 
+    def __qplot__( self, **kwargs):
+        return self.boxplot
 
     def tile(self, n : int = 1):
         """
