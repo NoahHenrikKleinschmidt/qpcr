@@ -159,6 +159,9 @@ You can find useful tutorials and applied examples as `jupyter notebooks` [on Gi
 """
 
 from qpcr.main import * 
+from qpcr.Filters import filter
+from qpcr.Plotters import plot 
+
 from qpcr.defaults import init_log_format
 
 import logging
