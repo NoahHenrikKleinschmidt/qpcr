@@ -1,6 +1,5 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-import qpcr._auxiliary as aux
 import seaborn as sns
 
 def generate_palette(kwargs):
@@ -8,8 +7,8 @@ def generate_palette(kwargs):
     Generates a color pallete for seaborn 
     plots to support a custom color argument.
     """
-    palette = aux.from_kwargs("palette", None, kwargs, rm = True)
-    color = aux.from_kwargs("color", None, kwargs, rm = True)
+    palette = kwargs.pop("palette", None )
+    color = kwargs.pop("color", None )
     if color is not None: 
         try: 
             palette = sns.color_palette( color )

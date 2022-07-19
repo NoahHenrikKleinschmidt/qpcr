@@ -5,8 +5,8 @@ normalisation to compute the first-step Delta-Ct Values within an `qpcr.Assay` o
 
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr._auxiliary.defaults as defaults
-from pandas import Series
+import qpcr.defaults as defaults
+import pandas as pd
 from qpcr.main.Assay import Assay
 
 import logging
@@ -313,7 +313,7 @@ DeltaCt: {self._deltaCt_function}
         # get Ct column label
         Ct = raw_col_names[1]
 
-        dCt = Series()
+        dCt = pd.Series()
         for group in groups: 
             group_subset = df.query(f"group == {group}").reset_index(drop = True)
             anchor = group_subset[Ct][0]

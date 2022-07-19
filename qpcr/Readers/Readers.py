@@ -47,7 +47,6 @@ types of "big tables").
 # to be used for (mostly pipe, sometimes read...)
 # _DataReader methods *must* return the data they read!
 
-from attr import asdict
 import pandas as pd
 import qpcr
 import qpcr._auxiliary as aux
@@ -57,7 +56,6 @@ import qpcr.Parsers as Parsers
 import os
 import numpy as np 
 from copy import deepcopy 
-from io import StringIO
 import re 
 
 
