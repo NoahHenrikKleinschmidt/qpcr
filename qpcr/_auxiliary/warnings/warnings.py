@@ -155,97 +155,53 @@ class ClassError(Exception):
     def __init__(self, warning, **attrs):
         self.msg = warning
         self.attr = attrs
+        self.name = type(self).__name__
+        self.key = self.name.replace( "Error", "" )
+
+    def __str__(self):
+        s = f"{self.key}:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.name}] {s}"
+        return s 
 
     def __repr__(self):
-        return self.__str__()        
+        return self.__str__()   
+
 class AssayError(ClassError):
-    def __str__(self):
-        s = f"Assay:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class AnalyserError(ClassError):
-    def __str__(self):
-        s = f"Analyser:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class NormaliserError(ClassError):
-    def __str__(self):
-        s = f"Normaliser:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class ResultsError(ClassError):
-    def __str__(self):
-        s = f"Results:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class CalibratorError(ClassError):
-    def __str__(self):
-        s = f"Calibrator:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class FilterError(ClassError):
-    def __str__(self):
-        s = f"Filter:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class PlotterError(ClassError):
-    def __str__(self):
-        s = f"Plotter:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+   pass
 
 class ReaderError(ClassError):
-    def __str__(self):
-        s = f"Reader:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class MultiReaderError(ClassError):
-    def __str__(self):
-        s = f"MultiReader:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class MultiSheetReaderError(ClassError):
-    def __str__(self):
-        s = f"MultiReader:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 
 class BigTableReaderError(ClassError):
-    def __str__(self):
-        s = f"BigTableReader:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
-
+    pass
 class ParserError(ClassError):
-    def __str__(self):
-        s = f"Parser:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+   pass
 
 class PipeError(ClassError):
-    def __str__(self):
-        s = f"Pipeline:{self.msg}"
-        s = WARNINGS[s].format(**self.attr)
-        s = f"[{self.msg}] {s}"
-        return s 
+    pass
 

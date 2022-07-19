@@ -6,6 +6,34 @@ import uuid
 import os 
 import re 
 import qpcr.defaults as defaults
+import logging
+
+
+def log( filename = None, level = logging.WARNING, format = None ):
+    """
+    Store a log file
+
+    Parameters
+    -------
+    filename : str
+        The file in which to save the log. By default this will be a file `qpcr.log`
+        in the same directory as the current main script.
+    level 
+        The logging level
+    
+    """
+    if filename is None:
+        import __main__
+        filename = os.path.dirname( __main__.__file__ ) + "/qpcr.log"
+    
+    if format is None: 
+        format = defaults.log_format
+        
+    logging.basicConfig(    level = level, 
+                            filename = filename,
+                            format = format
+                        )
+
 
 def from_kwargs(key, default, kwargs, rm = False):
     """

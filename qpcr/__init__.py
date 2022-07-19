@@ -159,3 +159,7 @@ You can find useful tutorials and applied examples as `jupyter notebooks` [on Gi
 """
 
 from qpcr.main import * 
+from qpcr.defaults import init_log_format
+
+import logging
+logging.basicConfig( format = init_log_format )

@@ -43,6 +43,12 @@ seed = 11299114
 strict_id = False
 """Set to True if object ids may strictly only be set once!"""
 
+log_format = "%(asctime)s  |  %(levelname)s  |  %(module)s.%(funcName)s  |  %(message)s"
+"""The default logging format"""
+
+init_log_format = "%(levelname)s  |  %(module)s.%(funcName)s  |  %(message)s"
+"""The default initial logging format that is used if aux.log() has not been called yet"""
+
 
 #  =================================================================
 #                       Default Calibrator settings
