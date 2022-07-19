@@ -44,7 +44,6 @@ class Filter(aux._ID):
 
         self._boxplot_mode = defaults.plotmode
         self._BoxPlotter = Plotters.FilterSummary( mode = self._boxplot_mode )
-        self._BoxPlotter.params(title = "Filter Summary")
 
         self._filter_stats = pd.DataFrame({
                                             "assay" : [], "group" : [], 
