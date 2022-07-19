@@ -140,7 +140,7 @@ static_EfficiencyLines = dict(
                                     title = "Efficiency Computations",
                                     xlabel = "Log Dilution",
                                     ylabel = "Ct",
-                                    palette = "Blues",
+                                    color = "cornflowerblue",
                                     style = "dark",   
                             )
 

@@ -2,20 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def generate_palette(kwargs):
+def generate_palette(kwargs, return_check = False ):
     """
     Generates a color pallete for seaborn 
     plots to support a custom color argument.
+
+    Optionally it can also return a boolean that checks if the entry was a color palette or a single color.
     """
     palette = kwargs.pop("palette", None )
     color = kwargs.pop("color", None )
+    is_palette = True
     if color is not None: 
         try: 
             palette = sns.color_palette( color )
         except:
             palette = color
-    return palette
+            is_palette = False
 
+    if return_check:
+        return palette, is_palette
+    return palette
 
 def make_layout(df, ref_column:str):
     """

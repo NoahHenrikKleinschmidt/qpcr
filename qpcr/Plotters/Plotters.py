@@ -62,7 +62,13 @@ raw_col_names = defaults.raw_col_names
 #       methods, one for interactive one for static plotting... Which one to use is decided based on the plotting mode...
 #       Each FigureClass has therefore to link default parameters, then init Plotter (superclass), 
 #       and define their own _static_plot() and _interactive_plot() methods! Any additionally required methods can be written as well...
-
+#
+# plot function API
+#       Different classes can define their own __qplot__ method which makes them plottable via the qpcr.plot function.
+#       __qplot__ must return the method to call for plotting (but not call the method itself)!
+#       Since the Plotters themselves are at the basis of plotting they do NOT have a __qplot__ method...
+#       This is primarily because the Plotters must be set up to be either static or interactive, while 
+#       the other classes can decide which plotmode to call on.
 
 class Plotter:
     """
@@ -276,13 +282,6 @@ class Plotter:
         print("The plot function that will handle interactive plotting...")
         print("Surprised to see this?, \nPerhaps your desired plotting methods are not named properly. Make sure to name your method _interactive_plot()!")
 
-    def __qplot__( self, **kwargs ):
-        """
-        The method each class must define in order to be able to interact with the `qpcr.plot` direct link.
-        This is primarily intended for non-Plotter objects.
-        """
-        return self.plot
-
     def _prep_properties(self, kwargs):
         """
         Setup ncols, nrows, subplot titles (headers), x, y, and sterr, columns for figure...
@@ -412,13 +411,6 @@ class Wrapper:
         """
         fig = self._Plotter.plot( **kwargs )
         return fig 
-
-    def __qplot__( self, **kwargs ):
-        """
-        The method each class must define in order to be able to interact with the `qpcr.plot` direct link.
-        This is primarily intended for non-Plotter objects.
-        """
-        return self.plot
 
     def id(self, id:str = None):
         """
@@ -2260,7 +2252,7 @@ class EfficiencyLines(Plotter):
     |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
     | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
     |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
+    |   color : `str or list`   | The fillcolor for the individual dots   | `color = "yellow"`     |
     |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
     |   edgecolor : `str or list`   | The edgecolor for the individual dots for the datapoints.   | `edgecolor = "black"`     |
     |   edgewidth : `float`   |  The width of the edge of individual dots.  | `edgewidth = 0.5`     |
@@ -2328,8 +2320,8 @@ class EfficiencyLines(Plotter):
         show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
         show = aux.from_kwargs("show", True, kwargs, rm = True)
         rot = aux.from_kwargs("rot", None, kwargs, rm = True)
-
-        palette = gx.generate_palette(kwargs)
+        
+        palette, is_palette = gx.generate_palette(kwargs, True )
 
         xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
         ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
@@ -2376,7 +2368,13 @@ class EfficiencyLines(Plotter):
             sns.scatterplot(
                                 x = dilutions,
                                 y = cts,
-                                palette = palette, 
+
+                                # this is somewhat hacky but it allows us to use 
+                                # either a colormap or a single color
+                                hue = dilutions if is_palette else None,
+                                color = None if is_palette else palette,
+                                palette = palette if is_palette else None,
+
                                 edgecolor = edgecolor,
                                 linewidth = edgewidth,
                                 ax = ax,
@@ -2568,8 +2566,10 @@ def plot( obj, mode = None, **kwargs ):
     fig
         The figure produced.
     """
-    func = obj.__qplot__()
-    fig = func( mode = mode, **kwargs )
+    kwargs["mode"] = mode
+    func = obj.__qplot__( **kwargs )
+    logging.debug( kwargs )
+    fig = func( **kwargs )
     return fig
 
 # if __name__ == '__main__':
