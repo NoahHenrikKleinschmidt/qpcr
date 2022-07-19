@@ -29,6 +29,15 @@ assay = Assay( df = mydata, id = "my_assay" )
 assay.group( replicates = 3 )
 ```
 
+We can now actually interact with the `qpcr.Assay`. Assays support direct item setting, getting, and deleting on their dataframes.
+
+```python
+# we could for instance fill a new column with only ones
+assay[ "my_new_column" ] = 1 
+
+# or get the id column from the assay
+ids = assay[ "id" ]
+```
 """
 
 import pandas as pd

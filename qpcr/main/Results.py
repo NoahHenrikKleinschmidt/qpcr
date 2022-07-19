@@ -1,6 +1,58 @@
 """
 This is the `qpcr.Results` class whose function is to accumulate results from various
 `qpcr.Assay` objects and summarize them.
+
+## Setting up a `qpcr.Results` object
+
+Since the `Results` are supposed to be a central collection hub it makes sense to know how to make them.
+The setup is fairly simple. The `qpcr.Results` already provide a number of methods to directly add specific data
+such as Delta-Delta-Ct values to their dataframes from `qpcr.Assay` objects. However, they also allow more generic
+data manipulation through normal item setting, getting, and deleting.
+
+An important first step is usually to adopt the experimental meta-data shared by the Assays. 
+This can be done using the `setup_cols` method which copies the `id, group, and group_name` columns from an Assay.
+Once this is done, we can easily add more interesting data.
+
+```python
+# initialize the Results
+result = Results()
+
+# make sure the metadata is present
+result.setup_cols( some_assay )
+
+# now copy actually interesting data
+# for example Delta-Delta-Ct values
+result.add_ddCt( some_assay )
+
+# now we can continue to assemble data
+# for instance with
+for assay in a_list_of_assays:
+    result.add_ddCt( assay )
+
+# or directly
+# result.add_ddCt( a_list_of_assays )
+
+# and now summarize these
+result.stats()
+
+# and visualise
+result.preview()
+```
+
+Alternatively, we might wish to make use of of a `Results` object for data processing where we might want to assemble a set of Assays from different files into a single BigTable-like file.
+For this we might only wish to store the Ct values and then save them to a new file.
+
+```python
+# a list of many assays
+many_assays = [...]
+
+r = Results()
+r.setup_cols( many_assays[0] )
+r.add_Ct( many_assays )
+
+# and now save the accumulated file
+r.save( ... )
+```
 """
 
 import qpcr.defaults as defaults
@@ -70,6 +122,10 @@ class Results(aux._ID):
         assay : qpcr.Assay
             An `qpcr.Assay` object from which to import.
         """
+        if isinstance( assay, list ):
+            [ self.add_Ct(i) for i in assay ]
+            return
+
         Ct = assay[ defaults.raw_col_names[1] ]
         Ct.name = assay.id()
         self.add( Ct )
@@ -84,6 +140,10 @@ class Results(aux._ID):
         assay : qpcr.Assay
             An `qpcr.Assay` object from which to import.
         """
+        if isinstance( assay, list ):
+            [ self.add_dCt(i) for i in assay ]
+            return
+            
         self.add( assay.dCt )
 
     def add_ddCt(self, assay : main.Assay ):
@@ -96,6 +156,9 @@ class Results(aux._ID):
         assay : qpcr.Assay
             An `qpcr.Assay` object from which to import.
         """
+        if isinstance( assay, list ):
+            [ self.add_ddCt(i) for i in assay ]
+            return
         self.add( assay.ddCt )
 
     def add(self, data:(pd.Series or pd.DataFrame), replace : bool = False):
