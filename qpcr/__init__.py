@@ -162,7 +162,4 @@ from qpcr.main import *
 from qpcr.Filters import filter
 from qpcr.Plotters import plot 
 
-from qpcr.defaults import init_log_format
-
-import logging
-logging.basicConfig( format = init_log_format )
+from qpcr._auxiliary import log, default_logger, extensive_logger
