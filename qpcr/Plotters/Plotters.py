@@ -42,6 +42,8 @@ import seaborn as sns
 import numpy as np 
 import logging
 
+logger = aux.default_logger()
+
 # get default colnames Id + Ct
 raw_col_names = defaults.raw_col_names
 
@@ -112,7 +114,7 @@ class Plotter:
             self._data = Results
         else:
             e = wa.PlotterError( "unknown_data", obj = Results )
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
     def plot(self, **kwargs):
@@ -905,7 +907,7 @@ class ReplicateBoxPlot(Plotter):
             data = self._Results.get( copy = True )
         else:
             e = wa.PlotterError("unknown_data", obj = Assay )
-            logging.critical( e )
+            logger.critical( e )
             raise e
 
         # add itentifier column
@@ -2568,7 +2570,7 @@ def plot( obj, mode = None, **kwargs ):
     """
     kwargs["mode"] = mode
     func = obj.__qplot__( **kwargs )
-    logging.debug( kwargs )
+    logger.debug( kwargs )
     fig = func( **kwargs )
     return fig
 

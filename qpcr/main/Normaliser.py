@@ -18,12 +18,14 @@ import scipy.stats as stats
 from copy import deepcopy
 import logging 
 
+logger = aux.default_logger()
+
 # use_new = True
 # if use_new: 
-#     logging.info( "We are currently using the NEW Results object" )
+#     logger.info( "We are currently using the NEW Results object" )
 #     from Results import Results 
 # else:
-#     logging.info( "We are using the OLD Results object") 
+#     logger.info( "We are using the OLD Results object") 
 #     import qpcr
 #     Results = qpcr.Results
 
@@ -215,7 +217,7 @@ Prep.Function: \t{self._norm_func.__name__}
 
         if self._Assays == [] or self._normaliser is None:
             e = aw.NormaliserError( "no_data_yet" )
-            logging.error( e )
+            logger.error( e )
             
         # check which kind of norm_func we should use
         if not self._norm_func_is_set:
@@ -475,7 +477,7 @@ Prep.Function: \t{self._norm_func.__name__}
                     self._Assays.append(assay)
                 else: 
                     e = aw.NormaliserError( "unknown_data", s = assay )
-                    logging.error( e )
+                    logger.error( e )
                 
     def _link_normaliser(self, normalisers):
         """
@@ -489,7 +491,7 @@ Prep.Function: \t{self._norm_func.__name__}
 
                 else: 
                     e = aw.NormaliserError( "norm_unknown_data", s = normaliser )
-                    logging.error( e )
+                    logger.error( e )
 
     def _preprocess_normalisers(self, *args, **kwargs):
         """
@@ -513,7 +515,7 @@ Prep.Function: \t{self._norm_func.__name__}
         combined_normaliser = combined_normaliser.rename("dCt")
         combined.add(combined_normaliser)
 
-        logging.debug( combined )
+        logger.debug( combined )
         
         # now assemble the normaliser into a qpcr.Assay
         combined = combined.get()
@@ -521,7 +523,7 @@ Prep.Function: \t{self._norm_func.__name__}
 
         self._normaliser = normaliser  
         self._update_combined_id()
-        logging.debug( f"combined normaliser id: {self._normaliser.id()}" )
+        logger.debug( f"combined normaliser id: {self._normaliser.id()}" )
 
         # forward combined_id to self and _Results 
         self.adopt_id(self._normaliser)

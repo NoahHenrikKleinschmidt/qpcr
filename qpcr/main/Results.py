@@ -67,6 +67,7 @@ import numpy as np
 from scipy.stats import sem, t
 import os
 
+logger = aux.default_logger()
 class Results(aux._ID):
     """
     Handles a pandas dataframe for data and computed results from a `qpcr` class. 
@@ -186,7 +187,7 @@ class Results(aux._ID):
             if data.name in self._df.columns:
                 if not replace:  
                     e = aw.ResultsError( "name_overlap", name = data.name )
-                    logging.error( e )
+                    logger.error( e )
                     return
             self._df[data.name] = data
             # else: 
@@ -204,7 +205,7 @@ class Results(aux._ID):
                 to_add = [ i for i in new if i in to_add ]
                 
                 if len(to_add) != len(new):
-                    logging.info( f"Excluding {tuple(new.intersection(current))} due to name overlap. Use replace=True to force replacement." )
+                    logger.info( f"Excluding {tuple(new.intersection(current))} due to name overlap. Use replace=True to force replacement." )
 
             to_add = list( to_add )
             self._df[ to_add ] = data[ to_add ]
@@ -263,7 +264,7 @@ class Results(aux._ID):
                                 right_index = True, left_index = True, 
                                 suffixes = [f"_{self.id()}", f"_{result.id()}"]
                             )
-                logging.critical( e )
+                logger.warning( e )
         self._df = new_df
         return self
 
@@ -461,7 +462,7 @@ class Results(aux._ID):
         for group, name in zip( self.groups(), self.names() ):
             subset = self._df.query( f"group == {group}" )
             _subset = subset.drop( columns = defaults.setup_cols, errors = "ignore" )
-            logging.debug( _subset )
+            logger.debug( _subset )
             
             # setup a stats dataframe with the right columns (in the right order)
             _stat = pd.DataFrame( columns = ["group", "group_name", "assay", "n"] + list(_stats.keys()) )
@@ -469,7 +470,7 @@ class Results(aux._ID):
             # compute all statistics
             for label, func in _stats.items():
                 s = func(_subset)
-                logging.debug( f"{label}: {s}" )
+                logger.debug( f"{label}: {s}" )
                 _stat[ label ] = s
             
             # fill in with groups and group names and assay identifiers in the right length
@@ -505,7 +506,7 @@ class Results(aux._ID):
         """
         if df and stats and not os.path.isdir(path):
             e = aw.ResultsError( "save_need_dir" )
-            logging.error( e )
+            logger.error( e )
             raise e 
 
         if df:

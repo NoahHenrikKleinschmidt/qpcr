@@ -10,6 +10,7 @@ from qpcr import Readers
 
 import logging 
 
+logger = aux.default_logger()
 class DataReader(aux._ID):
     """
     Handles reading a single file containing input data
@@ -205,7 +206,7 @@ class DataReader(aux._ID):
         suffix = self._filesuffix()
         if suffix not in defaults.supported_filetypes:
             e = aw.MultiReaderError( "unknown_datafile", file = self._src )
-            logging.critical( e )
+            logger.critical( e )
             raise e
         
         if reset or self._Reader is None: 

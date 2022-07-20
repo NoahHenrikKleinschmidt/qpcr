@@ -11,6 +11,8 @@ from qpcr.main.Assay import Assay
 
 import logging
 
+logger = aux.default_logger()
+
 raw_col_names = defaults.raw_col_names
 
 class Analyser(aux._ID):
@@ -204,7 +206,7 @@ DeltaCt: {self._deltaCt_function}
             self._deltaCt_function = f
         else:
             e = aw.AnalyserError( "cannot_set_func", func = f )
-            logging.critical( e )
+            logger.critical( e )
             raise e
 
     def DeltaCt(self, **kwargs):

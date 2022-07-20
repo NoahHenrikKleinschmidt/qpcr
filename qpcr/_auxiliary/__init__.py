@@ -43,6 +43,7 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
                 filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
             except:
                 return log( filename = "stdout", level = level, format = format, name = name )
+        
         elif not filename.endswith(".log"): 
             filename += ".log"
         handler = logging.FileHandler( filename = filename )
@@ -66,42 +67,8 @@ def default_logger():
 def extensive_logger():
     """
     The extensive logger of qpcr.
-    This will store all levels into different file handlers.
     """
-
-    # and setup the dedicated qpcr logger
-    logger = logging.getLogger( name = "qpcr" )
-    logger.setLevel( logging.DEBUG )
-
-    f = logging.Formatter( fmt = defaults.init_log_format )
-
-    try:
-        # get the current location
-        import __main__
-        filename = f"{os.path.dirname( __main__.__file__ )}/qpcr_" + "{level}.log"
-        
-        debug = logging.FileHandler( filename = filename.format( level = "DEBUG" ) )
-        info = logging.FileHandler( filename = filename.format( level = "INFO" ) )
-        warning = logging.FileHandler( filename = filename.format( level = "WARNING" ) )
-        error = logging.FileHandler( filename = filename.format( level = "ERROR" ) )
-        critical = logging.FileHandler( filename = filename.format( level = "CRITICAL" ) )
-        
-        debug.setLevel( logging.DEBUG )
-        info.setLevel( logging.INFO )
-        warning.setLevel( logging.WARNING )
-        error.setLevel( logging.ERROR )
-        critical.setLevel( logging.CRITICAL )
-
-        for handler in [debug, info, warning, error, critical]:
-            handler.setFormatter( f )
-            logger.addHandler( handler )
-        
-    # if we operate from a jupyter notebook or terminal we just use the StreamHandler
-    except:
-        handler = logging.StreamHandler()
-        handler.setLevel( logging.DEBUG )
-        logger.addHandler( handler )
-    return logger
+    return log( level = logging.DEBUG )
 
 def from_kwargs(key, default, kwargs, rm = False):
     """

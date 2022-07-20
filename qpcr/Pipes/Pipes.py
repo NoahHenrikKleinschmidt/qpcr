@@ -18,6 +18,8 @@ import qpcr.Filters as Filters
 import qpcr.Readers as Readers
 import os 
 
+logger = aux.default_logger()
+
 class Pipeline:
     """
     This is the basic template class for qpcr Pipelines. 
@@ -101,7 +103,7 @@ class Pipeline:
         # vet if there are at least one normaliser and assay present
         if self._Normalisers == [] or self._Assays == []:
             e = aw.PipeError( "no_data" )
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
         self._run(**kwargs)
@@ -248,7 +250,7 @@ class Pipeline:
                 # if no files are found, raise error
                 if len(datafiles) == 0:
                     e = aw.PipeError( "no_data_input", file = files )
-                    logging.critical( e )
+                    logger.critical( e )
                     SystemExit( e )
             
                 # combine paths with parent directory
@@ -263,7 +265,7 @@ class Pipeline:
 
             else: 
                 e = aw.PipeError( "no_data_input", file = files )
-                logging.critical( e )
+                logger.critical( e )
                 SystemExit( e )
         
         # else check if we got a list or tuple of files
@@ -273,7 +275,7 @@ class Pipeline:
         # raise error for anything else...
         else: 
             e = aw.PipeError( "no_data_input", file = files )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
 
     def _run(self, **kwargs):

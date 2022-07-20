@@ -99,6 +99,8 @@ from io import StringIO
 from copy import deepcopy
 import os
 
+logger = aux.default_logger()
+
 __pdoc__ = {
     "_CORE_Parser" : True
 }
@@ -278,7 +280,7 @@ class _CORE_Parser:
         """
         if self._save_loc is None:
             e = aw.ParserError( "no_save_loc" )
-            logging.error( e )
+            logger.error( e )
         else:
             for assay, df in self._dfs.items():
                 assay_path = os.path.join(self.save_to(), f"{assay}.csv")
@@ -411,7 +413,7 @@ class _CORE_Parser:
         # get the pattern required (or raise error if invalid decorators are provided)
         if decorator not in decorators.keys():
             e = aw.ParserError("invalid_decorator", d = decorator, all_d = list(decorators.keys()))
-            logging.error( e ) 
+            logger.error( e ) 
             raise e 
 
         decorator_pattern = re.compile( decorators[decorator] )
@@ -427,7 +429,7 @@ class _CORE_Parser:
 
         # if no assay_pattern was specified then default to generic "all" to get full cell contents
         if self.assay_pattern() is None:
-            logging.info( aw.ParserError( "decorators_but_no_pattern" )  )
+            logger.info( aw.ParserError( "decorators_but_no_pattern" )  )
             self.assay_pattern("all")
 
         assay_indices = decorator_indices
@@ -612,7 +614,7 @@ class _CORE_Parser:
             if not allow_nan_ct:
                 if not isinstance(default_to, (int, float)): 
                     e = aw.ParserError("no_ct_nan_default", d = default_to)
-                    logging.error( e )
+                    logger.error( e )
                     raise e 
 
                 # apply defaulting lambda function
@@ -667,7 +669,7 @@ class _CORE_Parser:
                 # print some info about the faulty entries
             bad_value = e.__str__().split(": ")[1]
             e = aw.ParserError("found_non_readable_cts", assay = id, bad_value = bad_value)
-            logging.error( e )
+            logger.error( e )
         return array
 
     def _make_BigTable_range(self, **kwargs):
@@ -695,7 +697,7 @@ class _CORE_Parser:
         # vet that we actually found the big table
         if idx.size == 0:
             e = aw.ParserError("no_bigtable_header", header = ref_col_header)
-            logging.critical( e )
+            logger.critical( e )
             SystemError( e )
 
         idx = idx.reshape(idx.size)
@@ -738,7 +740,7 @@ class _CORE_Parser:
         replicates = aux.from_kwargs("replicates", None, kwargs, rm = True)
         if replicates is None: 
             e = aw.ParserError("bigtable_no_replicates" )
-            logging.error( e )
+            logger.error( e )
             SystemExit( e )
 
         replicates, names = self._vet_replicates(ignore_empty, replicates, array, **kwargs)
@@ -870,7 +872,7 @@ class _CORE_Parser:
         indices = np.argwhere(array == decorator)
         if indices.size == 0 and not ignore_empty:
             e = aw.ParserError( "no_decorators_found" )
-            logging.error( e )
+            logger.error( e )
             SystemExit( e )
 
 
@@ -891,7 +893,7 @@ class _CORE_Parser:
             all_covered = groups == len(replicates)
             if not all_covered:
                 e = aw.AssayError( "reps_dont_cover", n_samples = groups, reps = replicates )
-                logging.error( e ) 
+                logger.error( e ) 
                 SystemExit( e )
 
             
@@ -901,7 +903,7 @@ class _CORE_Parser:
         # vet that names cover
         if group_names is not None and len(group_names) != len(replicates):
             e = aw.AssayError("groupnames_dont_colver", current_groups = f"None, but needs to be {len(replicates)} names.", new_received = group_names)
-            logging.error( e )
+            logger.error( e )
             SystemExit( e )
         
         # return tranformed replicates
@@ -922,7 +924,7 @@ class _CORE_Parser:
             array = self._data[row, col] if not self._transpose else self._data[col, row]
         else:
             e = aw.ParserError("invalid_range")
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
         # re-format to str and reset "nan" to dummy_blank
@@ -987,7 +989,7 @@ class _CORE_Parser:
         no_matches = len(matching_rows) == 1 and matching_rows[0].size == 0
         if no_matches:
             e = aw.ParserError("no_data_found", label = label )
-            logging.error( e )
+            logger.error( e )
             SystemExit( e )
 
         matching_rows = all_found[matching_rows]
@@ -1098,7 +1100,7 @@ class CsvParser(_CORE_Parser):
         except: 
             self.read(filename)
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv")
-            logging.error( e )
+            logger.error( e )
 
         self.parse(**kwargs)
         assays = self.get()
@@ -1132,7 +1134,7 @@ class CsvParser(_CORE_Parser):
             df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
         except: 
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv()")
-            logging.error( e )
+            logger.error( e )
             df = pd.read_csv(contents, header = None, sep = delimiter)
 
         drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
@@ -1228,7 +1230,7 @@ class ExcelParser(_CORE_Parser):
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
             
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel()")
-            logging.error( e )
+            logger.error( e )
 
         drop_nan = aux.from_kwargs("drop_nan", True, kwargs, rm = True)
         if drop_nan: 
@@ -1264,7 +1266,7 @@ class ExcelParser(_CORE_Parser):
         except: 
             self.read(filename)
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel")
-            logging.error( e )
+            logger.error( e )
 
         self.parse(**kwargs)
         assays = self.get()

@@ -23,6 +23,7 @@ import os
 import qpcr.Plotters as Plotters
 import logging
 
+logger = aux.default_logger()
 class Filter(aux._ID):
     """
     The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
@@ -180,7 +181,7 @@ class Filter(aux._ID):
             return self._Assay
         else: 
             e = aw.FilterError( "no_assay" )
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
     def report(self, directory = None):

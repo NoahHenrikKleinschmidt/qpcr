@@ -16,6 +16,7 @@ from qpcr.main import Assay
 
 import logging
 
+logger = aux.default_logger()
 class Calibrator(aux._ID):
     """
     Calculates qPCR primer efficiency based on a dilution series.
@@ -78,7 +79,7 @@ class Calibrator(aux._ID):
 
         else: 
             e = aw.CalibratorError( "unknown_savemode", mode = mode )
-            logging.info( e )
+            logger.info( e )
 
     def load(self, filename, merge : bool = True, supersede : bool = False ):
         """
@@ -105,7 +106,7 @@ class Calibrator(aux._ID):
             return current
         except: 
             e = aw.CalibratorError( "unknown_filetype", filename=filename )
-            logging.critical( e )
+            logger.critical( e )
             raise e
 
     def get( self, which = "efficiencies" ):

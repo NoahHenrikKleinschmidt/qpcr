@@ -50,6 +50,8 @@ import qpcr._auxiliary.warnings as aw
 
 from copy import deepcopy
 
+logger = aux.default_logger()
+
 raw_col_names = defaults.raw_col_names
 class Assay(aux._ID):
     """
@@ -144,11 +146,11 @@ Amplif. Eff.: {self._efficiency}
         float 
             The currently assigned efficiency.
         """
-        logging.debug( f"{eff=}" )
+        logger.debug( f"{eff=}" )
         if isinstance( eff, float ):
             self._efficiency = eff 
             self._eff = 2 * self._efficiency
-            logging.info( f"New efficiency set to {self._efficiency} (computes as binary factor {self._efficiency} * 2 = {self._eff})" )
+            logger.info( f"New efficiency set to {self._efficiency} (computes as binary factor {self._efficiency} * 2 = {self._eff})" )
         elif eff is None:
             return self._efficiency
         else:
@@ -433,7 +435,7 @@ Amplif. Eff.: {self._efficiency}
             else: 
                 return self._df["group_name"]
         else: 
-            logging.warning( aw.AssayError( "no_groupnames" ) )
+            logger.warning( aw.AssayError( "no_groupnames" ) )
             return None
     
     def groups(self, as_set = True):
@@ -454,7 +456,7 @@ Amplif. Eff.: {self._efficiency}
             groups = list( self._df["group"].unique() ) if as_set else self._df["group"]
             return groups
         else:
-            logging.warning( aw.AssayError("setup_not_grouped") ) 
+            logger.warning( aw.AssayError("setup_not_grouped") ) 
             return None
 
     def replicates(self, replicates : (int or tuple or str) = None):
@@ -484,7 +486,7 @@ Amplif. Eff.: {self._efficiency}
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else: 
-                logging.critical( aw.AssayError( "reps_dont_cover", n_samples = self.n(), reps = replicates ) )
+                logger.critical( aw.AssayError( "reps_dont_cover", n_samples = self.n(), reps = replicates ) )
                 raise aw.AssayError( "reps_dont_cover", n_samples = self.n(), reps = replicates )
         return self._replicates
 
@@ -519,7 +521,7 @@ Amplif. Eff.: {self._efficiency}
                 group_names = [defaults.group_name.format(i) for i in groups]
             else: 
                 e = aw.AssayError("no_reps_inferred", assay = self.id())
-                logging.critical( e )
+                logger.critical( e )
                 raise e
         
         # add numeric group identifiers
@@ -548,7 +550,7 @@ Amplif. Eff.: {self._efficiency}
         elif isinstance(names, dict):
             new_names = self._rename_per_key(names)
         else:
-            logging.error( aw.AssayError("no_groupname_assignment", names = names ) )
+            logger.error( aw.AssayError("no_groupname_assignment", names = names ) )
             return
 
         # update "group_name"
@@ -619,7 +621,7 @@ Amplif. Eff.: {self._efficiency}
         if self._identically_named():
             self._df["group_name"] = self._df[raw_col_names[0]]
         elif self._names is None: 
-            logging.warning( aw.AssayError("groupnames_not_inferred") )
+            logger.warning( aw.AssayError("groupnames_not_inferred") )
 
     def _identically_named(self):
         """
@@ -657,7 +659,7 @@ Amplif. Eff.: {self._efficiency}
             return new_names
         else:
             e = aw.AssayError("groupnames_dont_colver", current_groups = current_names, new_received = names)
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
     def _rename_per_index(self, names):
@@ -679,7 +681,7 @@ Amplif. Eff.: {self._efficiency}
             return new_names
         else:
             e = aw.AssayError("groupnames_dont_colver", current_groups = current_names, new_received = names)
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
     def _make_unequal_groups(self):
@@ -731,7 +733,7 @@ Amplif. Eff.: {self._efficiency}
         
         if verdict is None:
             e = aw.AssayError( "reps_could_not_vet", reps = replicates ) 
-            logging.error( e )
+            logger.error( e )
             raise e 
 
         return verdict

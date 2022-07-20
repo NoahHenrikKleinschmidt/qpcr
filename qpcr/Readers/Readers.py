@@ -59,6 +59,7 @@ import numpy as np
 from copy import deepcopy 
 import re 
 
+logger = aux.default_logger()
 
 __pdoc__ = {
     "_CORE_Reader" : True
@@ -132,7 +133,7 @@ class _CORE_Reader(aux._ID):
         if suffix not in supported_filetypes:
 
             e = aw.MultiReaderError( "empty_data", file = self._src )
-            logging.critical( e )
+            logger.critical( e )
             raise e 
 
         if suffix == "csv":
@@ -237,7 +238,7 @@ class _CORE_Reader(aux._ID):
             
             if assay_of_interest is None: 
                 e = aw.ReaderError( "cannot_read_multifile", file = self._src, assays = parser.assays() )
-                logging.critical( e )
+                logger.critical( e )
                 SystemExit( e )
             self._df = parser.get(assay_of_interest)
             self.id_reset()
@@ -283,7 +284,7 @@ class _CORE_Reader(aux._ID):
                             )
         except: 
             e = aw.ReaderError( "cannot_read_csv", file = self._src )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
 
         # try to get a FileID, from the kwargs
@@ -320,7 +321,7 @@ class _CORE_Reader(aux._ID):
                             )
         except: 
             e = aw.ReaderError( "cannot_read_csv", file = self._src )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
 
 
@@ -361,7 +362,7 @@ class _CORE_Reader(aux._ID):
             valid_data = Ct in df.columns and Id in df.columns
             if not valid_data:
                 e = aw.ReaderError( "cannot_find_datacols", id_label = Id, ct_label = Ct )
-                logging.critical( e )
+                logger.critical( e )
                 SystemExit( e )
 
             else:
@@ -706,7 +707,7 @@ class MultiReader(SingleReader, aux._ID):
         # check for a valid input file
         if self._filesuffix() not in supported_filetypes:
             e = aw.MultiReader( "empty_data", file = self._src )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
 
         self._Parser = Parsers.CsvParser() if self._filesuffix() == "csv" else Parsers.ExcelParser()
@@ -746,7 +747,7 @@ class MultiReader(SingleReader, aux._ID):
             self._parse_by_pattern(kwargs, assay_pattern)
         else: 
             e = aw.MultiReaderError( "no_decorator_or_pattern" )
-            logging.error( e )
+            logger.error( e )
              
     def make_Assays(self):
         """
@@ -797,7 +798,7 @@ class MultiReader(SingleReader, aux._ID):
         except: 
             self.read(filename)
             e = aw.ParserError( "incompatible_read_kwargs", func = f"{type(self._Parser).__name__}'s read method" )
-            logging.error( e )
+            logger.error( e )
 
         # parse and make assays
         self.parse(**kwargs)
@@ -995,7 +996,7 @@ class MultiSheetReader(MultiReader):
             except Exception as e: 
                 # ERROR HERE
                 _e = aw.MultiSheetReaderError( "sheet_unreadable", sheet = sheets, e = e )
-                logging.error( _e )
+                logger.error( _e )
 
         # store data
         self._assays = all_assays
@@ -1252,7 +1253,7 @@ class BigTableReader(MultiReader):
             # check if we got ct cols to extract
             if self._ct_col is None: 
                 e = aw.BigTableReader( "no_ct_cols" )
-                logging.critical( e )
+                logger.critical( e )
                 SystemExit( e )
 
             # we got a nice dataframe with columns in to extract directly
@@ -1280,7 +1281,7 @@ class BigTableReader(MultiReader):
                 # check if we got ct cols to extract
                 if self._ct_col is None: 
                     e = aw.BigTableReader( "no_ct_cols" )
-                    logging.critical( e )
+                    logger.critical( e )
                     SystemExit( e )
 
                 # transform the numpy array from the 
@@ -1489,7 +1490,7 @@ class BigTableReader(MultiReader):
 
         if self._kind == "vertical" and got_no_cols:
             e = aw.BigTableReader( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
             
         # convert to pandas dataframe in case 
@@ -1500,7 +1501,7 @@ class BigTableReader(MultiReader):
         # and test if the ones we have are good
         if not self._test_cols_are_good():
             e = aw.BigTableReader( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
-            logging.critical( e )
+            logger.critical( e )
             SystemExit( e )
 
 
