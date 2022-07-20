@@ -10,7 +10,7 @@ setting up ``qpcr.Assay`` objects for you.
 
 However, setting up a ``qpcr.Assay`` manually can be as simple as:
 
-.. code-block::
+.. code-block:: python
 
     # get the dataframe from one of the qpcr.Readers
     mydata = some_reader.get()
@@ -20,7 +20,7 @@ However, setting up a ``qpcr.Assay`` manually can be as simple as:
 If your replicate identifiers are the same for all replicates within each group then the groups are automatically inferred. And your assay is 
 ready at this point already to be passed to an `qpcr.Analyser`. If not, you can specify the replicates manually like this: 
 
-.. code-block::
+.. code-block:: python
 
     # manually specify triplicates during setup
     assay = Assay( df = mydata, id = "my_assay", replicates = 3 )
@@ -31,7 +31,7 @@ ready at this point already to be passed to an `qpcr.Analyser`. If not, you can 
 
 We can now actually interact with the `qpcr.Assay`. Assays support direct item setting, getting, and deleting on their dataframes.
 
-.. code-block::
+.. code-block:: python
 
     # we could for instance fill a new column with only ones
     assay[ "my_new_column" ] = 1 
@@ -353,6 +353,10 @@ Amplif. Eff.: {self._efficiency}
     # FUTURE FEATURE HERE
     # def fc(self):
         # some method to also return the fold change columns... 
+
+    @property
+    def columns(self):
+        return self._df.columns
 
     def rename_cols(self, cols:dict):
         """

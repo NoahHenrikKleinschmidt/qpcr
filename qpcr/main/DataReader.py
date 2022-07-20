@@ -1,6 +1,54 @@
 """
 This is the `qpcr.DataReader` that serves as a general Hub for the `qpcr.Readers`
-and allows versatile file reading.
+and allows versatile file reading. 
+
+Reading Data Files
+==================
+
+Setting up the DataReader is really easy and works just as setting up any other of the classes in ``qpcr``.
+
+.. code-block:: python
+
+    reader = qpcr.DataReader()
+
+    # now we can read the file using
+    assay = reader.read( some_file )
+
+
+If the file contains multiple assays we likely want to specify
+
+.. code-block:: python
+
+    assays = reader.read( some_file, multi_assay = True )
+
+In case there are both "assays-of-interest" and "normaliser" assays in our file, we will have to decorate the datafile (or manually sort the read assays in our script).
+To learn more about file pre-processing so that qpcr can automatically read your setup, check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_ .
+
+.. code-block:: python
+
+    # if we have a decorated file, then we can simply do
+    assays, normalisers = reader.read( some_file, multi_assay = True, decorator = True )
+
+
+Reading multiple files
+------------------------
+
+The DataReader is able to read multiple files successively when passed a ``list``. 
+However, the DataReader functions as a *wrapper* around the :ref:`qpcr.Readers <Readers>` and to save computations it sets up a suitable Reader
+and then re-uses that same reader to read all successive files. However, if your files are differently formatted, you may supply ``reset = True``
+to force the DataReader to set up a new Reader for each file it reads.
+
+.. code-block:: python
+
+    many_files = [ ... ]
+
+    assays = reader.read( many_files, reset = True )
+
+Using dedicated ``qpcr.Readers``
+--------------------------------
+
+Not all datafiles will be (easily) readable by the ``qpcr.DataReader``. This is not necessarily because the files are bad, simply because the DataReader makes use of mostly default Readers.
+Hence, it may be that your file will not be readable by the DataReader but will be readable by a dedicated Reader such as a ``BigTableReader`` for instance. Check out the :ref:`qpcr.Readers <Readers>` for more details.
 """
 
 import qpcr.defaults as defaults
@@ -87,7 +135,7 @@ class DataReader(aux._ID):
         """
         return self._Data
 
-    def read_multi_assay( self, filename : str, decorator : (bool or str), **kwargs):
+    def read_multi_assay( self, filename : str, decorator : (bool or str) = True, **kwargs):
         """
         Reads a single irregular *multi assay* datafile.
 
@@ -115,7 +163,7 @@ class DataReader(aux._ID):
 
         return self.read( filename = filename, multi_assay = True, decorator = decorator, **kwargs )
 
-    def read_bigtable( self, filename : str, kind : str, decorator : (bool or str), assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
+    def read_bigtable( self, filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
         """
         Reads a single BigTable datafile. 
 
@@ -267,7 +315,7 @@ class DataReader(aux._ID):
         self._Reader = reader
 
     
-def read_multi_assay( filename : str, decorator : (bool or str), **kwargs):
+def read_multi_assay( filename : str, decorator : (bool or str) = True, **kwargs):
         """
         Reads a single irregular *multi assay* datafile.
 
@@ -295,7 +343,7 @@ def read_multi_assay( filename : str, decorator : (bool or str), **kwargs):
 
         return DataReader().read_multi_assay( filename = filename, decorator = decorator, **kwargs )
 
-def read_bigtable( filename : str, kind : str, decorator : (bool or str), assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
+def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
         """
         Reads a single BigTable datafile. 
 

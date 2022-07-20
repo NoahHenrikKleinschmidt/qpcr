@@ -1,5 +1,60 @@
 """
 This is the `qpcr.Calibrator` class that is able to compute qPCR amplification efficiencies from `qpcr.Assay` objects.
+
+
+Amplification Efficiencies in ``qpcr``
+------------------------
+
+By default ``qpcr`` sets the amplification efficiency of a new ``qpcr.Assay`` to ``1`` (100%).  However, they can be set to any percentage (also > 1) using the ``efficiency`` method of the ``qpcr.Assay``.
+``qpcr`` stores the efficiency as percentage but actually calculates with :math:`2 \ \cdot \ efficiency` when computing Delta-Ct values.
+
+Assigning an assay's efficiency
+------
+
+The ``qpcr.Calibrator`` is dedicated to either computing the amplification efficiency of an assay or assigning existing effiencies that have been calculated elsewhere.
+In order to compute new efficiencies the Calibrator requires a set of *decorated replicates* that come from a **dilution series**. You can check out `this tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/9_custom_efficiencies.ipynb>`_ to learn more.
+
+If appropriate data is available we can use the ``qpcr.Calibrator`` to compute and assign new efficiencies by:
+
+.. code-block:: python
+
+    calibrator = qpcr.Calibrator()
+
+    assay = calibrator.calibrate( assay )
+
+This will read the data, perform a linear regression to determine the efficiency, and assign the computed efficiency to the assay. Also, the efficiency is now stored by the Calibrator.
+The stored efficiencies can be easily saved to a file using:
+
+.. code-block:: python
+
+    calibrator.save( "my_efficiencies.csv" )
+    
+We usually do not have a dilution series in each of our datasets, however. So most often you will wish to assign efficiencies that have been already computed from other qPCR runs.
+For these cases, the Calibrator can read a reference "database file" and assign existing efficiencies to new Assays as long as their ``id`` is present among the reference efficiencies.
+
+.. code-block:: python
+
+    # read already existing efficiencies from a file
+    calibrator.load( "my_efficiencies.csv" )
+
+    # and now simple assign an existing efficiency to the assay
+    assays = calibrator.assign( assay )
+
+If we have both assays with existing efficiencies and such with new dilution series data, we can actually just use the Calibrator's ``pipe`` method to process all of them at once. 
+
+.. code-block:: python
+
+    many_assays = [ ... ]
+
+    calibrator.load( "my_efficiencies.csv" )
+
+    # pipe all assays, which will assign where possible, and calibrate anew where necessary (and data is available)
+    many_assays = calibrator.pipe( many_assays )
+
+    # finally, save the (now updated) database of efficiencies 
+    # this will by default update the file "my_efficiencies.csv" which was already loaded.
+    calibrator.save()
+
 """
 
 import qpcr.defaults as defaults

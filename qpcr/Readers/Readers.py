@@ -32,6 +32,18 @@ which assay specifically to extract from it.
 | ...    | ...   | ...         |
 +--------+-------+-------------+
 
+.. code-block:: python
+
+    from qpcr.Readers import SingleReader
+
+    reader = SingleReader()
+
+    myfile = "my_datafile.csv"
+
+    assay = reader.pipe( myfile )
+
+
+
 MultiReader
 -----------
 The ``MultiReader`` can read irregular multi-assay datafiles and extract all assays from them
@@ -64,12 +76,28 @@ of the ``qpcr.Parsers`` for more information).
 | ...                  | ...                 |             |                      |   |
 +----------------------+---------------------+-------------+----------------------+---+
 
+.. code-block::
+
+    from qpcr.Readers import MultiReader
+
+    myfile = "my_datafile.xlsx"
+
+    reader = MultiReader()
+
+    # if we have a non-decorated file we can just use
+    assays = reader.pipe( myfile )
+
+    # if we have decorated our file, then we can use
+    assays, normalisers = reader.pipe( myfile, decorator = True )
 
 
 MultiSheetReader
 -----------
 The ``MultiSheetReader`` is able to read irregular multi-assay datafiles that contain assays in multiple 
 datasheets.
+
+By default the MultiSheetReader will read *all* sheets in an excel file. However, you can specify *a single sheet* that should be read exclusively (thus turning the reader to a "MultiReader") using the ``
+
 
 BigTableReader
 -----------
@@ -462,6 +490,8 @@ class _CORE_Reader(aux._ID):
             Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
             
             valid_data = Ct in df.columns and Id in df.columns
+            logger.debug( f"currently held df: {df}" )
+
             if not valid_data:
                 e = aw.ReaderError( "cannot_find_datacols", id_label = Id, ct_label = Ct )
                 logger.critical( e )

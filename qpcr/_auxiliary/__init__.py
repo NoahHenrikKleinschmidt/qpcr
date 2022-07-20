@@ -28,8 +28,12 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
     
     """
 
+    logger = logging.getLogger( name = name )
+
+    # setup the dedicated qpcr logger
     if level is None:
         level = defaults.log_level
+    logger.setLevel( level )
 
     if filename == "stdout":
         handler = logging.StreamHandler()
@@ -51,9 +55,6 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
     if format is None: 
         format = defaults.log_format
     
-    # and setup the dedicated qpcr logger
-    logger = logging.getLogger( name = name )
-    logger.setLevel( level )
     f = logging.Formatter( fmt = format )
     handler.setFormatter( f )
     handler.setLevel( level )
@@ -62,13 +63,20 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
 
 def default_logger():
     """The default logger of qpcr"""
-    return log( filename = defaults.init_log_loc )
+    logger = logging.getLogger( name = "qpcr" )
+    if not logger.hasHandlers():
+        return log( filename = defaults.init_log_loc )
+    return logger
 
 def extensive_logger():
     """
     The extensive logger of qpcr.
     """
-    return log( level = logging.DEBUG )
+    logger = logging.getLogger( name = "qpcr" )
+    if not logger.hasHandlers():
+        return log( level = logging.DEBUG )
+    logger.setLevel( logging.DEBUG )
+    return logger
 
 def from_kwargs(key, default, kwargs, rm = False):
     """

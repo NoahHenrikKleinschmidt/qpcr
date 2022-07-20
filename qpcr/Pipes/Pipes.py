@@ -1,12 +1,51 @@
 """
 This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
 This is designed for lightweight users that do not wish to employ specialised pipelines.
+The ``qpcr.Pipes`` allow you to "shortcut" some steps for you as they handle object setup for the main ``qpcr`` classes.
+They will perform file-reading, Delta-Ct computation, and normalisation, as well as visualization and saving for you.
 
-> ### A Word on Plotters 
-> Please, note that pipelines fully support mixing "static" and "interactive" Plotters, 
-> but static figures will not stay open if interactive plotters are called to plot after them! 
-> Because `qpcr.Filters` are always called to plot *before* any other `qpcr.Plotters`, this will mainly
-> affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
+Which pipeline to use?
+--------------
+
+Depending on which pipeline you choose you will get different levels of customizability. 
+In the basic tutorials we worked with the ``BasicPlus`` pipeline which allows for file-reading, filtering, Delta-Ct computation, and normalisation, as well as visualisation and file-saving for the results.
+It is the "big brother" of the most simple pipeline called ``Basic`` which only performs file-reading, Delta-Ct computation, and normalisation, as well as results saving.
+
+The most "free" pipeline that works with files is the ``Blueprint`` pipeline that allows a user-specified *Reader*, *Analyser*, and *Normaliser*. 
+
+However, these above pipelines were all designed with **multiple regular datafiles** as input in mind! However, as you may have *irregular* or *multi assay files* you may not find these pipelines to be usable for you.
+This is no problem, however, since the ``qpcr.DataReader`` allows for very swift file-reading into ``qpcr.Assay`` objects from many different filetypes. These can then directly be submitted to the ``ddCt`` pipeline. 
+This skips file reading but only performs filtering, Delta-Ct computation, normalisation, and visualisation + file saving. Here is a "pipeline example" using ``ddCt``:
+
+.. code-block:: python
+
+    import qpcr
+    from qpcr.Pipes import ddCt
+
+    myfile = "some_irregular_multi_assay_file.xlsx"
+
+    # read the data externally
+    assays, normalisers = qpcr.read_multi_assay( myfile )
+
+    # now setup the pipeline
+    pipe = ddCt()
+
+    # add our data and run
+    pipe.link( assays = assays, normalisers = normalisers )
+    pipe.run()
+
+    # now get the results to inspect 
+    results = pipe.results()
+
+
+
+Note
+-----
+A Word on Plotters 
+Please, note that pipelines fully support mixing "static" and "interactive" Plotters, 
+but static figures will not stay open if interactive plotters are called to plot after them! 
+Because `qpcr.Filters` are always called to plot *before* any other `qpcr.Plotters`, this will mainly
+affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
 """
 
 import logging
@@ -37,7 +76,7 @@ class Pipeline:
         self._save_to = None
         self._df = None
         self._stats_df = None
-        self._Results = None
+        self._Results = qpcr.Results()
         self._replicates = None
         self._names = None
         self._softlink = True
@@ -191,7 +230,7 @@ class Pipeline:
         if results: 
             self._df = None
             self._stats_df = None
-            self._Results = None
+            self._Results = qpcr.Results()
 
     def add_normalisers(self, normalisers):
         """

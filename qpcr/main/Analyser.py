@@ -9,7 +9,7 @@ Computing Delta-Ct values
 
 Setting up a ``qpcr.Analyser`` is really easy and we see it in virtually every GitHub tutorial.
 
-.. code-block::
+.. code-block:: python
     
     analyser = qpcr.Analyser()
 
@@ -18,7 +18,7 @@ Setting up a ``qpcr.Analyser`` is really easy and we see it in virtually every G
 
 Alternatively we can also directly use the ``qpcr.delta_ct`` function that will call on a Analyser for us.
 
-.. code-block::
+.. code-block:: python
     
     some_assays = qpcr.delta_ct( some_assays )
 
@@ -27,7 +27,8 @@ Delta-Ct values
 ------------------------
 The computed values are stored in the respective ``qpcr.Assay`` dataframe into a column called ``"dCt"``.
 By default, the ``qpcr.Analyser`` will compute the Delta-Ct values already in exponential form. I.e. as :math:`efficiency^{-\Delta Ct}`.
-This behaviour can be changed by changing the applied function using the provided ``func`` method.
+This behaviour can be changed by changing the applied function using the provided ``func`` method. 
+Check out `this tutorial about custom anchors <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/4_custom_anchor.ipynb>`_  which will give you an idea of the flavour of editing the ``qpcr.Analyser``. 
 
 """
 
