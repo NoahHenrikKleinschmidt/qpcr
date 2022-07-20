@@ -10,8 +10,9 @@ Welcome to qpcr's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
-
+   qpcr
+   gettingstarted
+   
 Indices and tables
 ==================
 
