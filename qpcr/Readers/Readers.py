@@ -1,33 +1,38 @@
 """
-This module provides different `Reader` classes that allow reading simple and complex datafiles
+This module provides different ``Reader`` classes that allow reading simple and complex datafiles
 of various architectures.
 
-## Available Data Readers
----
+Available Data Readers
+====================
 
-### SingleReader
-The `SingleReader` is able to read both regular and irregular single-assay datafiles. 
-It can also read multi-assay datafiles but requires an `assay` argument, specifying
+SingleReader
+-----------
+The ``SingleReader`` is able to read both regular and irregular single-assay datafiles. 
+It can also read multi-assay datafiles but requires an ``assay`` argument, specifying
 which assay specifically to extract from it.
 
-### MultiReader
-The `MultiReader` can read irregular multi-assay datafiles and extract all assays from them
-either using a specific `assay_pattern` to find them or using `decorators` (check out the documentation
-of the `qpcr.Parsers` for more information).
+MultiReader
+-----------
+The ``MultiReader`` can read irregular multi-assay datafiles and extract all assays from them
+either using a specific `assay_pattern` to find them or using ``decorators`` (check out the documentation
+of the ``qpcr.Parsers`` for more information).
 
-### MultiSheetReader
-The `MultiSheetReader` is able to read irregular multi-assay datafiles that contain assays in multiple 
+MultiSheetReader
+-----------
+The ``MultiSheetReader`` is able to read irregular multi-assay datafiles that contain assays in multiple 
 datasheets.
 
-### BigTableReader
-The `BigTableReader` is able to read datafiles that store their assays in one single "big table". It
-can extract all assays from that big table using either simple extraction methods or `decorators` depending
-on the type of big table (check out the documentation of the `BigTableReader` for more information on the
+BigTableReader
+-----------
+The ``BigTableReader`` is able to read datafiles that store their assays in one single "big table". It
+can extract all assays from that big table using either simple extraction methods or ``decorators`` depending
+on the type of big table (check out the documentation of the ``BigTableReader`` for more information on the
 types of "big tables").
 
 
-> ### Kwarg incompatibility Warning
-> When using the `qpcr.DataReader` or a `pipe` method you will regularly observe the following warning: 
+> Kwarg incompatibility Warning
+-----------
+> When using the ``qpcr.DataReader`` or a ``pipe`` method you will regularly observe the following warning: 
 > 
 > ```
 > Warning:
@@ -35,9 +40,9 @@ types of "big tables").
 > If the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.
 > ```
 >
-> This is because the `pipe` method (and the `qpcr.DataReader`, which usually calls the `pipe` method of a specific Reader) pass all kwargs to both `read` and `parse`. 
-> However, `pandas`' `read_excel` and `read_csv` are rather picky with the arguments they accept. So, in case you observe this warning, just know that the kwargs were removed from the 
-> `read` call.
+> This is because the ``pipe`` method (and the ``qpcr.DataReader``, which usually calls the ``pipe`` method of a specific Reader) pass all kwargs to both ``read`` and ``parse``. 
+> However, ``pandas``' `read_excel` and `read_csv` are rather picky with the arguments they accept. So, in case you observe this warning, just know that the kwargs were removed from the 
+> ``read`` call.
 """
 
 
@@ -107,11 +112,11 @@ class _CORE_Reader(aux._ID):
 
     def make_Assay(self):
         """
-        Converts the extracted dataset into an `qpcr.Assay`.
+        Converts the extracted dataset into an ``qpcr.Assay``.
         Returns
         --------
         Assay : qpcr.Assay
-            The `qpcr.Assay` from the extracted dataset.
+            The ``qpcr.Assay`` from the extracted dataset.
         """
         assay = self._make_new_Assay(self.id(), self._df)
         return assay
@@ -199,7 +204,7 @@ class _CORE_Reader(aux._ID):
         Parameters
         ----------
         names : list or dict
-            Either a `list` (new names without repetitions) or `dict` (key = old name, value = new name) specifying new group names. 
+            Either a ``list`` (new names without repetitions) or ``dict`` (key = old name, value = new name) specifying new group names. 
             Group names only need to be specified once, and are applied to all replicate entries.
         """
         if names is not None: 
@@ -214,14 +219,14 @@ class _CORE_Reader(aux._ID):
         Parameters
         ----------
         replicates : int or tuple or str
-            Can be an `integer` (equal group sizes, e.g. `3` for triplicates), 
-            or a `tuple` (uneven group sizes, e.g. `(3,2,3)` if the second group is only a duplicate). 
+            Can be an ``integer`` (equal group sizes, e.g. ``3`` for triplicates), 
+            or a ``tuple`` (uneven group sizes, e.g. ``(3,2,3)`` if the second group is only a duplicate). 
             Another method to achieve the same thing is to specify a "formula" as a string of how to create a replicate tuple.
-            The allowed structure of such a formula is `n:m,` where `n` is the number of replicates in a group and `m` is the number of times
-            this pattern is repeated (if no `:m` is specified `:1` is assumed). So, as an example, if there are 12 groups which are triplicates, but
+            The allowed structure of such a formula is ``n:m`` where ``n`` is the number of replicates in a group and ``m`` is the number of times
+            this pattern is repeated (if no `:m` is specified ``:1`` is assumed). So, as an example, if there are 12 groups which are triplicates, but
             at the end there is one which only has a single replicate (like the commonly measured diluent qPCR sample), we could either specify the tuple
-            individually as `replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)` or we use the formula to specify `replicates = "3:12,1"`. Of course, this works for
-            any arbitrary setting such as `"3:5,2:5,10,3:12"` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
+            individually as ``replicates = (3,3,3,3,3,3,3,3,3,3,3,3,1)`` or we use the formula to specify ``replicates = "3:12,1"``. Of course, this works for
+            any arbitrary setting such as ``"3:5,2:5,10,3:12"`` (which specifies five triplicates, followed by two duplicates, a single decaplicate, and twelve triplicates again – truly a dataset from another dimension)...
         """
         if replicates is not None:
             self._replicates = replicates
@@ -406,15 +411,16 @@ class SingleReader(_CORE_Reader):
 
     Input Data Files
     ----------------
-    Valid input files are either regular `csv` or `excel` files, or  irregular `csv` or `excel` files, 
+    Valid input files are either regular ``csv`` or ``excel`` files, or  irregular ``csv`` or ``excel`` files, 
     that specify assays by one replicate identifier column and one Ct value column.
 
     Irregular input files may specify multiple assays as separate tables, 
-    one assay has to be selected using the `assay` argument. 
+    one assay has to be selected using the ``assay`` argument. 
     Separate assay tables may be either below one another (separated by blank lines!)
     or besides one another (requires `transpose = True`).
 
-    #### Example of a "regular" single-assay datafile
+    Example of a "regular" single-assay datafile
+    ^^^^^^^^^^^^^^^
     |id|Ct| other data |
     |---|---| --- |
     | ctrl1| 5.67 | ... |
@@ -424,7 +430,8 @@ class SingleReader(_CORE_Reader):
     | ... | ... | ... |
 
 
-    #### Example of an "irregular" single-assay datafile
+    Example of an "irregular" single-assay datafile
+    ^^^^^^^^^^^^^^^
     |                     |                    |            |      |      |
     | ------------------- | ------------------ | ---------- | ---- | ---- |
     | Some meta-data here | maybe today's date |            |      |      |
@@ -438,13 +445,9 @@ class SingleReader(_CORE_Reader):
 
     Note
     ----
-    This is the successor of the original `qpcr.Reader` (not the `qpcr.SampleReader`!).
-    Hence, the `SingleReader` will return a pandas DataFrame of the dataset 
-    directly using `get` but not an `qpcr.Assay`. 
-    An `qpcr.Assay` object will be returned after calling `make_Assay`, however. 
-    Furthermore, if the provided file cannot be read as a "regular" file the Reader will automatically
-    switch to parsing. However, if your file _is_ a regular input file, you can force regular reading 
-    by passing the argument `is_regular = True` to the `read` method, which will prevent parsing and allow 
+    If the provided file cannot be read as a "regular" file the Reader will automatically
+    switch to parsing. However, if your file *is* a regular input file, you can force regular reading 
+    by passing the argument ``is_regular = True`` to the ``read`` method, which will prevent parsing and allow 
     you to figure out why regular reading may have failed instead (the Reader will not 
     provide further insight into why regular reading failed if it switches to parsing).
 
@@ -452,13 +455,13 @@ class SingleReader(_CORE_Reader):
     ----------
     filename : str
         A filepath to a raw data file.
-        If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
-        Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
-        If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+        If the file is a ``csv`` file, it has to have two named columns; one for replicate names, one for Ct values. 
+        Both csv (``,`` spearated) and csv2 (``;`` separated) are accepted.
+        If the file is an ``excel`` file it the relevant sections of the spreadsheet are identified automatically. 
         But they require identifying headers. By default it is assumed that replicate identifiers and Ct values are
-        stored in columns named `Name` and `Ct` but these can be changed using 
+        stored in columns named ``Name`` and ``Ct`` but these can be changed using 
         the `id_label` and `ct_label` arguments that can be passed as kwargs. 
-        Also the assay's `id` can be set as a kwarg. 
+        Also the assay's ``id`` can be set as a kwarg. 
 
     **kwargs
         Any additional keyword arguments that shall be passed to the `read()` method which is immediately called during init.
@@ -485,16 +488,16 @@ class SingleReader(_CORE_Reader):
         ----------
         filename : str
             A filepath to a raw data file.
-            If the file is a `csv` file, it has to have two named columns; one for replicate names, one for Ct values. 
-            Both csv (`,` spearated) and csv2 (`;` separated) are accepted.
-            If the file is an `excel` file it the relevant sections of the spreadsheet are identified automatically. 
+            If the file is a ``csv`` file, it has to have two named columns; one for replicate names, one for Ct values. 
+            Both csv (``,`` spearated) and csv2 (``;`` separated) are accepted.
+            If the file is an ``excel`` file it the relevant sections of the spreadsheet are identified automatically. 
             But they require identifying headers. 
             By default it is assumed that replicate identifiers and Ct values are
-            stored in columns named `Name` and `Ct` but these can be changed using 
-            the `id_label` and `ct_label` arguments that can be passed as kwargs. 
+            stored in columns named ``Name`` and ``Ct`` but these can be changed using 
+            the ``id_label`` and ``ct_label`` arguments that can be passed as kwargs. 
             Note, if only two columns are present anyway, they are assumed to be Id (1st) and Ct (2nd) column, 
-            and inputs for `id_label` and `ct_label` are being ignored!
-            The assay's `id` can be set as a kwarg. By default the filename is adopted as id.  
+            and inputs for ``id_label`` and ``ct_label`` are being ignored!
+            The assay's ``id`` can be set as a kwarg. By default the filename is adopted as id.  
         """
         self._src = filename
 
@@ -513,14 +516,14 @@ class SingleReader(_CORE_Reader):
         Returns
         -------
         assay : qpcr.Assay
-            An `qpcr.Assay` object of the extracted data
+            An ``qpcr.Assay`` object of the extracted data
         """
         self.read(filename = filename, **kwargs)
         assay = self.get()
         assay = self.make_Assay()
         return assay
 
-    def _DataReader(self, **kwargs):
+    def __dreader__(self, **kwargs):
         """
         The DataReader interacting method
         """
@@ -563,15 +566,16 @@ class MultiReader(SingleReader, aux._ID):
     
     Input Data Files
     ----------------
-    Valid input files are multi-assay irregular `csv` or `excel` files, 
+    Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
     that specify assays by one replicate identifier column and one Ct value column.
 
     Separate assay tables may be either below one another (separated by blank lines!)
     or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
 
-    Assays of interest and normaliser assays *must* be marked using `decorators`.
+    Assays of interest and normaliser assays *must* be marked using ``decorators``.
 
-    #### Example of an "irregular" multi-assay datafile
+    Example of an "irregular" multi-assay datafile
+^^^^^^^^^^^^^^^
     |                     |                    |            |      |      |
     | ------------------- | ------------------ | ---------- | ---- | ---- |
     | Some meta-data here | maybe today's date |            |      |      |
@@ -590,17 +594,17 @@ class MultiReader(SingleReader, aux._ID):
 
     Note
     ------
-    `MultiReader` can transform the extracted datasets directly into `qpcr.Assay` objects using `MultiReader.make_Assays()`.
-    It will perform grouping of assays if possible but will return raw-assays if not! `get` will either return a dictionary
-    of the raw dataframes or a list of `qpcr.Assay`s.
+    ``MultiReader`` can transform the extracted datasets directly into ``qpcr.Assay`` objects using ``MultiReader.make_Assays()``.
+    It will perform grouping of assays if possible but will return raw-assays if not! ``get`` will either return a dictionary
+    of the raw dataframes or a list of ``qpcr.Assay``s.
 
     Parameters
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+        Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
     **kwargs
-            Any additional keyword arguments that should be passed to the `read` method which is immediately called during init if a filename is provided.
+            Any additional keyword arguments that should be passed to the ``read`` method which is immediately called during init if a filename is provided.
     """
     def __init__(self, filename : str = None, **kwargs):
         super(aux._ID, self).__init__()
@@ -635,8 +639,8 @@ class MultiReader(SingleReader, aux._ID):
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `make_Assays` has not been run yet)
-            or a list of `qpcr.Assay` objects.
+            (if ``make_Assays`` has not been run yet)
+            or a list of ``qpcr.Assay`` objects.
         names : list
             A list of the names of all extracted assays.
         """
@@ -654,8 +658,8 @@ class MultiReader(SingleReader, aux._ID):
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `make_Assays` has not been run yet)
-            or a list of `qpcr.Assay` objects.
+            (if ``make_Assays`` has not been run yet)
+            or a list of ``qpcr.Assay`` objects.
         names : list
             A list of the names of all extracted normalisers.
         """
@@ -668,14 +672,14 @@ class MultiReader(SingleReader, aux._ID):
         Parameters
         ----------
         which : str
-            Can be either `"assays"` or `"normalisers"` or any specific assay identifier.
+            Can be either ``"assays"`` or ``"normalisers"`` or any specific assay identifier.
 
         Returns
         -------
         data : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
-            (if `make_Assays` has not been run yet)
-            or a list of `qpcr.Assay` objects.
+            (if ``make_Assays`` has not been run yet)
+            or a list of ``qpcr.Assay`` objects.
         """
         data = None
         if which == "assays":
@@ -698,9 +702,9 @@ class MultiReader(SingleReader, aux._ID):
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+            Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
         **kwargs
-                Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `read` method that extracts the datasets.
+                Any additional keyword arguments that should be passed to the ``qpcr.Parsers``''s ``read`` method that extracts the datasets.
         """
         self._src = filename
 
@@ -730,7 +734,7 @@ class MultiReader(SingleReader, aux._ID):
         Parameters
         ----------
         **kwargs
-            Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `parse` method that extracts the datasets.
+            Any additional keyword arguments that should be passed to the ``qpcr.Parsers``''s ``parse`` method that extracts the datasets.
         """
         # check for the two required inputs (either decorator must be specified or assay_pattern)
         # if neither is specified we default to using decorators!  
@@ -751,7 +755,7 @@ class MultiReader(SingleReader, aux._ID):
              
     def make_Assays(self):
         """
-        Convert all found assays and normalisers into `qpcr.Assay` objects.
+        Convert all found assays and normalisers into ``qpcr.Assay`` objects.
         """
         # convert assays to qpcr.Assay and overwrite current dict by new list
         new_assays = []
@@ -773,7 +777,7 @@ class MultiReader(SingleReader, aux._ID):
 
         Note 
         ----
-        This is the suggested use of `MultiReader`. 
+        This is the suggested use of ``MultiReader``. 
         If a directory has been specified into which the datafiles shall be saved, 
         then saving will automatically be done.
 
@@ -824,7 +828,7 @@ class MultiReader(SingleReader, aux._ID):
                 os.mkdir(self._save_loc)
         return self._save_loc
 
-    def _DataReader(self, **kwargs):
+    def __dreader__(self, **kwargs):
         """
         The DataReader interacting method
         """
@@ -912,21 +916,21 @@ class MultiSheetReader(MultiReader):
     
     Input Data Files
     ----------------
-    Valid input files are multi-assay irregular `excel` files, 
+    Valid input files are multi-assay irregular ``excel`` files, 
     that specify assays by one replicate identifier column and one Ct value column.
 
     Separate assay tables may be either below one another (separated by blank lines!)
-    or besides one another (requires `transpose = True`), but may be in DIFFERENT sheets.
+    or besides one another (requires ``transpose = True``), but may be in DIFFERENT sheets.
     All assays from all sheets will be read!
 
-    Assays of interest and normaliser assays *must* be marked using `decorators`.
+    Assays of interest and normaliser assays *must* be marked using ``decorators``.
 
 
     Parameters
     ----------
     filename : str
         A filepath to a raw data file, containing multiple assays that were decorated. 
-        Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+        Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
     **kwargs
     """
     def __init__(self):
@@ -934,15 +938,15 @@ class MultiSheetReader(MultiReader):
 
     def read(self, *args, **kwargs):
         """
-        The `MultiSheetReader` **only** offers a `pipe` method!
-        Hence, neither `read` nor `parse` will work directly!
+        The ``MultiSheetReader`` **only** offers a ``pipe`` method!
+        Hence, neither ``read`` nor `parse` will work directly!
         """
         print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
 
     def parse(self, *args, **kwargs):
         """
-        The `MultiSheetReader` **only** offers a `pipe` method!
-        Hence, neither `read` nor `parse` will work directly!
+        The ``MultiSheetReader`` **only** offers a ``pipe`` method!
+        Hence, neither ``read`` nor ``parse`` will work directly!
         """
         print("Sorry, the MultiSheetReader can currently only be used, through it's pipe() method!")
 
@@ -957,19 +961,19 @@ class MultiSheetReader(MultiReader):
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+            Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
         **kwargs
-                Any additional keyword arguments that should be passed to the `qpcr.Parsers`''s `read` method that extracts the datasets.
+                Any additional keyword arguments that should be passed to the ``qpcr.Parsers``''s ``read`` method that extracts the datasets.
         
         Returns
         -------
         assays : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser (if no qpcr.Assays could be made automatically)
-            or a list of `qpcr.Assay` objects.
+            or a list of ``qpcr.Assay`` objects.
         normalisers : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
             (if no qpcr.Assays could be made automatically)
-            or a list of `qpcr.Assay` objects.
+            or a list of ``qpcr.Assay`` objects.
         """
         self._src = filename
 
@@ -1011,7 +1015,7 @@ class MultiSheetReader(MultiReader):
         assays, normalisers = self._assays, self._normalisers
         return assays, normalisers
         
-    def _DataReader(self, **kwargs):
+    def __dreader__(self, **kwargs):
         """
         The DataReader interacting method
         """
@@ -1028,39 +1032,43 @@ class BigTableReader(MultiReader):
     
     ### Input Data Files
     ----------------
-    Valid input files are multi-assay irregular `csv` or `excel` files, 
+    Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
     that specify assays as one big table containing all information together.
-    Note that this implies that the entire data is stored in a single sheet (if using `excel` files).
+    Note that this implies that the entire data is stored in a single sheet (if using ``excel`` files).
 
     Two possible data architectures are allowed:
     
-    #### `Vertical` Big Tables
+    ``Vertical`` Big Tables
+    ^^^^^^^^^^^^^^^
     Big Tables of this kind require three columns (any additional columns are disregarded): 
     one specifying the assay, one specifying the replicate identifiers, and one specifying the Ct values. 
     An additional fourth column (`@qpcr`) may be filled with decorators but this is not necessary in this setup.
 
     Example:
 
-    | assay | id   | Ct    | @qpcr |
-    | ----- | ---- | ----- | ---- |
-    | assay 1   | group0 | 7.65  | normaliser | 
-    | assay 1   | group0 | 7.74  | normaliser | 
-    | assay 1   | group0 | 7.54  | normaliser | 
-    | assay 1   | group1   | 7.86  | normaliser | 
-    | assay 1   | group1   | 7.57  | normaliser | 
-    | assay 1   | group1   | 7.67  | normaliser | 
-    | assay 2 | group0 | 16.67 | assay | 
-    | assay 2 | group0 | 16.54  | assay | 
-    | ...   | ...  | ...   | ... | 
+    +----------+---------+-------+-------------+
+    | assay    | id      | Ct    | @qpcr       |
+    +==========+=========+=======+=============+
+    | assay 1  | group0  | 7.65  | normaliser  |
+    | assay 1  | group0  | 7.74  | normaliser  |
+    | assay 1  | group0  | 7.54  | normaliser  |
+    | assay 1  | group1  | 7.86  | normaliser  |
+    | assay 1  | group1  | 7.57  | normaliser  |
+    | assay 1  | group1  | 7.67  | normaliser  |
+    | assay 2  | group0  | 16.67 | assay       |
+    | assay 2  | group0  | 16.54 | assay       |
+    | ...      | ...     | ...   | ...         |
+    +----------+---------+-------+-------------+
 
 
-    #### `Horizontal` Big Tables
+    ``Horizontal`` Big Tables
+    ^^^^^^^^^^^^^^^
     Big Tables of this kind store replicates from assays in side-by-side columns.
     The replicates may be labelled numerically or all have the same column header. 
     A second column is required specifying the replicate identifier. 
 
     Note, this kind of setup *requires* decorators above the first replicate of each assay,
-    as well as user-defined `replicates`!
+    as well as user-defined ``replicates``!
 
     Example:
 
@@ -1075,9 +1083,10 @@ class BigTableReader(MultiReader):
     >
     > The column headers have to be **unique** to the table!
     >
-    > Also, a word of warning with regard to replicate _assays_. The entries in the `assay` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same `qpcr.Assay` object. However, this will result in differently sized `Assays` which will cause problems downstream when you (or a `qpcr.Normaliser`) try to assemble a `qpcr.Results` object!
+    > Also, a word of warning with regard to replicate _assays_. The entries in the ``assay`` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same ``qpcr.Assay`` object. However, this will result in differently sized *Assays* which will cause problems downstream when you (or a ``qpcr.Normaliser``) try to assemble a `qpcr.Results` object!
 
-    #### `Hybrid` Big Tables
+    ``Hybrid`` Big Tables
+    ^^^^^^^^^^^^^^^
     Big Tables of this kind store Ct values of different assays in separate side-by-side columns, 
     but they store the replicate identifiers as a separate column. Hence, they combine aspects of vertical and horizontal Big Tables.
     
@@ -1098,11 +1107,11 @@ class BigTableReader(MultiReader):
     > Note
     >
     > Two options exist to read this kind of setup. 
-    > - A `list` of `ct_col` values can be passed which contains the column header of each assay.
-    > - The table can be `decorated`, in which case only decorated assays (columns) are extracted.
+    > - A ``list`` of ``ct_col`` values can be passed which contains the column header of each assay.
+    > - The table can be ``decorated``, in which case only decorated assays (columns) are extracted.
     >
     > Please, note that the two methods of reading this table are mutually exclusive! So,
-    > if you decorate your table you cannot pass specific assay headers to the `ct_col` argument anymore.
+    > if you decorate your table you cannot pass specific assay headers to the ``ct_col`` argument anymore.
     """
     def __init__(self):
         super().__init__()
@@ -1127,30 +1136,30 @@ class BigTableReader(MultiReader):
 
         Note 
         -------
-        This is the suggested use of the `BigTableReader`.
+        This is the suggested use of the ``BigTableReader``.
 
         Parameters
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+            Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
         kind : str
             Specifies the kind of Big Table from the file. 
-            This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
+            This may either be ``"horizontal"``, ``"vertical"``, or ``"hybrid"``.
         id_col : str
             The column header specifying the replicate identifiers 
-            (or "assays" in case of `horizontal` big tables).
+            (or "assays" in case of ``horizontal`` big tables).
         **kwargs
             Any additional columns or keyword arguments.
         Returns
         -------
         assays : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser (if no qpcr.Assays could be made automatically)
-            or a list of `qpcr.Assay` objects.
+            or a list of ``qpcr.Assay`` objects.
         normalisers : dict or list
             Returns either the raw dictionary of dataframes returned by the Parser 
             (if no qpcr.Assays could be made automatically)
-            or a list of `qpcr.Assay` objects.
+            or a list of ``qpcr.Assay`` objects.
         """
         replicates = aux.from_kwargs("replicates", None, kwargs)
         names = aux.from_kwargs("names", None, kwargs, rm = True)
@@ -1173,7 +1182,7 @@ class BigTableReader(MultiReader):
 
     def read(self, filename : str, kind : str, id_col : str, **kwargs):
         """
-        Reads a regular or irregular `csv` or `excel` datafile that contains data stored 
+        Reads a regular or irregular ``csv`` or ``excel`` datafile that contains data stored 
         in a single big table. Files are first tried to be read regularly, if this fails, 
         the Reader resorts to parsing to identify the relevant sections of the data. 
 
@@ -1181,13 +1190,13 @@ class BigTableReader(MultiReader):
         ----------
         filename : str
             A filepath to a raw data file, containing multiple assays that were decorated. 
-            Check out the documentation of the `qpcr.Parsers`'s to learn more about decorators.
+            Check out the documentation of the ``qpcr.Parsers``'s to learn more about decorators.
         kind : str
             Specifies the kind of Big Table from the file. 
-            This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
+            This may either be ``"horizontal"``, ``"vertical"``, or ``"hybrid"``.
         id_col : str
             The column header specifying the replicate identifiers 
-            (or "assays" in case of `horizontal` big tables).
+            (or "assays" in case of ``horizontal`` big tables).
         **kwargs
             Any additional columns or keyword arguments.
         """
@@ -1328,7 +1337,7 @@ class BigTableReader(MultiReader):
 
         Note
         ----
-        This is a downsized version of the `qpcr.Parsers` `find_assays` core.
+        This is a downsized version of the ``qpcr.Parsers`` ``find_assays`` core.
 
         Parameters
         -------
@@ -1635,7 +1644,7 @@ class BigTableReader(MultiReader):
         if got_regular_data:
             self._data = data
         
-    def _DataReader(self, **kwargs):
+    def __dreader__(self, **kwargs):
         """
         The DataReader interacting method
         """

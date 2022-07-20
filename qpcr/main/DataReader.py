@@ -219,7 +219,7 @@ class DataReader(aux._ID):
                             )
         
         # read file and return data
-        data = self._Reader._DataReader( 
+        data = self._Reader.__dreader__( 
                                             filename = self._src, 
                                             decorator = decorator, 
                                             **kwargs 
