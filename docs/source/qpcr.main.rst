@@ -1,34 +1,14 @@
-qpcr.main package
+.. _main:
+
+The main qpcr classes
 =================
 
-Submodules
-----------
+These are the main ``qpcr`` classes that carry the main user API.
+Some of these classes are also supported by direct functions to 
+carry out setting up default instances of the below classes.
 
-qpcr.main.Analyser module
--------------------------
 
-.. automodule:: qpcr.main.Analyser
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-qpcr.main.Assay module
-----------------------
-
-.. automodule:: qpcr.main.Assay
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-qpcr.main.Calibrator module
----------------------------
-
-.. automodule:: qpcr.main.Calibrator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-qpcr.main.DataReader module
+qpcr.DataReader
 ---------------------------
 
 .. automodule:: qpcr.main.DataReader
@@ -36,7 +16,23 @@ qpcr.main.DataReader module
    :undoc-members:
    :show-inheritance:
 
-qpcr.main.Normaliser module
+qpcr.Assay 
+----------------------
+
+.. automodule:: qpcr.main.Assay
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+qpcr.Analyser
+-------------------------
+
+.. automodule:: qpcr.main.Analyser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+qpcr.Normaliser
 ---------------------------
 
 .. automodule:: qpcr.main.Normaliser
@@ -44,13 +40,24 @@ qpcr.main.Normaliser module
    :undoc-members:
    :show-inheritance:
 
-qpcr.main.Results module
+qpcr.Results
 ------------------------
 
 .. automodule:: qpcr.main.Results
    :members:
    :undoc-members:
    :show-inheritance:
+
+qpcr.Calibrator
+---------------------------
+
+.. automodule:: qpcr.main.Calibrator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
 
 Module contents
 ---------------

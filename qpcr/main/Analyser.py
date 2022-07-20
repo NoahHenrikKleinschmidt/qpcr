@@ -25,7 +25,7 @@ Alternatively we can also directly use the ``qpcr.delta_ct`` function that will 
 
 Delta-Ct values
 ------------------------
-The computed values are stored in the respective ``qpcr.Assay``s dataframe into a column called ``"dCt"``.
+The computed values are stored in the respective ``qpcr.Assay`` dataframe into a column called ``"dCt"``.
 By default, the ``qpcr.Analyser`` will compute the Delta-Ct values already in exponential form. I.e. as :math:`efficiency^{-\Delta Ct}`.
 This behaviour can be changed by changing the applied function using the provided ``func`` method.
 

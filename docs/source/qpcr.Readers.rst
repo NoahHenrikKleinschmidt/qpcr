@@ -1,21 +1,12 @@
+.. _Readers:
+
 qpcr.Readers package
 ====================
-
-Submodules
-----------
-
-qpcr.Readers.Readers module
----------------------------
-
-.. automodule:: qpcr.Readers.Readers
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------
 
-.. automodule:: qpcr.Readers
+.. automodule:: qpcr.Readers.Readers
    :members:
    :undoc-members:
    :show-inheritance:

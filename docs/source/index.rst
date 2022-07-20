@@ -1,3 +1,4 @@
+.. _index
 .. qpcr documentation master file, created by
    sphinx-quickstart on Wed Jul 20 17:13:20 2022.
    You can adapt this file completely to your liking, but it should at least
@@ -12,7 +13,7 @@ Welcome to qpcr's documentation!
 
    qpcr
    gettingstarted
-   
+
 Indices and tables
 ==================
 

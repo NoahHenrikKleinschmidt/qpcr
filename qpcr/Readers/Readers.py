@@ -1,9 +1,16 @@
 """
+.. _qpcr.Readers
+
 This module provides different ``Reader`` classes that allow reading simple and complex datafiles
 of various architectures.
 
+
+
 Available Data Readers
 ====================
+
+Learn more about the available Readers. If you are interested to learn more about preprocessing the datafiles, 
+check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_
 
 SingleReader
 -----------
@@ -11,11 +18,53 @@ The ``SingleReader`` is able to read both regular and irregular single-assay dat
 It can also read multi-assay datafiles but requires an ``assay`` argument, specifying
 which assay specifically to extract from it.
 
++--------+-------+-------------+
+| id     | Ct    | other_data  |
++========+=======+=============+
+| ctrl1  | 5.67  | ...         |
++--------+-------+-------------+
+| ctrl2  | 5.79  | ...         |
++--------+-------+-------------+
+| ctrl3  | 5.86  | ...         |
++--------+-------+-------------+
+| condA1 | 5.34  | ...         |
++--------+-------+-------------+
+| ...    | ...   | ...         |
++--------+-------+-------------+
+
 MultiReader
 -----------
 The ``MultiReader`` can read irregular multi-assay datafiles and extract all assays from them
 either using a specific `assay_pattern` to find them or using ``decorators`` (check out the documentation
 of the ``qpcr.Parsers`` for more information).
+
++----------------------+---------------------+-------------+----------------------+---+
+| Some meta-data here  | maybe today's date  |             |                      |   |
++======================+=====================+=============+======================+===+
+| Assay 1              |                     |             |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| id                   | Ct                  | other_data  |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ctrl1                | 5.67                | ...         |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ctrl2                | 5.79                | ...         |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ...                  | ...                 |             |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+|                      |                     |             | <- blank line here!  |   |
++----------------------+---------------------+-------------+----------------------+---+
+| Assay 2              |                     |             |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| id                   | Ct                  | other_data  |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ctrl1                | 10.23               | ...         |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ctrl2                | 10.54               | ...         |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+| ...                  | ...                 |             |                      |   |
++----------------------+---------------------+-------------+----------------------+---+
+
+
 
 MultiSheetReader
 -----------
@@ -29,14 +78,64 @@ can extract all assays from that big table using either simple extraction method
 on the type of big table (check out the documentation of the ``BigTableReader`` for more information on the
 types of "big tables").
 
+"Vertical" BigTables
+
+    +----------+--------+-------+-------------+
+    | assay    | id     | Ct    | other_data  |
+    +==========+========+=======+=============+
+    | assay 1  | ctrl1  | 5.67  | ...         |
+    +----------+--------+-------+-------------+
+    | assay 1  | ctrl2  | 5.79  | ...         |
+    +----------+--------+-------+-------------+
+    | ...      | ...    | ...   | ...         |
+    +----------+--------+-------+-------------+
+    | assay 2  | ctrl1  | 10.23 | ...         |
+    +----------+--------+-------+-------------+
+    | ...      | ...    | ...   | ...         |
+    +----------+--------+-------+-------------+
+
+
+
+"Horizontal" BigTables
+
+    +----------+--------+--------+------+-------------+
+    | assay    | ctrl1  | ctrl2  | ...  | other_data  |
+    +==========+========+========+======+=============+
+    | assay 1  | 5.67   | 5.79   | ...  | ...         |
+    +----------+--------+--------+------+-------------+
+    | assay 2  | 10.23  | 10.54  | ...  | ...         |
+    +----------+--------+--------+------+-------------+
+    | ...      | ...    | ...    | ...  | ...         |
+    +----------+--------+--------+------+-------------+
+
+
+
+"Hybrid" BigTables
+
+    +-------+----------+----------+-------------+
+    | id    | assay 1  | assay 2  | other_data  |
+    +=======+==========+==========+=============+
+    | ctrl  | 7.65     | 11.78    | ...         |
+    +-------+----------+----------+-------------+
+    | ctrl  | 7.87     | 11.56    | ...         |
+    +-------+----------+----------+-------------+
+    | ctrl  | 7.89     | 11.76    | ...         |
+    +-------+----------+----------+-------------+
+    | condA | 7.56     | 11.98    | ...         |
+    +-------+----------+----------+-------------+
+    | condA | 7.34     | 11.56    | ...         |
+    +-------+----------+----------+-------------+
+    | ...   | ...      | ...      | ...         |
+    +-------+----------+----------+-------------+
+
+
 
 Kwarg incompatibility Warning
 -----------
 When using the ``qpcr.DataReader`` or a ``pipe`` method you will regularly observe the following warning: 
  
 .. code-block::
-    Warning  |  [ParserError] It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading...
-                              If the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.
+    Warning  |  [ParserError] It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading... If the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.
 
 This is because the ``pipe`` method (and the ``qpcr.DataReader``, which usually calls the ``pipe`` method of a specific Reader) pass all kwargs to both ``read`` and ``parse``. 
 However, ``pandas``' `read_excel` and `read_csv` are rather picky with the arguments they accept. So, in case you observe this warning, just know that the kwargs were removed from the 
@@ -408,38 +507,14 @@ class SingleReader(_CORE_Reader):
     Reads qpcr raw data files in csv or excel format to get a single dataset. 
 
     Input Data Files
-    ----------------
-    Valid input files are either regular ``csv`` or ``excel`` files, or  irregular ``csv`` or ``excel`` files, 
-    that specify assays by one replicate identifier column and one Ct value column.
+        
+        Valid input files are either regular ``csv`` or ``excel`` files, or  irregular ``csv`` or ``excel`` files, 
+        that specify assays by one replicate identifier column and one Ct value column.
 
-    Irregular input files may specify multiple assays as separate tables, 
-    one assay has to be selected using the ``assay`` argument. 
-    Separate assay tables may be either below one another (separated by blank lines!)
-    or besides one another (requires `transpose = True`).
-
-    Example of a "regular" single-assay datafile
-    ^^^^^^^^^^^^^^^
-    |id|Ct| other data |
-    |---|---| --- |
-    | ctrl1| 5.67 | ... |
-    | ctrl2| 5.79 | ... |
-    | ctrl3 | 5.86 | ... |
-    | condA1 | 5.34 | ... |
-    | ... | ... | ... |
-
-
-    Example of an "irregular" single-assay datafile
-    ^^^^^^^^^^^^^^^
-    |                     |                    |            |      |      |
-    | ------------------- | ------------------ | ---------- | ---- | ---- |
-    | Some meta-data here | maybe today's date |            |      |      |
-    |                     |                    |            |      |      |
-    | Assay 1             |                    |            |      |      |
-    | id                  | Ct                 | other_data |      |      |
-    | ctrl1               | 5.67               | ...        |      |      |
-    | ctrl2               | 5.79               | ...        |      |      |
-    | ...                 | ...                |            |      |      |
-
+        Irregular input files may specify multiple assays as separate tables, 
+        one assay has to be selected using the ``assay`` argument. 
+        Separate assay tables may be either below one another (separated by blank lines!)
+        or besides one another (requires `transpose = True`).
 
     Note
     ----
@@ -563,32 +638,14 @@ class MultiReader(SingleReader, aux._ID):
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
     Input Data Files
-    ----------------
-    Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
-    that specify assays by one replicate identifier column and one Ct value column.
+        
+        Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
+        that specify assays by one replicate identifier column and one Ct value column.
 
-    Separate assay tables may be either below one another (separated by blank lines!)
-    or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
+        Separate assay tables may be either below one another (separated by blank lines!)
+        or besides one another (requires `transpose = True`), but ALL in the SAME sheet!
 
-    Assays of interest and normaliser assays *must* be marked using ``decorators``.
-
-    Example of an "irregular" multi-assay datafile
-^^^^^^^^^^^^^^^
-    |                     |                    |            |      |      |
-    | ------------------- | ------------------ | ---------- | ---- | ---- |
-    | Some meta-data here | maybe today's date |            |      |      |
-    |                     |                    |            |      |      |
-    | Assay 1             |                    |            |      |      |
-    | id                  | Ct                 | other_data |      |      |
-    | ctrl1               | 5.67               | ...        |      |      |
-    | ctrl2               | 5.79               | ...        |      |      |
-    | ...                 | ...                |            |      |      |
-    |                     |                    |            |   <- blank line here!   |      |
-    | Assay 2             |                    |            |      |      |
-    | id                  | Ct                 | other_data |      |      |
-    | ctrl1               | 10.23              | ...        |      |      |
-    | ctrl2               | 10.54              | ...        |      |      |
-    | ...                 | ...                |            |      |      |
+        Assays of interest and normaliser assays *must* be marked using ``decorators``.
 
     Note
     ------
@@ -913,15 +970,15 @@ class MultiSheetReader(MultiReader):
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
     Input Data Files
-    ----------------
-    Valid input files are multi-assay irregular ``excel`` files, 
-    that specify assays by one replicate identifier column and one Ct value column.
+        
+        Valid input files are multi-assay irregular ``excel`` files, 
+        that specify assays by one replicate identifier column and one Ct value column.
 
-    Separate assay tables may be either below one another (separated by blank lines!)
-    or besides one another (requires ``transpose = True``), but may be in DIFFERENT sheets.
-    All assays from all sheets will be read!
+        Separate assay tables may be either below one another (separated by blank lines!)
+        or besides one another (requires ``transpose = True``), but may be in DIFFERENT sheets.
+        All assays from all sheets will be read!
 
-    Assays of interest and normaliser assays *must* be marked using ``decorators``.
+        Assays of interest and normaliser assays *must* be marked using ``decorators``.
 
 
     Parameters
@@ -1028,88 +1085,48 @@ class BigTableReader(MultiReader):
     """
     Reads a single multi-assay datafile and reads assays-of-interest and normaliser-assays based on decorators.
     
-    ### Input Data Files
-    ----------------
-    Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
-    that specify assays as one big table containing all information together.
-    Note that this implies that the entire data is stored in a single sheet (if using ``excel`` files).
-
-    Two possible data architectures are allowed:
-    
-    ``Vertical`` Big Tables
-    ^^^^^^^^^^^^^^^
-    Big Tables of this kind require three columns (any additional columns are disregarded): 
-    one specifying the assay, one specifying the replicate identifiers, and one specifying the Ct values. 
-    An additional fourth column (`@qpcr`) may be filled with decorators but this is not necessary in this setup.
-
-    Example:
-
-    +----------+---------+-------+-------------+
-    | assay    | id      | Ct    | @qpcr       |
-    +==========+=========+=======+=============+
-    | assay 1  | group0  | 7.65  | normaliser  |
-    | assay 1  | group0  | 7.74  | normaliser  |
-    | assay 1  | group0  | 7.54  | normaliser  |
-    | assay 1  | group1  | 7.86  | normaliser  |
-    | assay 1  | group1  | 7.57  | normaliser  |
-    | assay 1  | group1  | 7.67  | normaliser  |
-    | assay 2  | group0  | 16.67 | assay       |
-    | assay 2  | group0  | 16.54 | assay       |
-    | ...      | ...     | ...   | ...         |
-    +----------+---------+-------+-------------+
-
-
-    ``Horizontal`` Big Tables
-    ^^^^^^^^^^^^^^^
-    Big Tables of this kind store replicates from assays in side-by-side columns.
-    The replicates may be labelled numerically or all have the same column header. 
-    A second column is required specifying the replicate identifier. 
-
-    Note, this kind of setup *requires* decorators above the first replicate of each assay,
-    as well as user-defined ``replicates``!
-
-    Example:
-
-    |      | @qpcr:group |      |      | @qpcr:group |      |      |    |
-    | ---- | ---------------- | ---- | ---- | ---------------- | ---- | ---- | ---- |
-    | assay   | group0_1  | group0_2  | group0_3  | group1_1 | group1_2 | ...  | @qpcr   |
-    | assay1 | 7.74 | 7.65 | 7.54 | 11.54 | 11.67 | ...  |  normaliser  |
-    | assay 2   | 16.67 | 16.54 | 16.97 |  16.43 |  16.56 | ...  | assay   |
-    | ...  | ...  | ...  | ...  | …     | ...   | ...  |  ...  |
-
-    > Note
-    >
-    > The column headers have to be **unique** to the table!
-    >
-    > Also, a word of warning with regard to replicate _assays_. The entries in the ``assay`` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same ``qpcr.Assay`` object. However, this will result in differently sized *Assays* which will cause problems downstream when you (or a ``qpcr.Normaliser``) try to assemble a `qpcr.Results` object!
-
-    ``Hybrid`` Big Tables
-    ^^^^^^^^^^^^^^^
-    Big Tables of this kind store Ct values of different assays in separate side-by-side columns, 
-    but they store the replicate identifiers as a separate column. Hence, they combine aspects of vertical and horizontal Big Tables.
+    Input Data Files
     
 
-    Example: 
+        Valid input files are multi-assay irregular ``csv`` or ``excel`` files, 
+        that specify assays as one big table containing all information together.
+        Note that this implies that the entire data is stored in a single sheet (if using ``excel`` files).
 
-    |      | @qpcr:assay| @qpcr:normaliser |  |
-    | ------ | ------- | ------- | ----- |
-    | id     | assay 1 | assay 2 | other_data |
-    | group0 | 7.65    | 11.78   |     ...  |
-    | group0 | 7.87    | 11.56   |  ...     |
-    | group0 | 7.89    | 11.76   |   ...    |
-    | group1 | 7.56    | 11.98   |  ...     |
-    | group1 | 7.34    | 11.56   |   ...    |
-    | ...    | ...     | ...     |  ...     |
+    Three possible data architectures are allowed:
+    
+    - ``Vertical`` Big Tables
+        
+
+        Big Tables of this kind require three columns (any additional columns are disregarded): 
+        one specifying the assay, one specifying the replicate identifiers, and one specifying the Ct values. 
+        An additional fourth column (`@qpcr`) may be filled with decorators but this is not necessary in this setup.
 
 
-    > Note
-    >
-    > Two options exist to read this kind of setup. 
-    > - A ``list`` of ``ct_col`` values can be passed which contains the column header of each assay.
-    > - The table can be ``decorated``, in which case only decorated assays (columns) are extracted.
-    >
-    > Please, note that the two methods of reading this table are mutually exclusive! So,
-    > if you decorate your table you cannot pass specific assay headers to the ``ct_col`` argument anymore.
+    - ``Horizontal`` Big Tables
+        
+
+        Big Tables of this kind store replicates from assays in side-by-side columns.
+        The replicates may be labelled numerically or all have the same column header. 
+        A second column is required specifying the replicate identifier. 
+
+        Note, this kind of setup *requires* decorators above the first replicate of each assay,
+        as well as user-defined ``replicates``!
+
+        Note, the column headers have to be **unique** to the table!
+        Also, a word of warning with regard to replicate _assays_. The entries in the ``assay`` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same ``qpcr.Assay`` object. However, this will result in differently sized *Assays* which will cause problems downstream when you (or a ``qpcr.Normaliser``) try to assemble a `qpcr.Results` object!
+
+    - ``Hybrid`` Big Tables
+    
+        Big Tables of this kind store Ct values of different assays in separate side-by-side columns, 
+        but they store the replicate identifiers as a separate column. Hence, they combine aspects of vertical and horizontal Big Tables.
+        
+
+        Note, two options exist to read this kind of setup. 
+            - A ``list`` of ``ct_col`` values can be passed which contains the column header of each assay.
+            - The table can be ``decorated``, in which case only decorated assays (columns) are extracted.
+        
+        Please, note that the two methods of reading this table are mutually exclusive! So,
+        if you decorate your table you cannot pass specific assay headers to the ``ct_col`` argument anymore.
     """
     def __init__(self):
         super().__init__()

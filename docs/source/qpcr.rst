@@ -1,3 +1,5 @@
+.. _qpcr:
+
 qpcr package
 ============
 

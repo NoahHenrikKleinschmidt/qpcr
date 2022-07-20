@@ -1,10 +1,12 @@
+.. _curves:
+
 qpcr.Curves package
 ===================
 
 Submodules
 ----------
 
-qpcr.Curves.EfficiencyCurve module
+qpcr.Curves.EfficiencyCurve
 ----------------------------------
 
 .. automodule:: qpcr.Curves.EfficiencyCurve
