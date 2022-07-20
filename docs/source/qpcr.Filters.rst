@@ -1,10 +1,7 @@
 .. _Filters:
 
-qpcr.Filters package
+The qpcr.Filters
 ====================
-
-Module contents
----------------
 
 .. automodule:: qpcr.Filters.Filters
    :members:

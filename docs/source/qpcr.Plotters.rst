@@ -1,10 +1,7 @@
 .. _Plotters:
 
-qpcr.Plotters package
+The qpcr.Plotters
 =====================
-
-Module contents
----------------
 
 .. automodule:: qpcr.Plotters.Plotters
    :members:

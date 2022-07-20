@@ -1,10 +1,7 @@
 .. _Parsers:
 
-qpcr.Parsers package
+The qpcr.Parsers
 ====================
-
-Module contents
----------------
 
 .. automodule:: qpcr.Parsers.Parsers
    :members:

@@ -1,10 +1,7 @@
 .. _defaults:
 
-qpcr.defaults package
+qpcr.defaults
 =====================
-
-Module contents
----------------
 
 .. automodule:: qpcr.defaults.defaults
    :members:

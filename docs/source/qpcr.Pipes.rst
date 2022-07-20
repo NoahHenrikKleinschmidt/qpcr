@@ -1,11 +1,7 @@
 .. _Parsers:
 
-qpcr.Pipes package
+The qpcr.Pipes
 ==================
-
-
-Module contents
----------------
 
 .. automodule:: qpcr.Pipes.Pipes
    :members:

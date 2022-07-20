@@ -1,7 +1,9 @@
 .. _curves:
 
-qpcr.Curves package
+The qpcr.Curves
 ===================
+
+There is not much here yet...
 
 Submodules
 ----------

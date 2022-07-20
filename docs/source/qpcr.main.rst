@@ -8,6 +8,12 @@ Some of these classes are also supported by direct functions to
 carry out setting up default instances of the below classes.
 
 
+.. automodule:: qpcr.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 qpcr.DataReader
 ---------------------------
 
@@ -57,12 +63,3 @@ qpcr.Calibrator
    :show-inheritance:
 
 
-
-
-Module contents
----------------
-
-.. automodule:: qpcr.main
-   :members:
-   :undoc-members:
-   :show-inheritance:

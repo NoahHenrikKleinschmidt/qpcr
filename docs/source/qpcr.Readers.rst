@@ -1,10 +1,7 @@
 .. _Readers:
 
-qpcr.Readers package
+The qpcr.Readers
 ====================
-
-Module contents
----------------
 
 .. automodule:: qpcr.Readers.Readers
    :members:
