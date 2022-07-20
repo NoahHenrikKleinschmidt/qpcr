@@ -9,7 +9,7 @@ import qpcr.defaults as defaults
 import logging
 
 
-def log( filename = None, level = logging.WARNING, format = None ):
+def log( filename = None, level = None, format = None, name = "qpcr" ):
     """
     Store a log file
 
@@ -17,24 +17,80 @@ def log( filename = None, level = logging.WARNING, format = None ):
     -------
     filename : str
         The file in which to save the log. By default this will be a file `qpcr.log`
-        in the same directory as the current main script.
+        (logger name + .log) in the same directory as the current main script.
+        The log can be directed to stdout using `filename = "stdout"`.
     level 
-        The logging level
+        The logging level. By default WARNING is used.
+    format  
+        The logging format.
+    name
+        The logger name to use. By default `qpcr` is used.
     
     """
-    if filename is None:
-        import __main__
-        filename = os.path.dirname( __main__.__file__ ) + "/qpcr.log"
-    
+
+    if level is None:
+        level = defaults.log_level
+
+    if filename == "stdout":
+        handler = logging.StreamHandler()
+    else:
+        if filename is None:
+            import __main__
+            filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
+        elif not filename.endswith(".log"): 
+            filename += ".log"
+        handler = logging.FileHandler( filename = filename )
+   
     if format is None: 
         format = defaults.log_format
-        
-    logging.basicConfig(    level = level, 
-                            filename = filename,
-                            format = format
-                        )
+    
+    # and setup the dedicated qpcr logger
+    logger = logging.getLogger( name = name )
+    logger.setLevel( level )
+    f = logging.Formatter( fmt = format )
+    handler.setFormatter( f )
+    handler.setLevel( level )
+    logger.addHandler( handler )
+    return logger
 
+def default_logger():
+    """The default logger of qpcr"""
+    return log( filename = defaults.init_log_loc )
 
+def extensive_logger():
+    """
+    The extensive logger of qpcr.
+    This will store all levels into different file handlers.
+    """
+
+    # and setup the dedicated qpcr logger
+    logger = logging.getLogger( name = "qpcr" )
+    logger.setLevel( logging.DEBUG )
+
+    f = logging.Formatter( fmt = defaults.init_log_format )
+    
+    # get the current location
+    import __main__
+    filename = f"{os.path.dirname( __main__.__file__ )}/qpcr_" + "{level}.log"
+
+    debug = logging.FileHandler( filename = filename.format( level = "DEBUG" ) )
+    info = logging.FileHandler( filename = filename.format( level = "INFO" ) )
+    warning = logging.FileHandler( filename = filename.format( level = "WARNING" ) )
+    error = logging.FileHandler( filename = filename.format( level = "ERROR" ) )
+    critical = logging.FileHandler( filename = filename.format( level = "CRITICAL" ) )
+    
+    debug.setLevel( logging.DEBUG )
+    info.setLevel( logging.INFO )
+    warning.setLevel( logging.WARNING )
+    error.setLevel( logging.ERROR )
+    critical.setLevel( logging.CRITICAL )
+
+    for handler in [debug, info, warning, error, critical]:
+        handler.setFormatter( f )
+        logger.addHandler( handler )
+
+    return logger
+    
 def from_kwargs(key, default, kwargs, rm = False):
     """
     This function will try to extract key from the kwargs, 
