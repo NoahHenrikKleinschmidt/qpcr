@@ -1,6 +1,34 @@
 """
 This is the `qpcr.Analyser` whose function is to perform dataset-internal 
 normalisation to compute the first-step Delta-Ct Values within an `qpcr.Assay` object.
+
+
+
+Computing Delta-Ct values
+================
+
+Setting up a ``qpcr.Analyser`` is really easy and we see it in virtually every GitHub tutorial.
+
+.. code-block::
+    
+    analyser = qpcr.Analyser()
+
+    # and now directly pipe the data through
+    some_assays = analyser.pipe( some_assays )
+
+Alternatively we can also directly use the ``qpcr.delta_ct`` function that will call on a Analyser for us.
+
+.. code-block::
+    
+    some_assays = qpcr.delta_ct( some_assays )
+
+
+Delta-Ct values
+------------------------
+The computed values are stored in the respective ``qpcr.Assay``s dataframe into a column called ``"dCt"``.
+By default, the ``qpcr.Analyser`` will compute the Delta-Ct values already in exponential form. I.e. as :math:`efficiency^{-\Delta Ct}`.
+This behaviour can be changed by changing the applied function using the provided ``func`` method.
+
 """
 
 import qpcr.defaults as defaults

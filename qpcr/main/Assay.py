@@ -1,43 +1,57 @@
 
 """
-## Setting up a `qpcr.Assay`
----
+Specifying (Groups of) Replicates
+=================================
 
-Here is a manual example of creating a `qpcr.Assay` object. You can use either the `qpcr.DataReader` or any one of `qpcr.Readers` directly to 
-read in your data and generate a pandas DataFrame. Note, the `qpcr.Readers` are already equipped with `make_Assay(s)` methods that will handle
-setting up `qpcr.Assay` objects for you. 
+The groups are essential to analysing our data, so ``qpcr`` needs to know about how the data is grouped.
+Here's the best part: usually, we don't necessarily need to do anything here because ``qpcr.Assay``s are able to infer the groups of replicates in your data 
+automatically from the replicate identifiers (yeah!). However, you will be asked to manually provide replicate settings in case this fails. 
+In case you want to / have to manually specify replicate settings, a ``qpcr.Assay`` accepts an input ``replicates`` which is where you can specify this information. 
 
-However, setting up `qpcr.Assay`s manually can be as simple as:
+This input can be either an ``integer``, a ``tuple``, or a ``string``. Why's that? 
+Well, normally we perform experiments as "triplicates", or "duplicates", or whatever multiplets.
+Hence, if we always have the same number of replicates in each group (say all triplicates) we can simply specify this number as ``replicates = 3``. 
+However, some samples might only be done in unicates (such as the diluent sample), while others are triplicates.
 
-```python
-# get the dataframe from one of the qpcr.Readers
-mydata = some_reader.get()
+In these cases your dataset does not have uniformly sized groups of replicates and a single number will not do to describe the groups of replicates. 
+For these cases you can specify the number of replicates in each group separately as a ``tuple`` such as ``replicates = (3,3,3,3,1)`` or as a ``string`` "formula"
+which allows you to avoid repeating the same number of replicates many times like ``replicates = "3:4,1"``, which will translate into the same tuple as we specified manually. 
 
-assay = Assay( df = mydata, id = "my_assay" )
 
-```
+Setting up a ``qpcr.Assay``
+=================
+
+Here is a manual example of creating a ``qpcr.Assay`` object. You can use either the ``qpcr.DataReader`` or any one of :ref:`qpcr.Readers <qpcr.Readers>` directly to 
+read in your data and generate a pandas DataFrame. Note, the ``qpcr.Readers`` are already equipped with ``make_Assay(s)`` methods that will handle
+setting up ``qpcr.Assay`` objects for you. 
+
+However, setting up ``qpcr.Assay``s manually can be as simple as:
+
+.. code-block::
+    # get the dataframe from one of the qpcr.Readers
+    mydata = some_reader.get()
+
+    assay = Assay( df = mydata, id = "my_assay" )
 
 If your replicate identifiers are the same for all replicates within each group then the groups are automatically inferred. And your assay is 
 ready at this point already to be passed to an `qpcr.Analyser`. If not, you can specify the replicates manually like this: 
 
-```python
-# manually specify triplicates during setup
-assay = Assay( df = mydata, id = "my_assay", replicates = 3 )
+.. code-block::
+    # manually specify triplicates during setup
+    assay = Assay( df = mydata, id = "my_assay", replicates = 3 )
 
-# or you can change the replicates after initial setup like 
-assay = Assay( df = mydata, id = "my_assay" )
-assay.group( replicates = 3 )
-```
+    # or you can change the replicates after initial setup like 
+    assay = Assay( df = mydata, id = "my_assay" )
+    assay.group( replicates = 3 )
 
 We can now actually interact with the `qpcr.Assay`. Assays support direct item setting, getting, and deleting on their dataframes.
 
-```python
-# we could for instance fill a new column with only ones
-assay[ "my_new_column" ] = 1 
+.. code-block::
+    # we could for instance fill a new column with only ones
+    assay[ "my_new_column" ] = 1 
 
-# or get the id column from the assay
-ids = assay[ "id" ]
-```
+    # or get the id column from the assay
+    ids = assay[ "id" ]
 """
 
 import pandas as pd

@@ -1,6 +1,61 @@
 """
-This is the `qpcr.Normaliser` class whose function is to compute Fold-Changes of Delta-Ct values
-from assays and normalisers using `qpcr.Assay` objects.
+This is the ``qpcr.Normaliser`` class whose function is to compute Fold-Changes of Delta-Ct values
+from assays and normalisers using ``qpcr.Assay`` objects.
+
+
+Modes of *normalisation*
+========================
+
+The ``qpcr.Normaliser`` supports custom functions for normalisation. However, it also comes with three built-in methods to normalise sample-assays against normalisers.
+These are accessible via the `mode` argument of the `qpcr.Normaliser.normalise` method, which can be set to ``"pair-wise"`` (default), ``"combinatoric"``, or ``"permutative"``. 
+
+The default option `"pair-wise"` is computationally the fastest and will rigidly normalise replicates against their corresponding partner from the normaliser. I.e. first against first, 
+second against second, etc. This mode is appropriate for multiplex qPCR experiments. 
+
+For qPCR reactions that were pipetted individually, there is not reason to strictly only pair first
+with first, second with second etc. For these cases there are other two options `"combinatoric"` and ``"permutative"``. ``"combinatoric"`` normalisation will calculate all possible group-wise 
+combinations of a sample-assay replicate with all available normaliser replicates of the same group. I.e. first against first, and against second, etc. This will generate :math:`n^2` values where 
+:math:`n` is the number of replicates within a group. This mode is appropriate for small-scale datasets but will substantially increase computation times for larger datasets.   
+
+``"permutative"`` on the other hand will reflect the equivalence of replicates within a group through random permutations wihtin the normaliser replicates. Hence, 
+first may be normalised against first, or second, etc. This normalisation method may by used iteratively to increase the accuracy. Replacement during permutations are allowed (although disabled by default).
+If replacement is desired by the user, the probability of each replicate to be chosen will be weighted based on a fitted normal distribution. This method is appropriate for larger datasets for which combinatoric normalisation
+is not desired. 
+
+
+Normalising data
+================
+
+Setting up a ``qpcr.Normaliser`` is really easy and we see it in virtually every GitHub tutorial.
+
+.. code-block::
+    
+    normaliser = qpcr.Normaliser()
+
+    # and now directly pipe the data through
+    results = normaliser.pipe( some_assays, some_normalisers )
+
+Alternatively we can also directly use the ``qpcr.normalise`` function that will call on a Normaliser for us.
+
+.. code-block::
+    
+    results = qpcr.normalise( some_assays, some_normalisers )
+
+
+Preprocessing "normalisers"
+------------------------
+
+The ``qpcr.Normaliser`` can work with multiple ``qpcr.Assay``s as "normaliser-assays". However, it requires for computation a single set of numbers to compute fold changes.
+Therefore, the Normaliser first performs some *pre-processing* of all normaliser assays it receives. By default it will **compute their mean** and use this to compute fold changes.
+However, the ``qpcr.Normaliser`` is equipped with a method ``prep_func`` which allows you to pass a custom function for preprocessing.
+
+Normalisation
+--------------------
+By default the ``qpcr.Normaliser`` will compute normalised fold changes by dividing the assays-of-interst by the pre-processed normaliser. 
+As a side note here, the ``qpcr.Analyser`` already stores the Delta-Ct values it computes as :math:`efficiency^{-\Delta Ct}`. 
+Hence, by default the Delta-Ct values stored by ``qpcr.Assay``s after having been "analysed" are exponentials.
+However, using the method ``norm_func`` also a custom normalisation function can be specified.
+
 """
 
 import qpcr._auxiliary.warnings as aw
@@ -19,15 +74,6 @@ from copy import deepcopy
 import logging 
 
 logger = aux.default_logger()
-
-# use_new = True
-# if use_new: 
-#     logger.info( "We are currently using the NEW Results object" )
-#     from Results import Results 
-# else:
-#     logger.info( "We are using the OLD Results object") 
-#     import qpcr
-#     Results = qpcr.Results
 
 class Normaliser(aux._ID):
     """
