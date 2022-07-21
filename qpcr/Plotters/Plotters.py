@@ -10,7 +10,7 @@ because like this you save the repeated plotter creation by the built-in methods
 
 
 `Static` vs `Interactive` Figures
-====================================
+=================================
 
 The `Plotters` are designed to produce two kinds of figures each, either a ``"static"`` or  an ``"interactive"`` figure. 
 The type of figure a specific Plotter should produce has to be specified using the ``mode`` argument. While the two 
@@ -64,7 +64,7 @@ Manual setup (the classic way)
 Just as with the ``qpcr.Analyser`` we can *set up* a ``qpcr.Plotter``, then ``link`` the object we want to visualize from, and call the Plotter's ``plot`` method.
 We can pass all additional styling arguments either to the ``plot`` method or use the ``params`` method to set them up beforehand.
 
-Let us for instance visualise the raw Ct values from a ``qpcr.Assay`` we just loaded from a datafile and we want to have an interactive figure. 
+Let us for instance visualise the raw Ct values from a ``qpcr.Assay`` we just loaded from a datafile. 
 The dedicated Plotter for this is the ``ReplicateBoxPlot``.
 We can set it up like this:
 
@@ -72,8 +72,8 @@ We can set it up like this:
 
     from qpcr.Plotters import ReplicateBoxPlot 
 
-    # by default it will produce an "interactive" figure
-    myboxplot = ReplicateBoxPlot( mode = "interactive" )
+    # by default it will produce a "static" figure by default
+    myboxplot = ReplicateBoxPlot()
 
     # now we link the assay
     myboxplot.link( myassay )
@@ -100,7 +100,7 @@ For more convenience, however, the ``qpcr.Assay`` lets us directly visualize its
 
 .. code-block:: python
 
-    fig = myassay.boxplot( mode = "interactive", **my_params )
+    fig = myassay.boxplot( **my_params )
 
 
 This will perform the setup and linking to a new instance of ``ReplicateBoxPlot``. 
@@ -108,7 +108,7 @@ This will perform the setup and linking to a new instance of ``ReplicateBoxPlot`
 
 
 The ``qpcr.plot`` function
-----------------------------
+--------------------------
 
 As a generic way to visualize data, ``qpcr`` offers the stand-alone ``plot`` function that accepts a data-containing object and will call it's built-in plotting method.
 Hence, this is just another way of calling the object's built-in plotting method. It may be convenient for you if you are used to the R plot API (and was inspired by it).
@@ -117,14 +117,10 @@ Thus, a final way of obtaining the exact same figure as before, is using:
 
 .. code-block:: python
 
-    fig = qpcr.plot( myassay, mode = "interactive", **my_params )
+    fig = qpcr.plot( myassay, **my_params )
 
 
-What does the output look like? Here is a possible figure output for a `ReplicateBoxPlot` in interactive mode:
-
-
-.. raw:: html
-        :file: ../../qpcr/docs/source/resources/boxplot.html
+What does the output look like? Here is a possible figure output for a `ReplicateBoxPlot` in static mode:
 
 .. image:: ../../docs/source/resources/boxplot.png
     :align: center

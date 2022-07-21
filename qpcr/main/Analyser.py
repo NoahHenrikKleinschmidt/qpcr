@@ -5,7 +5,7 @@ normalisation to compute the first-step Delta-Ct Values within an `qpcr.Assay` o
 
 
 Computing Delta-Ct values
-================
+=========================
 
 Setting up a ``qpcr.Analyser`` is really easy and we see it in virtually every GitHub tutorial.
 
@@ -24,7 +24,7 @@ Alternatively we can also directly use the ``qpcr.delta_ct`` function that will 
 
 
 Delta-Ct values
-------------------------
+---------------
 The computed values are stored in the respective ``qpcr.Assay`` dataframe into a column called ``"dCt"``.
 By default, the ``qpcr.Analyser`` will compute the Delta-Ct values already in exponential form. I.e. as :math:`efficiency^{-\Delta Ct}`.
 This behaviour can be changed by changing the applied function using the provided ``func`` method. 

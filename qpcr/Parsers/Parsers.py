@@ -21,7 +21,7 @@ There are essentially two ways how they can do this, which are explained below.
 
 
 "Finding" relevant datasets through ``assay_patterns``
----------------------------------------------------------
+------------------------------------------------------
 
 The Parsers are quipped with a method called ``find_assays`` which locates assays (or more formally "datasets") within the datafile
 using ``regex``. Of course, in order to do that they need to know the patterns they are supposed to look for. Some patterns are already pre-specified

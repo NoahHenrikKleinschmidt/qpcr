@@ -43,14 +43,15 @@ Alternatively we can also directly use the ``qpcr.normalise`` function that will
 
 
 Preprocessing "normalisers"
-------------------------
+---------------------------
 
 The ``qpcr.Normaliser`` can work with multiple ``qpcr.Assay`` as "normaliser-assays". However, it requires for computation a single set of numbers to compute fold changes.
 Therefore, the Normaliser first performs some *pre-processing* of all normaliser assays it receives. By default it will **compute their mean** and use this to compute fold changes.
 However, the ``qpcr.Normaliser`` is equipped with a method ``prep_func`` which allows you to pass a custom function for preprocessing.
 
 Normalisation
---------------------
+-------------
+
 By default the ``qpcr.Normaliser`` will compute normalised fold changes by dividing the assays-of-interst by the pre-processed normaliser. 
 As a side note here, the ``qpcr.Analyser`` already stores the Delta-Ct values it computes as :math:`efficiency^{-\Delta Ct}`. 
 Hence, by default the Delta-Ct values stored by ``qpcr.Assay``s after having been "analysed" are exponentials.

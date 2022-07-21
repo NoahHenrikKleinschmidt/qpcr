@@ -2,7 +2,7 @@
 This is the ``qpcr.Assay`` class whose job is to store qPCR datasets. It is a central data-handling class in ``qpcr``. 
 
 Setting up a ``qpcr.Assay``
-=================
+===========================
 
 Here is a manual example of creating a ``qpcr.Assay`` object. You can use either the ``qpcr.DataReader`` or any one of :ref:`qpcr.Readers <qpcr.Readers>` directly to 
 read in your data and generate a pandas DataFrame. Note, the ``qpcr.Readers`` are already equipped with ``make_Assay(s)`` methods that will handle

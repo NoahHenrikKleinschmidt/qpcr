@@ -56,7 +56,7 @@ For instance, we might want to filter out any values that are `+2 IQR` but retai
     myassay = myfilter.pipe( myassay )
 
 Filter Summary
-=====================
+==============
 
 The Filters offer a summary of their activity. This is primarily through a *summary figure* that can be called via the ``plot`` method or the ``qpcr.plot`` function.
 

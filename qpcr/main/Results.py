@@ -3,7 +3,7 @@ This is the ``qpcr.Results`` class whose function is to accumulate results from 
 ``qpcr.Assay`` objects and summarize them.
 
 Setting up a ``qpcr.Results`` object
-================================
+====================================
 
 Since the ``Results`` are supposed to be a central collection hub it makes sense to know how to make them.
 The setup is fairly simple. The ``qpcr.Results`` already provide a number of methods to directly add specific data

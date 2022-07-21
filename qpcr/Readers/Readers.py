@@ -8,7 +8,7 @@ Learn more about the available Readers. If you are interested to learn more abou
 check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_.
 
 SingleReader
------------
+------------
 The ``SingleReader`` is able to read both regular and irregular single-assay datafiles. 
 It can also read multi-assay datafiles but requires an ``assay`` argument, specifying
 which assay specifically to extract from it.
@@ -87,7 +87,7 @@ of the ``qpcr.Parsers`` for more information).
 
 
 MultiSheetReader
------------
+----------------
 The ``MultiSheetReader`` is able to read irregular multi-assay datafiles that contain assays in multiple 
 datasheets.
 
@@ -96,7 +96,7 @@ exclusively (thus turning the reader to a "MultiReader") using the ``sheet`` arg
 
 
 BigTableReader
------------
+--------------
 The ``BigTableReader`` is able to read datafiles that store their assays in one single "big table". It
 can extract all assays from that big table using either simple extraction methods or ``decorators`` depending
 on the type of big table (check out the documentation of the ``BigTableReader`` for more information on the

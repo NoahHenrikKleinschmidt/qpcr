@@ -31,7 +31,7 @@ To learn more about file pre-processing so that qpcr can automatically read your
 
 
 Reading multiple files
-------------------------
+----------------------
 
 The DataReader is able to read multiple files successively when passed a ``list``. 
 However, the DataReader functions as a *wrapper* around the :ref:`qpcr.Readers <Readers>` and to save computations it sets up a suitable Reader
