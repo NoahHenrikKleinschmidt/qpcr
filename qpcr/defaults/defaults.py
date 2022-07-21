@@ -49,7 +49,7 @@ strict_id = False
 log_level = logging.WARNING
 """The default logging level"""
 
-log_format = "%(asctime)s  |  %(levelname)s  |  %(module)s.%(funcName)s  |  %(message)s"
+log_format = "%(asctime)s  |  %(levelname)s  |  %(module)s.%(funcName)s (%(lineno)d)  |  %(message)s"
 """The default logging format"""
 
 init_log_loc = "stdout"
