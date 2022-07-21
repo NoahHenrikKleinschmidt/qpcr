@@ -20,7 +20,7 @@ by using ``qPCR`` with uppercase.
 File (or "datafile")
 -----------
 
-Let's start simple. A ``file` is simply one of your input datafiles. For`qpcr` this means either a `csv` or an `excel`` file. 
+Let's start simple. A `file` is simply one of your input datafiles. For ``qpcr`` this means either a `csv` or an `excel` file. 
 Files are the at the very basis of our data pipeline. 
 However, ``qpcr`` does not strictly require that these files correspond to anything in particular from "qPCR vocabulary" *per se* 
 (although the basic assumption underlying the default settings is that a single "regular" datafile contains exactly one single qPCR assay). 
@@ -64,7 +64,7 @@ Groups of replicates are, as their name already implies, well, a number of repli
 For most cases, if your datafiles contain one assay each, then the groups of replicates are most likely your different qPCR samples / experimental conditions. 
 We talk about *groups* of replicates instead of samples or conditions, primarily, because there might be different data setups so that these terms might not be always appropriate.
 If your data follows default arrangements, however, then a *group of replicates* is just what you would think of as a "qPCR sample". 
-Groups are assigned a numeric index starting from 0, which is how they are identified by the ``qpcr``classes. 
+Groups are assigned a numeric index starting from 0, which is how they are identified by the ``qpcr`` classes. 
 However, they also come with a text label called the ``group_name`` (you can manually set and re-set the group names as you like). 
 Many classes such as the ``qpcr.DataReader`` will actually just use the term ``names`` instead of the full ``group_names``. 
 Whenever you see anything "names"-related it is (super-duper most likely) a reference to the ``group_names``.
