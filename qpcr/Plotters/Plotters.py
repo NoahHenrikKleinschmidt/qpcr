@@ -1,29 +1,109 @@
 """
-This module is designed for streamlined data visualisation of the qpcr generated results
-It is designed to work directly with `qpcr.Results` objects. 
+.. _qpcr.Plotters:
 
-## `Static` vs `Interactive` Figures
-----
+This module is designed for streamlined data visualisation directly from ``qpcr`` classes. 
+To that end, it defines specific ``Plotter`` classes that are dedicated to producing one specific kind of figure each.
+All ``qpcr`` classes that support visualisation from their data have a built-in method to call their appropriate Plotter directly
+(such as the ``qpcr.Results.preview`` method that calls the ``PreviewResults`` wrapper). At this point: a "wrapper" is a wrapper for multiple Plotters.
+You may choose to setup your own Plotter instead of relying on the built-in methods if you have to visualize many different objects, 
+because like this you save the repeated plotter creation by the built-in methods. Also, manual setup is required for Plotter adding to the :ref:`qpcr.Pipes <Pipes>`.
 
-The `Plotters` are designed to produce two kinds of figures each, either a `"static"` or  an `"interactive"` figure. 
-The type of figure a specific Plotter should produce has to be specified using the `mode` argument. 
 
-### Static Figures
-_Static_  figures are made using `matplotlib` and they will open through whatever backend your matplotlib configuration 
+`Static` vs `Interactive` Figures
+====================================
+
+The `Plotters` are designed to produce two kinds of figures each, either a ``"static"`` or  an ``"interactive"`` figure. 
+The type of figure a specific Plotter should produce has to be specified using the ``mode`` argument. While the two 
+visualizations aim to be as close as possible to one another, they are naturally not identical, however. 
+Also they offer different kinds of costumization options.
+
+Static Figures
+--------------
+
+**Static**  figures are made using ``matplotlib`` and they will open through whatever backend your matplotlib configuration 
 as specified. Static figures are primarily designed for printing into labjournals and offer a greater flexibility with 
-style customizibility (you can use `seaborn` styles for instance, or the matplotlib `rcparams` to style your figures). 
+style customizibility (you can use ``seaborn`` styles for instance, or the matplotlib ``rcparams`` to style your figures). 
 
-### Interactive Figures
-_Interactive_  figures are made using `plotly` and they will open in your browser. Interactive Figures are primarily designed
+Interactive Figures
+-------------------
+
+**Interactive** figures are made using ``plotly`` and they will open in your browser. Interactive Figures are primarily designed
 for cases where your figures contain a lot of data so having a static view on them might be insufficient. Interactive figures
-offer `plotly`'s native features like zooming, cropping, size-adjustments and so forth. It comes at the price of less flexibility
-with regard to styling. You can set plotly `templates`, but that's about it. However, also interactive figures are perfectly 
+offer ``plotly``'s native features like zooming, cropping, size-adjustments and so forth. It comes at the price of less flexibility
+with regard to styling. You can set plotly ``templates``, but that is about the extend of it. However, also interactive figures are perfectly 
 adequate for your labjournal, and you may prefer using these for their dynamic figure size adjustments directly from your browser. 
 
-### Plotting `kwargs` 
+
+Plotting ``kwargs``
+===================
+
 Both Static and Interactive Figures support a variety of keyword arguments that allow you to customise many of their 
-characteristics and their underlying data handling. You can check which kwargs are passable to each type of figure in 
+characteristics and their underlying data handling. In fact, the entire styling is carried out via these arguments (a relic from earlier code phases).
+You can check which kwargs are passable to each type of figure in 
 the documentation of each Plotter. 
+
+
+Visualizing your data
+=====================
+
+There are a number of ways to visualize data in ``qpcr``.
+
+Manual setup (the classic way)
+--------------------------------
+
+Just as with the ``qpcr.Analyser`` we can *set up* a ``qpcr.Plotter``, then ``link`` the object we want to visualize from, and call the Plotter's ``plot`` method.
+We can pass all additional styling arguments either to the ``plot`` method or use the ``params`` method to set them up beforehand.
+
+Let us for instance visualise the raw Ct values from a ``qpcr.Assay`` we just loaded from a datafile. The dedicated Plotter for this is the ``ReplicateBoxPlot``.
+We can set it up like this:
+
+.. code-block:: python
+
+    from qpcr.Plotters import ReplicateBoxPlot
+
+    # by default it will produce a "static" figure
+    myboxplot = ReplicateBoxPlot()
+
+    # now we link the assay
+    myboxplot.link( myassay )
+
+    # and add some graphing paramters
+    my_params = { 
+                    "color" : "Reds", # we want to change the default colormap to red tones
+                    "title" : "my customized figure",
+                    "style" : "darkgrid", # and use the seaborn darkgrid style 
+                }
+    myboxplot.params( my_params )
+
+    # and now visualise the figure
+    fig = myboxplot.plot()
+
+    # alternatively: fig = myboxplot.plot( **my_params ) 
+
+This is a rather tedious way of setting up for just a quick look at our Assay, but it may be worth it if we have to repeat this many times...
+
+The Built-in shortuct
+----------------------
+For more convenience, however, the ``qpcr.Assay`` lets us directly visualize its Ct values through the ``boxplot`` method. We can call it easily like:
+
+.. code-block:: python
+
+    fig = myassay.boxplot( **my_params )
+
+This will perform the setup and linking to a new instance of ``ReplicateBoxPlot``. 
+
+The ``qpcr.plot`` function
+----------------------------
+
+As a generic way to visualize data, ``qpcr`` offers the stand-alone ``plot`` function that accepts a data-containing object and will call it's built-in plotting method.
+Hence, this is just another way of calling the object's built-in plotting method. It may be convenient for you if you are used to the R plot API (and was inspired by it).
+However, it is important to note that you cannot add a `Plotter` to the ``plot`` function, only data-containing classes like the ``qpcr.Assay`` or ``qpcr.Results`` support the generic ``plot`` function!
+Thus, a final way of obtaining the exact same figure as before, is using:
+
+.. code-block:: python
+
+    fig = qpcr.plot( myassay, **my_params )
+
 """
 
 import qpcr.main as main
@@ -579,49 +659,86 @@ class AssayBars(Plotter):
 
 
     Plotting Kwargs
-    ----
+    ===============
     
-    #### `"static"` Kwargs
-    Static AssayBars figures accept the following kwargs:
+    `"static"` Kwargs
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
-    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
-    |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
-    |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
+        Static AssayBars figures accept the following kwargs:
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive AssayBars figures accept the following kwargs:
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                  | Description                                                                                                            | Example                                       |
+        +===========================+========================================================================================================================+===============================================+
+        | show: `bool`              | Whether or not to show the figure                                                                                      | `show = True` (default)                       |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | figsize: `tuple`          | The figure size                                                                                                        | `figsize = (10, 4)`                           |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title: `str`              | The overall figure title                                                                                               | `title = "Today's results"                    |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel: `str`             | The x-axis label of each subplot                                                                                       | `xlabel = "Conditions"`                       |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel: `str`             | The y-axis label of each subplot                                                                                       | `ylabel = "Mean Fold Change"`                 |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | rot: `float`              | The rotation of x-axis labels                                                                                          | `rot = 0.3`                                   |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers: `list`           | A list of titles for each subplot in the preview figure                                                                | `headers = ["transcript A", "transcript B"]`  |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | label_subplots: `bool`    | Add each subplot with A, B, C ... (if True, default)                                                                   | `label_subplots = True` (default)             |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | labeltype: `str`          | The starting character for subplot labelling. By default an `"A"`.                                                     | `labeltype = "a"`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | frame: `bool`             | Show left and top spines of subplots (if True)                                                                         | `frame = False` (default)                     |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | color: `str or list`      | The fillcolor for the individual bars                                                                                  | `color = "yellow"`                            |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | style: `str`              | A `seaborn` style to set. Check out available styles [1].                                                              | `style = "darkgrid"`                          |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgecolor: `str or list`  | The edgecolor for the individual bars                                                                                  | `edgecolor = "black"`                         |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgewidth: `float`        | The width of the edge of individual bars                                                                               | `edgewidth = 0.5`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ecolor: `str`             | The color of errorbars                                                                                                 | `ecolor = "orange"`                           |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.                         |                                               |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
 
+    
+    `"interactive"` Kwargs
+    
+        Interactive AssayBars figures accept the following kwargs:
+
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                    | Example                                       |
+        +=============================+================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                              | `show = True` (default)                       |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                       | `title = "Today's results"`                   |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`              | The x axis label                                                                                                                                               | `xlabel = "My super qPCR samples"`            |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                               | `ylabel = "Mean of ddCt"`                     |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                           | `height = 50`                                 |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                            | `width = 50`                                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                       | `padding = 0.2`                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                               | `template = "plotly_dark"`                    |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                        | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | legend_title : `str`        | The title to be displayed above the legend                                                                                                                     | `legend_title = "my assays"`                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                  | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.                                                                                     |                                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+
+    
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode:str = None):
         self._setup_default_params(
@@ -845,36 +962,59 @@ class ReplicateBoxPlot(Plotter):
     mode : str
         The plotting mode (either `"interactive"` or `"static"`).
 
+
+
     Plotting Kwargs
-    ----
+    ===============
     
-    #### `"static"` Kwargs
-    Static ReplicateBoxPlot figures accept the following kwargs:
+    `"static"` Kwargs
+        
+        Static ReplicateBoxPlot figures accept the following kwargs:
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
-    | title : `str`   |  The overall figure title   | `title = "My assays"    |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |   color : `str or list`   | The fillcolor for the boxes.   | `color = "yellow"`     |
-    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | Argument               | Description                                                                      | Example                  |
+        +========================+==================================================================================+==========================+
+        | show : `bool`          | Whether or not to show the figure                                                | `show = True` (default)  |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | figsize : `tuple`      | The figure size                                                                  | `figsize = (10, 4)`      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | subplots : `tuple`     | A tuple specifying the number of colums and rows (in that order) for the figure  | `subplots = (2, 3)`      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | title : `str`          | The overall figure title                                                         | `title = "My assays"     |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | style : `str`          | A `seaborn` style to set. Check out available styles [1].                        | `style = "darkgrid"`     |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | color : `str or list`  | The fillcolor for the boxes.                                                     | `color = "yellow"`       |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | \*\*kwargs             | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.         |                          |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive ReplicateBoxPlot figures accept the following kwargs:
+    
+    `"interactive"` Kwargs
+        
+        Interactive ReplicateBoxPlot figures accept the following kwargs:
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "My run"`    |
-    | ylabel : `str`   |  The y-axis title   | `ylabel = "Raw Ct value"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | Argument          | Description                                                                 | Example                    |
+        +===================+=============================================================================+============================+
+        | show : `bool`     | Whether or not to show the figure                                           | `show = True` (default)    |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | title : `str`     | The overall figure title                                                    | `title = "My run"`         |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | ylabel : `str`    | The y-axis title                                                            | `ylabel = "Raw Ct value"`  |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | height : `int`    | Height of the figure                                                        | `height = 50`              |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | width : `int`     | Width of the figure                                                         | `width = 50`               |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | template : `str`  | The `plotly` template to use. Check out available templates [2].            | `template = "plotly_dark"` |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
+        | \*\*kwargs        | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.  |                            |
+        +-------------------+-----------------------------------------------------------------------------+----------------------------+
 
+
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
     """
     def __init__(self, mode : str = None):
         self._setup_default_params(
@@ -1042,42 +1182,71 @@ class FilterSummary(Plotter):
 
 
     
-    #### `"static"` Kwargs
-    Static FilterSummary figures accept the following kwargs:
+    `"static"` Kwargs
+
+	    Static FilterSummary figures accept the following kwargs:
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    |   subplots : `tuple`   |  A tuple specifying the number of colums and rows (in that order) for the figure    | `subplots = (2, 3)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's run"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct values"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |   color : `str or list`   | The color for the boxes.   | `color = ["yellow", "green"]`     |
-    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.     |      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | Argument               | Description                                                                      | Example                        |
+        +========================+==================================================================================+================================+
+        | show : `bool`          | Whether or not to show the figure                                                | `show = True` (default)        |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | figsize : `tuple`      | The figure size                                                                  | `figsize = (10, 4)`            |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | subplots : `tuple`     | A tuple specifying the number of colums and rows (in that order) for the figure  | `subplots = (2, 3)`            |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | title : `str`          | The overall figure title                                                         | `title = "Today's run"         |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | xlabel : `str`         | The x-axis label of each subplot                                                 | `xlabel = "Conditions"`        |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | ylabel : `str`         | The y-axis label of each subplot                                                 | `ylabel = "My Ct values"`      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | rot : `float`          | The rotation of x-axis labels                                                    | `rot = 0.3`                    |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | frame   : `bool`       | Show left and top spines of subplots (if True)                                   | `frame = False` (default)      |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | style : `str`          | A `seaborn` style to set. Check out available styles [1].                        | `style = "darkgrid"`           |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | color : `str or list`  | The color for the boxes.                                                         | `color = ["yellow", "green"]`  |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+        | \*\*kwargs             | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.         |                                |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------------+
+
   
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive FilterSummary figures accept the following kwargs:
+    
+    `"interactive"` Kwargs
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's run"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Raw Ct values"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  colors : `list`   |   List of two colors for _before_ and _after_ filtering boxes. | `colors = ["red", "green"]`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |  headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default `"y+x+name"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.     |      |
+	    Interactive FilterSummary figures accept the following kwargs:
 
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                      | Example                                       |
+        +=============================+==================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                                | `show = True` (default)                       |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                         | `title = "Today's run"`                       |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                                 | `ylabel = "Raw Ct values"`                    |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                             | `height = 50`                                 |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                              | `width = 50`                                  |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                         | `padding = 0.2`                               |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | colors : `list`             | List of two colors for before and after filtering boxes.                                                                                                         | `colors = ["red", "green"]`                   |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                                 | `template = "plotly_dark"`                    |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                          | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default `"y+x+name"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                  | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Box()`.                                                                                       |                                               |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode = None ):
         self._setup_default_params(
@@ -1338,47 +1507,81 @@ class AssayDots(Plotter):
 
 
     Plotting Kwargs
-    ----
+    ================
     
-    #### `"static"` Kwargs
-    Static AssayDots figures accept the following kwargs:
+    `"static"` Kwargs
+
+	    Static AssayDots figures accept the following kwargs:
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
-    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
-    |   color : `str or list`   | The fillcolor for the individual dots from replicate groups   | `color = "yellow"`     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `stripplot`.     |      |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                  | Description                                                               | Example                                       |
+        +===========================+===========================================================================+===============================================+
+        | show : `bool`             | Whether or not to show the figure                                         | `show = True` (default)                       |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | figsize : `tuple`         | The figure size                                                           | `figsize = (10, 4)`                           |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`             | The overall figure title                                                  | `title = "Today's results"                    |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`            | The x-axis label of each subplot                                          | `xlabel = "Conditions"`                       |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`            | The y-axis label of each subplot                                          | `ylabel = "Mean Fold Change"`                 |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | rot : `float`             | The rotation of x-axis labels                                             | `rot = 0.3`                                   |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`          | A list of titles for each subplot in the preview figure                   | `headers = ["transcript A", "transcript B"]`  |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                      | `label_subplots = True` (default)             |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.        | `labeltype = "a"`                             |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | frame   : `bool`          | Show left and top spines of subplots (if True)                            | `frame = False` (default)                     |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | violin   : `bool`         | Show symmetric kde of the dots of each group (if True).                   | `violin = False`                              |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | color : `str or list`     | The fillcolor for the individual dots from replicate groups               | `color = "yellow"`                            |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                 | `style = "darkgrid"`                          |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                | Any additional kwargs that can be passed to the `seaborn`'s `stripplot`.  |                                               |
+        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive AssayDots figures accept the following kwargs:
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.     |      |
+    
+    `"interactive"` Kwargs
 
+	    Interactive AssayDots figures accept the following kwargs:
+
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                    | Example                                       |
+        +=============================+================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                              | `show = True` (default)                       |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                       | `title = "Today's results"`                   |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`              | The x axis label                                                                                                                                               | `xlabel = "My super qPCR samples"`            |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                               | `ylabel = "Mean of ddCt"`                     |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                           | `height = 50`                                 |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                            | `width = 50`                                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                       | `padding = 0.2`                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                               | `template = "plotly_dark"`                    |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                        | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | violin   : `bool`           | Show symmetric kde of the dots of each group (if True).                                                                                                        | `violin = False`                              |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                  | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.                                                                                  |                                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode:str = None ):
         self._setup_default_params(
@@ -1640,50 +1843,89 @@ class GroupBars(Plotter):
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
 
+
+
     Plotting Kwargs
-    ----
+    ================
     
-    #### `"static"` Kwargs
-    Static GroupBars figures accept the following kwargs:
+    `"static"` Kwargs
+
+	    Static GroupBars figures accept the following kwargs:
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
-    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   color : `str or list`   | The fillcolor for the individual bars   | `color = "yellow"`     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |   edgecolor : `str or list`   | The edgecolor for the individual bars   | `edgecolor = "black"`     |
-    |   edgewidth : `float`   |  The width of the edge of individual bars  | `edgewidth = 0.5`     |
-    |  ecolor : `str`    |   The color of errorbars   |  `ecolor = "orange"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.     |      |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                  | Description                                                                                     | Example                                       |
+        +===========================+=================================================================================================+===============================================+
+        | show : `bool`             | Whether or not to show the figure                                                               | `show = True` (default)                       |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | figsize : `tuple`         | The figure size                                                                                 | `figsize = (10, 4)`                           |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`             | The overall figure title                                                                        | `title = "Today's results"                    |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`            | The x-axis label of each subplot                                                                | `xlabel = "Conditions"`                       |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`            | The y-axis label of each subplot                                                                | `ylabel = "Mean Mean Fold Change"`            |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | rot : `float`             | The rotation of x-axis labels                                                                   | `rot = 0.3`                                   |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`          | A list of titles for each subplot in the preview figure                                         | `headers = ["transcript A", "transcript B"]`  |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                                            | `label_subplots = True` (default)             |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.                              | `labeltype = "a"`                             |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | frame   : `bool`          | Show left and top spines of subplots (if True)                                                  | `frame = False` (default)                     |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | color : `str or list`     | The fillcolor for the individual bars                                                           | `color = "yellow"`                            |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                                       | `style = "darkgrid"`                          |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgecolor : `str or list` | The edgecolor for the individual bars                                                           | `edgecolor = "black"`                         |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgewidth : `float`       | The width of the edge of individual bars                                                        | `edgewidth = 0.5`                             |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ecolor : `str`            | The color of errorbars                                                                          | `ecolor = "orange"`                           |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | **kwargs                  | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.  |                                               |
+        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive GroupBars figures accept the following kwargs:
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    | legend_title : `str`    | The title to be displayed above the legend   |  `legend_title = "my assays"`   |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.     |      |
+    
+    `"interactive"` Kwargs
 
+	    Interactive GroupBars figures accept the following kwargs:
+
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                    | Example                                       |
+        +=============================+================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                              | `show = True` (default)                       |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                       | `title = "Today's results"`                   |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`              | The x axis label                                                                                                                                               | `xlabel = "My super qPCR samples"`            |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                               | `ylabel = "Mean of ddCt"`                     |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                           | `height = 50`                                 |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                            | `width = 50`                                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                       | `padding = 0.2`                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                               | `template = "plotly_dark"`                    |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                        | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | legend_title : `str`        | The title to be displayed above the legend                                                                                                                     | `legend_title = "my assays"`                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                  | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Bar()`.                                                                                     |                                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+
+
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode : str = None ):
         self._setup_default_params(
@@ -1896,47 +2138,81 @@ class GroupDots(Plotter):
 
 
     Plotting Kwargs
-    ----
+    ================
     
-    #### `"static"` Kwargs
-    Static GroupDots figures accept the following kwargs:
+    `"static"` Kwargs
+
+	    Static GroupDots figures accept the following kwargs:
+
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                  | Description                                                                 | Example                                       |
+        +===========================+=============================================================================+===============================================+
+        | show : `bool`             | Whether or not to show the figure                                           | `show = True` (default)                       |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | figsize : `tuple`         | The figure size                                                             | `figsize = (10, 4)`                           |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`             | The overall figure title                                                    | `title = "Today's results"                    |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`            | The x-axis label of each subplot                                            | `xlabel = "Conditions"`                       |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`            | The y-axis label of each subplot                                            | `ylabel = "Mean Fold Change"`                 |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | rot : `float`             | The rotation of x-axis labels                                               | `rot = 0.3`                                   |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`          | A list of titles for each subplot in the preview figure                     | `headers = ["transcript A", "transcript B"]`  |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                        | `label_subplots = True` (default)             |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.          | `labeltype = "a"`                             |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | frame   : `bool`          | Show left and top spines of subplots (if True)                              | `frame = False` (default)                     |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | violin   : `bool`         | Show symmetric kde of the dots of each group (if True).                     | `violin = False`                              |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | color : `str or list`     | The fillcolor for the individual dots from replicate groups                 | `color = "yellow"`                            |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                   | `style = "darkgrid"`                          |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\*kwargs                | Any additional kwargs that can be passed to the `seaborn`'s `stripplot()`.  |                                               |
+        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Conditions"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "Mean $\Delta\Delta Ct$"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
-    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
-    |   color : `str or list`   | The fillcolor for the individual dots from replicate groups   | `color = "yellow"`     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to the `seaborn`'s `stripplot()`.     |      |
+    `"interactive"` Kwargs
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive GroupDots figures accept the following kwargs:
+	    Interactive GroupDots figures accept the following kwargs:
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's results"`    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "My super qPCR samples"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = "Mean of ddCt"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |   violin   : `bool` |  Show symmetric kde of the dots of each group (if True).   | `violin = False`    |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.     |      |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                    | Example                                       |
+        +=============================+================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                              | `show = True` (default)                       |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                       | `title = "Today's results"`                   |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`              | The x axis label                                                                                                                                               | `xlabel = "My super qPCR samples"`            |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                               | `ylabel = "Mean of ddCt"`                     |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                           | `height = 50`                                 |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                            | `width = 50`                                  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                       | `padding = 0.2`                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                               | `template = "plotly_dark"`                    |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                        | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | violin   : `bool`           | Show symmetric kde of the dots of each group (if True).                                                                                                        | `violin = False`                              |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default just `"y"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\kwargs                   | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.                                                                                  |                                               |
+        +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
+    
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode:str = None):
         self._setup_default_params(
@@ -2236,51 +2512,90 @@ class EfficiencyLines(Plotter):
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
     
-    Plotting Kwargs
-    ----
-
-    #### `"static"` Kwargs
-    Static EfficiencyLines figures accept the following kwargs:
     
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    |   figsize : `tuple`   |  The figure size    | `figsize = (10, 4)`     |
-    | title : `str`   |  The overall figure title   | `title = "Today's efficiencies"    |
-    | xlabel : `str`| The x-axis label of each subplot | `xlabel = "Log Dilution"` |
-    | ylabel : `str`| The y-axis label of each subplot | `ylabel = "My Ct Values"` |
-    | rot : `float` | The rotation of x-axis labels | `rot = 0.3` |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  label_subplots  : `bool`   |   Add each subplot with A, B, C ... (if True, default)   | `label_subplots = True` (default)     |
-    | labeltype : `str`| The starting character for subplot labelling. By default an `"A"`. | `labeltype = "a"` |
-    |   frame   : `bool` |  Show left and top spines of subplots (if True)    | `frame = False` (default)     |
-    |   color : `str or list`   | The fillcolor for the individual dots   | `color = "yellow"`     |
-    |  style : `str`   | A `seaborn` style to set. Check out available styles [here](https://www.python-graph-gallery.com/104-seaborn-themes).     | `style = "darkgrid"`    |
-    |   edgecolor : `str or list`   | The edgecolor for the individual dots for the datapoints.   | `edgecolor = "black"`     |
-    |   edgewidth : `float`   |  The width of the edge of individual dots.  | `edgewidth = 0.5`     |
-    |   linecolor : `str or list`   | The color for regression line.   | `linecolor = "crimson"`     |
-    |   linewidth : `float`   |  The width of the regression line.  | `edgewidth = 0.5`     |
-    |  **kwargs    | Any additional kwargs that can be passed to `seaborn`'s `scatterplot` and `lineplot` (both!).     |      |
 
-    <br></br>
-    #### `"interactive"` Kwargs
-    Interactive EfficiencyLines figures accept the following kwargs:
+    Plotting Kwargs
+    ================
 
-    |   Argument  |  Description    |  Example    |
-    | ---- | ---- | ---- |
-    |  show : `bool`    |  Whether or not to show the figure    |  `show = True` (default)   |
-    | title : `str`   |  The overall figure title   | `title = "Today's efficiencies"`    |
-    | xlabel : `str`   |  The x axis label   | `xlabel = "Log Dilution"`    |
-    | ylabel : `str`   |  The y axis label   | `ylabel = My super Ct values"`    |
-    |  height : `int`   |   Height of the figure   | `height = 50`    |
-    |  width : `int`   |   Width of the figure   | `width = 50`    |
-    |  padding : `float or tuple`   |   Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.   | `padding = 0.2`    |
-    |  template : `str`   | The `plotly` template to use. Check out available templates [here](https://plotly.com/python/templates/).     | `template = "plotly_dark"`    |
-    |    headers : `list` |  A list of titles for each subplot in the preview figure    | `headers = ["transcript A", "transcript B"]`     |
-    |  hoverinfo : `str`   | The type of hoverinfo to display. By default just `"y+x"`. Learn more about plotly hoverinfo [here](https://plotly.com/python/hover-text-and-formatting/). Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`    |
-    |  **kwargs    | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Scatter()`.     |      |
+    `"static"` Kwargs
+
+	    Static EfficiencyLines figures accept the following kwargs:
+
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                  | Description                                                                                    | Example                                       |
+        +===========================+================================================================================================+===============================================+
+        | show : `bool`             | Whether or not to show the figure                                                              | `show = True` (default)                       |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | figsize : `tuple`         | The figure size                                                                                | `figsize = (10, 4)`                           |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`             | The overall figure title                                                                       | `title = "Today's efficiencies"               |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`            | The x-axis label of each subplot                                                               | `xlabel = "Log Dilution"`                     |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`            | The y-axis label of each subplot                                                               | `ylabel = "My Ct Values"`                     |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | rot : `float`             | The rotation of x-axis labels                                                                  | `rot = 0.3`                                   |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`          | A list of titles for each subplot in the preview figure                                        | `headers = ["transcript A", "transcript B"]`  |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                                           | `label_subplots = True` (default)             |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.                             | `labeltype = "a"`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | frame   : `bool`          | Show left and top spines of subplots (if True)                                                 | `frame = False` (default)                     |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | color : `str or list`     | The fillcolor for the individual dots                                                          | `color = "yellow"`                            |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                                      | `style = "darkgrid"`                          |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgecolor : `str or list` | The edgecolor for the individual dots for the datapoints.                                      | `edgecolor = "black"`                         |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | edgewidth : `float`       | The width of the edge of individual dots.                                                      | `edgewidth = 0.5`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | linecolor : `str or list` | The color for regression line.                                                                 | `linecolor = "crimson"`                       |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | linewidth : `float`       | The width of the regression line.                                                              | `edgewidth = 0.5`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\kwargs                 | Any additional kwargs that can be passed to `seaborn`'s `scatterplot` and `lineplot` (both!).  |                                               |
+        +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
 
+    
+    `"interactive"` Kwargs
+
+	    Interactive EfficiencyLines figures accept the following kwargs:
+
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | Argument                    | Description                                                                                                                                                      | Example                                       |
+        +=============================+==================================================================================================================================================================+===============================================+
+        | show : `bool`               | Whether or not to show the figure                                                                                                                                | `show = True` (default)                       |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | title : `str`               | The overall figure title                                                                                                                                         | `title = "Today's efficiencies"`              |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | xlabel : `str`              | The x axis label                                                                                                                                                 | `xlabel = "Log Dilution"`                     |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | ylabel : `str`              | The y axis label                                                                                                                                                 | `ylabel = My super Ct values"`                |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | height : `int`              | Height of the figure                                                                                                                                             | `height = 50`                                 |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | width : `int`               | Width of the figure                                                                                                                                              | `width = 50`                                  |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                         | `padding = 0.2`                               |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | template : `str`            | The `plotly` template to use. Check out available templates [2].                                                                                                 | `template = "plotly_dark"`                    |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | headers : `list`            | A list of titles for each subplot in the preview figure                                                                                                          | `headers = ["transcript A", "transcript B"]`  |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The type of hoverinfo to display. By default just `"y+x"`. Learn more about plotly hoverinfo [3]. Please, note that `hovertemplate` is not currently supported.  | `hoverinfo = "name+y"`                        |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | \*\kwargs                   | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Scatter()`.                                                                                   |                                               |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+
+
+    
+    [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
+    [2] `Plotly templates <https://plotly.com/python/templates/>`_
+    [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
     def __init__(self, mode : str = None ):
         self._setup_default_params(
