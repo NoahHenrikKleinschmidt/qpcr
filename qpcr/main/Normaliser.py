@@ -117,7 +117,9 @@ Prep.Function: \t{self._norm_func.__name__}
         return s
 
     def __repr__(self):
-        return self.__str__()
+        prep = self.prep_func.__name__
+        norm = self.norm_func.__name__
+        return f"Normaliser({prep=}, {norm=})"
 
     def clear(self):
         """

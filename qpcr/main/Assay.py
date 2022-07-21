@@ -148,7 +148,10 @@ Amplif. Eff.: {self._efficiency}
         return s 
 
     def __repr__( self ):
-        return self.__str__()
+        id = self._id
+        eff = self._efficiency
+        n = len(self)
+        return f"Assay({id=}, {eff=}, {n=})"
 
     def efficiency( self, eff : float = None ):
         """

@@ -74,11 +74,13 @@ Anchor: {self._anchor}\n
 Ref.Group: {self._ref_group}\n
 
 DeltaCt: {self._deltaCt_function}
-        """
+        """.strip()
         return s
     
     def __repr__(self):
-        return self.__str__()
+        anchor = self._anchor
+        ref = self._ref_group
+        return f"Analyser({anchor=}, {ref=})"
 
     def get(self):
         """

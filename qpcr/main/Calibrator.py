@@ -103,6 +103,23 @@ class Calibrator(aux._ID):
         
         self._loaded_file = None
 
+    def __str__(self):
+        effs = str( pd.DataFrame( self._eff_dict ) )
+        _length = len( effs.split("\n")[0] )
+        s = f"""
+{"-" * _length}
+Calibrator:\t{self._id}
+Loaded File:\t{self._loaded_file}
+        """.strip()
+        if self._manual_dilution_set:
+            s = f"{s}\nDilution:\t{self._orig_dilution}"
+        s = f""""{s}\n{"-" * _length}\n{effs}\n{"-" * _length}"""
+        return s
+    
+    def __repr__( self ):
+        file = self._loaded_file
+        effs = self._eff_dict
+        return f"Calibrator({file=}, {effs=})"
 
     def save( self, filename : str = None , mode : str = "write" ):
         """

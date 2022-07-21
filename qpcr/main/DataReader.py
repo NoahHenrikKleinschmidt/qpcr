@@ -276,6 +276,19 @@ class DataReader(aux._ID):
         self._tmp_data = {self._src : data}
         return data
 
+    def __str__(self):
+        s = f"""
+DataReader:\t{self._id}
+Current Reader:\t{type(self._Reader).__name__}
+Self-stored data:\t{self._Data}
+        """.strip()
+        return s
+
+    def __repr__(self):
+        base = type(self._Reader).__name__
+        data = self._Data
+        return f"DataReader({base=}, {data=})"
+
     def _filesuffix(self):
         """
         Returns the filesuffix

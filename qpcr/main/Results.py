@@ -100,7 +100,9 @@ class Results(aux._ID):
         return s 
 
     def __repr__( self ):
-        return self.__str__()
+        id = self._id
+        data = self.ddCt_cols
+        return f"Results({id=}, {data=})"
 
     def __len__(self):
         return len(self._df)
