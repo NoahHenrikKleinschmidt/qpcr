@@ -124,7 +124,7 @@ What does the output look like? Here is a possible figure output for a `Replicat
 
 
 .. raw:: html
-        :file: ../../docs/source/resources/boxplot.html
+        :file: ../../docs/source/resources/boxplot.png
 
 
 Customizing your Figures
