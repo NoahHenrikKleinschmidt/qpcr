@@ -74,6 +74,9 @@ calibrator_prefix = "calibrator"
 plotmode = "static"
 """The default setting for interactive or static figures"""
 
+default_preview = "AssayBars"
+"""The default setting for Results visualisation. This may be any of the four Results plotters."""
+
 # AssayDots / GroupDots
 # -------------------------------
 

@@ -104,6 +104,66 @@ Thus, a final way of obtaining the exact same figure as before, is using:
 
     fig = qpcr.plot( myassay, **my_params )
 
+
+Working with Plotters
+=====================
+
+PreviewResults
+--------------
+
+The ``PreviewResults`` class is a wrapper for `AssayBars`, `AssayDots`, `GroupBars`, and `GroupDots`, which are the four native visualizations supported for ``qpcr.Results`` objects.
+You can easily call on a `PreviewResults` wrapper using the ``qpcr.Results.preview`` method and specify which kind of visualisation to perform using the ``kind`` argument.
+
+For instance, we might want to visualize our data by having each assay in a separate subplot but visualizing all computed values. This would be a job for the ``AssayDots`` Plotter, so we can set up.
+
+.. code-block:: python
+
+    fig = myresults.preview( kind = "AssayDots" )
+
+
+Which will return the following figure 
+
+
+.. image:: ../../docs/source/resources/preview_AssayDots.png
+    :align: center
+
+
+Naturally, we can edit the default settings if we like. Maybe we do not like the *_rel_28S+Actin* in the assay headers. 
+We could specify our own headers using the ``headers`` arguments, or simply call the ``drop_rel`` method on our ``qpcr.Results`` object to reduce the assay ids back to their original states.
+
+With a few lines of code we can adjust the figure to something like this:
+
+.. code-block:: python
+
+    # get rid of the _rel_28S+Actin
+    result.drop_rel()
+
+    # specify some fancy colors
+    mycolors = ["crimson", "black" ]
+
+    fig = result.preview( kind = "AssayDots", 
+                          title = "Normalized to 28S+Actin", 
+                          style = "ticks",
+                          color = mycolors 
+                        )
+
+
+.. image:: ../../docs/source/resources/preview_AssayDots_modified.png
+    :align: center
+
+
+If you wish to edit settings more globally you can either set up your Plotters directly and call their ``params`` method to store dedicated plotting parameters, or you may choose to directly edit the
+default plotting settings in the ``qpcr.defaults`` submodule. All the plotting settings are stored as dictionaries there, so you can freely edit these as you like. 
+To achieve the same figure as before, we might also do:
+
+.. code-block:: python
+
+    # change default plot settings
+    qpcr.defaults.static_PreviewDots["style"] = "ticks"
+    qpcr.defaults.static_PreviewDots["color"] = ["crimson", "black" ]
+
+    results.preview( )
+
 """
 
 import qpcr.main as main
@@ -632,10 +692,11 @@ class PreviewResults(Wrapper):
         The kind of Plotter to call. This can be any of the four wrapped 
         Plotters, e.g. `kind = "GroupBars"`.
     """
-    def __init__(self, mode : str = None, kind : str = "AssayBars" ):
+    def __init__(self, mode : str = None, kind : str = None ):
 
         super().__init__( kind = kind, mode = mode )
         
+        if kind is None: kind = defaults.default_preview
         plotters = {
                         "AssayBars" : AssayBars,
                         "GroupBars" : GroupBars,
