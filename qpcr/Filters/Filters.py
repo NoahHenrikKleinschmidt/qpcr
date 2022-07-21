@@ -66,7 +66,7 @@ The Filters offer a summary of their activity. This is primarily through a *summ
 
 
 .. raw:: html
-    :file: ../../docs/source/resources/filter_summary.html
+    :file: docs/source/resources/filter_summary.html
 
 
 The Filters can also export a ``txt``-file summary of the indices they filtered out for each assay. This file is designed as a human-readable quick-check and does not offer a lot of information, however.

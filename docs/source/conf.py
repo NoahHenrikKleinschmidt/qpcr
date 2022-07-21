@@ -17,15 +17,22 @@ if on_rtd:
 
     autodoc_mock_imports = [ "plotly", "plotly.graph_objs", "plotly.subplots" ]
 
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('../..'))
+
+
+else: 
+
+    import os
+    import sys
+    src = os.path.abspath("..")
+    src = os.path.dirname(src)
+    sys.path.insert(0, src)
 
 
 # -- Project information -----------------------------------------------------

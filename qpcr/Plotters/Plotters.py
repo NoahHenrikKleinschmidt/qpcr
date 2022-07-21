@@ -124,7 +124,7 @@ What does the output look like? Here is a possible figure output for a `Replicat
 
 
 .. raw:: html
-        :file: ../../docs/source/resources/boxplot.html
+        :file: docs/source/resources/boxplot.html
 
 
 Customizing your Figures
@@ -144,7 +144,7 @@ For instance, we might want to visualize our data by having each assay in a sepa
 Which will return the following figure 
 
 
-.. image:: ../../docs/source/resources/preview_AssayDots.png
+.. image:: docs/source/resources/preview_AssayDots.png
     :align: center
 
 
@@ -168,7 +168,7 @@ With a few lines of code we can adjust the figure to something like this:
                         )
 
 
-.. image:: ../../docs/source/resources/preview_AssayDots_modified.png
+.. image:: docs/source/resources/preview_AssayDots_modified.png
     :align: center
 
 
