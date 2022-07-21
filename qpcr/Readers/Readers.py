@@ -1,16 +1,11 @@
 """
-.. _qpcr.Readers
+.. _qpcr.Readers:
 
 This module provides different ``Reader`` classes that allow reading simple and complex datafiles
 of various architectures.
 
-
-
-Available Data Readers
-====================
-
 Learn more about the available Readers. If you are interested to learn more about preprocessing the datafiles, 
-check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_
+check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_.
 
 SingleReader
 -----------
@@ -104,7 +99,7 @@ BigTableReader
 The ``BigTableReader`` is able to read datafiles that store their assays in one single "big table". It
 can extract all assays from that big table using either simple extraction methods or ``decorators`` depending
 on the type of big table (check out the documentation of the ``BigTableReader`` for more information on the
-types of "big tables").
+types of "big tables" and how to read them).
 
 "Vertical" BigTables
 
@@ -122,6 +117,28 @@ types of "big tables").
     | ...      | ...    | ...   | ...         |
     +----------+--------+-------+-------------+
 
+    .. code-block:: python
+
+        from qpcr.Readers import BigTableReader
+
+        myfile = "my_datafile.xlsx"
+
+        reader = BigTableReader()
+
+        assays, normalisers = reader.pipe(
+                                            filename = file, 
+                                            decorator = True,
+
+                                            # specify the kind of big table
+                                            kind = "vertical",
+
+                                            # specify which columns store
+                                            # the relevant data
+                                            assay_col = "Assay", 
+                                            id_col = "Name",
+                                            ct_col = "Ct"
+                                    )
+
 
 
 "Horizontal" BigTables
@@ -136,6 +153,34 @@ types of "big tables").
     | ...      | ...    | ...    | ...  | ...         |
     +----------+--------+--------+------+-------------+
 
+    .. code-block:: python
+
+        from qpcr.Readers import BigTableReader
+
+        myfile = "my_datafile.xlsx"
+
+        reader = BigTableReader()
+
+        assays, normalisers = reader.pipe(
+                                            filename = file,
+
+                                            # we specify that it's a horizontal table
+                                            kind = "horizontal",
+
+                                            # we **have to** specify the 
+                                            # number of replicates per group
+                                            replicates = 3,
+
+                                            # we also specify the group names (because they 
+                                            # will not be inferrable due to the different 
+                                            # column names of the replicates)
+                                            names = ["control", "condition A", "condition B", "condition C"],
+                                            
+                                            # we must also specify which column specifies the assays
+                                            # NOTE: in this mode this is handled by the `id_col` argument!
+                                            id_col = "Name"
+                                        
+                                        )
 
 
 "Hybrid" BigTables
@@ -156,18 +201,38 @@ types of "big tables").
     | ...   | ...      | ...      | ...         |
     +-------+----------+----------+-------------+
 
+    .. code-block:: python
 
+        from qpcr.Readers import BigTableReader
 
-Kwarg incompatibility Warning
------------
-When using the ``qpcr.DataReader`` or a ``pipe`` method you will regularly observe the following warning: 
- 
-.. code-block::
-    Warning  |  [ParserError] It appears as if some provided kwargs were incompatible with {func}! Defaulting to standard settings for file-reading... If the kwargs you specified are actually important for file reading, try manually reading and parsing to avoid kwarg incompatibilities.
+        myfile = "my_datafile.xlsx"
 
-This is because the ``pipe`` method (and the ``qpcr.DataReader``, which usually calls the ``pipe`` method of a specific Reader) pass all kwargs to both ``read`` and ``parse``. 
-However, ``pandas``' `read_excel` and `read_csv` are rather picky with the arguments they accept. So, in case you observe this warning, just know that the kwargs were removed from the 
-``read`` call.
+        reader = BigTableReader()
+
+        assays, normalisers = reader.pipe(
+                                            filename = file,
+
+                                            # we specify that it's a horizontal table
+                                            kind = "hybrid",
+
+                                            # we **have to** specify the 
+                                            # number of replicates per group
+                                            replicates = 3,
+
+                                            # we also specify the group names (because they 
+                                            # will not be inferrable due to the different 
+                                            # column names of the replicates)
+                                            names = ["control", "condition A", "condition B", "condition C"],
+                                            
+                                            id_col = "Sample",
+                                            
+                                            # in this setup each assay is already stored as a separate datacolumn 
+                                            # so we must provide either a list of the column names or use decorators
+                                            ct_col = ["ActB", "HNRNPL", "SRSF11"],
+                                        )
+        
+        # NOTE: Because we did not specify any decorators here, the normalisers list will be created but be empty!
+
 """
 
 
@@ -243,6 +308,7 @@ class _CORE_Reader(aux._ID):
         Assay : qpcr.Assay
             The ``qpcr.Assay`` from the extracted dataset.
         """
+        logger.debug( f"{self._df=}" )
         assay = self._make_new_Assay(self.id(), self._df)
         return assay
 
@@ -270,15 +336,18 @@ class _CORE_Reader(aux._ID):
             
             # first try simple read of "regular files"
             try: 
+                logging.info( "trying to read the file regularly..." )
                 self._csv_read(**kwargs)
             except Exception as e:
-
+                
                 # users can force-regular reading mode
                 is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
                 if is_regular:
                     # print out warning
-                    print(e)
+                    logger.error( e )
                     return
+                
+                logger.info( "unable to regularly read file. Resort to parsing..." )
 
                 # setup parser
                 parser = Parsers.CsvParser()
@@ -295,15 +364,18 @@ class _CORE_Reader(aux._ID):
         elif suffix == "xlsx":
 
             try: 
+                logging.info( "trying to read the file regularly..." )
                 self._excel_read(**kwargs)
             except Exception as e:
-
+                
                 # users can force-regular reading mode
                 is_regular = aux.from_kwargs("is_regular", False, kwargs, rm= True)
                 if is_regular:
                     # print out warning
-                    print(e)
+                    logger.error( e )
                     return
+                
+                logger.info( "unable to regularly read file. Resort to parsing..." )
 
                 # setup parser
                 parser = Parsers.ExcelParser()
@@ -478,6 +550,8 @@ class _CORE_Reader(aux._ID):
         """
         
         # check if we got exactly two columns only
+        logger.debug( f"df at the start\n{df}" )
+        
         if len( df.columns ) == 2:
 
             # just get the current column names for later renaming
@@ -488,14 +562,14 @@ class _CORE_Reader(aux._ID):
             # check if a valid Ct column was found
             Ct = aux.from_kwargs( "ct_label", default_ct_header, kwargs )
             Id = aux.from_kwargs( "id_label", default_id_header, kwargs )
-            
+
+            logger.debug( f"{df.columns=}" )            
             valid_data = Ct in df.columns and Id in df.columns
-            logger.debug( f"currently held df: {df}" )
 
             if not valid_data:
                 e = aw.ReaderError( "cannot_find_datacols", id_label = Id, ct_label = Ct )
-                logger.critical( e )
-                SystemExit( e )
+                logger.info( e ) # the way this function is wrapped, this is worth only an info...
+                raise e
 
             else:
                 # get only the relevant data columns 
@@ -508,6 +582,8 @@ class _CORE_Reader(aux._ID):
 
         # rename to qpcr default headers (id + Ct)
         df = df.rename( columns = { Id : raw_col_names[0] , Ct : raw_col_names[1] }  )
+        
+        logger.debug( f"df at the end (after rename)\n{df}" )
         return df
 
     def _filesuffix(self):
@@ -575,7 +651,7 @@ class SingleReader(_CORE_Reader):
         self._delimiter = None
         self._header = 0
         if self._src is not None:
-            self.read(**kwargs)
+            self.read( self._src, **kwargs)
 
     def read(self, filename : str, **kwargs):
         """
@@ -1143,7 +1219,7 @@ class BigTableReader(MultiReader):
         as well as user-defined ``replicates``!
 
         Note, the column headers have to be **unique** to the table!
-        Also, a word of warning with regard to replicate _assays_. The entries in the ``assay`` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same ``qpcr.Assay`` object. However, this will result in differently sized *Assays* which will cause problems downstream when you (or a ``qpcr.Normaliser``) try to assemble a `qpcr.Results` object!
+        Also, a word of warning with regard to replicate *assays*. The entries in the ``assay`` defining column *must* be unique! If you have multiple assays from the same gene which therefore also have the same id they will be interpreted as belonging together and will be assembled into the same ``qpcr.Assay`` object. However, this will result in differently sized *Assays* which will cause problems downstream when you (or a ``qpcr.Normaliser``) try to assemble a `qpcr.Results` object!
 
     - ``Hybrid`` Big Tables
     
@@ -1153,7 +1229,7 @@ class BigTableReader(MultiReader):
 
         Note, two options exist to read this kind of setup. 
             - A ``list`` of ``ct_col`` values can be passed which contains the column header of each assay.
-            - The table can be ``decorated``, in which case only decorated assays (columns) are extracted.
+            - The table can be `decorated`, in which case only decorated assays (columns) are extracted.
         
         Please, note that the two methods of reading this table are mutually exclusive! So,
         if you decorate your table you cannot pass specific assay headers to the ``ct_col`` argument anymore.
@@ -1306,7 +1382,7 @@ class BigTableReader(MultiReader):
 
             # check if we got ct cols to extract
             if self._ct_col is None: 
-                e = aw.BigTableReader( "no_ct_cols" )
+                e = aw.BigTableReaderError( "no_ct_cols" )
                 logger.critical( e )
                 SystemExit( e )
 
@@ -1334,7 +1410,7 @@ class BigTableReader(MultiReader):
                 
                 # check if we got ct cols to extract
                 if self._ct_col is None: 
-                    e = aw.BigTableReader( "no_ct_cols" )
+                    e = aw.BigTableReaderError( "no_ct_cols" )
                     logger.critical( e )
                     SystemExit( e )
 
@@ -1543,7 +1619,7 @@ class BigTableReader(MultiReader):
         got_no_cols = (self._ct_col is None or self._assay_col is None)
 
         if self._kind == "vertical" and got_no_cols:
-            e = aw.BigTableReader( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
+            e = aw.BigTableReaderError( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
             logger.critical( e )
             SystemExit( e )
             
@@ -1554,7 +1630,7 @@ class BigTableReader(MultiReader):
         
         # and test if the ones we have are good
         if not self._test_cols_are_good():
-            e = aw.BigTableReader( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
+            e = aw.BigTableReaderError( "no_cols", ct_col = self._ct_col, assay_col = self._assay_col )
             logger.critical( e )
             SystemExit( e )
 
