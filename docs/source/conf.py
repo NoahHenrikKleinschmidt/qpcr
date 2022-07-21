@@ -26,13 +26,11 @@ if on_rtd:
 #
 
 
-else: 
-
-    import os
-    import sys
-    src = os.path.abspath("..")
-    src = os.path.dirname(src)
-    sys.path.insert(0, src)
+import os
+import sys
+src = os.path.abspath("..")
+src = os.path.dirname(src)
+sys.path.insert(0, src)
 
 
 # -- Project information -----------------------------------------------------
