@@ -1,15 +1,89 @@
 """
 This submodule defines a number of filters that can be used to 
-remove faulty replicates from `qpcr.Assay`s before before passing them to an `qpcr.Analyser`.
+remove faulty replicates from a ``qpcr.Assay`` before before passing it to a ``qpcr.Analyser``.
 
-## Available Filters
---------
-### RangeFilter 
-Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
-The user has the option of specifying another anchor and limits for the inclusion range.
 
-### IQRFilter
-Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
+RangeFilter 
+===========
+
+The `RangeFilter` filters out all *raw Ct values* that do not comply to a user-specified range (default is `+/-1` around replicate group median)
+The user has the option of specifying another anchor and limits for the inclusion range. The limits may be asymmetrical (e.g. 1.5 above but only 0.7 below if this is desired).
+The limits are *static* and hence only the anchor is adjusted to each replicate group within each assay (unless a custom anchor is provided). 
+
+
+As an example, we might wish to filter out any Ct values that are outside of *+/- 0.5* around the *group mean*. To do this we need to set up a ``RangeFilter`` and adjust both the limits and the anchor.
+
+.. code-block:: python
+
+    myfilter = RangeFilter()
+
+    # set up the limits
+    myfilter.set_lim( 0.5 )
+    
+    # set a new anchor
+    def mean_anchor( values ):
+        return mean( values )
+    
+    # or as: mean_anchor = lambda values: mean( values )
+
+    myfilter.set_anchor( mean_anchor )
+
+    # and now we can filter our assays
+
+    myassay = myfilter.pipe( myassay )
+
+
+By default, any Ct values that are filtered out are set to ``np.nan`` and not actually removed from the dataframes. This is because ``qpcr`` tries to retain dimensionality between the Assays.
+You can choose to drop faulty outliers by using ``drop_outliers``. 
+
+
+IQRFilter
+=========
+
+The `IQRFilter` filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor). 
+Here the anchor *cannot* be re-set freely, but the limits can be adjusted symmetrically or asymmetrically as desired.
+
+For instance, we might want to filter out any values that are `+2 IQR` but retain all lower ones (maybe because we looked at their actual values and found that they were all acceptable).
+
+.. code-block:: python
+
+    myfilter = IQRFilter()
+
+    # we set some big value for retaining lower values
+    myfilter.set_lim( upper = 2, lower = 100 )
+
+    # and now we can filter our assays
+    myassay = myfilter.pipe( myassay )
+
+Filter Summary
+=====================
+
+The Filters offer a summary of their activity. This is primarily through a *summary figure* that can be called via the ``plot`` method or the ``qpcr.plot`` function.
+
+.. code-block:: python
+
+    fig = myfilter.plot( mode = "interactive" )
+
+
+.. raw:: html
+    :file: ../../docs/source/resources/filter_summary.html
+
+
+The Filters can also export a ``txt``-file summary of the indices they filtered out for each assay. This file is designed as a human-readable quick-check and does not offer a lot of information, however.
+The text summary is generated automatically if the ``report`` method is called, where you may specify a `directory` to store the filter reports to. Each filtered assay will be given a single report file.
+
+
+.. code-block:: python
+
+    # the report setup has to be done BEFORE the actual filtering!
+    myfilter.report( "./filter_reports_experiment1" )
+
+    # now we can filter
+    myassay = myfilter.pipe( myassay )
+
+Note
+-----
+These files are just named `filter_{assay name}.txt` so if you intend to save these reports from multiple experiments, make sure to store them in separate directories!
 """
 
 from re import L
@@ -26,7 +100,7 @@ import logging
 logger = aux.default_logger()
 class Filter(aux._ID):
     """
-    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
+    The super class of the Filters that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     """
     def __init__(self):
         super().__init__()

@@ -17,12 +17,14 @@ The type of figure a specific Plotter should produce has to be specified using t
 visualizations aim to be as close as possible to one another, they are naturally not identical, however. 
 Also they offer different kinds of costumization options.
 
+
 Static Figures
 --------------
 
 **Static**  figures are made using ``matplotlib`` and they will open through whatever backend your matplotlib configuration 
 as specified. Static figures are primarily designed for printing into labjournals and offer a greater flexibility with 
 style customizibility (you can use ``seaborn`` styles for instance, or the matplotlib ``rcparams`` to style your figures). 
+
 
 Interactive Figures
 -------------------
@@ -32,6 +34,13 @@ for cases where your figures contain a lot of data so having a static view on th
 offer ``plotly``'s native features like zooming, cropping, size-adjustments and so forth. It comes at the price of less flexibility
 with regard to styling. You can set plotly ``templates``, but that is about the extend of it. However, also interactive figures are perfectly 
 adequate for your labjournal, and you may prefer using these for their dynamic figure size adjustments directly from your browser. 
+
+You can trigger interactive figures either using the ``mode`` argument (``mode = "interactive"``) when creating a Plotter or calling a ``plot`` method of one of the non-Plotter classes.
+Or you can set the plotting mode globally to interactive using:
+
+.. code-block:: python
+
+    qpcr.Plotters.interactive()
 
 
 Plotting ``kwargs``
@@ -48,21 +57,23 @@ Visualizing your data
 
 There are a number of ways to visualize data in ``qpcr``.
 
+
 Manual setup (the classic way)
 --------------------------------
 
 Just as with the ``qpcr.Analyser`` we can *set up* a ``qpcr.Plotter``, then ``link`` the object we want to visualize from, and call the Plotter's ``plot`` method.
 We can pass all additional styling arguments either to the ``plot`` method or use the ``params`` method to set them up beforehand.
 
-Let us for instance visualise the raw Ct values from a ``qpcr.Assay`` we just loaded from a datafile. The dedicated Plotter for this is the ``ReplicateBoxPlot``.
+Let us for instance visualise the raw Ct values from a ``qpcr.Assay`` we just loaded from a datafile and we want to have an interactive figure. 
+The dedicated Plotter for this is the ``ReplicateBoxPlot``.
 We can set it up like this:
 
 .. code-block:: python
 
-    from qpcr.Plotters import ReplicateBoxPlot
+    from qpcr.Plotters import ReplicateBoxPlot 
 
-    # by default it will produce a "static" figure
-    myboxplot = ReplicateBoxPlot()
+    # by default it will produce an "interactive" figure
+    myboxplot = ReplicateBoxPlot( mode = "interactive" )
 
     # now we link the assay
     myboxplot.link( myassay )
@@ -80,6 +91,7 @@ We can set it up like this:
 
     # alternatively: fig = myboxplot.plot( **my_params ) 
 
+
 This is a rather tedious way of setting up for just a quick look at our Assay, but it may be worth it if we have to repeat this many times...
 
 The Built-in shortuct
@@ -88,9 +100,12 @@ For more convenience, however, the ``qpcr.Assay`` lets us directly visualize its
 
 .. code-block:: python
 
-    fig = myassay.boxplot( **my_params )
+    fig = myassay.boxplot( mode = "interactive", **my_params )
+
 
 This will perform the setup and linking to a new instance of ``ReplicateBoxPlot``. 
+
+
 
 The ``qpcr.plot`` function
 ----------------------------
@@ -102,16 +117,21 @@ Thus, a final way of obtaining the exact same figure as before, is using:
 
 .. code-block:: python
 
-    fig = qpcr.plot( myassay, **my_params )
+    fig = qpcr.plot( myassay, mode = "interactive", **my_params )
 
 
-Working with Plotters
-=====================
+What does the output look like? Here is a possible figure output for a `ReplicateBoxPlot` in interactive mode:
 
-PreviewResults
---------------
 
-The ``PreviewResults`` class is a wrapper for `AssayBars`, `AssayDots`, `GroupBars`, and `GroupDots`, which are the four native visualizations supported for ``qpcr.Results`` objects.
+.. raw:: html
+        :file: ../../docs/source/resources/boxplot.html
+
+
+Customizing your Figures
+-------------------------
+
+Let us work through a quick example of creating a customized figure from a ``qpcr.Results`` object. 
+The ``qpcr.Results`` class works uses the ``PreviewResults`` class to visualise its data.``PreviewResults`` is a wrapper for `AssayBars`, `AssayDots`, `GroupBars`, and `GroupDots`, which are the four native visualizations supported for ``qpcr.Results``.
 You can easily call on a `PreviewResults` wrapper using the ``qpcr.Results.preview`` method and specify which kind of visualisation to perform using the ``kind`` argument.
 
 For instance, we might want to visualize our data by having each assay in a separate subplot but visualizing all computed values. This would be a job for the ``AssayDots`` Plotter, so we can set up.
@@ -159,11 +179,17 @@ To achieve the same figure as before, we might also do:
 .. code-block:: python
 
     # change default plot settings
+
+    qpcr.defaults.default_preview = "AssayDots"
     qpcr.defaults.static_PreviewDots["style"] = "ticks"
     qpcr.defaults.static_PreviewDots["color"] = ["crimson", "black" ]
 
-    results.preview( )
+    fig = results.preview( title = "Normalized to 28S+Actin" )
 
+
+However, this will now cause **all** of your Results to generate a black and red `AssayDots` figure in `ticks` style when calling their ``preview`` method (unless you specify new parameters manually).
+As you will have noticed, the dictionary we edited was not a "qpcr default plotting parameters" dictionary but rather specific for the `static AssayDots` Plotters. All Plotters have two dedicated dictionaries to store their default parameters in, one for static mode, one for interactive.
+You can therefore selectively adjust your favourite default settings without having to worry to skew with other figure types. However, `rcParams` will of course, also work just fine globally. 
 """
 
 import qpcr.main as main
@@ -2949,6 +2975,16 @@ def plot( obj, mode = None, **kwargs ):
     logger.debug( kwargs )
     fig = func( **kwargs )
     return fig
+
+def interactive():
+    """Set the default plotting mode to ``interactive``"""
+    defaults.plotmode = "interactive"
+    return defaults.plotmode
+
+def static():
+    """Set the default plotting mode to ``static``"""
+    defaults.plotmode = "static"
+    return defaults.plotmode
 
 # if __name__ == '__main__':
 

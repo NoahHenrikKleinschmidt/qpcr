@@ -206,7 +206,7 @@ Amplif. Eff.: {self._efficiency}
             data = self._df 
         return data
 
-    def boxplot( self, mode : str = "static", **kwargs ):
+    def boxplot( self, mode : str = None, **kwargs ):
         """
         A shortcut to call a `qpcr.Plotters.ReplicateBoxPlot` plotter
         to visualise the loaded replicates.
@@ -595,8 +595,7 @@ Amplif. Eff.: {self._efficiency}
         if drop:
             self._df = self._df.drop(index = list(entries))
         else: 
-            Cts = self.Ct()
-            Cts = np.array( Cts )
+            Cts = np.array( self.Ct )
             Cts[ entries ] = np.nan
             self._df["Ct"] = Cts
     

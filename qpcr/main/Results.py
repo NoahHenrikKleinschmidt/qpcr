@@ -524,7 +524,7 @@ class Results(aux._ID):
             self._save_single(path, self._stats_df, "_stats")
 
 
-    def preview( self, kind : str = None, mode : str = "static", **kwargs ):
+    def preview( self, kind : str = None, mode : str = None, **kwargs ):
         """
         A shortcut to call on a ``qpcr.Plotters.PreviewResults`` wrapper to visualise 
         the results.
