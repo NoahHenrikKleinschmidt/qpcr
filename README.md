@@ -68,5 +68,5 @@ A set of basic introductory tutorials is available as `jupyter notebooks` in the
 In case you prefer a graphical-user-interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid offers the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). 
 
 #### Citation
-Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.5) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
