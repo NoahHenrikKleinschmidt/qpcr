@@ -18,6 +18,10 @@ data handling. Among them are:
 ### New stats
 The `qpcr.Results.stats()` dataframe now also includes `IQR` (by default, but adjustable to any two quantiles), and `CI` (assuming a normal distribution, default at 95% but also adjustable).
 
+### New extended documentation
+There is a new documentation now available with extended explanations on class usage.
+It is available on [qpcr.readthedocs.io](https://qpcr.readthedocs.io).
+
 ### New `__str__` representations
 The main `qpcr` classes now all have a `__str__` method to allow easier user-interaction, where they display their dataframes as well as other information. 
 
