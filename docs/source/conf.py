@@ -11,11 +11,11 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
 # import mock
 # import sys 
-# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
 # for mod_name in MOCK_MODULES:
 #     sys.modules[mod_name] = mock.Mock()
 
-    autodoc_mock_imports = [ "plotly", "plotly.graph_objs", "plotly.subplots" ]
+    MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
+    autodoc_mock_imports = MOCK_MODULES #[ "plotly", "plotly.graph_objs", "plotly.subplots" ]
 
 
 # -- Path setup --------------------------------------------------------------
