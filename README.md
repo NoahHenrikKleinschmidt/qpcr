@@ -1,5 +1,5 @@
 <!-- # <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="32"> qpcr -->
-# <img src="./docs/qpcr_tiny.svg" width="25"> qpcr
+# <img src="./docs/source/qpcr_tiny.svg" width="25"> qpcr
 
 ### A python module to analyse qPCR data on single-datasets or high-throughput
 
@@ -30,55 +30,33 @@ It is used to perform `Delta-Ct` computation. However, the precise function that
 On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisable.  
 
 ### Example usage
-To facilitate data analysis, common workflows have been implemented in pre-defined `pipelines` that allow for quick data analysis with minimal user effort. An example analysis using the pre-defined `BasicPlus` pipeline:
+A very simple analysis may start from a single `excel` file containing data of several qPCR assays, some of which are "assays-of-interest" and some of which are "normalisers" such as 28S rRNA. If we have performed a tiny bit of pre-processing on our datafile, our analysis may look like this:
 
 ```python
+import qpcr
+from qpcr.Pipes import ddCt
 
-from qpcr.Pipes import BasicPlus
-from qpcr.Plotters import PreviewResults
+myfile = "todays_qPCR_run.xlsx"
 
-# get our datafiles
-normaliser_files = [
-                    "./Examples/Example Data/28S.csv",
-                    "./Examples/Example Data/actin.csv"
-                ]
+# read the datafile
+assays, normalisers = qpcr.read(  myfile, 
+                                  multi_assay = True, 
+                                  decorator = True 
+                                )
 
-assay_files = [
-                "./Examples/Example Data/HNRNPL_nmd.csv",
-                "./Examples/Example Data/HNRNPL_prot.csv",
-                "./Examples/Example Data/SRSF11_nmd.csv",
-                "./Examples/Example Data/SRSF11_prot.csv",
-            ]
+# we can use a pre-defined default Delta-Delta-Ct pipeline
+pipe = ddCt()
+pipe.link( assays = assays, normalisers = normalisers )
+pipe.run()
 
-# define our experimental parameters
-reps = 6
-group_names = ["WT (-)", "WT (+)", "KO (-)", "KO (+)"] 
+# at this point we can save our results to a file
+results = pipe.results()
+results.save( "./MyResults/" )
 
-# setting up the pipeline
-pipeline = BasicPlus()
-pipeline.save_to("./Example Results")
-
-pipeline.replicates(reps)
-pipeline.names(group_names)
-
-# feed in our data
-pipeline.add_assays(assay_files)
-pipeline.add_normalisers(normaliser_files)
-
-# run the pipeline
-pipeline.run()
-# and at this point the results are already saved...
-
-# show a preview of our results with some customization
-results = pipeline.results()
-
+# and generate a preview using some custom settings
 colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
-fig = results.preview( 
-                        color = colors, 
-                        edgecolor = "black", 
-                        edgewidth = 1, 
-                        figsize = (8,4)
-                    )
+
+fig = results.preview( color = colors, edgecolor = "black" )
 ```
 
 ![](./Examples/Example%20Results/colorful.png)
@@ -86,6 +64,8 @@ fig = results.preview(
 ### Getting started
 A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation at the [github-pages](https://noahhenrikkleinschmidt.github.io/qpcr/index.html).
 
+### Qupid Web App
+In case you prefer a graphical-user-interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid offers the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). 
 
 #### Citation
 Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.5) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
