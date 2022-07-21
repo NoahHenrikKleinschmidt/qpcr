@@ -91,7 +91,8 @@ MultiSheetReader
 The ``MultiSheetReader`` is able to read irregular multi-assay datafiles that contain assays in multiple 
 datasheets.
 
-By default the MultiSheetReader will read *all* sheets in an excel file. However, you can specify *a single sheet* that should be read exclusively (thus turning the reader to a "MultiReader") using the ``
+By default the MultiSheetReader will read *all* sheets in an excel file. However, you can specify *a single sheet* that should be read 
+exclusively (thus turning the reader to a "MultiReader") using the ``sheet`` argument a specific sheet can be specified for reading.
 
 
 BigTableReader
