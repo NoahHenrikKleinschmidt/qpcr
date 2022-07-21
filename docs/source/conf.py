@@ -31,9 +31,10 @@ release = '4.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-                'sphinx.ext.autodoc',
                 'sphinx.ext.napoleon',
                 'sphinx.ext.viewcode',
+                'sphinx_toolbox.more_autodoc',
+                'sphinx.ext.autodoc',
             ]
 
 napoleon_numpy_docstring = True
