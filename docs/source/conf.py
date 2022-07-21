@@ -4,6 +4,14 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+
+
+import mock
+import sys 
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -33,7 +41,6 @@ release = '4.0.0'
 extensions = [
                 'sphinx.ext.napoleon',
                 'sphinx.ext.viewcode',
-                'sphinx_toolbox.more_autodoc',
                 'sphinx.ext.autodoc',
             ]
 
