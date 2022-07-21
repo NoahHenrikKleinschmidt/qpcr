@@ -12,6 +12,7 @@ Welcome to qpcr's documentation!
 It supports a number of ways to import data from a various of source files, pre-process them, analyze them, and finally visualize the results.
 Hence, ``qpcr`` aims to provide a maximally user-friendly analysis pipeline for qPCR data, with a lot of costumizability.
 
+
 Installation
 ============
 This package can directly be installed via ``pip``.
@@ -51,7 +52,7 @@ Assuming you are happy with default settings, the entire analysis could look lik
 
 To facilitate data analysis, common workflows have been implemented in pre-defined *pipelines* that allow for quick data analysis with minimal user effort. 
 You can learn more about the pipelines in `this tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/2_pipeline_tutorial.ipynb>`_ 
-or `this one <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/5_customisable_piplines.ipynb>`.
+or `this one <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/5_customisable_piplines.ipynb>`_.
 A more advanced example of such an analysis using the pre-defined ``BasicPlus`` pipeline is this:
 
 .. code-block:: python
@@ -94,18 +95,12 @@ A more advanced example of such an analysis using the pre-defined ``BasicPlus`` 
    # show a preview of our results with some customization
    results = pipeline.results()
 
-   colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
-   fig = results.preview( 
-                           color = colors, 
-                           edgecolor = "black", 
-                           edgewidth = 1, 
-                           figsize = (8,4)
-                     )
+   results.drop_rel()
+   fig = results.preview( mode = "interactive", title = "Normalized to 28S+Actin" )
 
 
-
-.. image:: resources/colorful.png
-   :align: center
+.. raw:: html
+   :file: resources/preview_index.html
 
 
 If you find ``qpcr`` useful for your research, please cite it ^^
@@ -116,6 +111,7 @@ If you find ``qpcr`` useful for your research, please cite it ^^
    :maxdepth: 2
    :caption: Contents:
 
+   installation
    qpcr
    gettingstarted
 
