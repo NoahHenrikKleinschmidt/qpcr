@@ -5,12 +5,17 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 
+import os
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
-import mock
-import sys 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+if on_rtd:
+# import mock
+# import sys 
+# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
+# for mod_name in MOCK_MODULES:
+#     sys.modules[mod_name] = mock.Mock()
+
+    autodoc_mock_imports = [ "plotly", "plotly.graph_objs", "plotly.subplots" ]
 
 # -- Path setup --------------------------------------------------------------
 
