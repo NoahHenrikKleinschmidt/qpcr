@@ -1,22 +1,21 @@
 .. _qpcr:
 
-qpcr package
+qpcr API reference
 ============
 
+Here you may find additional information about the usage of the various ``qpcr`` classes and stand-alone functions.
+
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    qpcr.main
-   qpcr.defaults
    qpcr.Pipes
    qpcr.Plotters
    qpcr.Filters
    qpcr.Readers
    qpcr.Parsers
    qpcr.Curves
-
-Module contents
----------------
+   qpcr.defaults
 
 .. automodule:: qpcr
    :members:
