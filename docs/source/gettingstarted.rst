@@ -147,15 +147,6 @@ Now, what about ``add``?  Classes that accept multiple inputs have ``add`` metho
 However, these classes usually still have a ``link()`` method somewhere that you can use as well. 
 Also data-storing classes often have multiple ``add`` methods, each dedicated to adding specific types of data, such as the ``qpcr.Results.add_ddCt`` method that gets Delta-Delta-Ct values from a ``qpcr.Assay``.
 
-Tutorials
-=========
-
-It was already mentioned in the text, but there are a number of useful tutorials `on GitHub <https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples>`_ to help you get started.
-They are easy to follow along and explain not only the use of ``qpcr`` itself but also how to prepare your datafiles and more.
-
-.. image:: resources/tutorials_screenshot.png
-    :align: center
-
 Qupid
 =====
 

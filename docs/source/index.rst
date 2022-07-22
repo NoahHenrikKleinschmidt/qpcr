@@ -111,10 +111,10 @@ If you find ``qpcr`` useful for your research, please cite it ^^
    :maxdepth: 2
    :caption: Contents:
 
-   installation
    qpcr
    gettingstarted
-
+   tutorials
+   
 Indices and tables
 ==================
 
