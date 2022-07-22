@@ -22,7 +22,7 @@ If the file contains multiple assays we likely want to specify
     assays = reader.read( some_file, multi_assay = True )
 
 In case there are both "assays-of-interest" and "normaliser" assays in our file, we will have to decorate the datafile (or manually sort the read assays in our script).
-To learn more about file pre-processing so that qpcr can automatically read your setup, check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_ .
+To learn more about file pre-processing so that qpcr can automatically read your setup, check out the `Decorator tutorial <https://qpcr.readthedocs.io/en/latest/tutorials/8_decorating_datafiles.html>`_ .
 
 .. code-block:: python
 

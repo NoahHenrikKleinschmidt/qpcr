@@ -5,7 +5,7 @@ This module provides different ``Reader`` classes that allow reading simple and 
 of various architectures.
 
 Learn more about the available Readers. If you are interested to learn more about preprocessing the datafiles, 
-check out the `Decorator tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/8_decorating_datafiles.ipynb>`_.
+check out the `Decorator tutorial <https://qpcr.readthedocs.io/en/latest/tutorials/8_decorating_datafiles.html>`_.
 
 SingleReader
 ------------
