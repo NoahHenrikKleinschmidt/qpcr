@@ -51,8 +51,8 @@ Assuming you are happy with default settings, the entire analysis could look lik
 
 
 To facilitate data analysis, common workflows have been implemented in pre-defined *pipelines* that allow for quick data analysis with minimal user effort. 
-You can learn more about the pipelines in `this tutorial <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/2_pipeline_tutorial.ipynb>`_ 
-or `this one <https://github.com/NoahHenrikKleinschmidt/qpcr/blob/main/Examples/5_customisable_piplines.ipynb>`_.
+You can learn more about the pipelines in `this tutorial <https://qpcr.readthedocs.io/en/latest/tutorials/2_pipeline_tutorial.html>`_ 
+or `this one <https://qpcr.readthedocs.io/en/latest/tutorials/5_customisable_piplines.html>`_.
 A more advanced example of such an analysis using the pre-defined ``BasicPlus`` pipeline is this:
 
 .. code-block:: python
@@ -104,7 +104,7 @@ A more advanced example of such an analysis using the pre-defined ``BasicPlus`` 
 
 
 If you find ``qpcr`` useful for your research, please cite it ^^
-   Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 3.1.5) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+   Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
 
 .. toctree::

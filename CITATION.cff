@@ -6,7 +6,7 @@ authors:
     family-names: Kleinschmidt
     given-names: Noah
 cff-version: "1.1.0"
-date-released: 2022-07-22
+date-released: 2022-07-23
 license: "GPL-3.0"
 message: "When using this package to analyse your data, please, cite accordingly. Good luck with your research!"
 repository-code: "https://github.com/NoahHenrikKleinschmidt/qpcr.git"
