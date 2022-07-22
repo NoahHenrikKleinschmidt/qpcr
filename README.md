@@ -66,7 +66,7 @@ fig = results.preview( color = colors, edgecolor = "black" )
 
 
 ### Getting started
-A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation on [read-the-docs](https://qpcr.readthedocs.io/en/latest/).
+A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation on [Read the Docs](https://qpcr.readthedocs.io/en/latest/).
 
 ### Qupid Web App
 In case you prefer a graphical-user-interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid offers the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). 
