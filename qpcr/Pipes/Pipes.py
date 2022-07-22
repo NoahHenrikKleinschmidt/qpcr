@@ -1,26 +1,63 @@
 """
 This module contains a set of common lightweight wrappers to perform simple and non-customised DeltaDeltaCt analyses.
 This is designed for lightweight users that do not wish to employ specialised pipelines.
+The ``qpcr.Pipes`` allow you to "shortcut" some steps for you as they handle object setup for the main ``qpcr`` classes.
+They will perform file-reading, Delta-Ct computation, and normalisation, as well as visualization and saving for you.
 
-> ### A Word on Plotters 
-> Please, note that pipelines fully support mixing "static" and "interactive" Plotters, 
-> but static figures will not stay open if interactive plotters are called to plot after them! 
-> Because `qpcr.Filters` are always called to plot *before* any other `qpcr.Plotters`, this will mainly
-> affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
+Which pipeline to use?
+--------------
+
+Depending on which pipeline you choose you will get different levels of customizability. 
+In the basic tutorials we worked with the ``BasicPlus`` pipeline which allows for file-reading, filtering, Delta-Ct computation, and normalisation, as well as visualisation and file-saving for the results.
+It is the "big brother" of the most simple pipeline called ``Basic`` which only performs file-reading, Delta-Ct computation, and normalisation, as well as results saving.
+
+The most "free" pipeline that works with files is the ``Blueprint`` pipeline that allows a user-specified *Reader*, *Analyser*, and *Normaliser*. 
+
+However, these above pipelines were all designed with **multiple regular datafiles** as input in mind! However, as you may have *irregular* or *multi assay files* you may not find these pipelines to be usable for you.
+This is no problem, however, since the ``qpcr.DataReader`` allows for very swift file-reading into ``qpcr.Assay`` objects from many different filetypes. These can then directly be submitted to the ``ddCt`` pipeline. 
+This skips file reading but only performs filtering, Delta-Ct computation, normalisation, and visualisation + file saving. Here is a "pipeline example" using ``ddCt``:
+
+.. code-block:: python
+
+    import qpcr
+    from qpcr.Pipes import ddCt
+
+    myfile = "some_irregular_multi_assay_file.xlsx"
+
+    # read the data externally
+    assays, normalisers = qpcr.read_multi_assay( myfile )
+
+    # now setup the pipeline
+    pipe = ddCt()
+
+    # add our data and run
+    pipe.link( assays = assays, normalisers = normalisers )
+    pipe.run()
+
+    # now get the results to inspect 
+    results = pipe.results()
+
+
+
+Note
+-----
+A Word on Plotters 
+Please, note that pipelines fully support mixing "static" and "interactive" Plotters, 
+but static figures will not stay open if interactive plotters are called to plot after them! 
+Because `qpcr.Filters` are always called to plot *before* any other `qpcr.Plotters`, this will mainly
+affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Summaries.
 """
 
+import logging
 import qpcr
-import matplotlib.pyplot as plt
-import pandas as pd 
-import statistics as stats
 import qpcr._auxiliary.warnings as aw
 import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
 import qpcr.Readers as Readers
-import re
 import os 
-import difflib
+
+logger = aux.default_logger()
 
 class Pipeline:
     """
@@ -32,6 +69,8 @@ class Pipeline:
     ----
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
     """
+    __slots__ = ['_Normalisers', '_Assays', '_save_to', '_df', '_stats_df', '_Results', '_replicates', '_names', '_softlink']
+    
     def __init__(self):
         # super().__init__()
         self._Normalisers = []
@@ -39,7 +78,7 @@ class Pipeline:
         self._save_to = None
         self._df = None
         self._stats_df = None
-        self._Results = None
+        self._Results = qpcr.Results()
         self._replicates = None
         self._names = None
         self._softlink = True
@@ -104,7 +143,9 @@ class Pipeline:
 
         # vet if there are at least one normaliser and assay present
         if self._Normalisers == [] or self._Assays == []:
-            aw.HardWarning("Pipeline:no_data")
+            e = aw.PipeError( "no_data" )
+            logger.critical( e )
+            raise e 
 
         self._run(**kwargs)
     
@@ -141,6 +182,17 @@ class Pipeline:
         elif kind == "obj":
             return self._Results
     
+    def results( self ):
+        """
+        Returns
+        -------
+        Results : qpcr.Results
+            The `qpcr.Results` object storing the pipelines data.
+            Note, this is equivalent to `get( kind = "obj" )`.
+        """
+        return self._Results
+
+
     def link(self, assays:(list or str) = None, normalisers:(list or str) = None):
         """
         Links new assays-of-interest / sample assays and/or normaliser assays 
@@ -180,7 +232,7 @@ class Pipeline:
         if results: 
             self._df = None
             self._stats_df = None
-            self._Results = None
+            self._Results = qpcr.Results()
 
     def add_normalisers(self, normalisers):
         """
@@ -238,7 +290,9 @@ class Pipeline:
             
                 # if no files are found, raise error
                 if len(datafiles) == 0:
-                    aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+                    e = aw.PipeError( "no_data_input", file = files )
+                    logger.critical( e )
+                    SystemExit( e )
             
                 # combine paths with parent directory
                 datafiles = [os.path.join(files,n) for n in datafiles]
@@ -251,7 +305,9 @@ class Pipeline:
                 return [files]
 
             else: 
-                aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
+                e = aw.PipeError( "no_data_input", file = files )
+                logger.critical( e )
+                SystemExit( e )
         
         # else check if we got a list or tuple of files
         elif isinstance(files, (list or tuple)):
@@ -259,8 +315,9 @@ class Pipeline:
         
         # raise error for anything else...
         else: 
-            aw.HardWarning("Pipeline:no_data_input", file = files, traceback = False)
-
+            e = aw.PipeError( "no_data_input", file = files )
+            logger.critical( e )
+            SystemExit( e )
 
     def _run(self, **kwargs):
         """
@@ -417,8 +474,8 @@ class BasicPlus(Basic):
 
 class Blueprint(BasicPlus):
     """
-    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `BasicPlus` pipeline, but allows full costumization of SampleReader, Analyser, and Normaliser objects.
-    Optionally, `qpcr.SampleReader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
+    Performs simple Delta-Delta-Ct analysis based on the same workflow as the `BasicPlus` pipeline, but allows full costumization of Reader, Analyser, and Normaliser objects.
+    Optionally, `Reader`, `qpcr.Analyser`, and `qpcr.Normaliser` may be set up externally and linked into the pipeline. Any non-linked processing classes will be set up using defaults.
     """
     def __init__(self):
         super().__init__()
@@ -487,14 +544,14 @@ class Blueprint(BasicPlus):
             if normaliser:
                 self._Normaliser = None
 
-    def Reader(self, Reader : qpcr.SampleReader = None):
+    def Reader(self, Reader = None):
         """
-        Links a `qpcr.SampleReader` object to the pipeline.
+        Links one of the `qpcr.Readers` to the pipeline.
 
         Parameters
         ----------
-        Reader : qpcr.SampleReader
-            A `qpcr.SampleReader` object
+        Reader
+            A `qpcr.Readers` object
         """
         if Reader is not None: 
             self._Reader = Reader
@@ -528,7 +585,7 @@ class Blueprint(BasicPlus):
     
     def _setup_cores(self):
         """
-        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
             self.Reader(qpcr.DataReader())
@@ -637,7 +694,7 @@ class _Qupid_Blueprint(Blueprint):
 
     def _setup_cores(self):
         """
-        Sets SampleReader, Analyser, and Normaliser to defaults, if no external ones were provided...
+        Sets Reader, Analyser, and Normaliser to defaults, if no external ones were provided...
         """
         if self.Reader() is None: 
             self.Reader(qpcr._Qupid_SampleReader())

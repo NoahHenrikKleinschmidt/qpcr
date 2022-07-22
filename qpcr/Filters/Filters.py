@@ -1,15 +1,89 @@
 """
 This submodule defines a number of filters that can be used to 
-remove faulty replicates from `qpcr.Assay`s before before passing them to an `qpcr.Analyser`.
+remove faulty replicates from a ``qpcr.Assay`` before before passing it to a ``qpcr.Analyser``.
 
-## Available Filters
---------
-### RangeFilter 
-Filters out all raw Ct values that do not comply to a user-specified range (default is `+/-1` around replicate group median)
-The user has the option of specifying another anchor and limits for the inclusion range.
 
-### IQRFilter
-Filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor).
+RangeFilter 
+===========
+
+The `RangeFilter` filters out all *raw Ct values* that do not comply to a user-specified range (default is `+/-1` around replicate group median)
+The user has the option of specifying another anchor and limits for the inclusion range. The limits may be asymmetrical (e.g. 1.5 above but only 0.7 below if this is desired).
+The limits are *static* and hence only the anchor is adjusted to each replicate group within each assay (unless a custom anchor is provided). 
+
+
+As an example, we might wish to filter out any Ct values that are outside of *+/- 0.5* around the *group mean*. To do this we need to set up a ``RangeFilter`` and adjust both the limits and the anchor.
+
+.. code-block:: python
+
+    myfilter = RangeFilter()
+
+    # set up the limits
+    myfilter.set_lim( 0.5 )
+    
+    # set a new anchor
+    def mean_anchor( values ):
+        return mean( values )
+    
+    # or as: mean_anchor = lambda values: mean( values )
+
+    myfilter.set_anchor( mean_anchor )
+
+    # and now we can filter our assays
+
+    myassay = myfilter.pipe( myassay )
+
+
+By default, any Ct values that are filtered out are set to ``np.nan`` and not actually removed from the dataframes. This is because ``qpcr`` tries to retain dimensionality between the Assays.
+You can choose to drop faulty outliers by using ``drop_outliers``. 
+
+
+IQRFilter
+=========
+
+The `IQRFilter` filters out any outliers by `n x IQR`, where `n` is a scaling factor (default `n = 1.5`) around the replicate group median (anchor). 
+Here the anchor *cannot* be re-set freely, but the limits can be adjusted symmetrically or asymmetrically as desired.
+
+For instance, we might want to filter out any values that are `+2 IQR` but retain all lower ones (maybe because we looked at their actual values and found that they were all acceptable).
+
+.. code-block:: python
+
+    myfilter = IQRFilter()
+
+    # we set some big value for retaining lower values
+    myfilter.set_lim( upper = 2, lower = 100 )
+
+    # and now we can filter our assays
+    myassay = myfilter.pipe( myassay )
+
+Filter Summary
+==============
+
+The Filters offer a summary of their activity. This is primarily through a *summary figure* that can be called via the ``plot`` method or the ``qpcr.plot`` function.
+
+.. code-block:: python
+
+    fig = myfilter.plot( mode = "interactive" )
+
+
+.. raw:: html
+    :file: ../docs/source/resources/filter_summary.html
+
+
+The Filters can also export a ``txt``-file summary of the indices they filtered out for each assay. This file is designed as a human-readable quick-check and does not offer a lot of information, however.
+The text summary is generated automatically if the ``report`` method is called, where you may specify a `directory` to store the filter reports to. Each filtered assay will be given a single report file.
+
+
+.. code-block:: python
+
+    # the report setup has to be done BEFORE the actual filtering!
+    myfilter.report( "./filter_reports_experiment1" )
+
+    # now we can filter
+    myassay = myfilter.pipe( myassay )
+
+Note
+-----
+These files are just named `filter_{assay name}.txt` so if you intend to save these reports from multiple experiments, make sure to store them in separate directories!
 """
 
 from re import L
@@ -17,14 +91,19 @@ import qpcr
 import pandas as pd
 import numpy as np
 import qpcr._auxiliary.warnings as aw
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import os 
 import qpcr.Plotters as Plotters
+import logging
 
+logger = aux.default_logger()
 class Filter(aux._ID):
     """
-    The super filtering class that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
+    The super class of the Filters that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     """
+    __slots__ = ["_Assay", "_report_loc", "_ignore_nan", "_drop_outliers", "_boxplot_mode", "_BoxPlotter", "_filter_stats"]
+    
     def __init__(self):
         super().__init__()
         self._Assay = None
@@ -40,9 +119,8 @@ class Filter(aux._ID):
         # don't drop them anymore
         self._drop_outliers = False
 
-        self._boxplot_mode = "interactive"
+        self._boxplot_mode = defaults.plotmode
         self._BoxPlotter = Plotters.FilterSummary( mode = self._boxplot_mode )
-        self._BoxPlotter.params(title = "Filter Summary")
 
         self._filter_stats = pd.DataFrame({
                                             "assay" : [], "group" : [], 
@@ -86,7 +164,7 @@ class Filter(aux._ID):
         """
         self._drop_outliers = bool
 
-    def plotmode(self, mode = "interactive"):
+    def plotmode(self, mode ):
         """
         Set graph mode if a summary Boxplot shall be made
 
@@ -95,6 +173,7 @@ class Filter(aux._ID):
         mode : str
             Can be either "interactive" (plotly) or "static" (matplotlib), or None to disable plotting.
         """
+        if mode is None: mode = defaults.plotmode
         self._boxplot_mode = mode
         self._BoxPlotter = Plotters.FilterSummary(mode = self._boxplot_mode)
         self._BoxPlotter.params(title = "Filter Summary")
@@ -119,6 +198,9 @@ class Filter(aux._ID):
             suffix = plotter.suffix()
             plotter.save(os.path.join(self._report_loc, f"{filename}.{suffix}"))
         return fig
+
+    def __qplot__( self, **kwargs ):
+        return self.plot
 
     def link(self, Assay:qpcr.Assay):
         """
@@ -149,9 +231,12 @@ class Filter(aux._ID):
             A `qpcr.Assay` object containing only entries that passed the filter.
 
         """
-        self.link(Assay)
-        self.filter(**kwargs)
-        return self._Assay    
+        if isinstance( Assay, list ):
+            return [ self.pipe( assay ) for assay in Assay ]
+        else:
+            self.link(Assay)
+            self.filter(**kwargs)
+            return self._Assay    
 
     def filter(self, **kwargs):
         """
@@ -171,7 +256,9 @@ class Filter(aux._ID):
             self._filter(**kwargs)
             return self._Assay
         else: 
-            aw.HardWarning("Filter:no_assay")
+            e = aw.FilterError( "no_assay" )
+            logger.critical( e )
+            raise e 
 
     def report(self, directory = None):
         """
@@ -330,7 +417,8 @@ class RangeFilter(Filter):
             upper, lower = self._set_bounds(anchor)
 
             # get faulty indices
-            faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
+            Ct = defaults.raw_col_names[1]
+            faulty_replicates = tmp.query(f"{Ct} < {lower} or {Ct} > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)
@@ -363,8 +451,9 @@ class RangeFilter(Filter):
         """
         Set anchor for inclusion range
         """
+        Ct = defaults.raw_col_names[1]
         if self._anchor is None:
-            anchor = np.median(tmp["Ct"])
+            anchor = np.median(tmp[Ct])
         elif type(self._anchor) == type(print):
             anchor = self._anchor(tmp, **kwargs)
         elif isinstance(self._anchor, (list, tuple, dict)):
@@ -393,23 +482,24 @@ class IQRFilter(Filter):
     
         df = self._Assay.get()
         groups = self._Assay.groups()
-
+        Ct = defaults.raw_col_names[1]
+        
         faulty_indices = []
         for group in groups:
             tmp = df.query(f"group == {group}")
 
             # get anchor
-            anchor = np.nanmedian(tmp["Ct"])
+            anchor = np.nanmedian(tmp[Ct])
             # ignore Nan if so specified
             if self._ignore_nan and anchor != anchor: 
                 continue
 
             # generate inclusion range boundries
-            first, third = np.nanquantile(tmp["Ct"], 0.26), np.nanquantile(tmp["Ct"], 0.76)
+            first, third = np.nanquantile(tmp[Ct], 0.26), np.nanquantile(tmp[Ct], 0.76)
             upper, lower = self._set_bounds(anchor, first, third)
             
             # get faulty replicates
-            faulty_replicates = tmp.query(f"Ct < {lower} or Ct > {upper}")
+            faulty_replicates = tmp.query(f"{Ct} < {lower} or {Ct} > {upper}")
             faulty_indices.extend(list(faulty_replicates.index))
 
             self._save_stats(self._Assay.id(), group, anchor, upper, lower)        
@@ -436,6 +526,59 @@ class IQRFilter(Filter):
         upper, lower = anchor + iqr * self._upper, anchor - iqr * self._lower
         return upper,lower
 
+
+
+
+def filter( assay, mode: str = "range", lim: (float or tuple) = None, anchor = None, ignore_nan : bool = True, drop_outliers : bool = False ):
+    """
+    Filter a single or multiple `qpcr.Assay` objects using default `Filter` setups.
+
+    Parameters
+    ----------
+    assay : qpcr.Assay or list
+        A single `qpcr.Assay` object or a list thereof.
+    
+    mode : str
+        Either `"range"` to call a `RangeFilter` that uses a static range to filter values, or `"iqr"` to call a `IQRFilter` that uses the Interquantile Range
+        to filter values. 
+    
+    lim : float or tuple
+        The filtering limits for the inclusion range. Any values outside of these will be filtered out. For the `RangeFilter` these are absolute values around the `anchor` (+/- 1 by default)
+        while for the `IQRFilter` these are scalars (+- 1.5 by default) for the IQR. If a single `float` is supplied the limits are interpreted symmetrically, while a `tuple` is read as first lower bound, then upper bound.
+    
+    anchor : 
+            Only used for `RangeFilters`. Supported types for `anchor` are: a numeric value (`int or float`),
+            an `iterable` of same length as groups in the dataframe, 
+            a `dict` where keys must be numeric group identifiers (starting from 0) and values are numeric values to be used as anchor (`int or float`),
+            or a `function` that works with a pandas dataframe as stored by `qpcr.Assay` objects, 
+            which must return a single numeric value for the anchor (it will be applied to replicate-grouped subsets of the total dataframe).
+    
+    ignore_nan : bool
+        Ignore NaN values when computing inclusion ranges. If set to `False` a single NaN value will render the entire replicate group unfilterable!
+    
+    drop_outliers : bool
+        If `True` entries are actually dropped from the dataframe. By default any entries that do not match the inclusion range are set to NaN.
+
+
+    Parameters
+    ----------
+    assay : qpcr.Assay or list
+        The same as input but with filtered dataframes.
+    """
+    f = RangeFilter() if mode == "range" else IQRFilter
+
+    if lim is not None:
+        if isinstance(lim, (tuple, list, np.ndarray)): 
+            f.set_lim( upper = lim[0], lower = lim[1] )
+        else: 
+            f.set_lim( lim = lim )
+    if mode == "range" and anchor is not None:
+        f.set_anchor( anchor = anchor )
+
+    f.ignore_nan( ignore_nan )
+    f.drop_outliers( drop_outliers ) 
+
+    return f.pipe( assay )
 
 
 if __name__ == "__main__":

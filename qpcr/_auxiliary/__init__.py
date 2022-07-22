@@ -5,6 +5,78 @@ that are not directly linked to qpcr Analysis per se.
 import uuid
 import os 
 import re 
+import qpcr.defaults as defaults
+import logging
+
+
+def log( filename = None, level = None, format = None, name = "qpcr" ):
+    """
+    Store a log file
+
+    Parameters
+    -------
+    filename : str
+        The file in which to save the log. By default this will be a file `qpcr.log`
+        (logger name + .log) in the same directory as the current main script.
+        The log can be directed to stdout using `filename = "stdout"`.
+    level 
+        The logging level. By default WARNING is used.
+    format  
+        The logging format.
+    name
+        The logger name to use. By default `qpcr` is used.
+    
+    """
+
+    logger = logging.getLogger( name = name )
+
+    # setup the dedicated qpcr logger
+    if level is None:
+        level = defaults.log_level
+    logger.setLevel( level )
+
+    if filename == "stdout":
+        handler = logging.StreamHandler()
+    else:
+        if filename is None:
+
+            # try to use a fileHandler but if we have a jupyter notebook or terminal
+            # just use StreamHandler instead...
+            try:
+                import __main__
+                filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
+            except:
+                return log( filename = "stdout", level = level, format = format, name = name )
+        
+        elif not filename.endswith(".log"): 
+            filename += ".log"
+        handler = logging.FileHandler( filename = filename )
+   
+    if format is None: 
+        format = defaults.log_format
+    
+    f = logging.Formatter( fmt = format )
+    handler.setFormatter( f )
+    handler.setLevel( level )
+    logger.addHandler( handler )
+    return logger
+
+def default_logger():
+    """The default logger of qpcr"""
+    logger = logging.getLogger( name = "qpcr" )
+    if not logger.hasHandlers():
+        return log( filename = defaults.init_log_loc )
+    return logger
+
+def extensive_logger():
+    """
+    The extensive logger of qpcr.
+    """
+    logger = logging.getLogger( name = "qpcr" )
+    if not logger.hasHandlers():
+        return log( level = logging.DEBUG )
+    logger.setLevel( logging.DEBUG )
+    return logger
 
 def from_kwargs(key, default, kwargs, rm = False):
     """
@@ -46,27 +118,46 @@ class _ID:
     """
     A meta_superclass that simply adds an ID getter-setter to itself
     """
+    __slots__ = ["_id", "_id_was_set", "_id_label", "_id_label_was_set", "_id_func",  "__dict__"]
+
     def __init__(self):
         self._id = uuid.uuid1() 
         self._id_was_set = False
         self._id_label_was_set = False
         self._id_label = None
+
+        self._id_func = self._strict_id if defaults.strict_id else self._relaxed_id
     
+    def id( self, id : str = None ):
+        """
+        Adds a string identifier or returns the given id
+        """
+        return self._id_func( id )
+
     def id_was_set(self):
         """
         Returns True if an Id was set
         """
         return self._id_was_set
-
-    def id(self, id:str = None):
+    
+    def _strict_id(self, id:str = None):
         """
         Adds a string identifier or returns the given id
         """
         if id is not None and not self.id_was_set():
             self._id = id
             self._id_was_set = True
+        return self._id 
+
+    def _relaxed_id( self, id:str = None ):
+        """
+        Adds a string identifier or returns the given id
+        """
+        if id is not None:
+            self._id = id
+            self._id_was_set = True
         return self._id
-    
+
     def id_label(self, label:str = None):
         """
         Adds a label and gets the current label.

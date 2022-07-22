@@ -33,9 +33,20 @@ WARNINGS = {
 "Normaliser:cannot_set_prep_func" : "Unknown function supplied for prep_func!\n Received func = {func}", 
 "Normaliser:cannot_set_norm_func" : "Unknown function supplied for norm_func!\n Received func = {func}", 
 "Normaliser:empty_data" : "Assay {s} was not added because it did not contain any results data!", 
-"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
-"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay or qpcr.Analyser objects are allowed!",
+"Normaliser:unknown_data" : "Assay {s} was not added because it could not be read!\nOnly qpcr.Assay objects are allowed!",
+"Normaliser:norm_unknown_data" : "Normaliser {s} was not added because it could not be read!\nOnly qpcr.Assay objects are allowed!",
 "Normaliser:no_data_yet" : "Normalisation cannot be performed, as either samples are missing or no normaliser has been specified yet, or could not be processed!",
+
+
+"Calibrator:unknown_savemode" : "Unknown mode = '{mode}' could not be interpreted!",
+"Calibrator:unknown_filetype" : "Could not read file '{filename}'! Make sure it is a comma-separated csv file.",
+"Calibrator:cannot_adopt" : "Could not interpret input '{effs}' ({eff_type}). Make sure to provide a dictionary",
+"Calibration:cannot_interpret_dilution" : "Cannot interpret dilution step input: {step} ({step_type})! Specify either a float or np.ndarray...",
+"Calibrator:cannot_process_assay" : "The Assay '{id}' could not be processed! Neither a matching pre-computed efficiency could be assigned nor a new one computed! Check again your datafile and Calibrator setup!",
+"Calibrator:could_not_assign" : "No efficiencies could be found for Assay '{id}'!\nMake sure to have loaded / precomputed proper effiencies with matching Ids.",
+"Calibrator:could_not_infer_dilution" : "Could not infer dilutions! Please, set a dilution step using dilution()",
+
+
 
 "SampleReader:no_reps_yet" : "Could not read data as no replicates have been specified yet!\nPlease, make sure to provide replicate information using the .replicate() method.",
 
@@ -77,6 +88,9 @@ WARNINGS = {
 
 
 "Versions:Deprecation" : "Class {old} is deprecated and will be dropped in a future release! Please, use {new} instead.",
+"blank" : "{msg}",
+
+"Generic:DataExistsError" : "Data already exists and could not be re-set. Use force=True (if available) or setup a new instance.",
 
 }
 
@@ -112,3 +126,82 @@ class HardWarning:
         else:
             print("\nError:", self._message, sep = "\n")
             exit(1)
+
+
+def warning(key):
+    """
+    Returns the the warning message for a given key.
+    """
+    return WARNINGS.get( key, None )
+
+
+class DataExistError(AttributeError):
+    def __init__(self, msg : str = None, **attrs ):
+        self.attr = attrs
+        self.msg = msg
+    
+    def __str__(self):
+        if self.msg is None: 
+            s = WARNINGS["Generic:DataExistsError"]
+        else:
+            s = WARNINGS[self.msg].format( **self.attr )
+        return s 
+
+# new qpcr4 system of custom Exceptions
+class ClassError(Exception):
+    """
+    A generic Meta-Error for the specific classes of qpcr
+    """
+    def __init__(self, warning, **attrs):
+        self.msg = warning
+        self.attr = attrs
+        self.name = type(self).__name__
+        self.key = self.name.replace( "Error", "" )
+
+    def __str__(self):
+        s = f"{self.key}:{self.msg}"
+        s = WARNINGS[s].format(**self.attr)
+        s = f"[{self.name}] {s}"
+        return s 
+
+    def __repr__(self):
+        return self.__str__()   
+
+class AssayError(ClassError):
+    pass
+
+class AnalyserError(ClassError):
+    pass
+
+class NormaliserError(ClassError):
+    pass
+
+class ResultsError(ClassError):
+    pass
+
+class CalibratorError(ClassError):
+    pass
+
+class FilterError(ClassError):
+    pass
+
+class PlotterError(ClassError):
+   pass
+
+class ReaderError(ClassError):
+    pass
+
+class MultiReaderError(ClassError):
+    pass
+
+class MultiSheetReaderError(ClassError):
+    pass
+
+class BigTableReaderError(ClassError):
+    pass
+class ParserError(ClassError):
+   pass
+
+class PipeError(ClassError):
+    pass
+

@@ -1,0 +1,20 @@
+﻿id;Ct
+ctrl;16.74
+ctrl;16.91
+condA;14.36
+condA;14.29
+calibrator : dil : 1;15.02
+calibrator : dil : 1;14.95
+calibrator : dil : 2;15.89
+calibrator : dil : 2;16.05
+calibrator : dil : 4;16.76
+calibrator : dil : 4;16.83
+calibrator : dil : 8;17.81
+calibrator : dil : 8;17.64
+calibrator : dil : 16;18.53
+calibrator : dil : 16;18.71
+calibrator : dil : 32;19.59
+calibrator : dil : 32;19.73
+calibrator : dil : 64;20.78
+calibrator : dil : 64;20.64
+Diluent;40
