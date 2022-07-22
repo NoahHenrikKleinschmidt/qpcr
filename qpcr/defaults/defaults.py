@@ -33,7 +33,7 @@ id_header = "Name"
 ct_header = "Ct"
 """Default assumed column name for replicate Ct entries"""
 
-setup_cols = ["id", "group", "group_name"]
+setup_cols = [raw_col_names[0], "group", "group_name"]
 """Default Assay dataset columns that supply metadata, and not specific values like Ct values."""
 
 #  =================================================================

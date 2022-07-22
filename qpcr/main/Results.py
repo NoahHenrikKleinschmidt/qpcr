@@ -87,6 +87,7 @@ class Results(aux._ID):
 
         self._df = pd.DataFrame()
         self._stats_df = pd.DataFrame()
+        self._rel_cols = None
     
     def __str__(self):
         _length = len( str(self._df).split("\n")[0] ) 
@@ -416,7 +417,9 @@ class Results(aux._ID):
         Crops the ``X_rel_Y`` column-names of Delta-Delta-Ct results to just ``X``.
         I.e. reduces back to the assay-of-interest name only.
         """
-        to_change = {i : i.split("_rel_")[0] for i in self._df.columns if "_rel_" in i }
+        # first store the current _rel_ cols for ddCt_col
+        to_change = {i : i.split("_rel_")[0] for i in self._df.columns if "_rel_" in i} 
+        self._rel_cols = list( to_change.values() ) 
         self.rename_cols(to_change)
 
         # also recompute the stats df with new names...
@@ -562,7 +565,10 @@ class Results(aux._ID):
         -------
         cols
             A list of all {}_rel_{} columns within the Results's dataframe.
+            Or their new names if `drop_rel` was performed.
         """
+        if self._rel_cols is not None:
+            return self._rel_cols
         return [i for i in self._df.columns if "_rel_" in i]
 
     @property
