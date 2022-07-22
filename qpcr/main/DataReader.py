@@ -76,8 +76,9 @@ class DataReader(aux._ID):
     will either have a hard time or be unable to read your datafiles using the `DataReader`. 
     In such cases, don't try too long to make it work with the DataReader, 
     just use one of the `qpcr.Readers` or even `qpcr.Parsers` directly.  
-
     """
+    __slots__ = ["_src", "_Reader", "_Data", "_tmp_data", "_replicates", "_names"]
+
     def __init__(self):
         super().__init__()
         self._replicates = None

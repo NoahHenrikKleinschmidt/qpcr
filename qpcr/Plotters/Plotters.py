@@ -246,6 +246,8 @@ class Plotter:
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).    
     """
+    __slots__ = "_default_params", "_data", "_PARAMS", "_Results", "_data", "_rep_data", "_id", "_MODE", "_fig", "_static_default", "_interactive_default", "_default_x", "_default_y", "_default_sterr", "__dict__"
+        
     def __init__(self, mode = None):
         self._default_params = None
         self._PARAMS = {} #: _PARAMS will store the plotting parameter kwargs from both _default_params and any additional user specified parameters
@@ -522,6 +524,8 @@ class Wrapper:
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly). 
 
     """
+    __slots__ = "_Plotter", "_id", "__dict__"
+
     def __init__(self, kind : str, mode : str):
 
         self._Plotter = None

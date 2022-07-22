@@ -273,6 +273,7 @@ class _CORE_Reader(aux._ID):
     Both the standard qpcr.Reader as well as the qpcr._Qupid_Reader
     inherit from this. 
     """
+    __slots__ = "_src", "_delimiter", "_header", "_df", "_replicates", "_names"
     def __init__(self):
         super().__init__()
         self._src = None
@@ -768,6 +769,7 @@ class MultiReader(SingleReader, aux._ID):
     **kwargs
             Any additional keyword arguments that should be passed to the ``read`` method which is immediately called during init if a filename is provided.
     """
+    __slots__ = ["_Parser", "_assay_pattern", "_assays", "_normalisers"]
     def __init__(self, filename : str = None, **kwargs):
         super(aux._ID, self).__init__()
         self._src = filename
@@ -1235,6 +1237,8 @@ class BigTableReader(MultiReader):
         Please, note that the two methods of reading this table are mutually exclusive! So,
         if you decorate your table you cannot pass specific assay headers to the ``ct_col`` argument anymore.
     """
+    __slots__ = ["_kind", "_id_col", "_ct_col", "_assay_col", "_is_regular", "_hybrid_decorated"]
+    
     def __init__(self):
         super().__init__()
 

@@ -80,6 +80,8 @@ class Results(aux._ID):
     externally computed sources. Please, note that it will not perform extensive vetting on its data input, 
     so make sure to only provide proper data input when manually assembling your ``qpcr.Results``!
     """
+    __slots__ = [ "_df", "_stats_df", "_id", "_rel_cols" ]
+
     def __init__(self, id:str = None):
         super().__init__()
         if id is not None:

@@ -84,6 +84,8 @@ class Normaliser(aux._ID):
     -----
     This requires that all have been analysed in the same way before!
     """
+    __slots__ = ["_Normalisers", "_Assays", "_Results", "_normaliser", "_prep_func", "_norm_func", "_norm_func_is_set"]
+
     def __init__(self):
         super().__init__()
 
@@ -352,7 +354,7 @@ Prep.Function: \t{self._norm_func.__name__}
         convert it to one. 
         """
         if not isinstance(self._normaliser, Assay):
-            tmp = Assay( df = self._normaliser )
+            tmp = Assay( df = self._normaliser )          
             tmp.id("combined_normaliser")
             self._normaliser = tmp
             
@@ -568,7 +570,7 @@ Prep.Function: \t{self._norm_func.__name__}
         
         # now assemble the normaliser into a qpcr.Assay
         combined = combined.get()
-        normaliser = Assay( df = combined, replicates = self._Normalisers[0].replicates() )
+        normaliser = Assay( df = combined, replicates = self._Normalisers[0].replicates(), group_names = self._Normalisers[0].names() )
 
         self._normaliser = normaliser  
         self._update_combined_id()

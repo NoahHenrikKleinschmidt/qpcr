@@ -49,6 +49,8 @@ class Analyser(aux._ID):
     Performs Single Delta-Ct (first normalisation 
     within dataset against the `anchor`) 
     """
+    __slots__ = ["_anchor", "_ref_group", "_ref_group_col", "_deltaCt_function", "_Assay"]
+
     def __init__(self):
         super().__init__()
         self._Assay = None

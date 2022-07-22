@@ -118,6 +118,8 @@ class _ID:
     """
     A meta_superclass that simply adds an ID getter-setter to itself
     """
+    __slots__ = ["_id", "_id_was_set", "_id_label", "_id_label_was_set", "_id_func",  "__dict__"]
+
     def __init__(self):
         self._id = uuid.uuid1() 
         self._id_was_set = False

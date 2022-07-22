@@ -103,6 +103,8 @@ class Assay(aux._ID):
         A list of names to use for the replicates groups. If replicates of the same group share the same identifier, then the 
         group will be inferred automatically. Otherwise, default group names will be set if no `group_names` are provided. 
     """
+    __slots__ = ["_df", "_id", "_efficiency", "_efficiency", "_replicates", "_group_names", "_groups"]
+
     def __init__(self, df : pd.DataFrame, id : str = None, replicates : (int or tuple or str) = None, group_names : list = None):
         super().__init__()
        

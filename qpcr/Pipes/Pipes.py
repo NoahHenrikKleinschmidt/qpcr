@@ -69,6 +69,8 @@ class Pipeline:
     ----
     The simplest implementation of this `Pipeline` template is the `Basic` pipeline.
     """
+    __slots__ = ['_Normalisers', '_Assays', '_save_to', '_df', '_stats_df', '_Results', '_replicates', '_names', '_softlink']
+    
     def __init__(self):
         # super().__init__()
         self._Normalisers = []

@@ -225,6 +225,11 @@ class _CORE_Parser:
     This is the functional core for the irregular multi-assay file-reader classes.
     It handles the regex searching and numpy indexing of relevant column subsets of the datafiles.
     """
+    __slots__ = [ "_src", "_pattern", "_data", "_assay_indices", "_assay_names", "_assay_names_start_indices", "_assay_names_end_indices", 
+                  "_assay_ct_start_indices", "_assay_ct_end_indices", "_dfs", "_ids_were_set", "_max_assay_name_length", "_save_loc",
+                  "_transpose", "_bigtable_range", "_id_label", "_ct_label", "_ids_were_set", "__dict__"
+                ]
+
     def __init__(self):
         self._src = None
         self._pattern = None

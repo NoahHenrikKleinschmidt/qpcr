@@ -102,6 +102,8 @@ class Filter(aux._ID):
     """
     The super class of the Filters that takes in a `qpcr.Assay` object and updates its dataframe to a filtered version.
     """
+    __slots__ = ["_Assay", "_report_loc", "_ignore_nan", "_drop_outliers", "_boxplot_mode", "_BoxPlotter", "_filter_stats"]
+    
     def __init__(self):
         super().__init__()
         self._Assay = None

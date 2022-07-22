@@ -5,6 +5,8 @@ class EfficiencyCurve(aux._ID):
     A helper class that will handle dilutions, ct values and the linreg model
     when newly computing efficiencies from assays.
     """
+    __slots__ = ['_dilutions', '_ct_values', '_model', '_efficiency']
+    
     def __init__(self, dilutions, ct_values, model, efficiency):
         super().__init__()
         self._dilutions = dilutions

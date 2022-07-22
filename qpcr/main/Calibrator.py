@@ -88,6 +88,8 @@ class Calibrator(aux._ID):
     for some other reason, it is possible to supply a dilution step via 
     the `qpcr.Calibrator.dilution` method. 
     """
+    __slots__ = ["_id", "_loaded_file", "_eff_dict", "_computed_values", "_orig_dilution", "_manual_dilution_set"]
+      
     def __init__(self):
         super().__init__()
         self._eff_dict = {}             # stores the efficiencies as assay_id : efficiency
