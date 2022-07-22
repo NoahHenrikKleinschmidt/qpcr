@@ -254,31 +254,36 @@ class Results(aux._ID):
             df = result.get()
 
             if not all_cols:
-                df = df[ result.ddCt_cols ]
+                df = df[ [ i for i in result.columns if i not in defaults.setup_cols ] ]
             # we merge the dataframes first without adding 
             # some new id suffix, only do so if this fails
             try:
 
                 # check if we have an overlap of column names
                 intersect = set(df.columns).intersection( set(new_df.columns) )
-                if intersect != {}:
+                if intersect != set():
                     raise IndexError( f"Duplicate column names were found: {intersect}" )
                 new_df = pd.merge(new_df, df, 
                                     right_index = True, left_index = True, 
                                 )
-            except Exception as e:
+
+            except aw.ClassError as e:
                 new_df = pd.merge(new_df, df, 
                                 right_index = True, left_index = True, 
                                 suffixes = [f"_{self.id()}", f"_{result.id()}"]
                             )
                 logger.warning( e )
+
+            except Exception as e:
+                raise e
+
         self._df = new_df
         return self
 
     def __add__(self, other):
         self.merge( other )
         return self
-
+    
     def rename( self, cols : dict ):
         """
         Renames columns according to a dictionary as key -> value.
@@ -559,6 +564,10 @@ class Results(aux._ID):
 
     def __qplot__( self, **kwargs ):
         return self.preview
+
+    @property
+    def columns(self):
+        return self._df.columns
 
     @property
     def ddCt_cols( self ):
