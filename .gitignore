@@ -11,4 +11,4 @@ test*py
 html*
 testfiles
 worktools
-.DS_Store
+*.DS_Store
