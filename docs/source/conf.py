@@ -80,6 +80,7 @@ html_theme = 'sphinx_rtd_theme'
 
 html_logo = "./qpcr_dark.svg"
 
+
 html_theme_options = dict( style_nav_header_background = "#00aaffff" ) 
 
 # Add any paths that contain custom static files (such as style sheets) here,
