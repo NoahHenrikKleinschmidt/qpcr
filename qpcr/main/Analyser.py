@@ -38,8 +38,6 @@ import qpcr._auxiliary.warnings as aw
 import pandas as pd
 from qpcr.main.Assay import Assay
 
-import logging
-
 logger = aux.default_logger()
 
 raw_col_names = defaults.raw_col_names

@@ -69,8 +69,6 @@ import scipy.stats as scistats
 from qpcr.Curves import EfficiencyCurve
 from qpcr.main import Assay 
 
-import logging
-
 logger = aux.default_logger()
 class Calibrator(aux._ID):
     """

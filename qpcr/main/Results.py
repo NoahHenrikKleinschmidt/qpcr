@@ -62,7 +62,6 @@ import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 import qpcr.main as main
 
-import logging
 import re
 import pandas as pd
 import numpy as np

@@ -60,7 +60,6 @@ which allows you to avoid repeating the same number of replicates many times lik
 
 import pandas as pd
 import numpy as np
-import logging
 import os 
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux

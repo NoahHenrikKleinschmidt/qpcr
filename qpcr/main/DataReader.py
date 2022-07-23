@@ -56,7 +56,6 @@ import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 from qpcr import Readers 
 
-import logging 
 
 logger = aux.default_logger()
 class DataReader(aux._ID):

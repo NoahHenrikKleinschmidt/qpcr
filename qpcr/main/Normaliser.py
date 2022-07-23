@@ -70,9 +70,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as scistats
 
-
 from copy import deepcopy
-import logging 
 
 logger = aux.default_logger()
 
