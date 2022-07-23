@@ -12,3 +12,4 @@ html*
 testfiles
 worktools
 *.DS_Store
+qpcr/main/DataReader.py
