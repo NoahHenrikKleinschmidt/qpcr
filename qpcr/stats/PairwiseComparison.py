@@ -301,6 +301,19 @@ class PairwiseComparisons:
         self.comparisons = list(comparisons.values())
         self.ids = list(comparisons.keys())
     
+    def save( self, directory : str ):
+        """
+        Saves the comparisons to files.
+
+        Parameters
+        ----------
+        directory : str
+            The directory to save the files to.
+        """
+        fname = "{directory}/{id}.csv"
+        for i in self:
+            i.save( filename = fname.format( directory = directory, id = i.id() ) )
+
     def __getitem__( self, id ):
         if id in self.ids:
             idx = self.ids.index(id)
