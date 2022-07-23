@@ -90,6 +90,76 @@ class PairwiseComparison(aux._ID):
         
         return self._pvalues
 
+    def stack(self):
+        """
+        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
+        into multi-column column dataframe format. 
+        Where `a` and `b` denote the two partners in the comparison, 
+        and `pval` is the unadjusted p-value for the comparison, 
+        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
+        and `effect_size` is the effect size for the comparison (if stored).
+
+        Returns
+        -------
+        pd.DataFrame
+            The stacked data.
+        """
+        if self._pvalues is None:
+            return None
+        else:
+            pvals = self._melt( "pval" )
+            final = pvals
+        if self._p_are_adjusted:
+            pvals_adj = self._melt( "pval_adj" )
+            final[ "pval_adj" ] = pvals_adj[ "pval_adj" ]
+        if self._effect_size is not None:
+            effects = self._melt( "effect_size" )
+            final[ "effect_size" ] = effects[ "effect_size" ]
+        return final 
+
+
+    def to_df(self, which : str = None):
+        """
+        Converts a data array into a pandas DataFrame with labeled index and columns.
+        This will retain the 2D grid arrangement of the data.
+
+        Parameters
+        -------
+        which : str
+            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"effects"` (for the effect sizes).
+            If correction was performed, then `"adjusted"` is the default else `"raw"`.
+
+        Returns
+        -------
+        pd.DataFrame
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
+            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
+        """
+        if which == "adjusted":
+            data = self._pvalues
+        elif which == "raw":
+            data = self._orig_pvalues
+        elif which == "effects":
+            data = self._effect_size
+        if which is None: 
+            if self._pvalues is None:
+                return None
+            data = self._pvalues
+        p = pd.DataFrame( data, columns = self.labels[0], index = self.labels[1] )
+        return p
+
+    def save( self, filename : str ):
+        """
+        Saves the comparison to a file.
+
+        Parameters
+        ----------
+        filename : str
+            The filename to save the comparison to.
+        """
+        df = self.stack()
+        df.to_csv( filename, index = False )
+
     @property
     def pvalues_adjusted(self):
         """
@@ -162,63 +232,7 @@ class PairwiseComparison(aux._ID):
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
     
-    def stack(self):
-        """
-        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
-        into multi-column column dataframe format. 
-        Where `a` and `b` denote the two partners in the comparison, 
-        and `pval` is the unadjusted p-value for the comparison, 
-        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
-        and `effect_size` is the effect size for the comparison (if stored).
-
-        Returns
-        -------
-        pd.DataFrame
-            The stacked data.
-        """
-        if self._pvalues is None:
-            return None
-        else:
-            pvals = self._melt( "pval" )
-            final = pvals
-        if self._p_are_adjusted:
-            pvals_adj = self._melt( "pval_adj" )
-            final[ "pval_adj" ] = pvals_adj[ "pval_adj" ]
-        if self._effect_size is not None:
-            effects = self._melt( "effect_size" )
-            final[ "effect_size" ] = effects[ "effect_size" ]
-        return final 
-
-
-    def to_df(self, which : str = None):
-        """
-        Converts a data array into a pandas DataFrame with labeled index and columns.
-        This will retain the 2D grid arrangement of the data.
-
-        Parameters
-        -------
-        which : str
-            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"effects"` (for the effect sizes).
-            If correction was performed, then `"adjusted"` is the default else `"raw"`.
-
-        Returns
-        -------
-        pd.DataFrame
-            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
-            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
-        """
-        if which == "adjusted":
-            data = self._pvalues
-        elif which == "raw":
-            data = self._orig_pvalues
-        elif which == "effects":
-            data = self._effect_size
-        if which is None: 
-            if self._pvalues is None:
-                return None
-            data = self._pvalues
-        p = pd.DataFrame( data, columns = self.labels[0], index = self.labels[1] )
-        return p
+    
 
     def _melt( self, which : str ):
         """
