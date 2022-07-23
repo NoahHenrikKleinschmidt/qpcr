@@ -104,7 +104,7 @@ A more advanced example of such an analysis using the pre-defined ``BasicPlus`` 
 
 
 If you find ``qpcr`` useful for your research, please cite it ^^
-   Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+   Kleinschmidt, N. (2022). qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
 
 .. toctree::

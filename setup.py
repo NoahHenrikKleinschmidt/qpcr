@@ -8,7 +8,7 @@ setuptools.setup(
     version="4.0.0",
     author="Noah H. Kleinschmidt",
     author_email="noah.kleinschmidt@students.unibe.ch",
-    description="A module to perform analysis of qPCR data",
+    description="A package to perform analysis of qPCR data",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/NoahHenrikKleinschmidt/qpcr.git",
