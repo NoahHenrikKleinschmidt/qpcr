@@ -2954,7 +2954,7 @@ class EfficiencyLines(Plotter):
         return fig 
 
 
-def plot( obj, mode = None, **kwargs ):
+def plot( obj, mode : str = None, **kwargs ):
     """
     A generic plotting shortcut to visualise the data from a `qpcr` class object, if it supports visualisation.
 
