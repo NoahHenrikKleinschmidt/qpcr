@@ -593,6 +593,17 @@ class Results(aux._ID):
         return [i for i in self._df.columns if "_rel_" in i]
 
     @property
+    def data_cols(self):
+        """
+        Returns
+        -------
+        cols
+            A list of all non-setup columns in the dataframe.
+        """
+        return [i for i in self._df.columns if not i in defaults.setup_cols]
+        
+
+    @property
     def is_empty(self):
         """
         Checks if any results have been stored so far.

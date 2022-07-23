@@ -360,6 +360,17 @@ Amplif. Eff.: {self._efficiency}
         # some method to also return the fold change columns... 
 
     @property
+    def data_cols(self):
+        """
+        Returns
+        -------
+        cols
+            A list of all non-setup columns in the dataframe.
+        """
+        return [i for i in self._df.columns if not i in defaults.setup_cols]
+        
+
+    @property
     def columns(self):
         return self._df.columns
 
