@@ -411,7 +411,7 @@ DeltaCt: {self._deltaCt_function}
         #     dCt = self._simple_DCt
         # return dCt
 
-__generic__Analyser__ = Analyser()
+__default__Analyser__ = Analyser()
 """The default Analyser"""
 
 def delta_ct( assay : (Assay or list) ):
@@ -436,7 +436,7 @@ def delta_ct( assay : (Assay or list) ):
     qpcr.Assay or list
         The same as input but with computed DeltaCt values.
     """
-    return __generic__Analyser__.pipe( assay )
+    return __default__Analyser__.pipe( assay )
 
 def analyse( assay : (Assay or list) ):
     """

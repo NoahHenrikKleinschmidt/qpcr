@@ -733,7 +733,8 @@ Loaded File:\t{self._loaded_file}
         df = df.transpose().reset_index()
         df.to_csv( filename, index = False )
 
-__generic_Calibrator__ = Calibrator()
+__default_Calibrator__ = Calibrator()
+"""The default Calibrator"""
 
 def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple) = None, remove_calibrators : bool = True ):
     """
@@ -771,5 +772,5 @@ def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple
     assay
         The same as input but with updated efficiency. 
     """
-    __generic_Calibrator__.dilution( dilution )
-    return __generic_Calibrator__.calibrate( assay, remove_calibrators )
+    __default_Calibrator__.dilution( dilution )
+    return __default_Calibrator__.calibrate( assay, remove_calibrators )
