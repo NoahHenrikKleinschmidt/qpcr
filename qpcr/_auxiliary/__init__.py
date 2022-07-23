@@ -30,10 +30,15 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
 
     logger = logging.getLogger( name = name )
 
+    if logger.hasHandlers():
+        if any( [ i.level == level for i in logger.handlers ] ):
+            return logger
+
     # setup the dedicated qpcr logger
     if level is None:
         level = defaults.log_level
-    logger.setLevel( level )
+    if not logger.hasHandlers():
+        logger.setLevel( level )
 
     if filename == "stdout":
         handler = logging.StreamHandler()
