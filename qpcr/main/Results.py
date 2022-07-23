@@ -134,6 +134,9 @@ class Results(aux._ID):
             [ self.add_Ct(i) for i in assay ]
             return
 
+        if self.is_empty:
+            self.setup_cols( assay )
+
         Ct = assay[ defaults.raw_col_names[1] ]
         Ct.name = assay.id()
         self.add( Ct )
@@ -151,7 +154,10 @@ class Results(aux._ID):
         if isinstance( assay, list ):
             [ self.add_dCt(i) for i in assay ]
             return
-            
+
+        if self.is_empty:
+            self.setup_cols( assay )
+
         self.add( assay.dCt )
 
     def add_ddCt(self, assay : main.Assay ):
@@ -167,6 +173,10 @@ class Results(aux._ID):
         if isinstance( assay, list ):
             [ self.add_ddCt(i) for i in assay ]
             return
+            
+        if self.is_empty:
+            self.setup_cols( assay )
+
         self.add( assay.ddCt )
 
     def add(self, data:(pd.Series or pd.DataFrame), replace : bool = False):
