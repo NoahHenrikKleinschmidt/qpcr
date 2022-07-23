@@ -432,4 +432,4 @@ def read( filename : str, multi_assay : bool = False, big_table : bool = False, 
             Either a single `qpcr.Assay` object or a list thereof. 
             In case of a decorated file, two lists will be returned, one for assays and one for normalisers.
         """
-        return __default_DataReader__.read( filename = filename, multi_assay = multi_assay, big_table = big_table, decorator = decorator, **kwargs )
+        return __default_DataReader__.read( filename = filename, multi_assay = multi_assay, big_table = big_table, decorator = decorator, reset = reset, **kwargs )
