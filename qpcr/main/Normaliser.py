@@ -68,7 +68,7 @@ from qpcr.main.Results import Results
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
+import scipy.stats as scistats
 
 
 from copy import deepcopy
@@ -480,8 +480,8 @@ Prep.Function: \t{self._norm_func.__name__}
                     # being chosen. Since the probabilities do not themselves correspond to 1
                     # we normalise against the limited available subset to generate a probabilities
                     # array that sums up to 1.
-                    mu, sd = stats.norm.fit(n_dCt)
-                    probs = stats.norm.pdf(n_dCt, loc = mu, scale = sd)
+                    mu, sd = scistats.norm.fit(n_dCt)
+                    probs = scistats.norm.pdf(n_dCt, loc = mu, scale = sd)
                     probs = probs / np.sum(probs)
                     n_dCt = np.random.choice( n_dCt, size = n_dCt.size, replace = replace, p = probs )
                 else:
@@ -609,6 +609,10 @@ Prep.Function: \t{self._norm_func.__name__}
 
         return tmp_df
 
+
+__generic__Normaliser__ = Normaliser()
+"""The default Normaliser"""
+
 def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
     """
     Computes DeltaDeltaCt values (Normalised fold changes) for a number of assays-of-interest and normalisers.
@@ -645,4 +649,4 @@ def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
     results : Results
         A `qpcr.Results` object containing the computed results.
     """
-    return Normaliser().pipe( assays, normalisers )
+    return __generic__Normaliser__.pipe( assays, normalisers )

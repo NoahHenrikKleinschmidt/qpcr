@@ -43,7 +43,6 @@ import logging
 logger = aux.default_logger()
 
 raw_col_names = defaults.raw_col_names
-
 class Analyser(aux._ID):
     """
     Performs Single Delta-Ct (first normalisation 
@@ -412,6 +411,8 @@ DeltaCt: {self._deltaCt_function}
         #     dCt = self._simple_DCt
         # return dCt
 
+__generic__Analyser__ = Analyser()
+"""The default Analyser"""
 
 def delta_ct( assay : (Assay or list) ):
     """
@@ -435,7 +436,7 @@ def delta_ct( assay : (Assay or list) ):
     qpcr.Assay or list
         The same as input but with computed DeltaCt values.
     """
-    return Analyser().pipe( assay )
+    return __generic__Analyser__.pipe( assay )
 
 def analyse( assay : (Assay or list) ):
     """

@@ -63,7 +63,7 @@ import qpcr._auxiliary.warnings as aw
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
+import scipy.stats as scistats
 
 
 from qpcr.Curves import EfficiencyCurve
@@ -417,7 +417,7 @@ Loaded File:\t{self._loaded_file}
         # now interpolate a line through the log dilutions and the ct values
         cts = df[ ct_name ].to_numpy()
 
-        regression_line = stats.linregress( x = dilutions, y = cts )
+        regression_line = scistats.linregress( x = dilutions, y = cts )
         # and now compute the efficiency from the regression line
         efficiency = self._compute_efficiency(regression_line)
 
@@ -733,6 +733,7 @@ Loaded File:\t{self._loaded_file}
         df = df.transpose().reset_index()
         df.to_csv( filename, index = False )
 
+__generic_Calibrator__ = Calibrator()
 
 def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple) = None, remove_calibrators : bool = True ):
     """
@@ -770,6 +771,5 @@ def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple
     assay
         The same as input but with updated efficiency. 
     """
-    c = Calibrator()
-    c.dilution( dilution )
-    return c.calibrate( assay, remove_calibrators )
+    __generic_Calibrator__.dilution( dilution )
+    return __generic_Calibrator__.calibrate( assay, remove_calibrators )
