@@ -135,7 +135,7 @@ class DataReader(aux._ID):
         """
         return self._Data
 
-    def read_multi_assay( self, filename : str, decorator : (bool or str) = True, **kwargs):
+    def read_multi_assay( self, filename : str, decorator : (bool or str) = True, reset : bool = False, **kwargs):
         """
         Reads a single irregular *multi assay* datafile.
 
@@ -148,12 +148,18 @@ class DataReader(aux._ID):
             Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
             Check out the documentation of the `qpcr.Parsers` for more information on decorators.
+        
+        reset : bool
+            If multiple input files should be read but they do not all 
+            adhere to the same filetype / datastructure, use `reset = True` 
+            to set up a new Reader each time `read` is called.
 
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
             Note, while this tries to be utmost versatile there is a limitation
             to costumizibility through the kwargs. If you require streamlined datareading
             use dedicated `qpcr.Readers` and/or `qpcr.Parsers` directly.
+
         Returns
         -------
         assays 
@@ -161,9 +167,9 @@ class DataReader(aux._ID):
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
 
-        return self.read( filename = filename, multi_assay = True, decorator = decorator, **kwargs )
+        return self.read( filename = filename, multi_assay = True, decorator = decorator, reset = reset, **kwargs )
 
-    def read_bigtable( self, filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
+    def read_bigtable( self, filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, reset : bool = False, **kwargs ):
         """
         Reads a single BigTable datafile. 
 
@@ -171,9 +177,11 @@ class DataReader(aux._ID):
         ----------
         filename : str
             A filepath to an input datafile.
+
         kind : str
             Specifies the kind of Big Table from the file. 
             This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
+
         decorator : str or bool
             Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
@@ -181,24 +189,32 @@ class DataReader(aux._ID):
         
         assay_col : str
             The column header specifying the assay identifiers.
+
         id_col : str
             The column header specifying the replicate identifiers 
             (or "assays" in case of `horizontal` big tables).
+
         ct_col : str   
             The column header specifying the Ct values.
+
+        reset : bool
+            If multiple input files should be read but they do not all 
+            adhere to the same filetype / datastructure, use `reset = True` 
+            to set up a new Reader each time `read` is called.
 
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
             Note, while this tries to be utmost versatile there is a limitation
             to costumizibility through the kwargs. If you require streamlined datareading
             use dedicated `qpcr.Readers` and/or `qpcr.Parsers` directly.
+
         Returns
         -------
         assays 
             Two lists will be returned, one for assays and one for normalisers.
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
-        return self.read( filename = filename, big_table = True, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, **kwargs )
+        return self.read( filename = filename, big_table = True, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, reset = reset, **kwargs )
 
     def read(self, filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = None, reset = False, **kwargs):
         """
@@ -327,8 +343,11 @@ Self-stored data:\t{self._Data}
                 reader = Readers.SingleReader()
         self._Reader = reader
 
-    
-def read_multi_assay( filename : str, decorator : (bool or str) = True, **kwargs):
+
+__default_DataReader__ = DataReader()
+"""The default DataReader"""
+
+def read_multi_assay( filename : str, decorator : (bool or str) = True, reset = False, **kwargs):
         """
         Reads a single irregular *multi assay* datafile.
 
@@ -342,11 +361,16 @@ def read_multi_assay( filename : str, decorator : (bool or str) = True, **kwargs
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
             Check out the documentation of the `qpcr.Parsers` for more information on decorators.
 
+        reset : bool
+            Set to `True` if you wish to reset the default DataReader before reading the file. This is required if
+            already another file was read before which was of a different format than the current file.
+
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
             Note, while this tries to be utmost versatile there is a limitation
             to costumizibility through the kwargs. If you require streamlined datareading
             use dedicated `qpcr.Readers` and/or `qpcr.Parsers` directly.
+
         Returns
         -------
         assays 
@@ -354,9 +378,9 @@ def read_multi_assay( filename : str, decorator : (bool or str) = True, **kwargs
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
 
-        return DataReader().read_multi_assay( filename = filename, decorator = decorator, **kwargs )
+        return __default_DataReader__.read_multi_assay( filename = filename, decorator = decorator, reset = reset, **kwargs )
 
-def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, **kwargs ):
+def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = defaults.dataset_header, id_col : str = defaults.id_header, ct_col : str = defaults.ct_header, reset : bool = False, **kwargs ):
         """
         Reads a single BigTable datafile. 
 
@@ -364,22 +388,30 @@ def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True,
         ----------
         filename : str
             A filepath to an input datafile.
+
         kind : str
             Specifies the kind of Big Table from the file. 
             This may either be `"horizontal"`, `"vertical"`, or `"hybrid"`.
+
         decorator : str or bool
             Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
             Check out the documentation of the `qpcr.Parsers` for more information on decorators.
-        
+
         assay_col : str
             The column header specifying the assay identifiers.
+
         id_col : str
             The column header specifying the replicate identifiers 
             (or "assays" in case of `horizontal` big tables).
+
         ct_col : str   
             The column header specifying the Ct values.
 
+        reset : bool
+            Set to `True` if you wish to reset the default DataReader before reading the file. This is required if
+            already another file was read before which was of a different format than the current file.
+            
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
             Note, while this tries to be utmost versatile there is a limitation
@@ -392,10 +424,8 @@ def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True,
             Two lists will be returned, one for assays and one for normalisers.
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
-        return DataReader().read_bigtable( filename = filename, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, **kwargs )
+        return __default_DataReader__.read_bigtable( filename = filename, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, reset = reset, **kwargs )
 
-__default_DataReader__ = DataReader()
-"""The default DataReader"""
 
 def read( filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = None, reset = False, **kwargs):
         """
@@ -419,6 +449,10 @@ def read( filename : str, multi_assay : bool = False, big_table : bool = False, 
             Set if the file is decorated. This can be set either to `True` for `multi_assay` and multi-sheet (excel) or `big_table` files,
             or it can be set to a valid `qpcr decorator` for single assay files or single-sheet files.
             Check out the documentation of the `qpcr.Parsers` for more information on decorators.
+
+        reset : bool
+            Set to `True` if you wish to reset the default DataReader before reading the file. This is required if
+            already another file was read before which was of a different format than the current file.
 
         **kwargs
             Any additional keyword arguments to be passed to the core Reader.
