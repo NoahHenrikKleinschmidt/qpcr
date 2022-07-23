@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from statsmodels.stats import multitest
 
+logger = aux.default_logger()
+
 class PairwiseComparison(aux._ID):
     """
     Stores results from a pair-wise comparison.
@@ -31,7 +33,7 @@ class PairwiseComparison(aux._ID):
         self._pvalues = pvalues
         self._effect_size = effect_size
 
-        self._orig_pvalues = pvalues
+        self._orig_pvalues = pvalues.copy()
         self._p_are_adjusted = False 
 
         self.labels = self._set_labels(pvalues, labels)
@@ -62,7 +64,7 @@ class PairwiseComparison(aux._ID):
         """
         self.subset_groups = self._set_labels(self._pvalues, subset)
         return self
-        
+
     def adjust_pvalues(self, **kwargs):
         """
         Adjusts the p-values for the comparison by benjamini-hochberg.
@@ -74,16 +76,19 @@ class PairwiseComparison(aux._ID):
 
         Returns
         -------
-        pvalues_adjusted : pd.DataFrame
+        pvalues_adjusted : np.ndarray
             The adjusted p-values.
         """
         if self._pvalues is None:
             return None
         pval_mask = np.isfinite( self._pvalues )
-        self._pvalues[pval_mask] = multitest.fdrcorrection( self._pvalues[pval_mask], **kwargs )[1]
+        adjusted = multitest.fdrcorrection( self._pvalues[pval_mask], **kwargs )[1]
+        logger.debug( f"adjusted values are:\n{adjusted}" )
+
+        self._pvalues[pval_mask] = adjusted
         self._p_are_adjusted = True
         
-        return self.pvalues
+        return self._pvalues
 
     @property
     def pvalues_adjusted(self):
@@ -112,14 +117,10 @@ class PairwiseComparison(aux._ID):
         """
         Returns
         -------
-        pd.DataFrame
-            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
-            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
+        np.ndarray
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones).
         """
-        if self._pvalues is None: 
-            return None
-        p = pd.DataFrame( self._pvalues, columns = self.labels[0], index = self.labels[1] )
-        return p
+        return self._pvalues
 
     @property
     def pvalues_subset(self):
@@ -132,7 +133,7 @@ class PairwiseComparison(aux._ID):
         """
         if self._pvalues is None: 
             return None
-        p = self.pvalues
+        p = self.to_df()
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p 
 
@@ -141,14 +142,10 @@ class PairwiseComparison(aux._ID):
         """
         Returns
         -------
-        pd.DataFrame
-            The effect sizes for the comparison. With index and columns labeled by the compared groups.
+        np.ndarray
+            The effect sizes for the comparison.
         """
-        if self._effect_size is None: 
-            return None
-        p = pd.DataFrame( self._effect_size, columns = self.labels[0], index = self.labels[1] )
-        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
-        return p
+        return self._effect_size
     
     @property
     def effects_subset( self ):
@@ -161,10 +158,87 @@ class PairwiseComparison(aux._ID):
         """
         if self._effect_size is None:
             return None
-        p = self.effect_size
+        p = self.to_df( which = "effects" )
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
     
+    def stack(self):
+        """
+        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
+        into multi-column column dataframe format. 
+        Where `a` and `b` denote the two partners in the comparison, 
+        and `pval` is the unadjusted p-value for the comparison, 
+        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
+        and `effect_size` is the effect size for the comparison (if stored).
+
+        Returns
+        -------
+        pd.DataFrame
+            The stacked data.
+        """
+        if self._pvalues is None:
+            return None
+        else:
+            pvals = self._melt( "pval" )
+            final = pvals
+        if self._p_are_adjusted:
+            pvals_adj = self._melt( "pval_adj" )
+            final[ "pval_adj" ] = pvals_adj[ "pval_adj" ]
+        if self._effect_size is not None:
+            effects = self._melt( "effect_size" )
+            final[ "effect_size" ] = effects[ "effect_size" ]
+        return final 
+
+
+    def to_df(self, which : str = None):
+        """
+        Converts a data array into a pandas DataFrame with labeled index and columns.
+        This will retain the 2D grid arrangement of the data.
+
+        Parameters
+        -------
+        which : str
+            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"effects"` (for the effect sizes).
+            If correction was performed, then `"adjusted"` is the default else `"raw"`.
+
+        Returns
+        -------
+        pd.DataFrame
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
+            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
+        """
+        if which == "adjusted":
+            data = self._pvalues
+        elif which == "raw":
+            data = self._orig_pvalues
+        elif which == "effects":
+            data = self._effect_size
+        if which is None: 
+            if self._pvalues is None:
+                return None
+            data = self._pvalues
+        p = pd.DataFrame( data, columns = self.labels[0], index = self.labels[1] )
+        return p
+
+    def _melt( self, which : str ):
+        """
+        Melts a 2D dataframe into a three column dataframe.
+        """
+        if which == "pval":
+            res = self.to_df( "raw" )
+        elif which == "pval_adj":
+            res = self.to_df( "adjusted" )
+        elif which == "effect_size":
+            res = self.to_df( "effects" )
+        
+        # now melt the data
+        res = res.melt( ignore_index = False )
+        res.rename( columns = { "variable": "a", "value": which }, inplace = True )
+        res["b"] = res.index
+        res.reset_index( inplace = True, drop = True )
+        res = res[ ["a", "b", which] ]
+        return res
+
     def _set_labels(self, pvalues, labels):
         """
         Set labels for columns and rows for the pvalues and effect size dataframes
@@ -181,7 +255,7 @@ class PairwiseComparison(aux._ID):
         return labels
 
     def __str__(self):
-        length = len( str(self.pvalues).split("\n")[0] ) 
+        length = len( str(  self.to_df()  ).split("\n")[0] ) 
         adjusted = " (adjusted)" if self._p_are_adjusted else ""
         s = f"""
 {"-" * length}
@@ -189,11 +263,11 @@ Pairwise Comparison: {self._id}
 {"-" * length}
 Pvalues{adjusted}:
 {"-" * length}
-{self.pvalues}
+{self.to_df()}
 {"-" * length}
 Effect Sizes:
 {"-" * length}
-{self.effect_size}
+{self.to_df("effects")}
 {"-" * length}
         """.strip()
         return s
@@ -229,9 +303,10 @@ class PairwiseComparisons:
         return len(self.comparisons)
     
     def __str__(self):
+        s = f"""Pairwise Comparisons"""
         names = [str(c) for c in self.ids]
-        length = max( [len(n) for n in names] )
-        s = f"""{'-' * length}\nPairwise Comparisons\n{'-' * length}\n"""
+        length = max( [len(n) for n in names] + [len(s)] )
+        s = f"""{'-' * length}\n{s}\n{'-' * length}\n"""
         s += "\n".join([str(c) for c in self.ids])
         s += f"\n{'-' * length}"
         return s
