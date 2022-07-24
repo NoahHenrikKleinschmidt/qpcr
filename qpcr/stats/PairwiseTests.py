@@ -18,7 +18,11 @@ logger = aux.default_logger()
 
 class PairwiseTests(aux._ID):
     """
-    Performs statistical evaluations of Results.
+    Performs statistical evaluations of Results using pairwise t-tests.
+    Two modes are supported: ``assaywise`` and ``groupwise``.
+
+    In `groupwise` mode, the t-tests are performed to compare the groups within each data column with each other.
+    In `assaywise` mode, the t-tests are performed to compare the data columns within each group of the dataframe overall.
     """
     def __init__(self, id : str = None):
         super().__init__()
