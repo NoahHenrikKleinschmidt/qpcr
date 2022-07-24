@@ -292,7 +292,7 @@ Effect Sizes:
         return s
 
 
-class PairwiseComparisons:
+class MultipleComparisons:
     """
     A collection of multiple PairWiseComparison objects.
     This is being returned by the Evaluator when calling a pair-wise comparison test.
@@ -364,5 +364,5 @@ class PairwiseComparisons:
         return s
     
     def __repr__(self):
-        s = f"""PairwiseComparisons(comparisons={self.ids})"""
+        s = f"""MultipleComparisons(comparisons={self.ids})"""
         return s
