@@ -120,6 +120,7 @@ class PairwiseComparison(aux._ID):
             for i,j in perms:
                 if self._effect_size[j,i] == self._effect_size[j,i]:
                     self._effect_size[i,j] = self._effect_size[j,i]
+        return self 
 
     def stack(self):
         """
