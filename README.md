@@ -6,8 +6,9 @@
 [![DOI](https://zenodo.org/badge/398244987.svg)](https://zenodo.org/badge/latestdoi/398244987)
 [![Generic badge](https://img.shields.io/badge/made_for-qPCR-yellow.svg)](https://shields.io/)
 [![PyPI version](https://badge.fury.io/py/qpcr.svg)](https://badge.fury.io/py/qpcr)
+[![CodeFactor](https://www.codefactor.io/repository/github/noahhenrikkleinschmidt/qpcr/badge)](https://www.codefactor.io/repository/github/noahhenrikkleinschmidt/qpcr)
 [![Documentation Status](https://readthedocs.org/projects/ansicolortags/badge/?version=latest)](http://qpcr.readthedocs.io/?badge=latest)
-[![Downloads](https://static.pepy.tech/personalized-badge/qpcr?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/qpcr)
+[![Downloads](https://static.pepy.tech/personalized-badge/qpcr?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/qpcr)
 
 
 
