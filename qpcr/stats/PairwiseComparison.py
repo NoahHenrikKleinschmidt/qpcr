@@ -2,6 +2,7 @@
 This is the ``PairwiseComparison`` class, which handles data from multiple pairwise-t-tests, conducted by the ``Evaluator``.
 """
 
+import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import numpy as np
 import pandas as pd
@@ -301,6 +302,30 @@ class PairwiseComparisons:
         self.comparisons = list(comparisons.values())
         self.ids = list(comparisons.keys())
     
+    def get( self ):
+        """
+        Returns
+        -------
+        list
+            A list of PairWiseComparison objects.
+        """
+        return self.comparisons
+
+    def stack( self ):
+        """
+        Stacks the stored comparisons into a single stacked dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            A stacked dataframe with the p-values and effect sizes of all comparisons.
+        """
+        stacked = [c.stack() for c in self.comparisons]
+        for obj,df in zip( self.comparisons, stacked ):
+            df[ defaults.raw_col_names[0] ] = obj.id()
+        stacked = pd.concat( stacked, axis = 0 )
+        return stacked
+
     def save( self, directory : str ):
         """
         Saves the comparisons to files.
