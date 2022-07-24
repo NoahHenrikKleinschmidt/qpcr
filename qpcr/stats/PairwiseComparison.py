@@ -300,7 +300,7 @@ class PairwiseComparison(aux._ID):
         return labels
 
     def __str__(self):
-        length = len( str(  self.to_df("effects")  ).split("\n")[0] ) 
+        length = max( [ len( str(  self.to_df( i )  ).split("\n")[0] ) for i in ("effects", None) ] )
         adjusted = " (adjusted)" if self._p_are_adjusted else ""
         s = f"""
 {"-" * length}
@@ -377,7 +377,7 @@ class MultipleComparisons:
         else:
             raise ValueError( f"id must be one of the ids in the comparison (or a valid index between 0-{len(self)}). Got '{id}' instead" )
         return self.comparisons[idx]
-    
+
     def __iter__( self ):
         return iter(self.comparisons)
     
