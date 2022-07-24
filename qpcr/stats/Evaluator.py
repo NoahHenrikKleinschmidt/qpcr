@@ -26,7 +26,8 @@ class Evaluator(aux._ID):
         self.assaywise_results = None
         self._results = None
         self._effect_size_func = self._default_effect_size_func
-    
+        self._no_duplicates = True
+
     def link(self, obj : main.Results ):
         """
         Links a new object to evaluate.
@@ -55,13 +56,17 @@ class Evaluator(aux._ID):
             Alongside with any other keyword arguments. The function must return a single number.
         """
         self._effect_size_func = f
-
                   
     def groupwise_ttests( self, obj : main.Results = None, groups : (list or dict) = None, columns : list = None, **kwargs ):
         """
         Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `KO-HNRNPL` but not `ctrl-SRSF11`. 
         
+        Note
+        ----
+        This will compute any combination `a,b` only once as the t-test of `b,a` yields the same. By default any skipped
+        inverse combination is left blank. The blank fields can be filled with the corresponding values using the ``PairwiseComparison.make_symmetric`` method. 
+
         Parameters
         ----------
         obj : qpcr.Results or list
@@ -82,7 +87,7 @@ class Evaluator(aux._ID):
 
         Returns
         -------
-        results : PairwiseComparisons
+        results : MultipleComparisons
             A collection of ``PairwiseComparison`` objects for each assay in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
@@ -134,7 +139,7 @@ class Evaluator(aux._ID):
             r.adjust_pvalues()
             self.groupwise_results[name] = r
 
-        self.groupwise_results = PairwiseComparison.PairwiseComparisons( self.groupwise_results )           
+        self.groupwise_results = PairwiseComparison.MultipleComparisons( self.groupwise_results )           
         self._results = self.groupwise_results
         return self.groupwise_results
 
@@ -144,6 +149,11 @@ class Evaluator(aux._ID):
         Perform multiple pairwise t-tests comparing the different `assays` within each `group separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `ctrl-SRSF11` but not `KO-HNRNPL`. 
         
+        Note
+        ----
+        This will compute any combination `a,b` only once as the t-test of `b,a` yields the same. By default any skipped
+        inverse combination is left blank. The blank fields can be filled with the corresponding values using the ``PairwiseComparison.make_symmetric`` method. 
+
         Parameters
         ----------
         obj : qpcr.Results or list
@@ -164,7 +174,7 @@ class Evaluator(aux._ID):
 
         Returns
         -------
-        results : PairwiseComparisons
+        results : MultipleComparisons
             A collection of ``PairwiseComparison`` objects for each group in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
@@ -218,7 +228,7 @@ class Evaluator(aux._ID):
             r.adjust_pvalues()
             self.assaywise_results[name] = r
         
-        self.assaywise_results = PairwiseComparison.PairwiseComparisons( self.assaywise_results )           
+        self.assaywise_results = PairwiseComparison.MultipleComparisons( self.assaywise_results )           
         self._results = self.assaywise_results
         return self.assaywise_results
 
@@ -346,7 +356,8 @@ class Evaluator(aux._ID):
             j, i = index( *comb )
 
             # if we already have computed this permutation in reverse
-            # we will skip this step (no need to compute it twice)
+            # we will skip this step (no need to compute it twice).
+            # If we should store it, just assign from the already existing one.
             if pvalues[ j,i ] == pvalues[ j,i ]:
                 continue
 
@@ -368,7 +379,7 @@ class Evaluator(aux._ID):
             j, i = index( *comp )
 
             # if we already have computed this permutation in reverse
-            # we will skip this step (no need to compute it twice)
+            # we will skip this step (no need to compute it twice).
             if effect_sizes[ j,i ] == effect_sizes[ j,i ]:
                 continue
             

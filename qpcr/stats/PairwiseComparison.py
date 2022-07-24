@@ -2,6 +2,7 @@
 This is the ``PairwiseComparison`` class, which handles data from multiple pairwise-t-tests, conducted by the ``Evaluator``.
 """
 
+from itertools import permutations
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import numpy as np
@@ -35,6 +36,7 @@ class PairwiseComparison(aux._ID):
         self._effect_size = effect_size
 
         self._orig_pvalues = pvalues.copy()
+        self._asymmetric_pvalues = None
         self._p_are_adjusted = False 
 
         self.labels = self._set_labels(pvalues, labels)
@@ -66,12 +68,16 @@ class PairwiseComparison(aux._ID):
         self.subset_groups = self._set_labels(self._pvalues, subset)
         return self
 
-    def adjust_pvalues(self, **kwargs):
+    def adjust_pvalues(self, make_symmetric : bool = False, **kwargs):
         """
         Adjusts the p-values for the comparison by benjamini-hochberg.
 
         Parameters
         ----------
+        make_symmetric : bool
+            Convert the assymmetric pvalues array symmetric along the diagonal.
+            This will also convert the effect size array symmetric along the diagonal.
+
         **kwargs
             Any additional keyword arguments to be passed to ``multitest.fdrcorrection``.
 
@@ -88,8 +94,32 @@ class PairwiseComparison(aux._ID):
 
         self._pvalues[pval_mask] = adjusted
         self._p_are_adjusted = True
-        
+
+        if make_symmetric:
+            self.make_symmetric()
+
         return self._pvalues
+
+    def make_symmetric(self):
+        """
+        Fills up an assymettric 2D array of p-values / effect sizes (if provided) to a symmetric 2D array around the diagonal.
+        """
+
+        self._asymmetric_pvalues = self._pvalues.copy()
+
+        rows, cols = self._pvalues.shape
+        if rows != cols: 
+            raise IndexError( "The p-values array is not square." )
+        
+        perms = tuple( permutations( np.arange(rows), r = 2 ) ) 
+        for i,j in perms:
+            if self._pvalues[j,i] == self._pvalues[j,i]:
+                self._pvalues[i,j] = self._pvalues[j,i]
+
+        if self._effect_size is not None:
+            for i,j in perms:
+                if self._effect_size[j,i] == self._effect_size[j,i]:
+                    self._effect_size[i,j] = self._effect_size[j,i]
 
     def stack(self):
         """
@@ -233,7 +263,6 @@ class PairwiseComparison(aux._ID):
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
     
-    
 
     def _melt( self, which : str ):
         """
@@ -270,7 +299,7 @@ class PairwiseComparison(aux._ID):
         return labels
 
     def __str__(self):
-        length = len( str(  self.to_df()  ).split("\n")[0] ) 
+        length = len( str(  self.to_df("effects")  ).split("\n")[0] ) 
         adjusted = " (adjusted)" if self._p_are_adjusted else ""
         s = f"""
 {"-" * length}
@@ -355,7 +384,7 @@ class MultipleComparisons:
         return len(self.comparisons)
     
     def __str__(self):
-        s = f"""Pairwise Comparisons"""
+        s = f"""Stored Comparisons"""
         names = [str(c) for c in self.ids]
         length = max( [len(n) for n in names] + [len(s)] )
         s = f"""{'-' * length}\n{s}\n{'-' * length}\n"""
