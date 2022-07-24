@@ -108,6 +108,9 @@ class Results(aux._ID):
 
     def __len__(self):
         return len(self._df)
+    
+    def __iter__(self):
+        return ( self._df[ defaults.setup_cols + [i] ] for i in self.data_cols )
 
     def get(self):
         """

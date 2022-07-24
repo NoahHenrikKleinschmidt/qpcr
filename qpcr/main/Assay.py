@@ -154,6 +154,11 @@ Amplif. Eff.: {self._efficiency}
         n = len(self)
         return f"Assay({id=}, {eff=}, {n=})"
 
+    def __iter__( self ):
+        d = list( self._df.groupby( "group" ) )
+        d = ( i for _,i in d )
+        return d 
+
     def efficiency( self, eff : float = None ):
         """
         Gets or sets the amplification efficiency of the Assay.
