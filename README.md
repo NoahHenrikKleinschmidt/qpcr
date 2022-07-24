@@ -6,8 +6,9 @@
 [![DOI](https://zenodo.org/badge/398244987.svg)](https://zenodo.org/badge/latestdoi/398244987)
 [![Generic badge](https://img.shields.io/badge/made_for-qPCR-yellow.svg)](https://shields.io/)
 [![PyPI version](https://badge.fury.io/py/qpcr.svg)](https://badge.fury.io/py/qpcr)
+[![CodeFactor](https://www.codefactor.io/repository/github/noahhenrikkleinschmidt/qpcr/badge)](https://www.codefactor.io/repository/github/noahhenrikkleinschmidt/qpcr)
 [![Documentation Status](https://readthedocs.org/projects/ansicolortags/badge/?version=latest)](http://qpcr.readthedocs.io/?badge=latest)
-[![Downloads](https://static.pepy.tech/personalized-badge/qpcr?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/qpcr)
+[![Downloads](https://static.pepy.tech/personalized-badge/qpcr?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/qpcr)
 
 
 
@@ -72,5 +73,5 @@ A set of basic introductory tutorials is available as `jupyter notebooks` in the
 In case you prefer a graphical-user-interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid offers the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). 
 
 #### Citation
-Kleinschmidt, N. (2022). qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2022). qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 
