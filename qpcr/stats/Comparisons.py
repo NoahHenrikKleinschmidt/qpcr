@@ -1,5 +1,6 @@
 """
-This is the ``PairwiseComparison`` class, which handles data from multiple pairwise-t-tests, conducted by the ``Evaluator``.
+This is the ``Comparisons`` module that stores the ``Comparison`` classes that are responsible for handling the results of ``qpcr.stats`` computations.
+Multiple ``Comparison`` objects are stored together in ``MultipleComparisons`` objects from where they are easily accessible.
 """
 
 from itertools import permutations
@@ -332,6 +333,84 @@ class MultipleComparisons:
         self.comparisons = list(comparisons.values())
         self.ids = list(comparisons.keys())
     
+    def get( self ):
+        """
+        Returns
+        -------
+        list
+            A list of PairWiseComparison objects.
+        """
+        return self.comparisons
+
+    def stack( self ):
+        """
+        Stacks the stored comparisons into a single stacked dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            A stacked dataframe with the p-values and effect sizes of all comparisons.
+        """
+        stacked = [c.stack() for c in self.comparisons]
+        for obj,df in zip( self.comparisons, stacked ):
+            df[ defaults.raw_col_names[0] ] = obj.id()
+        stacked = pd.concat( stacked, axis = 0 )
+        return stacked
+
+    def save( self, directory : str ):
+        """
+        Saves the comparisons to files.
+
+        Parameters
+        ----------
+        directory : str
+            The directory to save the files to.
+        """
+        fname = "{directory}/{id}.csv"
+        for i in self:
+            i.save( filename = fname.format( directory = directory, id = i.id() ) )
+
+    def __getitem__( self, id ):
+        if id in self.ids:
+            idx = self.ids.index(id)
+        elif isinstance( id, ( int, list, tuple ) ):
+            idx = id
+        else:
+            raise ValueError( f"id must be one of the ids in the comparison (or a valid index between 0-{len(self)}). Got '{id}' instead" )
+        return self.comparisons[idx]
+
+    def __iter__( self ):
+        return iter(self.comparisons)
+    
+    def __len__( self ):
+        return len(self.comparisons)
+    
+    def __str__(self):
+        s = f"""Stored Comparisons"""
+        names = [str(c) for c in self.ids]
+        length = max( [len(n) for n in names] + [len(s)] )
+        s = f"""{'-' * length}\n{s}\n{'-' * length}\n"""
+        s += "\n".join([str(c) for c in self.ids])
+        s += f"\n{'-' * length}"
+        return s
+    
+    def __repr__(self):
+        s = f"""MultipleComparisons(comparisons={self.ids})"""
+        return s
+
+
+
+
+
+class MultipleComparisons:
+    """
+    A collection of multiple Comparison objects.
+    """
+    __slots__ = ["comparisons", "ids"]
+    def __init__( self, comparisons : dict ):
+        self.comparisons = list(comparisons.values())
+        self.ids = list(comparisons.keys())
+
     def get( self ):
         """
         Returns
