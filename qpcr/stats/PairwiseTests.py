@@ -141,7 +141,7 @@ class PairwiseTests(aux._ID):
             logger.debug( f"{effect_sizes=}" )
              
             # assemble results and store
-            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, tstats = tstats, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, statistic = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.groupwise_results[name] = r
 
@@ -232,7 +232,7 @@ class PairwiseTests(aux._ID):
             effect_sizes = self._pairwise_effect_size(subset, comparisons, **kwargs)
             
             # assemble results and store
-            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, tstats = tstats, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, statistic = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.assaywise_results[name] = r
         
