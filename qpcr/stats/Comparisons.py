@@ -23,14 +23,29 @@ class Comparison(aux._ID):
     pvalues : np.ndarray
         The p-values for the comparison. These may be corrected or not (this class can correct them).
     """
-    __slots__ = ["_pvalues", "labels", "subset_groups"]
-    def __init__(self, pvalues : np.ndarray, id : str = None, labels : list = None, subset : list = None ):
+    __slots__ = ["_pvalues", "_statistic", "labels", "subset_groups"]
+    def __init__(self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
         super().__init__()
         self._pvalues = pvalues
+        self._statistic = statistic
         self.id(id)
 
         self.labels = self._set_labels(pvalues, labels)
         self.subset_groups = subset if subset is not None else labels
+
+        self._get_dict = { "pvalues" : self._pvalues, "statistic" : self._statistic }
+
+    def get( self, which : str = "pvalues" ):
+        """
+        Parameters
+        -------
+        which : str
+            Either the `pvalues`, the `statistic` or the `effect_sizes` as pandas DataFrame.
+        """
+        if which in self._get_dict:
+            return self._to_df( self._get_dict[ which ] ) 
+        else:
+            raise ValueError( f"which must be a valid data key. Possible keys are {list(self._get_dict.keys())} Got '{which}' instead" )
 
 
     def subset( self, subset ):
@@ -67,9 +82,34 @@ class Comparison(aux._ID):
         """
         if self._pvalues is None: 
             return None
-        p = self.to_df()
+        p = self._to_df( self._pvalues )
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p 
+
+    @property
+    def statistic(self):
+        """
+        Returns
+        -------
+        np.ndarray
+            The t-statistics for the comparison.
+        """
+        return self._statistic
+    
+    @property
+    def statistic_subset( self ):
+        """
+        Returns
+        -------
+        pd.DataFrame
+            The t-statistics for the comparison. With index and columns labeled by the compared groups.
+            This will be cropped to the groups "of interest" specified.
+        """
+        if self._statistic is None:
+            return None
+        p = self._to_df( self._statistic )
+        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
+        return p
 
     def _to_df(self, data):
         """
@@ -153,12 +193,13 @@ class MultiTestComparison(Comparison):
     Stores the results of a multiple testing comparison.
     """
     __slots__ = ['_orig_pvalues', '_corrected_pvalues', '_p_are_adjusted', '_asymmetric_pvalues']
-    def __init__(self, pvalues : np.ndarray, id : str = None, labels : list = None, subset : list = None ):
-        super().__init__( pvalues = pvalues, id = id, labels = labels, subset = subset )
+    def __init__(self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+        super().__init__( pvalues = pvalues, statistic = statistic, id = id, labels = labels, subset = subset )
         self._orig_pvalues = pvalues.copy()
         self._p_are_adjusted = False
         self._corrected_pvalues = None
         self._asymmetric_pvalues = None
+        self._get_dict = { **self._get_dict, "raw" : self._orig_pvalues }
 
     def adjust_pvalues(self, make_symmetric : bool = False, **kwargs):
         """
@@ -299,30 +340,22 @@ class PairwiseComparison(MultiTestComparison):
     subset : list
         A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
-    __slots__ = ["_orig_pvalues", "_effect_size", "_tstats", "_p_are_adjusted"]
+    __slots__ = ["_orig_pvalues", "_effect_size", "_p_are_adjusted"]
     def __init__( self, pvalues : np.ndarray, effect_size : np.ndarray = None, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
-        super().__init__( pvalues = pvalues, id = id, labels = labels, subset = subset )
+        super().__init__( pvalues = pvalues, statistic = statistic, id = id, labels = labels, subset = subset )
 
-        self._tstats = statistic
         self._effect_size = effect_size
-
+        self._get_dict = { **self._get_dict, "effect_size" : self._effect_size }
+                        
     def get( self, which : str = "pvalues" ):
         """
         Parameters
         -------
         which : str
-            Either the `pvalues` or the `effect sizes` as panda DataFrame.
+            Either the `pvalues`, the `statistic` or the `effect_sizes` as pandas DataFrame.
         """
-        data = {
-                    "pvalues": self.pvalues,
-                    "effect_size": self.effect_size,
-                    "tstats": self.tstats
-                }
-        if which in data:
-            return data[ which ]
-        else:
-            raise ValueError( f"which must be either 'pvalues', 'tstats', 'effect_size'. Got '{which}' instead" )
-
+        return super().get( which )
+        
     def make_symmetric(self):
         """
         Fills up an assymettric 2D array of p-values, and t-statistics (if provided), and effect sizess (if provided) to a symmetric 2D array around the diagonal.
@@ -331,8 +364,8 @@ class PairwiseComparison(MultiTestComparison):
         super().make_symmetric()
         if self._effect_size is not None:
             self._effect_size = self._make_symmetric( self._effect_size )
-        if self._tstats is not None:
-            self._tstats = self._make_symmetric( self._tstats )
+        if self._statistic is not None:
+            self._statistic = self._make_symmetric( self._statistic )
         return self 
 
 
@@ -353,8 +386,8 @@ class PairwiseComparison(MultiTestComparison):
         if self._pvalues is None:
             return None
         final = super().stack()
-        if self._tstats is not None:
-            tstats = self._to_df( self._tstats )
+        if self._statistic is not None:
+            tstats = self._to_df( self._statistic )
             tstats.name = "t_stat"
             tstats = self._melt( tstats )
             final[ "t_stat" ] = tstats[ "t_stat" ]
@@ -377,7 +410,7 @@ class PairwiseComparison(MultiTestComparison):
         Parameters
         -------
         which : str
-            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"tstats"` (for the t-statistics) or `"effects"` (for the effect sizes).
+            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"statistic"` (for the t-statistics) or `"effects"` (for the effect sizes).
             If correction was performed, then `"adjusted"` is the default else `"raw"`.
 
         Returns
@@ -390,7 +423,7 @@ class PairwiseComparison(MultiTestComparison):
                     "adjusted" : self._pvalues,
                     "raw" : self._orig_pvalues,
                     "effects" : self._effect_size,
-                    "tstats" : self._tstats,
+                    "statistic" : self._statistic,
                     None : self._pvalues
                 }
         data = data[ which ]
@@ -430,35 +463,10 @@ class PairwiseComparison(MultiTestComparison):
         """
         if self._effect_size is None:
             return None
-        p = self.to_df( which = "effects" )
+        p = self._to_df( self._effect_size )
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
     
-    @property
-    def statistic(self):
-        """
-        Returns
-        -------
-        np.ndarray
-            The t-statistics for the comparison.
-        """
-        return self._tstats
-    
-    @property
-    def statistic_subset( self ):
-        """
-        Returns
-        -------
-        pd.DataFrame
-            The t-statistics for the comparison. With index and columns labeled by the compared groups.
-            This will be cropped to the groups "of interest" specified.
-        """
-        if self._tstats is None:
-            return None
-        p = self.to_df( which = "effects" )
-        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
-        return p
-
     def __str__(self):
         length = max( [ len( str(  self.to_df( i )  ).split("\n")[0] ) for i in ("effects", None) ] )
         adjusted = " (adjusted)" if self._p_are_adjusted else ""
@@ -472,7 +480,7 @@ Pvalues{adjusted}:
 {"-" * length}
 t-statistics:
 {"-" * length}
-{self.to_df("tstats")}
+{self.to_df("statistic")}
 {"-" * length}
 Effect Sizes:
 {"-" * length}
@@ -485,6 +493,23 @@ Effect Sizes:
         s = f"""PairwiseComparison(id={self._id}, labels={self.labels}, subset={self.subset_groups})"""
         return s
 
+class AnovaComparison(Comparison):
+    """
+    Stores the results of an ANOVA or Kruskal Wallis test.
+    """
+    def __init__( self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+        super().__init__( pvalues = pvalues, statistic = statistic, id = id, labels = labels, subset = subset )
+
+
+    def stack(self):
+        """
+        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
+        into multi-column column dataframe format. 
+        Where `a` and `b` denote the two partners in the comparison, 
+        and `pval` is the unadjusted p-value for the comparison, 
+        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
+        """
+        pass
 
 class ComparisonsCollection:
     """
