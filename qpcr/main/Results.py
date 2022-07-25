@@ -233,7 +233,7 @@ class Results(aux._ID):
         self._df[ key ] = value 
 
     def __getitem__( self, key ):
-        if key in self._df.columns:
+        if isinstance(key, (list, tuple)) or key in self._df.columns:
             return self._df[ key ]
         if key in self._stats_df.columns:
             return self._stats_df[ key ]
