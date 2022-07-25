@@ -135,30 +135,6 @@ class Assay(aux._ID):
         if self._names is not None and self.groups() is not None: 
             self.rename(self._names)
 
-    def __str__(self):
-
-        _length = len( str(self._df).split("\n")[0] ) 
-        s = f"""
-{"-" * _length}
-Assay: {self._id}
-Amplif. Eff.: {self._efficiency}
-{"-" * _length}
-{self._df}
-{"-" * _length}
-        """.strip()
-        return s 
-
-    def __repr__( self ):
-        id = self._id
-        eff = self._efficiency
-        n = len(self)
-        return f"Assay({id=}, {eff=}, {n=})"
-
-    def __iter__( self ):
-        d = list( self._df.groupby( "group" ) )
-        d = ( i for _,i in d )
-        return d 
-
     def efficiency( self, eff : float = None ):
         """
         Gets or sets the amplification efficiency of the Assay.
@@ -256,7 +232,7 @@ Amplif. Eff.: {self._efficiency}
         groups = self.groups()
 
         new = None
-
+        
         for group in groups: 
             subset = df.query(f"group == {group}")
             length = len(subset) * n
@@ -267,6 +243,7 @@ Amplif. Eff.: {self._efficiency}
                 new = pd.concat( [new, subset], ignore_index = True )
 
         self.adopt( new )
+        return self 
 
     def stack(self, n : int = 2):
         """
@@ -295,6 +272,7 @@ Amplif. Eff.: {self._efficiency}
                     new = pd.concat( [new, subset], ignore_index = True )
 
             self.adopt( new )
+        return self 
 
     @property
     def Ct(self):
@@ -399,18 +377,6 @@ Amplif. Eff.: {self._efficiency}
         """
         return len( self._df )  # self._length
 
-    def __len__(self):
-        return len( self._df )
-
-    def __setitem__( self, key, value ):
-        self._df[ key ] = value
-        
-
-    def __getitem__( self, key ):
-        return self._df[ key ]
-    
-    def __delitem__( self, key ):
-        del self._df[ key ]
 
     def add_dCt(self, dCt : pd.Series): 
         """
@@ -573,6 +539,7 @@ Amplif. Eff.: {self._efficiency}
         if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
+        return self 
             
 
     def rename(self, names:(list or dict)):
@@ -598,6 +565,7 @@ Amplif. Eff.: {self._efficiency}
         # update "group_name"
         self._df["group_name"] = new_names
         self._renamed = True
+        return self 
 
     def ignore(self, entries:tuple, drop = False):
         """
@@ -618,6 +586,7 @@ Amplif. Eff.: {self._efficiency}
             Cts = np.array( self.Ct )
             Cts[ entries ] = np.nan
             self._df["Ct"] = Cts
+        return self
     
     def _reps_from_formula(self, replicates):
         """
@@ -778,3 +747,40 @@ Amplif. Eff.: {self._efficiency}
             raise e 
 
         return verdict
+
+    def __str__(self):
+
+        _length = len( str(self._df).split("\n")[0] ) 
+        s = f"""
+{"-" * _length}
+Assay: {self._id}
+Amplif. Eff.: {self._efficiency}
+{"-" * _length}
+{self._df}
+{"-" * _length}
+        """.strip()
+        return s 
+
+    def __repr__( self ):
+        id = self._id
+        eff = self._efficiency
+        n = len(self)
+        return f"Assay({id=}, {eff=}, {n=})"
+
+    def __iter__( self ):
+        d = list( self._df.groupby( "group" ) )
+        d = ( i for _,i in d )
+        return d 
+        
+    def __len__(self):
+        return len( self._df )
+
+    def __setitem__( self, key, value ):
+        self._df[ key ] = value
+        
+
+    def __getitem__( self, key ):
+        return self._df[ key ]
+    
+    def __delitem__( self, key ):
+        del self._df[ key ]
