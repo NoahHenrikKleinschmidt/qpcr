@@ -145,6 +145,7 @@ Prep.Function: \t{self._norm_func.__name__}
             self._Assays = []
         if normalisers: 
             self._Normalisers = []
+            self._normaliser = None
         if results: 
             self.clear()
 
