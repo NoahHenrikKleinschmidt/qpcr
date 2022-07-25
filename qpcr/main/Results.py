@@ -139,9 +139,7 @@ class Results(aux._ID):
         if self.is_empty:
             self.setup_cols( assay )
 
-        Ct = assay[ defaults.raw_col_names[1] ]
-        Ct.name = assay.id()
-        self.add( Ct )
+        self.add( assay.Ct )
 
     def add_dCt(self, assay : main.Assay ):
         """
@@ -179,7 +177,7 @@ class Results(aux._ID):
         if self.is_empty:
             self.setup_cols( assay )
 
-        self.add( assay.ddCt )
+        self.add( assay.ddCt)
 
     def add(self, data:(pd.Series or pd.DataFrame), replace : bool = False):
         """
@@ -228,6 +226,8 @@ class Results(aux._ID):
 
             to_add = list( to_add )
             self._df[ to_add ] = data[ to_add ]
+
+        return self 
 
     def __setitem__( self, key, value ):
         self._df[ key ] = value 

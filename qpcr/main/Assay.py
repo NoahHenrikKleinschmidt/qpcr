@@ -284,7 +284,7 @@ class Assay(aux._ID):
             from "Ct" to the assay's `id`.
         """
         Ct = self._df[ raw_col_names[1] ]
-        Ct.name = self.id()
+        Ct.name = f"{self.id()}_Ct"
         return Ct
 
     @property         
@@ -321,7 +321,7 @@ class Assay(aux._ID):
         if not isinstance(ddCt, pd.DataFrame):
             ddCt = pd.DataFrame(ddCt)
         ddCt = ddCt.rename(columns = new_names)
-        
+        ddCt.name = f"{self.id()}_ddCt"
         return ddCt
 
     @property
@@ -333,10 +333,7 @@ class Assay(aux._ID):
             A list of all rel_{} columns within the Assays's dataframe.
         """
         return [i for i in self._df.columns if "rel_" in i]
-        # for i in self._df.columns: 
-        #     if "rel_" in i:
-        #         yield i
-
+        
     # FUTURE FEATURE HERE
     # def fc(self):
         # some method to also return the fold change columns... 
