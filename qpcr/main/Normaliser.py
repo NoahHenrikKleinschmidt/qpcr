@@ -611,7 +611,7 @@ Prep.Function: \t{self._norm_func.__name__}
         return tmp_df
 
 
-__default__Normaliser__ = Normaliser()
+__default_Normaliser__ = Normaliser()
 """The default Normaliser"""
 
 def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
@@ -650,4 +650,5 @@ def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
     results : Results
         A `qpcr.Results` object containing the computed results.
     """
-    return __default__Normaliser__.pipe( assays, normalisers )
+    __default_Normaliser__.prune()
+    return __default_Normaliser__.pipe( assays, normalisers )
