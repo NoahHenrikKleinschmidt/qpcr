@@ -328,7 +328,7 @@ class PairwiseComparison(MultiTestComparison):
         Fills up an assymettric 2D array of p-values, and t-statistics (if provided), and effect sizess (if provided) to a symmetric 2D array around the diagonal.
         """
 
-        self.super().make_symmetric()
+        super().make_symmetric()
         if self._effect_size is not None:
             self._effect_size = self._make_symmetric( self._effect_size )
         if self._tstats is not None:
