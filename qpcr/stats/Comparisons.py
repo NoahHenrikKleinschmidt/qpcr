@@ -292,7 +292,7 @@ class PairwiseComparison(MultiTestComparison):
         The p-values for the comparison. These may be corrected or not (this class can correct them).
     effect_size : np.ndarray
         The actual effect sizes for each comparison. This needs to be of the same shape as the pvalues array.
-    tstats : np.ndarray
+    statistic : np.ndarray
         The t-statsistics from the comparison. This needs to be of the same shape as the pvalues array. 
     labels : list
         A list of the group labels that were compared. These need to be in the same order as the pvalues array.
@@ -300,10 +300,10 @@ class PairwiseComparison(MultiTestComparison):
         A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
     __slots__ = ["_orig_pvalues", "_effect_size", "_tstats", "_p_are_adjusted"]
-    def __init__( self, pvalues : np.ndarray, effect_size : np.ndarray = None, tstats : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+    def __init__( self, pvalues : np.ndarray, effect_size : np.ndarray = None, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
         super().__init__( pvalues = pvalues, id = id, labels = labels, subset = subset )
 
-        self._tstats = tstats
+        self._tstats = statistic
         self._effect_size = effect_size
 
     def get( self, which : str = "pvalues" ):
@@ -435,7 +435,7 @@ class PairwiseComparison(MultiTestComparison):
         return p
     
     @property
-    def tstats(self):
+    def statistic(self):
         """
         Returns
         -------
@@ -445,7 +445,7 @@ class PairwiseComparison(MultiTestComparison):
         return self._tstats
     
     @property
-    def tstats_subset( self ):
+    def statistic_subset( self ):
         """
         Returns
         -------
