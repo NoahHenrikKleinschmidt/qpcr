@@ -104,9 +104,10 @@ def sorted_set(some_list):
     Importantly, sorted means it keeps the order of entries.
     """
     list_set = []
-    for i in some_list:
-        if i not in list_set: 
-            list_set.append(i)
+    list_set = [ i for i in some_list if i not in list_set ]
+    # for i in some_list:
+    #     if i not in list_set: 
+    #         list_set.append(i)
     return list_set
 
 def same_type(obj1, obj2):
