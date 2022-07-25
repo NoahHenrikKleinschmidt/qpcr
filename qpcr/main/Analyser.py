@@ -65,21 +65,6 @@ class Analyser(aux._ID):
         # self._efficiency = 1                # the formal effiency in percent
         # self._eff = 2 * self._efficiency    # the actual doubplciation factor used for calculation
 
-    def __str__(self):
-        s = f"""
-Analyser: {self._id}\n
-
-Anchor: {self._anchor}\n
-Ref.Group: {self._ref_group}\n
-
-DeltaCt: {self._deltaCt_function}
-        """.strip()
-        return s
-    
-    def __repr__(self):
-        anchor = self._anchor
-        ref = self._ref_group
-        return f"Analyser({anchor=}, {ref=})"
 
     def get(self):
         """
@@ -409,6 +394,22 @@ DeltaCt: {self._deltaCt_function}
         #     dCt = self._simple_DCt
         # return dCt
 
+    def __str__(self):
+        s = f"""
+Analyser: {self._id}\n
+
+Anchor: {self._anchor}\n
+Ref.Group: {self._ref_group}\n
+
+DeltaCt: {self._deltaCt_function}
+        """.strip()
+        return s
+    
+    def __repr__(self):
+        anchor = self._anchor
+        ref = self._ref_group
+        return f"Analyser({anchor=}, {ref=})"
+
 __default__Analyser__ = Analyser()
 """The default Analyser"""
 
@@ -435,6 +436,7 @@ def delta_ct( assay : (Assay or list) ):
         The same as input but with computed DeltaCt values.
     """
     return __default__Analyser__.pipe( assay )
+
 
 def analyse( assay : (Assay or list) ):
     """
