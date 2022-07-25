@@ -22,6 +22,12 @@ class Comparison(aux._ID):
         The comparison id (such as the name of the assay).
     pvalues : np.ndarray
         The p-values for the comparison. These may be corrected or not (this class can correct them).
+    statistic : np.ndarray
+        The test statsistics from the comparison. This needs to be of the same shape as the pvalues array. 
+    labels : list
+        A list of the group labels that were compared. These need to be in the same order as the pvalues array.
+    subset : list
+        A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
     __slots__ = ["_pvalues", "_statistic", "labels", "subset_groups"]
     def __init__(self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
@@ -154,6 +160,10 @@ class Comparison(aux._ID):
     def __collection_export__( self ):
         return self._to_df( self._pvalues )
 
+    def __repr__(self):
+        s = f"""{self.__class__.__name__}(id={self._id}, labels={self.labels}, subset={self.subset_groups})"""
+        return s
+
     def __getitem__( self, row, col ):
         return self._pvalues[row, col]
     
@@ -191,6 +201,19 @@ class Comparison(aux._ID):
 class MultiTestComparison(Comparison):
     """
     Stores the results of a multiple testing comparison.
+
+    Parameters
+    -------
+    id : str
+        The comparison id (such as the name of the assay).
+    pvalues : np.ndarray
+        The p-values for the comparison. These may be corrected or not (this class can correct them).
+    statistic : np.ndarray
+        The test statsistics from the comparison. This needs to be of the same shape as the pvalues array. 
+    labels : list
+        A list of the group labels that were compared. These need to be in the same order as the pvalues array.
+    subset : list
+        A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
     __slots__ = ['_orig_pvalues', '_corrected_pvalues', '_p_are_adjusted', '_asymmetric_pvalues']
     def __init__(self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
@@ -323,7 +346,7 @@ class MultiTestComparison(Comparison):
 
 class PairwiseComparison(MultiTestComparison):
     """
-    Stores results from a pair-wise comparison.
+    Stores results from a pair-wise comparison through T-Tests.
 
     Parameters
     -------
@@ -488,28 +511,14 @@ Effect Sizes:
 {"-" * length}
         """.strip()
         return s
-    
-    def __repr__(self):
-        s = f"""PairwiseComparison(id={self._id}, labels={self.labels}, subset={self.subset_groups})"""
-        return s
 
 class AnovaComparison(Comparison):
     """
     Stores the results of an ANOVA or Kruskal Wallis test.
     """
-    def __init__( self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
-        super().__init__( pvalues = pvalues, statistic = statistic, id = id, labels = labels, subset = subset )
+    def __init__( self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None ):
+        super().__init__( pvalues = pvalues, statistic = statistic, id = id )
 
-
-    def stack(self):
-        """
-        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
-        into multi-column column dataframe format. 
-        Where `a` and `b` denote the two partners in the comparison, 
-        and `pval` is the unadjusted p-value for the comparison, 
-        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
-        """
-        pass
 
 class ComparisonsCollection:
     """
