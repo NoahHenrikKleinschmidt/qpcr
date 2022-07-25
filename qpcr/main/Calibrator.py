@@ -236,6 +236,7 @@ Loaded File:\t{self._loaded_file}
         clear all stored efficiency values and computed data!
         """
         self.__init__()
+        return self
 
     def clear( self ):
         """
@@ -243,6 +244,8 @@ Loaded File:\t{self._loaded_file}
         """
         self._eff_dict = {}
         self._computed_values = {}
+        return self
+
 
     def adopt( self, effs : dict ):
         """
@@ -259,7 +262,8 @@ Loaded File:\t{self._loaded_file}
             self._eff_dict = effs
         else: 
             aw.SoftWarning("Calibrator:cannot_adopt", effs = effs, eff_type = type(effs).__name__ )
-    
+        return self
+
     def dilution( self, step : float or np.ndarray or tuple = None ):
         """
         Gets or sets the dilution steps used. This must be a `float` fraction
@@ -322,29 +326,32 @@ Loaded File:\t{self._loaded_file}
         """
         if isinstance( assay, list ):
             return [ self.pipe( A, remove_calibrators = remove_calibrators, ignore_uncalibrated = ignore_uncalibrated ) for A in assay ]
-        else:
-            if self._eff_dict != {}:
-                # first try to assign (will leave the assay unchanged if nothing is found)
-                eff = self._get_efficiency( assay )
-                if eff is not None: 
-                    assay = self.assign( assay, remove_calibrators = remove_calibrators )
-                else: 
-                    try:
-                        assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                    except: 
-                        if not ignore_uncalibrated:
-                            aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
-                        else: 
-                            aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-            else:
-                try: 
+        if self._eff_dict != {}:
+            # first try to assign (will leave the assay unchanged if nothing is found)
+            eff = self._get_efficiency( assay )
+            if eff is not None: 
+                assay = self.assign( assay, remove_calibrators = remove_calibrators )
+            else: 
+                try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                except:
+                except: 
+                    e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
                     if not ignore_uncalibrated:
-                        aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                        logger.critical( e )
+                        raise e
                     else: 
-                        aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-            return assay
+                        logger.info( e )
+        else:
+            try: 
+                assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
+            except:
+                e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
+                if not ignore_uncalibrated:
+                    logger.critical( e )
+                    raise e 
+                else: 
+                    logger.info( e )
+        return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
         """
