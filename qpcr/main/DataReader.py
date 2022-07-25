@@ -76,12 +76,10 @@ class DataReader(aux._ID):
     In such cases, don't try too long to make it work with the DataReader, 
     just use one of the `qpcr.Readers` or even `qpcr.Parsers` directly.  
     """
-    __slots__ = ["_src", "_Reader", "_Data", "_tmp_data", "_replicates", "_names"]
+    __slots__ = ["_src", "_Reader", "_Data", "_tmp_data"]
 
     def __init__(self):
         super().__init__()
-        self._replicates = None
-        self._names = None
         self._Reader = None             # the functional core will be either a Reader
         self._Data = {}                 # the _Data attribute will store any output from the Reader as a dictionary with filename : data structure.
         self._tmp_data = None           # this will not attempt to distinguish between assays / normalisers, or anything. It's just an archive of whatever data we got.
@@ -466,4 +464,5 @@ def read( filename : str, multi_assay : bool = False, big_table : bool = False, 
             Either a single `qpcr.Assay` object or a list thereof. 
             In case of a decorated file, two lists will be returned, one for assays and one for normalisers.
         """
+        __default_DataReader__.reset()
         return __default_DataReader__.read( filename = filename, multi_assay = multi_assay, big_table = big_table, decorator = decorator, reset = reset, **kwargs )
