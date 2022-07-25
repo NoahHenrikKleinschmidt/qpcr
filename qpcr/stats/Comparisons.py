@@ -20,18 +20,22 @@ class Comparison(aux._ID):
     -------
     id : str
         The comparison id (such as the name of the assay).
-    pvalues : np.ndarray
-        The p-values for the comparison. These may be corrected or not (this class can correct them).
-    statistic : np.ndarray
-        The test statsistics from the comparison. This needs to be of the same shape as the pvalues array. 
+    pvalues : float or np.ndarray
+        The p-value(s) for the comparison. These may be corrected or not (this class can correct them).
+    statistic : float or np.ndarray
+        The test statsistic(s) from the comparison. This needs to be of the same shape as the pvalues array. 
     labels : list
-        A list of the group labels that were compared. These need to be in the same order as the pvalues array.
+        A list of the group labels that were compared (in case multiple pvalues are supplied in an array). These need to be in the same order as the pvalues array.
     subset : list
         A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
     __slots__ = ["_pvalues", "_statistic", "labels", "subset_groups"]
-    def __init__(self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+    def __init__(self, pvalues : (float or np.ndarray), statistic : (float or np.ndarray) = None, id : str = None, labels : list = None, subset : list = None ):
         super().__init__()
+        if not isinstance(pvalues, np.ndarray):
+            pvalues = np.array( [pvalues] )  
+        if statistic is None and not isinstance(statistic, np.ndarray):
+            statistic = np.array( [statistic] )
         self._pvalues = pvalues
         self._statistic = statistic
         self.id(id)
@@ -66,7 +70,25 @@ class Comparison(aux._ID):
         self.subset_groups = self._set_labels(self._pvalues, subset)
         return self
 
-    
+    def to_df( self ):
+        """
+        Converts the comparison to a three column data frame of `id`, `pval`, and `stat`.
+        """
+        d = pd.DataFrame( { "pval" : self._pvalues, "stat" : self._statistic } )  
+        d[ "id" ] = self._id
+        d = d[ ["id", "pval", "stat"] ]
+        return d
+
+    @property
+    def pvalue(self):
+        """
+        Returns
+        -------
+        np.ndarray
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones).
+        """
+        return self._pvalues
+
     @property
     def pvalues(self):
         """
@@ -153,15 +175,17 @@ class Comparison(aux._ID):
                 labels = [labels, labels]
             else:
                 raise TypeError( f"labels must be a list of ints, strings, or tuples. Got '{type(labels[0]).__name__}' instead" )
+        elif pvalues.size == 1:
+            labels = [[0],[0]]
         else:
             labels = [ np.arange(pvalues.shape[0]), np.arange(pvalues.shape[1]) ]
         return labels
 
     def __collection_export__( self ):
-        return self._to_df( self._pvalues )
+        return self.to_df()
 
     def __repr__(self):
-        s = f"""{self.__class__.__name__}(id={self._id}, labels={self.labels}, subset={self.subset_groups})"""
+        s = f"""{self.__class__.__name__}(id={self._id}, pvalues={self.pvalues}, statistic={self._statistic})"""
         return s
 
     def __getitem__( self, row, col ):
@@ -341,6 +365,10 @@ class MultiTestComparison(Comparison):
         res = res[ ["a", "b", data.name] ]
         return res
 
+    def __repr__(self):
+        s = f"""{self.__class__.__name__}(id={self._id}, labels={self.labels}, subset={self.subset_groups})"""
+        return s
+
     def __collection_export__( self ):
         return self.stack()
 
@@ -411,9 +439,9 @@ class PairwiseComparison(MultiTestComparison):
         final = super().stack()
         if self._statistic is not None:
             tstats = self._to_df( self._statistic )
-            tstats.name = "t_stat"
+            tstats.name = "stat"
             tstats = self._melt( tstats )
-            final[ "t_stat" ] = tstats[ "t_stat" ]
+            final[ "stat" ] = tstats[ "stat" ]
         if self._effect_size is not None:
             effects = self._to_df( self._effect_size )
             effects.name = "effect_size"
@@ -516,9 +544,8 @@ class AnovaComparison(Comparison):
     """
     Stores the results of an ANOVA or Kruskal Wallis test.
     """
-    def __init__( self, pvalues : np.ndarray, statistic : np.ndarray = None, id : str = None ):
-        super().__init__( pvalues = pvalues, statistic = statistic, id = id )
-
+    def __init__( self, pvalue : float, statistic : float = None, id : str = None ):
+        super().__init__( pvalues = pvalue, statistic = statistic, id = id )
 
 class ComparisonsCollection:
     """
@@ -538,7 +565,7 @@ class ComparisonsCollection:
         """
         return self.comparisons
 
-    def assemble_df( self ):
+    def to_df( self ):
         """
         Assembles all stored comparisons into a single stacked dataframe.
 
@@ -615,7 +642,7 @@ class ComparisonsCollection:
         return s
     
     def __repr__(self):
-        s = f"""ComparisonsCollection(comparisons={self.ids})"""
+        s = f"""{self.__class__.__name__}(comparisons={self.ids})"""
         return s
 
 
