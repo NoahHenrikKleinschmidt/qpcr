@@ -166,7 +166,13 @@ class Filter(aux._ID):
 
     def plotmode(self, mode ):
         """
-        Set graph mode if a summary Boxplot shall be made
+        Set graph mode if a summary Boxplot shall be made.
+        
+        Note
+        ----
+        Because this will reset the summary 
+        Plotter, all plotting data that have been stored up to this point will be lost!
+        Make sure to call this function BEFORE actually filtering any data. 
 
         Parameters
         ----------

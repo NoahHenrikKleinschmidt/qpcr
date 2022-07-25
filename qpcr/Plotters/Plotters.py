@@ -281,6 +281,14 @@ class Plotter(_Base):
         self._fig = None
         self._set_plot()
 
+    def clear(self):
+        """
+        Will clear the currently stored data and figure
+        """
+        self._data = None
+        self._obj = None
+        self._fig = None
+
     def link(self, obj):
         """
         Links a qpcr object as data source.
@@ -342,7 +350,7 @@ class Plotter(_Base):
             A dictionary of the new pre-set plotting parameters
         """
         if params != {} and self._PARAMS == {}:
-            self._PARAMS = params
+            self._PARAMS = dict(params)
         elif params != {}:
             self.update_params(params, store = True)
         return self._PARAMS
@@ -375,6 +383,13 @@ class Plotter(_Base):
             self._PARAMS = kwargs
 
         return kwargs
+    
+    def reset_params(self):
+        """
+        Reset to the pre-set default plotting parameters.
+        """
+        params = { "static": self._static_default, "interactive": self._interactive_default }
+        self._PARAMS = params[self._MODE]
 
     def save(self, filename, **kwargs):
         """
@@ -409,10 +424,12 @@ class Plotter(_Base):
         """
         Sets self._plot either interactive or static depending on MODe
         """
-        self._plot = self._static_plot if self._MODE == "static" else self._interactive_plot
+        options = { 
+                        "static": (self._static_plot, self._static_default), 
+                        "interactive": (self._interactive_plot,self._interactive_default) 
+                    }
         prev_default = self._default_params
-        self._default_params = self._static_default if self._MODE == "static" else self._interactive_default
-
+        self._plot, self._default_params = options[self._MODE]
         if self.params() == {} or self.params() == prev_default:
             self.params(**self._default_params)
         else:
@@ -446,8 +463,6 @@ class Plotter(_Base):
                     weight = "bold", fontsize = 12
                 )
 
-# The Wrapper essentially defines public methods from Plotter but 
-# replaces self with self._Plotter instead...
 
 class ResultsPlotter(Plotter):
     """
@@ -482,15 +497,6 @@ class ResultsPlotter(Plotter):
             logger.critical( e )
             raise e 
 
-   
-class AssaySubplotsResults(ResultsPlotter):
-    """
-    A super class for Figureclasses that use a Results object and operate assay-wise
-    (different assays in different subplots)
-    """
-    def __init__(self, mode : str ):
-        super().__init__(mode)
-    
     def _setup_default_plot_cols(self):
         """
         Sets default columns for x and y in barcharts,
@@ -520,7 +526,7 @@ class AssaySubplotsResults(ResultsPlotter):
         ncols, nrows = kwargs.pop("subplots", gx.make_layout(data, ref_col) )
 
         # transposing currently not supported...
-        # if aux.from_kwargs("transpose", False, kwargs, rm = True):
+        # if kwargs.pop("transpose", False, kwargs):
         #     ncols, nrows = nrows, ncols
 
         headers = aux.sorted_set( data[ref_col] )
@@ -537,7 +543,53 @@ class AssaySubplotsResults(ResultsPlotter):
         query = "{ref_col} == '{q}'" if isinstance(headers[0], str) else "{ref_col} == {q}"
 
         return ref_col,ncols,nrows, headers, x, y, sterr, query, xlabel, ylabel
+class AssayPlotter(Plotter):
+    """
+    A superclass for all FigureClasses that work with Assay objects.
+    """
+    def __init__(self, mode : str ):
+        super().__init__(mode)
 
+    def link(self, obj:main.Assay):
+        """
+        link a qpcr.Assay object to the Plotter.
+
+        Parameters
+        ----------
+        obj : qpcr.Assay
+            A qpcr.Assay object.
+        """
+        if isinstance( obj, main.Assay) :
+            self._obj = obj
+            self._data = self._obj.get( copy = True )
+        else:
+            e = aw.PlotterError("unknown_data", obj = obj )
+            logger.critical( e )
+            raise e
+        
+
+# these two could get dedicated kwarg-prep functions...    
+class AssaySubplotsResults(ResultsPlotter):
+    """
+    A super class for Figureclasses that use a Results object and operate assay-wise
+    (different assays in different subplots).
+    """
+    def __init__(self, mode : str ):
+        super().__init__(mode)
+    
+
+class GroupSubplotsResults(ResultsPlotter):
+    """
+    A superclass for FigureClasses that work with Results objects and operate group-wise
+    (different groups in different subplots).
+    """
+    def __init__(self, mode : str ):
+        super().__init__(mode)
+
+    
+
+# The Wrapper essentially defines public methods from Plotter but 
+# replaces self with self._Plotter instead...
 class Wrapper(_Base):
     """
     A superclass that allows to make wrappers for multiple Plotters 
@@ -847,6 +899,7 @@ class AssayBars(AssaySubplotsResults):
         sns.set_style( style )
 
         edgecolor = kwargs.pop("edgecolor", "white")
+        ecolor = kwargs.get("ecolor", "black")
         edgewidth = kwargs.pop("edgewidth", None)
 
         if edgewidth is None: 
@@ -885,7 +938,7 @@ class AssayBars(AssaySubplotsResults):
                             x = tmp_df[x], y = tmp_df[y], 
                             yerr = tmp_df[sterr], 
                             fmt = ".", markersize = 0, capsize = 3, 
-                            ecolor = aux.from_kwargs("ecolor", "black", kwargs),
+                            ecolor = ecolor,
                         )
         
             subplot.set(
@@ -952,7 +1005,7 @@ class AssayBars(AssaySubplotsResults):
 
         Coords = gx.AxesCoords(fig, [], (ncols, nrows))
         Coords.autoincrement()
-        
+
         fig.update_layout(
                             title = kwargs.pop("title", "Results Preview"), 
                             height = kwargs.pop("height", None), 
@@ -998,10 +1051,8 @@ class AssayBars(AssaySubplotsResults):
         # print("<<< Interactive Check >>>")
         return fig 
         
-        
 
-
-class ReplicateBoxPlot(Plotter):
+class ReplicateBoxPlot(AssayPlotter):
     """
     Generate a boxplot figure summary for the input sample replicates.
     
@@ -1044,6 +1095,8 @@ class ReplicateBoxPlot(Plotter):
         +------------------------+----------------------------------------------------------------------------------+--------------------------+
         | color : `str or list`  | The fillcolor for the boxes.                                                     | `color = "yellow"`       |
         +------------------------+----------------------------------------------------------------------------------+--------------------------+
+        | hue : `str`            | The data column by which to colo.                                                | `hue = "Ct"`             |
+        +------------------------+----------------------------------------------------------------------------------+--------------------------+
         | \*\*kwargs             | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.         |                          |
         +------------------------+----------------------------------------------------------------------------------+--------------------------+
 
@@ -1083,13 +1136,7 @@ class ReplicateBoxPlot(Plotter):
         super().__init__(mode=mode)
         self._data = None
 
-    def clear(self):
-        """
-        Will clear the currently stored Assay data
-        """
-        self._data = None
-
-    def link(self, Assay:main.Assay):
+    def link(self, obj:main.Assay):
         """
         Links an Assay object to the BoxPlotter.
         This will simply add the Ct column to the current overall data!
@@ -1097,25 +1144,23 @@ class ReplicateBoxPlot(Plotter):
 
         Parameters
         ----------
-        Assay : qpcr.Assay
+        obj : qpcr.Assay
             A qpcr.Assay object.
         """
-        if type(Assay).__name__ == "Assay" :
-            self._obj = Assay
-            data = self._obj.get( copy = True )
-        else:
-            e = aw.PlotterError("unknown_data", obj = Assay )
-            logger.critical( e )
-            raise e
+        if self._data is None:
+            super().link(obj)
+            self._data[ defaults.dataset_header ] = self._obj.id()
+            return
+        data = self._data.copy()
+        super().link(obj)
 
         # add itentifier column
-        data["assay"] = [self._obj.id() for i in range(len(data))]
+        self._data[ defaults.dataset_header ] = self._obj.id()
 
-        if self._data is None: 
-            self._data = data
-        else:
-            self._data = pd.concat([self._data, data], ignore_index=True)
-        
+        # and concat together
+        self._data = pd.concat([data, self._data], ignore_index=True)
+    
+
 
     def _interactive_plot(self, **kwargs):
         """
@@ -1123,27 +1168,27 @@ class ReplicateBoxPlot(Plotter):
         """
         kwargs = self.update_params(kwargs)
 
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        template = aux.from_kwargs("template", None, kwargs, rm=True)
-        title = aux.from_kwargs("title", None, kwargs, rm=True)
+        show = kwargs.pop("show", True)
+        template = kwargs.pop("template", None)
+        title = kwargs.pop("title", None)
 
         data = self._data
     
-        groups = aux.sorted_set(data["group"])
-        group_names = aux.sorted_set(data["group_name"])
+        groups = data["group"].unique()
+        group_names = data["group_name"].unique()
 
         fig = go.Figure()
 
         fig.update_layout(
                             boxmode="group", 
-                            height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                            width = aux.from_kwargs("width", None, kwargs, rm = True),
+                            height = kwargs.pop("height", None), 
+                            width = kwargs.pop("width", None),
                             template = template, 
                             title = title,
                         )
 
         # add default ylabel
-        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True) 
+        ylabel = kwargs.pop("ylabel", "Ct") 
         fig.update_yaxes(title_text = ylabel)
 
         fig.update_xaxes(showgrid=True)
@@ -1151,7 +1196,7 @@ class ReplicateBoxPlot(Plotter):
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
             
-            
+
             fig.add_trace(
                             go.Box(
                                 x = tmp_df["assay"],
@@ -1176,33 +1221,34 @@ class ReplicateBoxPlot(Plotter):
         data = self._data
         
         # set a seaborn style
-        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        style = kwargs.pop("style", "ticks")
         sns.set_style( style )
 
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
-        title = aux.from_kwargs("title", None, kwargs, rm=True)
+        show = kwargs.pop("show", True)
+        figsize = kwargs.pop("figsize", (7,5))
+        hue = kwargs.pop("hue", "group_name")
+        title = kwargs.pop("title", None)
+        ylabel = kwargs.pop("ylabel", "Ct")
         palette = gx.generate_palette(kwargs)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        ncols, nrows = aux.from_kwargs("subplots", gx.make_layout(data, "assay"), kwargs, rm=True)
+        show_spines = kwargs.pop("frame", True)
+        ncols, nrows = kwargs.pop("subplots", gx.make_layout(data, "assay") )
 
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
         # possibly nrows and ncols should be switched...
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
-        
-        for assay in aux.sorted_set(data["assay"]):
-            
-            try: 
-                ax = Coords.subplot()
-            except: 
-                print("We ran out of axes ... ")
-                break
-            tmp = data.query(f"assay == '{assay}'")
+        Coords.autoincrement()
+
+        # for assay in aux.sorted_set(data["assay"]):
+        for assay, tmp in data.groupby( defaults.dataset_header ):
+            ax = Coords.subplot()
+           
+            # tmp = data.query(f"assay == '{assay}'")
 
             sns.boxplot(
                         data=tmp, 
-                        x = "assay", y = "Ct", hue="group_name", 
+                        x = defaults.dataset_header, 
+                        y = ylabel, hue=hue, 
                         palette = palette, 
                         ax = ax, 
                         **kwargs
@@ -1213,8 +1259,6 @@ class ReplicateBoxPlot(Plotter):
             
             if not show_spines:
                 sns.despine()
-
-            Coords.increment()
 
         # add one single legend to the last plot
         ax.legend(bbox_to_anchor=(1,1), loc = None)
@@ -1228,7 +1272,7 @@ class ReplicateBoxPlot(Plotter):
         return fig 
 
 
-class FilterSummary(Plotter):
+class FilterSummary(AssayPlotter):
     """
     Generates a summary figure of the replicate
     Ct values for each assay before and after filtering.
@@ -1290,6 +1334,8 @@ class FilterSummary(Plotter):
         | width : `int`               | Width of the figure                                                                                                                                              | `width = 50`                                  |
         +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | padding : `float or tuple`  | Padding between subplots. This can be a single float (interpreted as horizontal padding), or a tuple of (horizontal, vertical) paddings.                         | `padding = 0.2`                               |
+        +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | hoverinfo : `str`           | The hoverinfo to display.                                                                                                                                        | `hoverinfo = "name"`                          |
         +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | colors : `list`             | List of two colors for before and after filtering boxes.                                                                                                         | `colors = ["red", "green"]`                   |
         +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
@@ -1358,13 +1404,13 @@ class FilterSummary(Plotter):
         """
         kwargs = self.update_params(kwargs)
 
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        template = aux.from_kwargs("template", None, kwargs, rm=True)
-        title = aux.from_kwargs("title", None, kwargs, rm=True)
-        padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
-        
+        show = kwargs.pop("show", True)
+        template = kwargs.pop("template", None)
+        title = kwargs.pop("title", None)
+        padding = kwargs.pop("padding", 0.1)
+        hoverinfo = kwargs.pop("hoverinfo", "y+x+name")   
         # setup color scheme
-        colors = aux.from_kwargs("colors", ["blue", "crimson"], kwargs, rm = True)
+        colors = kwargs.pop("colors", ["blue", "crimson"])
         before_color, after_color = colors
 
         if isinstance(padding, (list, tuple)):
@@ -1377,8 +1423,8 @@ class FilterSummary(Plotter):
         after = self._after.get()
 
         # get the number of assays to visualse
-        assays = [ i for i in before.columns if i not in [ "group", "group_name", raw_col_names[0]] ]
-        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+        assays = [ i for i in before.columns if i not in defaults.setup_cols ]
+        headers = kwargs.pop("headers", assays)
 
         # each assay will be on its own plot,
         ncols, nrows = gx.make_layout_from_list( assays )
@@ -1395,17 +1441,18 @@ class FilterSummary(Plotter):
         
         fig.update_layout(
                             boxmode="group", 
-                            height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                            width = aux.from_kwargs("width", None, kwargs, rm = True),
+                            height = kwargs.pop("height", None), 
+                            width = kwargs.pop("width", None),
                             template = template, 
                             title = title,
                         )
 
         # add default ylabel
-        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True) 
+        ylabel = kwargs.pop("ylabel", "Ct") 
         fig.update_yaxes(title_text = ylabel)
         
         Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords.autoincrement()
 
         show_legend = True
         # now iterate over each assay and make a BoxPlot
@@ -1423,7 +1470,7 @@ class FilterSummary(Plotter):
                                 x = pre_Cts["group_name"],
                                 y = pre_Cts[ assay ],
                                 name = "Before",
-                                hoverinfo = "y+x+name",
+                                hoverinfo = hoverinfo,
                                 marker_color = before_color,
                                 legendgroup='group1',
                                 showlegend = show_legend,
@@ -1437,7 +1484,7 @@ class FilterSummary(Plotter):
                                 x = post_Cts["group_name"],
                                 y = post_Cts[ assay ],
                                 name = "After",
-                                hoverinfo = "y+x+name",
+                                hoverinfo = hoverinfo,
                                 marker_color = after_color,
                                 legendgroup='group2',
                                 showlegend = show_legend,
@@ -1445,8 +1492,6 @@ class FilterSummary(Plotter):
                             ),
                             row, col
                         )
-
-            Coords.increment()
 
             # set show_legend to False after the first assay,
             # to avoid repetitive legends...
@@ -1465,17 +1510,17 @@ class FilterSummary(Plotter):
         """
         kwargs = self.update_params(kwargs)
 
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        figsize = aux.from_kwargs("figsize", (7,5), kwargs, rm=True)
-        title = aux.from_kwargs("title", None, kwargs, rm=True)
-        ylabel = aux.from_kwargs("ylabel", "Ct", kwargs, rm = True)
-        xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True)
-        rot = aux.from_kwargs("rot",None, kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
+        show = kwargs.pop("show", True)
+        figsize = kwargs.pop("figsize", (7,5))
+        title = kwargs.pop("title", None)
+        ylabel = kwargs.pop("ylabel", "Ct")
+        xlabel = kwargs.pop("xlabel", "")
+        rot = kwargs.pop("rot",None)
+        show_spines = kwargs.pop("frame", True)
         palette = gx.generate_palette(kwargs)
 
         # set a seaborn style
-        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        style = kwargs.pop("style", "ticks")
         sns.set_style( style )
 
         # get the data
@@ -1484,18 +1529,18 @@ class FilterSummary(Plotter):
 
         # get the number of assays to visualse
         assays = [ i for i in before.columns if i not in [ "group", "group_name", raw_col_names[0]] ]
-        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
+        headers = kwargs.pop("headers", assays)
 
         # each assay will be on its own plot
         ncols, nrows = gx.make_layout_from_list( assays )
 
-        ncols, nrows = aux.from_kwargs("subplots", (ncols, nrows), kwargs, rm=True)
-
+        ncols, nrows = kwargs.pop("subplots", (ncols, nrows))
 
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize=figsize)
         
         # possibly nrows and ncols should be switched...
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+        Coords.autoincrement()
 
         # set a kind column for grouping in the boxplots
         before[ "kind" ] = "before" 
@@ -1511,12 +1556,8 @@ class FilterSummary(Plotter):
             # assemble data to one dataframe
             df = pd.concat( (pre_Cts, post_Cts) )
 
-            # get the new subplot
-            try: 
-                ax = Coords.subplot()
-            except: 
-                print("We ran out of axes ... ")
-                break
+            
+            ax = Coords.subplot()
 
             # main box plot
             sns.boxplot(
@@ -1539,8 +1580,6 @@ class FilterSummary(Plotter):
                 ax.legend( bbox_to_anchor=(1,1), loc = None, frameon = False )
             show_legend = False
 
-            Coords.increment()
-
         if not show_spines: 
             sns.despine()
 
@@ -1553,7 +1592,7 @@ class FilterSummary(Plotter):
         return fig
 
 
-class AssayDots(Plotter):
+class AssayDots(AssaySubplotsResults):
     """
     Generate a Preview of all results from all Assays in subplots, plotting individual values
     in a Dot Plot rather than Bar Plot. Each assay will be shown in a separate subplot.
@@ -1658,96 +1697,93 @@ class AssayDots(Plotter):
         data = self._rep_data
 
         # get assays to plot
-        assays = [ i for i in data.columns if i not in [ "group", "group_name", raw_col_names[0] ] ]
+        assays = [ i for i in data.columns if i not in defaults.setup_cols ]
 
         # generate subplot layout
         ncols, nrows = gx.make_layout_from_list( assays )
 
         # get kwargs incompatible with the main plotting method
-        title = aux.from_kwargs("title", None, kwargs, rm = True)
-        headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
-        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
-        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
-        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
-        alpha = aux.from_kwargs("alpha", 1, kwargs, rm = True)
-        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
-        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
+        title = kwargs.pop("title", None)
+        headers = kwargs.pop("headers", assays)
+        label_subplots = kwargs.pop("label_subplots", True)
+        start_character = kwargs.pop("labeltype", "A")
+        show_spines = kwargs.pop("frame", True)
+        show = kwargs.pop("show", True)
+        show_violins = kwargs.pop("violin", True)
+        rot = kwargs.pop("rot", None)
+        alpha = kwargs.pop("alpha", 1)
+        xlabel = kwargs.pop("xlabel", None)
+        ylabel = kwargs.pop("ylabel", None)
 
         # generate a custom color palette in case color kwarg is provided
         palette = gx.generate_palette(kwargs)
 
         # set a seaborn style
-        style = aux.from_kwargs("style", "dark", kwargs, rm = True)
+        style = kwargs.pop("style", "dark")
         sns.set_style( style )
 
         # make figure
-        figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
+        figsize = kwargs.pop("figsize", None)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
         fig.suptitle( title )
 
         # setup Coords
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+        Coords.autoincrement()
+
         idx = 0
         for assay in assays: 
 
-            try: 
-                tmp_df = data[ ["group", "group_name", assay] ]
-                tmp_df = tmp_df.sort_values("group")
+            tmp_df = data[ ["group", "group_name", assay] ]
+            tmp_df = tmp_df.sort_values("group")
 
-                # now plot a new violin chart 
-                subplot = Coords.subplot()
+            # now plot a new violin chart 
+            subplot = Coords.subplot()
 
-                if show_violins:
-                    sns.violinplot(
-                                    x = tmp_df["group_name"],
-                                    y = tmp_df[ assay ],
-                                    color = None,
-                                    inner = None, 
-                                    palette = palette,
-                                    ax = subplot,
-
-                                )
-                    for i in subplot.collections:
-                        i.set_alpha( alpha * 0.3 )
-
-                sns.stripplot(
+            if show_violins:
+                sns.violinplot(
                                 x = tmp_df["group_name"],
                                 y = tmp_df[ assay ],
+                                color = None,
+                                inner = None, 
                                 palette = palette,
-                                alpha = alpha,
                                 ax = subplot,
-                                **kwargs
+
                             )
-            
-                subplot.set(
-                            title = assay if headers is None else headers[idx],
-                            xlabel = xlabel,
-                            ylabel = ylabel,        
+                for i in subplot.collections:
+                    i.set_alpha( alpha * 0.3 )
+
+            sns.stripplot(
+                            x = tmp_df["group_name"],
+                            y = tmp_df[ assay ],
+                            palette = palette,
+                            alpha = alpha,
+                            ax = subplot,
+                            **kwargs
                         )
+        
+            subplot.set(
+                        title = assay if headers is None else headers[idx],
+                        xlabel = xlabel,
+                        ylabel = ylabel,        
+                    )
 
-                # adjust xtick rotation   
-                if rot is not None: 
-                    align = "center" if rot == 0 else "left"
-                    plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+            # adjust xtick rotation   
+            if rot is not None: 
+                align = "center" if rot == 0 else "left"
+                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
 
-                if not show_spines:
-                    subplot.spines["right"].set_visible(False)
-                    subplot.spines["top"].set_visible(False)
-                    subplot.spines["left"].set_linewidth(1.05)
-                    subplot.spines["bottom"].set_linewidth(1.05)
+            if not show_spines:
+                subplot.spines["right"].set_visible(False)
+                subplot.spines["top"].set_visible(False)
+                subplot.spines["left"].set_linewidth(1.05)
+                subplot.spines["bottom"].set_linewidth(1.05)
 
-                # add ABCD... label to subplot
-                if label_subplots:
-                    self._add_subplot_label(idx, subplot, start_character)         
+            # add ABCD... label to subplot
+            if label_subplots:
+                self._add_subplot_label(idx, subplot, start_character)         
 
-                Coords.increment()
-                idx += 1
-            except Exception as e:
-                raise e 
-                break
+            idx += 1
         
         plt.tight_layout()
 
@@ -1757,19 +1793,6 @@ class AssayDots(Plotter):
         # print("<<< Static Check >>>")
 
         return fig 
-
-    def _add_subplot_label(self, idx, subplot, start_character):
-        """
-        Adds A B C ... to upper left corner of a subplot...
-        It will start labelling at any arbitrary start_character
-        """
-        subplot_label = chr(ord(start_character)+idx)
-        subplot.annotate(
-                            xy = (-0.1,1.03), 
-                            text = subplot_label, 
-                            xycoords = "axes fraction",
-                            weight = "bold", fontsize = 12
-                        )
 
     def _interactive_plot(self, **kwargs):
         """
@@ -1792,107 +1815,102 @@ class AssayDots(Plotter):
         # make subplot layout
         ncols, nrows = gx.make_layout_from_list( assays )
 
-        try: 
-            # get incompaltible kwargs 
-            headers = aux.from_kwargs("headers", assays, kwargs, rm = True)
-            show = aux.from_kwargs("show", True, kwargs, rm = True)
-            show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
+        # get incompaltible kwargs 
+        headers = kwargs.pop("headers", assays)
+        show = kwargs.pop("show", True)
+        show_violins = kwargs.pop("violin", True)
 
-            # setup padding
-            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
-            if isinstance(padding, (list, tuple)):
-                hpad, vpad = padding
-            else: 
-                hpad, vpad = padding, None
+        # setup padding
+        padding = kwargs.pop("padding", 0.1)
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
 
-            # make figure
-            speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(
-                                    rows = nrows, cols = ncols, 
-                                    specs = speclist, 
-                                    subplot_titles = headers,
-                                    horizontal_spacing = hpad,
-                                    vertical_spacing = vpad
-                            )
-
-            # setup subplot coords handling
-            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
-
-            # setup figure
-            fig.update_layout(
-                                title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
-                                height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                                width = aux.from_kwargs("width", None, kwargs, rm = True),
-                                margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
-                                autosize = True, 
-                                template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                                # legend = {  "title" : aux.from_kwargs("legend_title", "Assay", kwargs, rm = True),  },
-                                showlegend = False
-                            )
-
-            # set default axes labels
-            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
-            fig.update_xaxes(title_text = xlabel)
-            
-            ylabel = aux.from_kwargs("ylabel", "", kwargs, rm = True) 
-            fig.update_yaxes(title_text = ylabel)
-
-            idx = 0
-            for assay, header in zip( assays, headers ):
-                
-                row, col = Coords.get()
-
-                tmp_df = data[ ["group", "group_name", assay] ]
-                tmp_df = tmp_df.sort_values("group")
-
-                # now plot a new violin chart 
-                fig.add_trace(
-
-                    go.Violin(
-                                    name = header,
-                                    y = tmp_df[ assay ], x = tmp_df[ "group" ], 
-                                    points = "all",
-                                    pointpos = 0,
-                                    hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
-                                    **kwargs
-                            ), 
-                                    row, col
+        # make figure
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad
                         )
 
-                # remove violins if not desired (leaving only dot plot)
-                if not show_violins: 
-                    fig.update_traces(
-                                        fillcolor="rgba(0,0,0,0)", 
-                                        line_width = 0, 
-                                        selector=dict(type='violin'),
-                                    )
+        # setup subplot coords handling
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords.autoincrement()
 
+        # setup figure
+        fig.update_layout(
+                            title = kwargs.pop("title", "Results Preview"), 
+                            height = kwargs.pop("height", None), 
+                            width = kwargs.pop("width", None),
+                            margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                            autosize = True, 
+                            template = kwargs.pop("template", "plotly_white"),
+                            # legend = {  "title" : kwargs.pop("legend_title", "Assay"),  },
+                            showlegend = False
+                        )
 
-                # update x axis to categorical group names
-                fig.update_layout(
-                                    { 
-                                        f"xaxis{idx+1}" : dict(
-                                                                tickmode = 'array',
-                                                                tickvals = ticks,
-                                                                ticktext = group_names,
-                                                        )         
-                                    }
+        # set default axes labels
+        xlabel = kwargs.pop("xlabel", "") 
+        fig.update_xaxes(title_text = xlabel)
+        
+        ylabel = kwargs.pop("ylabel", "") 
+        fig.update_yaxes(title_text = ylabel)
+
+        idx = 0
+        for assay, header in zip( assays, headers ):
+            
+            row, col = Coords.get()
+
+            tmp_df = data[ ["group", "group_name", assay] ]
+            tmp_df = tmp_df.sort_values("group")
+
+            # now plot a new violin chart 
+            fig.add_trace(
+
+                go.Violin(
+                                name = header,
+                                y = tmp_df[ assay ], x = tmp_df[ "group" ], 
+                                points = "all",
+                                pointpos = 0,
+                                hoverinfo = kwargs.pop("hoverinfo", "y"), 
+                                **kwargs
+                        ), 
+                                row, col
+                    )
+
+            # remove violins if not desired (leaving only dot plot)
+            if not show_violins: 
+                fig.update_traces(
+                                    fillcolor="rgba(0,0,0,0)", 
+                                    line_width = 0, 
+                                    selector=dict(type='violin'),
                                 )
 
-                Coords.increment()
 
-                idx += 1
+            # update x axis to categorical group names
+            fig.update_layout(
+                                { 
+                                    f"xaxis{idx+1}" : dict(
+                                                            tickmode = 'array',
+                                                            tickvals = ticks,
+                                                            ticktext = group_names,
+                                                    )         
+                                }
+                            )
+            idx += 1
 
-            if show:
-                fig.show()
+        if show:
+            fig.show()
 
-            # print("<<< Interactive Check >>>")
-            return fig 
-        except Exception as e: 
-            raise e 
+        # print("<<< Interactive Check >>>")
+        return fig 
 
 
-class GroupBars(Plotter):
+class GroupBars(GroupSubplotsResults):
     """
     Generates a Bar plot figure with a separate subplot for each group. 
 
@@ -2003,29 +2021,28 @@ class GroupBars(Plotter):
         groups = data["group"].unique()
         names = data["group_name"].unique()
 
-        ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)
+        ref_col, ncols, nrows, headings, x, y, sterr, query, xlabel, ylabel = self._prep_properties(kwargs)
         x = "assay" 
 
-        title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True)
-        headers = aux.from_kwargs("headers", names, kwargs, rm = True)
-        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
-        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+        title = kwargs.pop("title", "Results Preview")
+        headers = kwargs.pop("headers", names)
+        label_subplots = kwargs.pop("label_subplots", True)
+        start_character = kwargs.pop("labeltype", "A")
+        show_spines = kwargs.pop("frame", True)
+        show = kwargs.pop("show", True)
+        rot = kwargs.pop("rot", None)
 
         palette = gx.generate_palette(kwargs)
 
-        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
-        ylabel = aux.from_kwargs("ylabel", "$\Delta\Delta$Ct", kwargs, rm = True)
         # set a seaborn style
-        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        style = kwargs.pop("style", "ticks")
         sns.set_style( style )
 
-        edgecolor = aux.from_kwargs("edgecolor", "white", kwargs, rm = True)
-        edgewidth = aux.from_kwargs("linewidth", 1, kwargs, rm = True)
-        edgewidth = aux.from_kwargs("edgewidth", edgewidth, kwargs, rm = True)
-        figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
+        edgecolor = kwargs.pop("edgecolor", "white")
+        edgewidth = kwargs.pop("linewidth", 1)
+        edgewidth = kwargs.pop("edgewidth", edgewidth)
+        ecolor = kwargs.get("ecolor", "black")
+        figsize = kwargs.pop("figsize", None)
 
         groups = data["group"].unique()
         nrows, ncols = gx.make_layout_from_list( groups )
@@ -2034,6 +2051,7 @@ class GroupBars(Plotter):
         fig.suptitle( title )
 
         coords = gx.AxesCoords( fig, axs, (ncols, nrows) )
+        coords.autoincrement()
 
         idx = 0 
         for group, name in zip(groups, headers): 
@@ -2058,7 +2076,7 @@ class GroupBars(Plotter):
                             x = tmp_df[x], y = tmp_df[y], 
                             yerr = tmp_df[sterr], 
                             fmt = ".", markersize = 0, capsize = 3, 
-                            ecolor = aux.from_kwargs("ecolor", "black", kwargs),
+                            ecolor = ecolor,
                     )
             
             ax.set(
@@ -2082,7 +2100,6 @@ class GroupBars(Plotter):
                 if label_subplots:
                     self._add_subplot_label(idx, ax, start_character)         
 
-            coords.increment()
             idx += 1
 
         plt.tight_layout()
@@ -2103,88 +2120,81 @@ class GroupBars(Plotter):
         groups = data["group"].unique()
         names = data["group_name"].unique()
 
-        try: 
-            # setup figure framework variables that have to be removed from 
-            ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)
-            x = "assay"
-            headers = aux.from_kwargs("headers", names, kwargs, rm = True)
-            show = aux.from_kwargs("show", True, kwargs, rm = True)
-            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+        # setup figure framework variables that have to be removed from 
+        ref_col, ncols, nrows, headings, x, y, sterr, query, xlabel, ylabel = self._prep_properties(kwargs)
+        x = "assay"
+        headers = kwargs.pop("headers", names, kwargs)
+        show = kwargs.pop("show", True, kwargs)
+        padding = kwargs.pop("padding", 0.1, kwargs)
 
-            if isinstance(padding, (list, tuple)):
-                hpad, vpad = padding
-            else: 
-                hpad, vpad = padding, None
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
 
-            # make new ncols and nrows based on the groups list
-            nrows, ncols = gx.make_layout_from_list(groups)
+        # make new ncols and nrows based on the groups list
+        nrows, ncols = gx.make_layout_from_list(groups)
 
-            speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(
-                                    rows = nrows, cols = ncols, 
-                                    specs = speclist, 
-                                    subplot_titles = headers,
-                                    horizontal_spacing = hpad,
-                                    vertical_spacing = vpad
-                            )
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad
+                        )
 
 
-            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords.autoincrement()
 
-            fig.update_layout(
-                        title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
-                        height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                        width = aux.from_kwargs("width", None, kwargs, rm = True),
-                        margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
-                        autosize = True, 
-                        template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                        legend = {"title" : aux.from_kwargs("legend_title", "group name", kwargs, rm = True),
-                        },
-                    )
-
-            # set default axes labels
-            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
-            fig.update_xaxes(title_text = xlabel)
-            
-            ylabel = aux.from_kwargs("ylabel", "DeltaDeltaCt", kwargs, rm = True) 
-            fig.update_yaxes(title_text = ylabel)
-
-            idx = 0
-            for group, name in zip( groups, names ):
-                row, col = Coords.get()
-                tmp_df = data.query(f"group == {group}")
-                tmp_df = tmp_df.sort_values( x )
-
-                # now plot a new bar chart 
-                fig.add_trace(
-
-                    go.Bar(
-                        name = name,
-                        y = tmp_df[y], x = tmp_df[x], 
-                        error_y=dict(type='data', array = tmp_df[sterr]),
-                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
-                        **kwargs
-                    ), 
-
-                    row, col
+        fig.update_layout(
+                    title = kwargs.pop("title", "Results Preview", kwargs), 
+                    height = kwargs.pop("height", None, kwargs), 
+                    width = kwargs.pop("width", None, kwargs),
+                    margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                    autosize = True, 
+                    template = kwargs.pop("template", "plotly_white", kwargs),
+                    legend = {"title" : kwargs.pop("legend_title", "group name", kwargs),
+                    },
                 )
-                Coords.increment()
 
-                idx += 1
+        # set default axes labels
+        fig.update_xaxes(title_text = xlabel)
+        fig.update_yaxes(title_text = ylabel)
 
-            if show:
-                fig.show()
+        idx = 0
+        for group, name in zip( groups, names ):
+            row, col = Coords.get()
+            tmp_df = data.query(f"group == {group}")
+            tmp_df = tmp_df.sort_values( x )
 
-            # print("<<< Interactive Check >>>")
-            return fig 
-        except Exception as e: 
-            raise e 
+            # now plot a new bar chart 
+            fig.add_trace(
+
+                go.Bar(
+                    name = name,
+                    y = tmp_df[y], x = tmp_df[x], 
+                    error_y=dict(type='data', array = tmp_df[sterr]),
+                    hoverinfo = kwargs.pop("hoverinfo", "y", kwargs), 
+                    **kwargs
+                ), 
+
+                row, col
+            )
+
+            idx += 1
+
+        if show:
+            fig.show()
+
+        # print("<<< Interactive Check >>>")
+        return fig 
 
 
 
 
-
-class GroupDots(Plotter):
+class GroupDots(GroupSubplotsResults):
     """
     Generate a Preview of all results from all Assays in subplots, plotting individual values
     in a Dot Plot rather than Bar Plot.
@@ -2300,92 +2310,88 @@ class GroupDots(Plotter):
         ncols, nrows = gx.make_layout_from_list( groups )
 
         # get kwargs incompatible with the main plotting method
-        title = aux.from_kwargs("title", None, kwargs, rm = True)
-        headers = aux.from_kwargs("headers", names, kwargs, rm = True)
-        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
-        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
-        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
-        alpha = aux.from_kwargs("alpha", 1, kwargs, rm = True)
-        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
-        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
+        title = kwargs.pop("title", None)
+        headers = kwargs.pop("headers", names)
+        label_subplots = kwargs.pop("label_subplots", True)
+        start_character = kwargs.pop("labeltype", "A")
+        show_spines = kwargs.pop("frame", True)
+        show = kwargs.pop("show", True)
+        show_violins = kwargs.pop("violin", True)
+        rot = kwargs.pop("rot", None)
+        alpha = kwargs.pop("alpha", 1)
+        xlabel = kwargs.pop("xlabel", None)
+        ylabel = kwargs.pop("ylabel", None)
 
         # generate a custom color palette in case color kwarg is provided
         palette = gx.generate_palette(kwargs)
 
         # set a seaborn style
-        style = aux.from_kwargs("style", "dark", kwargs, rm = True)
+        style = kwargs.pop("style", "dark")
         sns.set_style( style )
 
         # make figure
-        figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
+        figsize = kwargs.pop("figsize", None)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
         fig.suptitle( title )
 
         # setup Coords
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+        Coords.autoincrement()
+
         idx = 0
         for group, name in zip( groups, headers ): 
-
-            try:
                 
-                # prepare a vertical bigtable format dataframe 
-                tmp_df = self._prepare_df(data, assays, group)
-                
-                # now plot a new violin chart 
-                subplot = Coords.subplot()
+            # prepare a vertical bigtable format dataframe 
+            tmp_df = self._prepare_df(data, assays, group)
+            
+            # now plot a new violin chart 
+            subplot = Coords.subplot()
 
-                if show_violins:
-                    sns.violinplot(
-                                    x = tmp_df[ "assay" ],
-                                    y = tmp_df[ "value" ],
-                                    color = None,
-                                    inner = None, 
-                                    palette = palette,
-                                    ax = subplot,
-
-                                )
-                    for i in subplot.collections:
-                        i.set_alpha( alpha * 0.3 )
-
-                sns.stripplot(
+            if show_violins:
+                sns.violinplot(
                                 x = tmp_df[ "assay" ],
                                 y = tmp_df[ "value" ],
+                                color = None,
+                                inner = None, 
                                 palette = palette,
-                                alpha = alpha,
                                 ax = subplot,
-                                **kwargs
+
                             )
-            
-                subplot.set(
-                            title = name,
-                            xlabel = xlabel,
-                            ylabel = ylabel,        
+                for i in subplot.collections:
+                    i.set_alpha( alpha * 0.3 )
+
+            sns.stripplot(
+                            x = tmp_df[ "assay" ],
+                            y = tmp_df[ "value" ],
+                            palette = palette,
+                            alpha = alpha,
+                            ax = subplot,
+                            **kwargs
                         )
-
-                # adjust xtick rotation   
-                if rot is not None: 
-                    align = "center" if rot == 0 else "left"
-                    plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
-
-                if not show_spines:
-                    subplot.spines["right"].set_visible(False)
-                    subplot.spines["top"].set_visible(False)
-                    subplot.spines["left"].set_linewidth(1.05)
-                    subplot.spines["bottom"].set_linewidth(1.05)
-
-                # add ABCD... label to subplot
-                if label_subplots:
-                    self._add_subplot_label(idx, subplot, start_character)         
-
-                Coords.increment()
-                idx += 1
-            except Exception as e:
-                raise e 
-                break
         
+            subplot.set(
+                        title = name,
+                        xlabel = xlabel,
+                        ylabel = ylabel,        
+                    )
+
+            # adjust xtick rotation   
+            if rot is not None: 
+                align = "center" if rot == 0 else "left"
+                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+
+            if not show_spines:
+                subplot.spines["right"].set_visible(False)
+                subplot.spines["top"].set_visible(False)
+                subplot.spines["left"].set_linewidth(1.05)
+                subplot.spines["bottom"].set_linewidth(1.05)
+
+            # add ABCD... label to subplot
+            if label_subplots:
+                self._add_subplot_label(idx, subplot, start_character)         
+
+            idx += 1
+            
         plt.tight_layout()
 
         if show:
@@ -2425,19 +2431,6 @@ class GroupDots(Plotter):
 
         return tmp_df
 
-    def _add_subplot_label(self, idx, subplot, start_character):
-        """
-        Adds A B C ... to upper left corner of a subplot...
-        It will start labelling at any arbitrary start_character
-        """
-        subplot_label = chr(ord(start_character)+idx)
-        subplot.annotate(
-                            xy = (-0.1,1.03), 
-                            text = subplot_label, 
-                            xycoords = "axes fraction",
-                            weight = "bold", fontsize = 12
-                        )
-
     def _interactive_plot(self, **kwargs):
         """
         The interactive Preview Results Figure
@@ -2458,105 +2451,104 @@ class GroupDots(Plotter):
         # make subplot layout
         ncols, nrows = gx.make_layout_from_list( groups )
 
-        try: 
-            # get incompaltible kwargs 
-            headers = aux.from_kwargs("headers", names, kwargs, rm = True)
-            show = aux.from_kwargs("show", True, kwargs, rm = True)
-            show_violins = aux.from_kwargs("violin", True, kwargs, rm = True)
+        # get incompaltible kwargs 
+        headers = kwargs.pop("headers", names)
+        show = kwargs.pop("show", True)
+        show_violins = kwargs.pop("violin", True)
+        hoverinfo =  kwargs.pop("hoverinfo", "y")
 
-            # setup padding
-            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
-            if isinstance(padding, (list, tuple)):
-                hpad, vpad = padding
-            else: 
-                hpad, vpad = padding, None
+        # setup padding
+        padding = kwargs.pop("padding", 0.1)
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
 
-            # make figure
-            speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(
-                                    rows = nrows, cols = ncols, 
-                                    specs = speclist, 
-                                    subplot_titles = headers,
-                                    horizontal_spacing = hpad,
-                                    vertical_spacing = vpad
-                            )
-
-            # setup subplot coords handling
-            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
-
-            # setup figure
-            fig.update_layout(
-                                title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
-                                height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                                width = aux.from_kwargs("width", None, kwargs, rm = True),
-                                margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
-                                autosize = True, 
-                                template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                                # legend = {  "title" : aux.from_kwargs("legend_title", "Assay", kwargs, rm = True),  },
-                                showlegend = False
-                            )
-
-            # set default axes labels
-            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
-            fig.update_xaxes(title_text = xlabel)
-            
-            ylabel = aux.from_kwargs("ylabel", "", kwargs, rm = True) 
-            fig.update_yaxes(title_text = ylabel)
-
-            idx = 0
-            for group, name in zip( groups, headers ):
-                
-                # prepare a vertical bigtable format dataframe 
-                tmp_df = self._prepare_df(data, assays, group)
-
-                row, col = Coords.get()
-
-                # now plot a new violin chart 
-                fig.add_trace(
-
-                    go.Violin(
-                                    name = name,
-                                    x = tmp_df[ "assay" ], 
-                                    y = tmp_df[ "value" ], 
-                                    points = "all",
-                                    pointpos = 0,
-                                    hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
-                                    **kwargs
-                            ), 
-                                    row, col
+        # make figure
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad
                         )
 
-                # remove violins if not desired (leaving only dot plot)
-                if not show_violins: 
-                    fig.update_traces(
-                                        fillcolor="rgba(0,0,0,0)", 
-                                        line_width = 0, 
-                                        selector=dict(type='violin'),
-                                    )
+        # setup subplot coords handling
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords.autoincrement()
 
+        # setup figure
+        fig.update_layout(
+                            title = kwargs.pop("title", "Results Preview"), 
+                            height = kwargs.pop("height", None), 
+                            width = kwargs.pop("width", None),
+                            margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                            autosize = True, 
+                            template = kwargs.pop("template", "plotly_white"),
+                            # legend = {  "title" : kwargs.pop("legend_title", "Assay", kwargs),  },
+                            showlegend = False
+                        )
 
-                # update x axis to categorical group names
-                fig.update_layout(
-                                    { 
-                                        f"xaxis{idx+1}" : dict(
-                                                                tickmode = 'array',
-                                                                tickvals = ticks,
-                                                                ticktext = assays,
-                                                        )         
-                                    }
+        # set default axes labels
+        xlabel = kwargs.pop("xlabel", "") 
+        fig.update_xaxes(title_text = xlabel)
+        
+        ylabel = kwargs.pop("ylabel", "") 
+        fig.update_yaxes(title_text = ylabel)
+
+        idx = 0
+        for group, name in zip( groups, headers ):
+            
+            # prepare a vertical bigtable format dataframe 
+            tmp_df = self._prepare_df(data, assays, group)
+
+            row, col = Coords.get()
+
+            # now plot a new violin chart 
+            fig.add_trace(
+
+                go.Violin(
+                                name = name,
+                                x = tmp_df[ "assay" ], 
+                                y = tmp_df[ "value" ], 
+                                points = "all",
+                                pointpos = 0,
+                                hoverinfo = hoverinfo, 
+                                **kwargs
+                        ), 
+                                row, col
+                    )
+
+            # remove violins if not desired (leaving only dot plot)
+            if not show_violins: 
+                fig.update_traces(
+                                    fillcolor="rgba(0,0,0,0)", 
+                                    line_width = 0, 
+                                    selector=dict(type='violin'),
                                 )
 
-                Coords.increment()
 
-                idx += 1
+            # update x axis to categorical group names
+            fig.update_layout(
+                                { 
+                                    f"xaxis{idx+1}" : dict(
+                                                            tickmode = 'array',
+                                                            tickvals = ticks,
+                                                            ticktext = assays,
+                                                    )         
+                                }
+                            )
 
-            if show:
-                fig.show()
+            idx += 1
 
-            # print("<<< Interactive Check >>>")
-            return fig 
-        except Exception as e: 
-            raise e 
+        if show:
+            fig.show()
+
+        # print("<<< Interactive Check >>>")
+        return fig 
+   
+   
 
 
 class EfficiencyLines(Plotter):
@@ -2688,34 +2680,36 @@ class EfficiencyLines(Plotter):
         data = self._Calibrator._computed_values
         headers = list(  data.keys()  )
 
-        title = aux.from_kwargs("title", None, kwargs, rm = True)
-        headers = aux.from_kwargs("headers", headers, kwargs, rm = True)
-        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
-        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+        title = kwargs.pop("title", None, kwargs)
+        headers = kwargs.pop("headers", headers, kwargs)
+        label_subplots = kwargs.pop("label_subplots", True, kwargs)
+        start_character = kwargs.pop("labeltype", "A", kwargs)
+        show_spines = kwargs.pop("frame", True, kwargs)
+        show = kwargs.pop("show", True, kwargs)
+        rot = kwargs.pop("rot", None, kwargs)
         
         palette, is_palette = gx.generate_palette(kwargs, True )
 
-        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True)
-        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True)
+        xlabel = kwargs.pop("xlabel", None, kwargs)
+        ylabel = kwargs.pop("ylabel", None, kwargs)
 
         # set a seaborn style
-        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        style = kwargs.pop("style", "ticks", kwargs)
         sns.set_style( style )
 
-        edgecolor = aux.from_kwargs("edgecolor", "white", kwargs, rm = True)
-        edgewidth = aux.from_kwargs("edgewidth", None, kwargs, rm = True)
+        edgecolor = kwargs.pop("edgecolor", "white", kwargs)
+        edgewidth = kwargs.pop("edgewidth", None, kwargs)
 
-        linecolor = aux.from_kwargs("linecolor", "black", kwargs, rm = True)
-        linewidth = aux.from_kwargs("linewidth", 1, kwargs, rm = True)
+        linecolor = kwargs.pop("linecolor", "black", kwargs)
+        linewidth = kwargs.pop("linewidth", 1, kwargs)
 
         ncols, nrows = gx.make_layout_from_list( headers )
 
         fig, axs = plt.subplots( nrows = nrows, ncols = ncols)
         fig.suptitle( title )
+
         Coords = gx.AxesCoords( fig, axs, subplots = (nrows, ncols) )
+        Coords.autoincrement()
 
         idx = 0 
         for id, obj in data.items(): 
@@ -2794,7 +2788,6 @@ class EfficiencyLines(Plotter):
                 sns.despine()
             
             idx += 1
-            Coords.increment()
 
         plt.tight_layout()
         if show: 
@@ -2810,10 +2803,10 @@ class EfficiencyLines(Plotter):
         data = self._Calibrator._computed_values
         headers = list(  data.keys()  )
 
-        title = aux.from_kwargs("title", None, kwargs, rm = True)
-        headers = aux.from_kwargs("headers", headers, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
+        title = kwargs.pop("title", None, kwargs)
+        headers = kwargs.pop("headers", headers, kwargs)
+        show = kwargs.pop("show", True, kwargs)
+        padding = kwargs.pop("padding", 0.1, kwargs)
 
         if isinstance(padding, (list, tuple)):
             hpad, vpad = padding
@@ -2834,22 +2827,22 @@ class EfficiencyLines(Plotter):
 
 
         Coords = gx.AxesCoords(fig, [], (ncols, nrows))
-
+        Coords.autoincrement()
         fig.update_layout(
                     title = title, 
-                    height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                    width = aux.from_kwargs("width", None, kwargs, rm = True),
+                    height = kwargs.pop("height", None, kwargs), 
+                    width = kwargs.pop("width", None, kwargs),
                     margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
                     autosize = True, 
-                    template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                    # legend = {"title" : aux.from_kwargs("legend_title", "Assay", kwargs, rm = True), },
+                    template = kwargs.pop("template", "plotly_white", kwargs),
+                    # legend = {"title" : kwargs.pop("legend_title", "Assay", kwargs), },
                 )
 
         # set default axes labels
-        xlabel = aux.from_kwargs("xlabel", None, kwargs, rm = True) 
+        xlabel = kwargs.pop("xlabel", None, kwargs) 
         fig.update_xaxes(title_text = xlabel)
         
-        ylabel = aux.from_kwargs("ylabel", None, kwargs, rm = True) 
+        ylabel = kwargs.pop("ylabel", None, kwargs) 
         fig.update_yaxes(title_text = ylabel)
 
         Coords = gx.AxesCoords(fig, [], (ncols, nrows))
@@ -2874,7 +2867,7 @@ class EfficiencyLines(Plotter):
                                 y = cts,  
                                 mode = "markers",
                                 showlegend = False,
-                                hoverinfo = aux.from_kwargs("hoverinfo", "y+x", kwargs, rm = True), 
+                                hoverinfo = kwargs.pop("hoverinfo", "y+x", kwargs), 
                                 **kwargs
                             ), 
                             row, col
@@ -2913,8 +2906,6 @@ class EfficiencyLines(Plotter):
                                     showarrow = False
                                 )
                             )
-
-            Coords.increment()
             idx += 1
 
         if show: 
