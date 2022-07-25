@@ -195,7 +195,7 @@ import qpcr.main as main
 import qpcr._auxiliary.graphical as gx
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux 
-import qpcr._auxiliary.warnings as wa
+import qpcr._auxiliary.warnings as aw
 import pandas as pd 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -204,7 +204,6 @@ from plotly.subplots import make_subplots
 import plotly
 import seaborn as sns 
 import numpy as np 
-import logging
 
 logger = aux.default_logger()
 
@@ -236,7 +235,29 @@ raw_col_names = defaults.raw_col_names
 #       This is primarily because the Plotters must be set up to be either static or interactive, while 
 #       the other classes can decide which plotmode to call on.
 
-class Plotter:
+class _Base(aux._ID):
+    """
+    The Base class for Plotters and Wrappers
+    """
+    __slots__ = ["_MODE"]
+    def __init__(self, mode = None ):
+        super().__init__()
+        self._MODE = defaults.plotmode if mode is None else mode
+        self._id = self.__class__.__name__
+    
+    def suffix(self):
+        """
+        Returns
+        ------- 
+        suffix : str
+            The appropriate file suffix for save (html for "interactive" or jpg for "static" figures)
+        """
+        suffix = "jpg" if self._MODE == "static" else "html"
+        return suffix
+
+
+
+class Plotter(_Base):
     """
     A superclass that handles Data Linking and Parameter setup for FigureClasses
     (not for End-User usage)
@@ -246,42 +267,31 @@ class Plotter:
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).    
     """
-    __slots__ = "_default_params", "_data", "_PARAMS", "_Results", "_data", "_rep_data", "_id", "_MODE", "_fig", "_static_default", "_interactive_default", "_default_x", "_default_y", "_default_sterr", "__dict__"
+    __slots__ = "_default_params", "_data", "_PARAMS", "_Results", "_data", "_fig", "_static_default", "_interactive_default", "_default_x", "_default_y", "_default_sterr"
         
     def __init__(self, mode = None):
+        super().__init__(mode)
+        
         self._default_params = None
-        self._PARAMS = {} #: _PARAMS will store the plotting parameter kwargs from both _default_params and any additional user specified parameters
-        self._Results = None
-        self._data = None
-        self._rep_data = None
-        self._id = type(self).__name__
-        self._MODE = defaults.plotmode if mode is None else mode
+        self._PARAMS = {}
+
+        self._obj = None # the data source object
+        self._data = None # the data to plot (df)
+        
         self._fig = None
         self._set_plot()
 
-    def link(self, Results:(main.Results or pd.DataFrame)):
+    def link(self, obj):
         """
-        Links a Results object or pandas DataFrame of the same architecture
-        as one handled by a Results object to the Plotter. 
-        Note, that this will replace any previously linked data!
+        Links a qpcr object as data source.
 
         Parameters
         ----------
-        Results : qpcr.Results or pd.DataFrame
-            A qpcr.Results Object or a pandas DataFrame of the same architecture.
+        obj : some data source object
+            A qpcr object.
         """
-        
-        if aux.same_type(Results, main.Results()):
-            self._Results = Results
-            self._data = self._Results.stats()
-            self._rep_data = self._Results.get()
-        elif isinstance(Results, pd.DataFrame):
-            self._Results = None
-            self._data = Results
-        else:
-            e = wa.PlotterError( "unknown_data", obj = Results )
-            logger.critical( e )
-            raise e 
+        print( "Define here a dedicated method to linking the respective data source object(s)" )
+        self._obj = obj
 
     def plot(self, **kwargs):
         """
@@ -301,25 +311,6 @@ class Plotter:
         fig = self._plot(**total_kwargs)
         self._fig = fig
         return fig
-
-    def id(self, id:str = None):
-        """
-        Set a unique Id, by default the Classname will be used.
-
-        Parameters
-        ----------
-        id : str
-            A unique identifier for the Plotter object
-        
-        Returns
-        -------
-        id 
-            The Plotter Id (if no id keyword was entered)
-        """
-        if id is not None:
-            self._id = id
-        else:
-            return self._id
 
     def get(self):
         """
@@ -399,22 +390,13 @@ class Plotter:
             Any arbitrary keyword arguments for the respective figure saving method. 
         """
         if self._fig is None:
-            wa.SoftWarning("Plotter:no_fig_yet")
+            e = aw.PlotterError( "no_fig_yet" )
+            logger.info( e )
         else:
             if self._MODE == "static":
                 self._fig.savefig(filename, bbox_inches = 'tight', **kwargs)
             elif self._MODE == "interactive":
                 plotly.offline.plot(self._fig, filename=filename, **kwargs)
-
-    def suffix(self):
-        """
-        Returns
-        ------- 
-        suffix : str
-            The appropriate file suffix for save (html for "interactive" or jpg for "static" figures)
-        """
-        suffix = "jpg" if self._MODE == "static" else "html"
-        return suffix
 
     def _setup_default_params(self, static:dict, interactive:dict):
         """
@@ -427,7 +409,7 @@ class Plotter:
         """
         Sets self._plot either interactive or static depending on MODe
         """
-        self._plot  = self._static_plot if self._MODE == "static" else self._interactive_plot
+        self._plot = self._static_plot if self._MODE == "static" else self._interactive_plot
         prev_default = self._default_params
         self._default_params = self._static_default if self._MODE == "static" else self._interactive_default
 
@@ -450,50 +432,6 @@ class Plotter:
         print("The plot function that will handle interactive plotting...")
         print("Surprised to see this?, \nPerhaps your desired plotting methods are not named properly. Make sure to name your method _interactive_plot()!")
 
-    def _prep_properties(self, kwargs):
-        """
-        Setup ncols, nrows, subplot titles (headers), x, y, and sterr, columns for figure...
-        """
-        self._setup_default_plot_cols()
-        data = self.get()
-
-        # setup reference column and figure subplots
-        ref_col = aux.from_kwargs("key", "assay", kwargs, rm=True)
-        ncols, nrows = aux.from_kwargs("subplots", 
-                                        gx.make_layout(data, ref_col), 
-                                        kwargs, rm=True
-                                       )
-
-        # transposing currently not supported...
-        # if aux.from_kwargs("transpose", False, kwargs, rm = True):
-        #     ncols, nrows = nrows, ncols
-
-        headers = aux.sorted_set(data[ref_col])
-
-        x = aux.from_kwargs("x", self._default_x, kwargs, rm = True)
-        y = aux.from_kwargs("y", self._default_y, kwargs, rm = True)
-        sterr = aux.from_kwargs("sterr", self._default_sterr, kwargs, rm = True)
-        
-        # the query to be used if group or group_name is ref_col
-        query = "{ref_col} == '{q}'" if isinstance(headers[0], str) else "{ref_col} == {q}"
-
-        return ref_col,ncols,nrows, headers, x, y, sterr, query
-
-    def _setup_default_plot_cols(self):
-        """
-        Sets default columns for x and y in barcharts,
-        default x
-        - "group_name" column if present 
-        - "group" Otherwise
-        default y
-        - "mean"
-        default sterr
-        - "stdev"
-        """
-        columns = self._data.columns
-        self._default_x = "group_name" if "group_name" in columns else "group"
-        self._default_y = "mean"
-        self._default_sterr = "stdev"
 
     def _add_subplot_label(self, idx, subplot, start_character):
         """
@@ -510,7 +448,97 @@ class Plotter:
 
 # The Wrapper essentially defines public methods from Plotter but 
 # replaces self with self._Plotter instead...
-class Wrapper:
+
+class ResultsPlotter(Plotter):
+    """
+    A super class for FigureClasses that work with Results objects.
+    """
+    __slots__ = ["_rep_data"]
+    def __init__(self, mode : str ):
+        super().__init__(mode)
+        self._rep_data = None # replicate data 
+
+    def link(self, obj:(main.Results or pd.DataFrame)):
+        """
+        Links a qpcr object or pandas DataFrame of the same architecture
+        as one handled by a Results object to the Plotter. 
+        Note, that this will replace any previously linked data!
+
+        Parameters
+        ----------
+        obj : qpcr.Results or pd.DataFrame
+            A qpcr.Results object or a pandas DataFrame of the same architecture.
+        """
+        
+        if isinstance(obj, main.Results):
+            self._obj = obj
+            self._data = self._obj.stats()
+            self._rep_data = self._obj.get()
+        elif isinstance(obj, pd.DataFrame):
+            self._obj = None
+            self._data = obj
+        else:
+            e = aw.PlotterError( "unknown_data", obj = obj )
+            logger.critical( e )
+            raise e 
+
+   
+class AssaySubplotsResults(ResultsPlotter):
+    """
+    A super class for Figureclasses that use a Results object and operate assay-wise
+    (different assays in different subplots)
+    """
+    def __init__(self, mode : str ):
+        super().__init__(mode)
+    
+    def _setup_default_plot_cols(self):
+        """
+        Sets default columns for x and y in barcharts,
+        default x
+        - "group_name" column if present 
+        - "group" Otherwise
+        default y
+        - "mean"
+        default sterr
+        - "stdev"
+        """
+        columns = self._data.columns
+        self._default_x = "group_name" if "group_name" in columns else "group"
+        
+        self._default_y = "mean"
+        self._default_sterr = "stdev"
+
+    def _prep_properties(self, kwargs):
+        """
+        Setup ncols, nrows, subplot titles (headers), x, y, and sterr, columns for figure...
+        """
+        self._setup_default_plot_cols()
+        data = self.get()
+
+        # setup reference column and figure subplots
+        ref_col = kwargs.pop( "key", "assay" )
+        ncols, nrows = kwargs.pop("subplots", gx.make_layout(data, ref_col) )
+
+        # transposing currently not supported...
+        # if aux.from_kwargs("transpose", False, kwargs, rm = True):
+        #     ncols, nrows = nrows, ncols
+
+        headers = aux.sorted_set( data[ref_col] )
+
+        x = kwargs.pop( "x", self._default_x )
+        y = kwargs.pop( "y", self._default_y )
+        sterr = kwargs.pop( "sterr", self._default_sterr )
+
+        xlabel = kwargs.pop("xlabel", None)
+        ylabel = kwargs.pop("ylabel", None)
+
+        
+        # the query to be used if group or group_name is ref_col
+        query = "{ref_col} == '{q}'" if isinstance(headers[0], str) else "{ref_col} == {q}"
+
+        return ref_col,ncols,nrows, headers, x, y, sterr, query, xlabel, ylabel
+
+class Wrapper(_Base):
     """
     A superclass that allows to make wrappers for multiple Plotters 
     (not for End-User usage).
@@ -524,10 +552,9 @@ class Wrapper:
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly). 
 
     """
-    __slots__ = "_Plotter", "_id", "__dict__"
+    __slots__ = "_Plotter"
 
     def __init__(self, kind : str, mode : str):
-
         self._Plotter = None
         self._id = type(self).__name__
 
@@ -550,19 +577,17 @@ class Wrapper:
         return plotter
 
 
-    def link(self, Results:(main.Results or pd.DataFrame)):
+    def link(self, obj):
         """
-        Links a Results object or pandas DataFrame of the same architecture
-        as one handled by a Results object to the Plotter. 
-        Note, that this will replace any previously linked data!
+        Links a data obj as data source.
 
         Parameters
         ----------
-        Results : qpcr.Results or pd.DataFrame
-            A qpcr.Results Object or a pandas DataFrame of the same architecture.
+        obj 
+            A qpcr obj to use as data source.
         """
         plotter = self._Plotter
-        plotter.link( Results )
+        plotter.link( obj )
 
 
     def plot(self, **kwargs):
@@ -581,25 +606,6 @@ class Wrapper:
         """
         fig = self._Plotter.plot( **kwargs )
         return fig 
-
-    def id(self, id:str = None):
-        """
-        Set a unique Id, by default the Classname will be used.
-
-        Parameters
-        ----------
-        id : str
-            A unique identifier for the Plotter object
-        
-        Returns
-        -------
-        id 
-            The Plotter Id (if no id keyword was entered)
-        """
-        if id is not None:
-            self._id = id
-        else:
-            return self._id
 
     def get(self):
         """
@@ -680,26 +686,6 @@ class Wrapper:
         suffix = self._Plotter.suffix()
         return suffix
 
-    def id(self, id:str = None):
-        """
-        Set a unique Id, by default the Classname will be used.
-
-        Parameters
-        ----------
-        id : str
-            A unique identifier for the Plotter object
-        
-        Returns
-        -------
-        id 
-            The Plotter Id (if no id keyword was entered)
-        """
-        if id is not None:
-            self._id = id
-        else:
-            return self._id
-
-
 class PreviewResults(Wrapper):
     """
     Generate a Preview of all results from all Assays in subplots.
@@ -736,7 +722,7 @@ class PreviewResults(Wrapper):
         self._Plotter = self._Plotter( mode = mode )
 
 
-class AssayBars(Plotter):
+class AssayBars(AssaySubplotsResults):
     """
     Generate a Preview of all results from all Assays in subplots as Bar Charts.
     Each assay will be shown in a separate subplot.
@@ -844,111 +830,94 @@ class AssayBars(Plotter):
         kwargs = self.update_params(kwargs)
         data = self.get()
 
-        ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)       
+        ref_col, ncols, nrows, headings, x, y, sterr, query, xlabel, ylabel = self._prep_properties(kwargs)       
 
-        title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True)
-        headers = aux.from_kwargs("headers", None, kwargs, rm = True)
-        label_subplots = aux.from_kwargs("label_subplots", True, kwargs, rm = True)
-        start_character = aux.from_kwargs("labeltype", "A", kwargs, rm = True)
-        show_spines = aux.from_kwargs("frame", True, kwargs, rm = True)
-        show = aux.from_kwargs("show", True, kwargs, rm = True)
-        rot = aux.from_kwargs("rot", None, kwargs, rm = True)
+        title = kwargs.pop("title", "Results Preview")
+        headers = kwargs.pop("headers", None)
+        label_subplots = kwargs.pop("label_subplots", True)
+        start_character = kwargs.pop("labeltype", "A")
+        show_spines = kwargs.pop("frame", True)
+        show = kwargs.pop("show", False)
+        rot = kwargs.pop("rot", None)
 
         palette = gx.generate_palette(kwargs)
 
         # set a seaborn style
-        style = aux.from_kwargs("style", "ticks", kwargs, rm = True)
+        style = kwargs.pop("style", "ticks")
         sns.set_style( style )
 
-        edgecolor = aux.from_kwargs("edgecolor", "white", kwargs, rm = True)
-        edgewidth = aux.from_kwargs("edgewidth", None, kwargs, rm = True)
+        edgecolor = kwargs.pop("edgecolor", "white")
+        edgewidth = kwargs.pop("edgewidth", None)
 
         if edgewidth is None: 
-            edgewidth = aux.from_kwargs("linewidth", 1, kwargs, rm = True) 
+            edgewidth = kwargs.pop("linewidth", 1) 
         else: 
-            aux.from_kwargs("linewidth", None, kwargs, rm = True )
+            kwargs.pop("linewidth", None)
 
-        figsize = aux.from_kwargs("figsize", None, kwargs, rm = True)
+        figsize = kwargs.pop("figsize", None)
         fig, axs = plt.subplots(nrows = nrows, ncols = ncols, figsize = figsize)
         fig.suptitle( title )
 
         # setup Coords
         Coords = gx.AxesCoords(fig, axs, (nrows, ncols))
+        Coords.autoincrement()
+
         idx = 0
-        for assay in headings: 
-            try: 
-                q = query.format(ref_col = ref_col, q = assay)
-                tmp_df = data.query(q)
-                tmp_df = tmp_df.sort_values("group")
+        # for assay in headings: 
+        #     q = query.format(ref_col = ref_col, q = assay)
+        #     tmp_df = data.query(q)
+        #     tmp_df = tmp_df.sort_values("group")
+        for assay, tmp_df in data.groupby( ref_col ):
 
+            # now plot a new bar chart 
+            subplot = Coords.subplot()
 
-                # now plot a new bar chart 
-                subplot = Coords.subplot()
-
-                tmp_df.plot.bar(
-                                x = x, y = y, 
-                                ax = subplot,
-                                edgecolor = edgecolor,
-                                linewidth = edgewidth,
-                                color = palette,
-                                **kwargs
-                            )
-
-                subplot.errorbar(
-                                x = tmp_df[x], y = tmp_df[y], 
-                                yerr = tmp_df[sterr], 
-                                fmt = ".", markersize = 0, capsize = 3, 
-                                ecolor = aux.from_kwargs("ecolor", "black", kwargs),
-                            )
-            
-                subplot.set(
-                            title = assay if headers is None else headers[idx],
-                            xlabel = aux.from_kwargs("xlabel", None, kwargs),
-                            ylabel = aux.from_kwargs("ylabel", "$\Delta\Delta$Ct", kwargs),        
+            tmp_df.plot.bar(
+                            x = x, y = y, 
+                            ax = subplot,
+                            edgecolor = edgecolor,
+                            linewidth = edgewidth,
+                            color = palette,
+                            **kwargs
                         )
 
-                if rot is not None: 
-                    align = "center" if rot == 0 else "left"
-                    plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+            subplot.errorbar(
+                            x = tmp_df[x], y = tmp_df[y], 
+                            yerr = tmp_df[sterr], 
+                            fmt = ".", markersize = 0, capsize = 3, 
+                            ecolor = aux.from_kwargs("ecolor", "black", kwargs),
+                        )
+        
+            subplot.set(
+                        title = assay if headers is None else headers[idx],
+                        xlabel = xlabel,
+                        ylabel = ylabel,        
+                    )
 
-                if not show_spines:
-                    subplot.spines["right"].set_visible(False)
-                    subplot.spines["top"].set_visible(False)
-                    subplot.spines["left"].set_linewidth(1.05)
-                    subplot.spines["bottom"].set_linewidth(1.05)
+            if rot is not None: 
+                align = "center" if rot == 0 else "left"
+                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
 
-                # add ABCD... label to subplot
-                if label_subplots:
-                    self._add_subplot_label(idx, subplot, start_character)         
+            if not show_spines:
+                subplot.spines["right"].set_visible(False)
+                subplot.spines["top"].set_visible(False)
+                subplot.spines["left"].set_linewidth(1.05)
+                subplot.spines["bottom"].set_linewidth(1.05)
 
-                Coords.increment()
-                idx += 1
-            except Exception as e:
-                raise e 
-                break
+            # add ABCD... label to subplot
+            if label_subplots:
+                self._add_subplot_label(idx, subplot, start_character)         
+
+            idx += 1
         
         plt.tight_layout()
 
-        
         if show:
             plt.show()
 
         # print("<<< Static Check >>>")
 
         return fig 
-
-    # def _add_subplot_label(self, idx, subplot, start_character):
-    #     """
-    #     Adds A B C ... to upper left corner of a subplot...
-    #     It will start labelling at any arbitrary start_character
-    #     """
-    #     subplot_label = chr(ord(start_character)+idx)
-    #     subplot.annotate(
-    #                 xy = (-0.1,1.03), 
-    #                 text = subplot_label, 
-    #                 xycoords = "axes fraction",
-    #                 weight = "bold", fontsize = 12
-    #             )
 
     def _interactive_plot(self, **kwargs):
         """
@@ -958,78 +927,78 @@ class AssayBars(Plotter):
         kwargs = self.update_params(kwargs)
         data = self.get()
 
-        try: 
-            # setup figure framework variables that have to be removed from 
-            ref_col, ncols, nrows, headings, x, y, sterr, query = self._prep_properties(kwargs)
-            headers = aux.from_kwargs("headers", headings, kwargs, rm = True)
-            show = aux.from_kwargs("show", True, kwargs, rm = True)
-            padding = aux.from_kwargs("padding", 0.1, kwargs, rm = True)
-
-            if isinstance(padding, (list, tuple)):
-                hpad, vpad = padding
-            else: 
-                hpad, vpad = padding, None
-
-            speclist = gx.make_speclist(nrows, ncols, "xy")
-            fig = make_subplots(
-                                    rows = nrows, cols = ncols, 
-                                    specs = speclist, 
-                                    subplot_titles = headers,
-                                    horizontal_spacing = hpad,
-                                    vertical_spacing = vpad
-                            )
+        # setup figure framework variables that have to be removed from 
+        ref_col, ncols, nrows, headings, x, y, sterr, query, xlabel, ylabel = self._prep_properties(kwargs)
+        headers = kwargs.pop("headers", headings)
+        show = kwargs.pop("show", True)
+        padding = kwargs.pop("padding", 0.1)
+        hoverinfo = kwargs.pop("hoverinfo", "y")
 
 
-            Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        if isinstance(padding, (list, tuple)):
+            hpad, vpad = padding
+        else: 
+            hpad, vpad = padding, None
 
-            fig.update_layout(
-                        title = aux.from_kwargs("title", "Results Preview", kwargs, rm = True), 
-                        height = aux.from_kwargs("height", None, kwargs, rm = True), 
-                        width = aux.from_kwargs("width", None, kwargs, rm = True),
-                        margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
-                        autosize = True, 
-                        template = aux.from_kwargs("template", "plotly_white", kwargs, rm = True),
-                        legend = {"title" : aux.from_kwargs("legend_title", ref_col, kwargs, rm = True),
-                        },
-                    )
+        speclist = gx.make_speclist(nrows, ncols, "xy")
+        fig = make_subplots(
+                                rows = nrows, cols = ncols, 
+                                specs = speclist, 
+                                subplot_titles = headers,
+                                horizontal_spacing = hpad,
+                                vertical_spacing = vpad
+                        )
 
-            # set default axes labels
-            xlabel = aux.from_kwargs("xlabel", "", kwargs, rm = True) 
-            fig.update_xaxes(title_text = xlabel)
-            
-            ylabel = aux.from_kwargs("ylabel", "DeltaDeltaCt", kwargs, rm = True) 
-            fig.update_yaxes(title_text = ylabel)
 
-            idx = 0
-            for assay in headings:
-                row, col = Coords.get()
-                tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
-                tmp_df = tmp_df.sort_values("group")
+        Coords = gx.AxesCoords(fig, [], (ncols, nrows))
+        Coords.autoincrement()
+        
+        fig.update_layout(
+                            title = kwargs.pop("title", "Results Preview"), 
+                            height = kwargs.pop("height", None), 
+                            width = kwargs.pop("width", None),
+                            margin = {"autoexpand": True, "pad" : 0, "b": 1, "t": 50}, 
+                            autosize = True, 
+                            template = kwargs.pop("template", "plotly_white"),
+                            legend = {"title" : kwargs.pop("legend_title", ref_col),
+                            },
+                        )
 
-                # now plot a new bar chart 
-                fig.add_trace(
+        # set default axes labels
+        fig.update_xaxes(title_text = xlabel)
+        fig.update_yaxes(title_text = ylabel)
 
-                    go.Bar(
-                        name = assay,
-                        y = tmp_df[y], x = tmp_df[x], 
-                        error_y=dict(type='data', array = tmp_df[sterr]),
-                        hoverinfo = aux.from_kwargs("hoverinfo", "y", kwargs, rm = True), 
-                        **kwargs
-                    ), 
 
-                    row, col
-                )
-                Coords.increment()
+        idx = 0
+        # for assay in headings:
+        for assay, tmp_df in data.groupby( ref_col ):
+            row, col = Coords.get()
+            # tmp_df = data.query(query.format(ref_col = ref_col, q = assay))
+            # tmp_df = tmp_df.sort_values("group")
 
-                idx += 1
+            # now plot a new bar chart 
+            fig.add_trace(
 
-            if show:
-                fig.show()
+                go.Bar(
+                    name = assay,
+                    y = tmp_df[y], x = tmp_df[x], 
+                    error_y=dict(type='data', array = tmp_df[sterr]),
+                    hoverinfo = hoverinfo, 
+                    **kwargs
+                ), 
 
-            # print("<<< Interactive Check >>>")
-            return fig 
-        except Exception as e: 
-            raise e 
+                row, col
+            )
+
+            idx += 1
+
+        if show:
+            fig.show()
+
+        # print("<<< Interactive Check >>>")
+        return fig 
+        
+        
 
 
 class ReplicateBoxPlot(Plotter):
@@ -1132,15 +1101,15 @@ class ReplicateBoxPlot(Plotter):
             A qpcr.Assay object.
         """
         if type(Assay).__name__ == "Assay" :
-            self._Results = Assay
-            data = self._Results.get( copy = True )
+            self._obj = Assay
+            data = self._obj.get( copy = True )
         else:
-            e = wa.PlotterError("unknown_data", obj = Assay )
+            e = aw.PlotterError("unknown_data", obj = Assay )
             logger.critical( e )
             raise e
 
         # add itentifier column
-        data["assay"] = [self._Results.id() for i in range(len(data))]
+        data["assay"] = [self._obj.id() for i in range(len(data))]
 
         if self._data is None: 
             self._data = data
