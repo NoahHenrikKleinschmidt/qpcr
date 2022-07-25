@@ -522,7 +522,9 @@ Prep.Function: \t{self._norm_func.__name__}
                 # UPDATE: that's probably due to the way we import it without
                 # the whole module stuff in front. Anyway, this one works and
                 # it should be fine for our purposes although it's a bit hacky...
-                if type(assay).__name__ == "Assay" :
+                if type(assay).__name__ == "Assay":
+                    if assay.id() in [ i.id() for i in self._Assays ]:
+                        return
                     self._Assays.append(assay)
                 else: 
                     e = aw.NormaliserError( "unknown_data", s = assay )
@@ -536,8 +538,9 @@ Prep.Function: \t{self._norm_func.__name__}
             for normaliser in normalisers:
                 # if aux.same_type(normaliser, Assay()):
                 if type(normaliser).__name__ == "Assay" :
+                    if normaliser.id() in [ i.id() for i in self._Normalisers ]:
+                        return
                     self._Normalisers.append(normaliser)
-
                 else: 
                     e = aw.NormaliserError( "norm_unknown_data", s = normaliser )
                     logger.error( e )
