@@ -1,6 +1,10 @@
 """
 This defines the TTests class which performs multiple pairwise t-tests on the groups or assays of a qpcr class.
-The results are stored in a number `PairwiseComparison` objects.
+Two modes are supported: ``groupwise`` and ``assaywise``. In `assaywise` mode, the t-tests are performed to compare the groups within each data column (assay) with each other.
+In `groupwise` mode, the t-tests are performed to compare the data columns within each group of the dataframe overall.
+P-values are corrected for multiple testing using the Benjamini-Hochberg procedure.
+
+
 """
 
 import qpcr.defaults as defaults
@@ -19,17 +23,17 @@ logger = aux.default_logger()
 class PairwiseTests(aux._ID):
     """
     Performs statistical evaluations of Results using pairwise t-tests.
-    Two modes are supported: ``assaywise`` and ``groupwise``.
+    Two modes are supported: ``groupwise`` and ``assaywise``.
 
-    In `groupwise` mode, the t-tests are performed to compare the groups within each data column with each other.
-    In `assaywise` mode, the t-tests are performed to compare the data columns within each group of the dataframe overall.
+    In `assaywise` mode, the t-tests are performed to compare the groups within each data column (assay) with each other.
+    In `groupwise` mode, the t-tests are performed to compare the data columns within each group of the dataframe overall.
     """
     def __init__(self, id : str = None):
         super().__init__()
         self._id = id
         self._obj = None
-        self.groupwise_results = None
         self.assaywise_results = None
+        self.groupwise_results = None
         self._results = None
         self._effect_size_func = self._default_effect_size_func
     
@@ -63,7 +67,7 @@ class PairwiseTests(aux._ID):
         self._effect_size_func = f
 
                   
-    def groupwise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list or dict) = None, columns : list = None, **kwargs ):
+    def assaywise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list or dict) = None, columns : list = None, **kwargs ):
         """
         Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `KO-HNRNPL` but not `ctrl-SRSF11`. 
@@ -97,7 +101,7 @@ class PairwiseTests(aux._ID):
             A collection of ``PairwiseComparison`` objects for each assay in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
-            return [ self.groupwise_ttests( i, groups, columns, **kwargs ) for i in obj ]
+            return [ self.assaywise_ttests( i, groups, columns, **kwargs ) for i in obj ]
 
         if obj is not None: 
             self.link(obj)
@@ -119,13 +123,13 @@ class PairwiseTests(aux._ID):
 
         logger.debug( f"{labels=}" )
         # check the ref column to use
-        ref_col = self._groupwise_get_ref_col(groups)
+        ref_col = self._assaywise_get_ref_col(groups)
 
         # generate subsets for each data column to pair-wise evaluate the groups
         subsets = ( df[ [ref_col, i] ] for i in columns )
         
         # setup a dictionary for the overall results
-        self.groupwise_results = {}
+        self.assaywise_results = {}
         
         for subset in subsets:
             
@@ -143,14 +147,14 @@ class PairwiseTests(aux._ID):
             # assemble results and store
             r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, statistic = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
-            self.groupwise_results[name] = r
+            self.assaywise_results[name] = r
 
-        self.groupwise_results = Comparisons.ComparisonsCollection( self.groupwise_results )           
-        self._results = self.groupwise_results
-        return self.groupwise_results
+        self.assaywise_results = Comparisons.ComparisonsCollection( self.assaywise_results )           
+        self._results = self.assaywise_results
+        return self.assaywise_results
 
     
-    def assaywise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list) = None, columns : (list or dict) = None, **kwargs ):
+    def groupwise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list) = None, columns : (list or dict) = None, **kwargs ):
         """
         Perform multiple pairwise t-tests comparing the different `assays` within each `group separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `ctrl-SRSF11` but not `KO-HNRNPL`. 
@@ -184,7 +188,7 @@ class PairwiseTests(aux._ID):
             A collection of ``PairwiseComparison`` objects for each group in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
-            return [ self.assaywise_ttests( i, groups, columns, **kwargs ) for i in obj ]
+            return [ self.groupwise_ttests( i, groups, columns, **kwargs ) for i in obj ]
 
         if obj is not None: 
             self.link(obj)
@@ -219,7 +223,7 @@ class PairwiseTests(aux._ID):
         logger.debug( f"{df=}" )
 
         # setup the results dictionary
-        self.assaywise_results = {}
+        self.groupwise_results = {}
 
         # now iterate over all groups
         for name,subset in subsets:
@@ -234,15 +238,15 @@ class PairwiseTests(aux._ID):
             # assemble results and store
             r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, statistic = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
-            self.assaywise_results[name] = r
+            self.groupwise_results[name] = r
         
-        self.assaywise_results = Comparisons.ComparisonsCollection( self.assaywise_results )           
-        self._results = self.assaywise_results
-        return self.assaywise_results
+        self.groupwise_results = Comparisons.ComparisonsCollection( self.groupwise_results )           
+        self._results = self.groupwise_results
+        return self.groupwise_results
 
 
     @staticmethod
-    def _groupwise_get_ref_col(groups):
+    def _assaywise_get_ref_col(groups):
         """
         Checks if we have numeric or string groups and sets the reference column for subsetting accordingly.
         This happens AFTER the groups have been permuted into tuples.
@@ -282,7 +286,7 @@ class PairwiseTests(aux._ID):
     def _prepare_pairwise_vars(df):
         """
         Prepares an output array for outputs, and the index method
-        for the pairwise ttest and effect size comparison, for the groupwise ttests.
+        for the pairwise ttest and effect size comparison, for the assaywise ttests.
         """
 
         # get pair-wise group permutations
@@ -407,7 +411,7 @@ class PairwiseTests(aux._ID):
         s = f"""{'-' * length}\n{s}\n{'-' * length}\n{self._results}\n{'-' * length}"""
 
     def __repr__(self):
-        return f"PairwiseTests(results={self._results})"
+        return f"{self.__class__.__name__}(results={self._results})"
 
 
 __default_PairwiseTests__ = PairwiseTests()
