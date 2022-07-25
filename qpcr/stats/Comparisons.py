@@ -194,19 +194,11 @@ class MultiTestComparison(Comparison):
 
     def make_symmetric(self):
         """
-        Fills up an assymettric 2D array of p-values / effect sizes (if provided) to a symmetric 2D array around the diagonal.
+        Fills up an assymettric 2D array of p-values to a symmetric 2D array around the diagonal.
         """
 
         self._asymmetric_pvalues = self._pvalues.copy()
-
-        rows, cols = self._pvalues.shape
-        if rows != cols: 
-            raise IndexError( "The p-values array is not square." )
-        
-        perms = tuple( permutations( np.arange(rows), r = 2 ) ) 
-        for i,j in perms:
-            if self._pvalues[j,i] == self._pvalues[j,i]:
-                self._pvalues[i,j] = self._pvalues[j,i]
+        self._pvalues = self._make_symmetric( self._pvalues )
         return self 
 
     def stack(self):
@@ -257,6 +249,21 @@ class MultiTestComparison(Comparison):
             The p-values for the comparison, originally provided.
         """
         return self._orig_pvalues
+
+    @staticmethod
+    def _make_symmetric( data ):
+        """
+        The core function of make_symmetric
+        """
+        rows, cols = data.shape
+        if rows != cols: 
+            raise IndexError( "The p-values array is not square." )
+        
+        perms = tuple( permutations( np.arange(rows), r = 2 ) ) 
+        for i,j in perms:
+            if data[j,i] == data[j,i]:
+                data[i,j] = data[j,i]
+        return data
 
     def _melt( self, data ):
         """
@@ -316,6 +323,19 @@ class PairwiseComparison(MultiTestComparison):
         else:
             raise ValueError( f"which must be either 'pvalues', 'tstats', 'effect_size'. Got '{which}' instead" )
 
+    def make_symmetric(self):
+        """
+        Fills up an assymettric 2D array of p-values, and t-statistics (if provided), and effect sizess (if provided) to a symmetric 2D array around the diagonal.
+        """
+
+        self.super().make_symmetric()
+        if self._effect_size is not None:
+            self._effect_size = self._make_symmetric( self._effect_size )
+        if self._tstats is not None:
+            self._tstats = self._make_symmetric( self._tstats )
+        return self 
+
+
     def stack(self):
         """
         Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
@@ -344,6 +364,8 @@ class PairwiseComparison(MultiTestComparison):
             effects = self._melt( effects )
             final[ "effect_size" ] = effects[ "effect_size" ]
         return final 
+
+    
 
 
     def to_df(self, which : str = None):
@@ -447,6 +469,7 @@ Pairwise Comparison: {self._id}
 Pvalues{adjusted}:
 {"-" * length}
 {self.to_df()}
+{"-" * length}
 t-statistics:
 {"-" * length}
 {self.to_df("tstats")}
