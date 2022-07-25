@@ -87,7 +87,7 @@ class PairwiseTests(aux._ID):
             By default all groups that are present will be compared pair-wise.
 
         columns : list
-            The columns of the Results dataframe to use as input data. By default this will all non-setup columns.
+            The columns of the dataframe to use as input data. By default this will all non-setup columns.
             You can pass a list of any subset of non-setup-cols here. As a shortcut you can restrict to only 
             valid Delta-Delta-Ct columns (i.e. `{}_rel_{}` columns using the `kwarg` ``restrict_ddCt = True``). 
 
@@ -103,7 +103,7 @@ class PairwiseTests(aux._ID):
             self.link(obj)
 
         results = self._obj
-        df = results._df
+        df = results._df.copy()
 
         # check if we should restrict to only conventional ddCt cols or all non-setup cols
         if columns is None:
@@ -190,7 +190,7 @@ class PairwiseTests(aux._ID):
             self.link(obj)
 
         results = self._obj
-        df = results._df
+        df = results._df.copy()
 
         # check if we should restrict to only a subset of groups
         if groups is not None:
