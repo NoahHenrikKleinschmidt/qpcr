@@ -292,7 +292,7 @@ class DataReader(aux._ID):
 
     def __str__(self):
         s = f"""
-DataReader:\t{self._id}
+{self.__class__.__name__}:\t{self._id}
 Current Reader:\t{type(self._Reader).__name__}
 Self-stored data:\t{self._Data}
         """.strip()
@@ -301,7 +301,7 @@ Self-stored data:\t{self._Data}
     def __repr__(self):
         base = type(self._Reader).__name__
         data = self._Data
-        return f"DataReader({base=}, {data=})"
+        return f"{self.__class__.__name__}({base=}, {data=})"
 
     def _filesuffix(self):
         """

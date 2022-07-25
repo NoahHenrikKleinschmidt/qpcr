@@ -750,7 +750,7 @@ class Assay(aux._ID):
         _length = len( str(self._df).split("\n")[0] ) 
         s = f"""
 {"-" * _length}
-Assay: {self._id}
+{self.__class__.__name__}: {self._id}
 Amplif. Eff.: {self._efficiency}
 {"-" * _length}
 {self._df}
@@ -762,7 +762,7 @@ Amplif. Eff.: {self._efficiency}
         id = self._id
         eff = self._efficiency
         n = len(self)
-        return f"Assay({id=}, {eff=}, {n=})"
+        return f"{self.__class__.__name__}({id=}, {eff=}, {n=})"
 
     def __iter__( self ):
         d = list( self._df.groupby( "group" ) )

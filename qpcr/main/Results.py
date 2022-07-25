@@ -98,13 +98,13 @@ class Results(aux._ID):
 {"-" * _length}
         """.strip()
         if self.id_was_set():
-            s = f"{'-' * _length}\nResults: {self._id}\n{s}"
+            s = f"{'-' * _length}\n{self.__class__.__name__}: {self._id}\n{s}"
         return s 
 
     def __repr__( self ):
         id = self._id
         data = self.ddCt_cols
-        return f"Results({id=}, {data=})"
+        return f"{self.__class__.__name__}({id=}, {data=})"
 
     def __len__(self):
         return len(self._df)

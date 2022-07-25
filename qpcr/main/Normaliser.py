@@ -108,7 +108,7 @@ class Normaliser(aux._ID):
 
     def __str__(self):
         s = f"""
-Normaliser: \t{self.id()}
+{self.__class__.__name__}: \t{self.id()}
 Prep.Function: \t{self._prep_func.__name__}
 Prep.Function: \t{self._norm_func.__name__}
         """.strip()
@@ -120,7 +120,7 @@ Prep.Function: \t{self._norm_func.__name__}
     def __repr__(self):
         prep = self.prep_func.__name__
         norm = self.norm_func.__name__
-        return f"Normaliser({prep=}, {norm=})"
+        return f"{self.__class__.__name__}({prep=}, {norm=})"
 
     def clear(self):
         """

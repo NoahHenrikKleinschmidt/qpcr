@@ -108,7 +108,7 @@ class Calibrator(aux._ID):
         _length = len( effs.split("\n")[0] )
         s = f"""
 {"-" * _length}
-Calibrator:\t{self._id}
+{self.__class__.__name__}:\t{self._id}
 Loaded File:\t{self._loaded_file}
         """.strip()
         if self._manual_dilution_set:
@@ -119,7 +119,7 @@ Loaded File:\t{self._loaded_file}
     def __repr__( self ):
         file = self._loaded_file
         effs = self._eff_dict
-        return f"Calibrator({file=}, {effs=})"
+        return f"{self.__class__.__name__}({file=}, {effs=})"
 
     def save( self, filename : str = None , mode : str = "write" ):
         """

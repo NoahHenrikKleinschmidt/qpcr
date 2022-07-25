@@ -396,7 +396,7 @@ class Analyser(aux._ID):
 
     def __str__(self):
         s = f"""
-Analyser: {self._id}\n
+{self.__class__.__name__}: {self._id}\n
 
 Anchor: {self._anchor}\n
 Ref.Group: {self._ref_group}\n
@@ -408,7 +408,7 @@ DeltaCt: {self._deltaCt_function}
     def __repr__(self):
         anchor = self._anchor
         ref = self._ref_group
-        return f"Analyser({anchor=}, {ref=})"
+        return f"{self.__class__.__name__}({anchor=}, {ref=})"
 
 __default__Analyser__ = Analyser()
 """The default Analyser"""
