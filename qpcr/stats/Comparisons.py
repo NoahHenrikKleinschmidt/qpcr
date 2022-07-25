@@ -12,9 +12,9 @@ from statsmodels.stats import multitest
 
 logger = aux.default_logger()
 
-class PairwiseComparison(aux._ID):
+class Comparison(aux._ID):
     """
-    Stores results from a pair-wise comparison.
+    The base class for all single ``Comparison`` classes.
 
     Parameters
     -------
@@ -22,40 +22,16 @@ class PairwiseComparison(aux._ID):
         The comparison id (such as the name of the assay).
     pvalues : np.ndarray
         The p-values for the comparison. These may be corrected or not (this class can correct them).
-    effect_size : np.ndarray
-        The actual effect sizes for each comparison. This needs to be of the same shape as the pvalues array.
-    labels : list
-        A list of the group labels that were compared. These need to be in the same order as the pvalues array.
-    subset : list
-        A list of all groups that were tested that are of interest. This can be any subset of the labels.
     """
-    __slots__ = ["_pvalues", "_orig_pvalues", "labels", "_effect_size", "_p_are_adjusted", "subset_groups"]
-    def __init__( self, pvalues : np.ndarray, effect_size : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+    __slots__ = ["_pvalues", "labels", "subset_groups"]
+    def __init__(self, pvalues : np.ndarray, id : str = None, labels : list = None, subset : list = None ):
         super().__init__()
-        self._id = id
         self._pvalues = pvalues
-        self._effect_size = effect_size
-
-        self._orig_pvalues = pvalues.copy()
-        self._asymmetric_pvalues = None
-        self._p_are_adjusted = False 
+        self.id(id)
 
         self.labels = self._set_labels(pvalues, labels)
         self.subset_groups = subset if subset is not None else labels
 
-    def get( self, which : str = "pvalues" ):
-        """
-        Parameters
-        -------
-        which : str
-            Either the `pvalues` or the `effect sizes` as panda DataFrame.
-        """
-        if which == "pvalues":
-            return self.pvalues
-        elif which == "effect_size":
-            return self.effect_size
-        else:
-            raise ValueError( f"which must be either 'pvalues' or 'effect_size'. Got '{which}' instead" )
 
     def subset( self, subset ):
         """
@@ -68,6 +44,121 @@ class PairwiseComparison(aux._ID):
         """
         self.subset_groups = self._set_labels(self._pvalues, subset)
         return self
+
+    
+    @property
+    def pvalues(self):
+        """
+        Returns
+        -------
+        np.ndarray
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones).
+        """
+        return self._pvalues
+
+    @property
+    def pvalues_subset(self):
+        """
+        Returns
+        -------
+        pd.DataFrame
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
+            This will be cropped to the groups "of interest" specified.
+        """
+        if self._pvalues is None: 
+            return None
+        p = self.to_df()
+        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
+        return p 
+
+    def _to_df(self, data):
+        """
+        This is the core function for to_df()
+        
+        Converts a data array into a pandas DataFrame with labeled index and columns.
+        This will retain the 2D grid arrangement of the data.
+
+        Parameters
+        -------
+        which : str
+            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"effects"` (for the effect sizes).
+            If correction was performed, then `"adjusted"` is the default else `"raw"`.
+
+        Returns
+        -------
+        pd.DataFrame
+            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
+            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
+        """
+        if data is None:
+            return None
+        p = pd.DataFrame( data, columns = self.labels[0], index = self.labels[1] )
+        return p
+
+    @staticmethod
+    def _set_labels(pvalues, labels):
+        """
+        Set labels for columns and rows for the pvalues and effect size dataframes
+        """
+        if labels is not None:
+            if isinstance( labels[0], (tuple, list, np.ndarray) ):
+                labels = labels
+            elif isinstance( labels[0], (int, str) ):
+                labels = [labels, labels]
+            else:
+                raise TypeError( f"labels must be a list of ints, strings, or tuples. Got '{type(labels[0]).__name__}' instead" )
+        else:
+            labels = [ np.arange(pvalues.shape[0]), np.arange(pvalues.shape[1]) ]
+        return labels
+
+    def __collection_export__( self ):
+        return self._to_df( self._pvalues )
+
+    def __getitem__( self, row, col ):
+        return self._pvalues[row, col]
+    
+    def __gt__( self, other ):
+        if isinstance( other, self.__class__ ):
+            return self._pvalues > other._pvalues
+        else:
+            return self._pvalues > other
+
+    def __lt__( self, other ):
+        if isinstance( other, self.__class__ ):
+            return self._pvalues < other._pvalues
+        else:
+            return self._pvalues < other
+    
+    def __ge__( self, other ):
+        if isinstance( other, self.__class__ ):
+            return self._pvalues >= other._pvalues
+        else:
+            return self._pvalues >= other
+
+    def __le__( self, other ):
+        if isinstance( other, self.__class__ ):
+            return self._pvalues <= other._pvalues
+        else:
+            return self._pvalues <= other
+    
+    def __eq__( self, other ):
+        if isinstance( other, self.__class__ ):
+            return self._pvalues == other._pvalues
+        else:
+            return self._pvalues == other
+
+
+class MultiTestComparison(Comparison):
+    """
+    Stores the results of a multiple testing comparison.
+    """
+    __slots__ = ['_orig_pvalues', '_corrected_pvalues', '_p_are_adjusted', '_asymmetric_pvalues']
+    def __init__(self, pvalues : np.ndarray, id : str = None, labels : list = None, subset : list = None ):
+        super().__init__( pvalues = pvalues, id = id, labels = labels, subset = subset )
+        self._orig_pvalues = pvalues.copy()
+        self._p_are_adjusted = False
+        self._corrected_pvalues = None
+        self._asymmetric_pvalues = None
 
     def adjust_pvalues(self, make_symmetric : bool = False, **kwargs):
         """
@@ -116,11 +207,6 @@ class PairwiseComparison(aux._ID):
         for i,j in perms:
             if self._pvalues[j,i] == self._pvalues[j,i]:
                 self._pvalues[i,j] = self._pvalues[j,i]
-
-        if self._effect_size is not None:
-            for i,j in perms:
-                if self._effect_size[j,i] == self._effect_size[j,i]:
-                    self._effect_size[i,j] = self._effect_size[j,i]
         return self 
 
     def stack(self):
@@ -139,59 +225,16 @@ class PairwiseComparison(aux._ID):
         """
         if self._pvalues is None:
             return None
-        else:
-            pvals = self._melt( "pval" )
-            final = pvals
+        
+        pvals = self._to_df( self._orig_pvalues )
+        pvals.name = "pval"
+        final = self._melt( pvals )
         if self._p_are_adjusted:
-            pvals_adj = self._melt( "pval_adj" )
+            pvals_adj = self._to_df( self._pvalues )
+            pvals_adj.name = "pval_adj"
+            pvals_adj = self._melt( pvals_adj )
             final[ "pval_adj" ] = pvals_adj[ "pval_adj" ]
-        if self._effect_size is not None:
-            effects = self._melt( "effect_size" )
-            final[ "effect_size" ] = effects[ "effect_size" ]
         return final 
-
-
-    def to_df(self, which : str = None):
-        """
-        Converts a data array into a pandas DataFrame with labeled index and columns.
-        This will retain the 2D grid arrangement of the data.
-
-        Parameters
-        -------
-        which : str
-            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"effects"` (for the effect sizes).
-            If correction was performed, then `"adjusted"` is the default else `"raw"`.
-
-        Returns
-        -------
-        pd.DataFrame
-            The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
-            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
-        """
-        if which == "adjusted":
-            data = self._pvalues
-        elif which == "raw":
-            data = self._orig_pvalues
-        elif which == "effects":
-            data = self._effect_size
-        if which is None: 
-            if self._pvalues is None:
-                return None
-            data = self._pvalues
-        p = pd.DataFrame( data, columns = self.labels[0], index = self.labels[1] )
-        return p
-
-    def save( self, filename : str ):
-        """
-        Saves the comparison to a file.
-
-        Parameters
-        ----------
-        filename : str
-            The filename to save the comparison to.
-        """
-        df = self.stack()
-        df.to_csv( filename, index = False )
 
     @property
     def pvalues_adjusted(self):
@@ -215,31 +258,135 @@ class PairwiseComparison(aux._ID):
         """
         return self._orig_pvalues
 
-    @property
-    def pvalues(self):
+    def _melt( self, data ):
         """
+        Melts a 2D dataframe into a three column dataframe.
+        """
+        # now melt the data
+        res = data.melt( ignore_index = False )
+        res.rename( columns = { "variable": "a", "value": data.name }, inplace = True )
+        res["b"] = res.index
+        res.reset_index( inplace = True, drop = True )
+        res = res[ ["a", "b", data.name] ]
+        return res
+
+    def __collection_export__( self ):
+        return self.stack()
+
+class PairwiseComparison(MultiTestComparison):
+    """
+    Stores results from a pair-wise comparison.
+
+    Parameters
+    -------
+    id : str
+        The comparison id (such as the name of the assay).
+    pvalues : np.ndarray
+        The p-values for the comparison. These may be corrected or not (this class can correct them).
+    effect_size : np.ndarray
+        The actual effect sizes for each comparison. This needs to be of the same shape as the pvalues array.
+    tstats : np.ndarray
+        The t-statsistics from the comparison. This needs to be of the same shape as the pvalues array. 
+    labels : list
+        A list of the group labels that were compared. These need to be in the same order as the pvalues array.
+    subset : list
+        A list of all groups that were tested that are of interest. This can be any subset of the labels.
+    """
+    __slots__ = ["_orig_pvalues", "_effect_size", "_tstats", "_p_are_adjusted"]
+    def __init__( self, pvalues : np.ndarray, effect_size : np.ndarray = None, tstats : np.ndarray = None, id : str = None, labels : list = None, subset : list = None ):
+        super().__init__( pvalues = pvalues, id = id, labels = labels, subset = subset )
+
+        self._tstats = tstats
+        self._effect_size = effect_size
+
+    def get( self, which : str = "pvalues" ):
+        """
+        Parameters
+        -------
+        which : str
+            Either the `pvalues` or the `effect sizes` as panda DataFrame.
+        """
+        data = {
+                    "pvalues": self.pvalues,
+                    "effect_size": self.effect_size,
+                    "tstats": self.tstats
+                }
+        if which in data:
+            return data[ which ]
+        else:
+            raise ValueError( f"which must be either 'pvalues', 'tstats', 'effect_size'. Got '{which}' instead" )
+
+    def stack(self):
+        """
+        Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
+        into multi-column column dataframe format. 
+        Where `a` and `b` denote the two partners in the comparison, 
+        and `pval` is the unadjusted p-value for the comparison, 
+        `pval_adj` is the adjusted p-value for the comparison (if performed), and finally
+        and `effect_size` is the effect size for the comparison (if stored).
+
         Returns
         -------
-        np.ndarray
-            The p-values for the comparison (corrected if correction was performed, else the originally provided ones).
+        pd.DataFrame
+            The stacked data.
         """
-        return self._pvalues
+        if self._pvalues is None:
+            return None
+        final = super().stack()
+        if self._tstats is not None:
+            tstats = self._to_df( self._tstats )
+            tstats.name = "t_stat"
+            tstats = self._melt( tstats )
+            final[ "t_stat" ] = tstats[ "t_stat" ]
+        if self._effect_size is not None:
+            effects = self._to_df( self._effect_size )
+            effects.name = "effect_size"
+            effects = self._melt( effects )
+            final[ "effect_size" ] = effects[ "effect_size" ]
+        return final 
 
-    @property
-    def pvalues_subset(self):
+
+    def to_df(self, which : str = None):
         """
+        Converts a data array into a pandas DataFrame with labeled index and columns.
+        This will retain the 2D grid arrangement of the data. 
+        To export a column-arranged dataframe, use the ``stack`` method.
+
+        Parameters
+        -------
+        which : str
+            Either `"raw"` or `"adjusted"` (for the respective pvalues) or `"tstats"` (for the t-statistics) or `"effects"` (for the effect sizes).
+            If correction was performed, then `"adjusted"` is the default else `"raw"`.
+
         Returns
         -------
         pd.DataFrame
             The p-values for the comparison (corrected if correction was performed, else the originally provided ones) With index and columns labeled by the compared groups.
-            This will be cropped to the groups "of interest" specified.
+            This will include all groups (labels) present in the data. Use ``pvalues_tested`` to get a dataframe cropped to "groups of interest".
         """
-        if self._pvalues is None: 
-            return None
-        p = self.to_df()
-        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
-        return p 
+        data = {
+                    "adjusted" : self._pvalues,
+                    "raw" : self._orig_pvalues,
+                    "effects" : self._effect_size,
+                    "tstats" : self._tstats,
+                    None : self._pvalues
+                }
+        data = data[ which ]
+        return self._to_df( data )
 
+    def save( self, filename : str ):
+        """
+        Saves the comparison to a file.
+
+        Parameters
+        ----------
+        filename : str
+            The filename to save the comparison to.
+        """
+        df = self.stack()
+        df.to_csv( filename, index = False )
+
+    
     @property
     def effect_size(self):
         """
@@ -265,40 +412,30 @@ class PairwiseComparison(aux._ID):
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
     
-
-    def _melt( self, which : str ):
+    @property
+    def tstats(self):
         """
-        Melts a 2D dataframe into a three column dataframe.
+        Returns
+        -------
+        np.ndarray
+            The t-statistics for the comparison.
         """
-        if which == "pval":
-            res = self.to_df( "raw" )
-        elif which == "pval_adj":
-            res = self.to_df( "adjusted" )
-        elif which == "effect_size":
-            res = self.to_df( "effects" )
-        
-        # now melt the data
-        res = res.melt( ignore_index = False )
-        res.rename( columns = { "variable": "a", "value": which }, inplace = True )
-        res["b"] = res.index
-        res.reset_index( inplace = True, drop = True )
-        res = res[ ["a", "b", which] ]
-        return res
-
-    def _set_labels(self, pvalues, labels):
+        return self._tstats
+    
+    @property
+    def tstats_subset( self ):
         """
-        Set labels for columns and rows for the pvalues and effect size dataframes
+        Returns
+        -------
+        pd.DataFrame
+            The t-statistics for the comparison. With index and columns labeled by the compared groups.
+            This will be cropped to the groups "of interest" specified.
         """
-        if labels is not None:
-            if isinstance( labels[0], (tuple, list, np.ndarray) ):
-                labels = labels
-            elif isinstance( labels[0], (int, str) ):
-                labels = [labels, labels]
-            else:
-                raise TypeError( f"labels must be a list of ints, strings, or tuples. Got '{type(labels[0]).__name__}' instead" )
-        else:
-            labels = [ np.arange(pvalues.shape[0]), np.arange(pvalues.shape[1]) ]
-        return labels
+        if self._tstats is None:
+            return None
+        p = self.to_df( which = "effects" )
+        p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
+        return p
 
     def __str__(self):
         length = max( [ len( str(  self.to_df( i )  ).split("\n")[0] ) for i in ("effects", None) ] )
@@ -310,6 +447,9 @@ Pairwise Comparison: {self._id}
 Pvalues{adjusted}:
 {"-" * length}
 {self.to_df()}
+t-statistics:
+{"-" * length}
+{self.to_df("tstats")}
 {"-" * length}
 Effect Sizes:
 {"-" * length}
@@ -323,35 +463,34 @@ Effect Sizes:
         return s
 
 
-class MultipleComparisons:
+class ComparisonsCollection:
     """
     A collection of multiple PairWiseComparison objects.
     This is being returned by the Evaluator when calling a pair-wise comparison test.
     """
-    __slots__ = ["comparisons", "ids"]
+    __slots__ = ["_dict"]
     def __init__( self, comparisons : dict ):
-        self.comparisons = list(comparisons.values())
-        self.ids = list(comparisons.keys())
-    
+        self._dict = comparisons
+
     def get( self ):
         """
         Returns
         -------
         list
-            A list of PairWiseComparison objects.
+            A list of the stored Comparison objects.
         """
         return self.comparisons
 
-    def stack( self ):
+    def assemble_df( self ):
         """
-        Stacks the stored comparisons into a single stacked dataframe.
+        Assembles all stored comparisons into a single stacked dataframe.
 
         Returns
         -------
         pd.DataFrame
             A stacked dataframe with the p-values and effect sizes of all comparisons.
         """
-        stacked = [c.stack() for c in self.comparisons]
+        stacked = [c.__collection_export__() for c in self.comparisons]
         for obj,df in zip( self.comparisons, stacked ):
             df[ defaults.raw_col_names[0] ] = obj.id()
         stacked = pd.concat( stacked, axis = 0 )
@@ -370,6 +509,25 @@ class MultipleComparisons:
         for i in self:
             i.save( filename = fname.format( directory = directory, id = i.id() ) )
 
+    @property
+    def comparisons(self):
+        """
+        Returns
+        -------
+        A list of all stored Comparison objects.
+        """
+        return list(self._dict.values())
+
+    
+    @property
+    def ids(self):
+        """
+        Returns
+        -------
+        A list of the ids of all stored Comparison objects.
+        """
+        return list(self._dict.keys())
+
     def __getitem__( self, id ):
         if id in self.ids:
             idx = self.ids.index(id)
@@ -378,6 +536,11 @@ class MultipleComparisons:
         else:
             raise ValueError( f"id must be one of the ids in the comparison (or a valid index between 0-{len(self)}). Got '{id}' instead" )
         return self.comparisons[idx]
+
+    def __add__( self, other ):
+        if not isinstance( other, self.__class__ ):
+            raise TypeError( f"other must be a MultipleComparisons object. Got '{type(other).__name__}' instead" )
+        return ComparisonsCollection( self._dict + other._dict )
 
     def __iter__( self ):
         return iter(self.comparisons)
@@ -395,83 +558,7 @@ class MultipleComparisons:
         return s
     
     def __repr__(self):
-        s = f"""MultipleComparisons(comparisons={self.ids})"""
+        s = f"""ComparisonsCollection(comparisons={self.ids})"""
         return s
 
 
-
-
-
-class MultipleComparisons:
-    """
-    A collection of multiple Comparison objects.
-    """
-    __slots__ = ["comparisons", "ids"]
-    def __init__( self, comparisons : dict ):
-        self.comparisons = list(comparisons.values())
-        self.ids = list(comparisons.keys())
-
-    def get( self ):
-        """
-        Returns
-        -------
-        list
-            A list of PairWiseComparison objects.
-        """
-        return self.comparisons
-
-    def stack( self ):
-        """
-        Stacks the stored comparisons into a single stacked dataframe.
-
-        Returns
-        -------
-        pd.DataFrame
-            A stacked dataframe with the p-values and effect sizes of all comparisons.
-        """
-        stacked = [c.stack() for c in self.comparisons]
-        for obj,df in zip( self.comparisons, stacked ):
-            df[ defaults.raw_col_names[0] ] = obj.id()
-        stacked = pd.concat( stacked, axis = 0 )
-        return stacked
-
-    def save( self, directory : str ):
-        """
-        Saves the comparisons to files.
-
-        Parameters
-        ----------
-        directory : str
-            The directory to save the files to.
-        """
-        fname = "{directory}/{id}.csv"
-        for i in self:
-            i.save( filename = fname.format( directory = directory, id = i.id() ) )
-
-    def __getitem__( self, id ):
-        if id in self.ids:
-            idx = self.ids.index(id)
-        elif isinstance( id, ( int, list, tuple ) ):
-            idx = id
-        else:
-            raise ValueError( f"id must be one of the ids in the comparison (or a valid index between 0-{len(self)}). Got '{id}' instead" )
-        return self.comparisons[idx]
-
-    def __iter__( self ):
-        return iter(self.comparisons)
-    
-    def __len__( self ):
-        return len(self.comparisons)
-    
-    def __str__(self):
-        s = f"""Stored Comparisons"""
-        names = [str(c) for c in self.ids]
-        length = max( [len(n) for n in names] + [len(s)] )
-        s = f"""{'-' * length}\n{s}\n{'-' * length}\n"""
-        s += "\n".join([str(c) for c in self.ids])
-        s += f"\n{'-' * length}"
-        return s
-    
-    def __repr__(self):
-        s = f"""MultipleComparisons(comparisons={self.ids})"""
-        return s

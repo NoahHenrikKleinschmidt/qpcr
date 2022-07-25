@@ -6,7 +6,7 @@ The results are stored in a number `PairwiseComparison` objects.
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr.main as main
-import qpcr.stats.PairwiseComparison as PairwiseComparison
+import qpcr.stats.Comparisons as Comparisons
 
 from itertools import permutations
 import numpy as np
@@ -93,7 +93,7 @@ class PairwiseTests(aux._ID):
 
         Returns
         -------
-        results : MultipleComparisons
+        results : ComparisonsCollection
             A collection of ``PairwiseComparison`` objects for each assay in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
@@ -141,11 +141,11 @@ class PairwiseTests(aux._ID):
             logger.debug( f"{effect_sizes=}" )
              
             # assemble results and store
-            r = PairwiseComparison.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.groupwise_results[name] = r
 
-        self.groupwise_results = PairwiseComparison.MultipleComparisons( self.groupwise_results )           
+        self.groupwise_results = Comparisons.ComparisonsCollection( self.groupwise_results )           
         self._results = self.groupwise_results
         return self.groupwise_results
 
@@ -180,7 +180,7 @@ class PairwiseTests(aux._ID):
 
         Returns
         -------
-        results : MultipleComparisons
+        results : ComparisonsCollection
             A collection of ``PairwiseComparison`` objects for each group in the `Results` object's dataframe.
         """
         if isinstance( obj, list ):
@@ -232,11 +232,11 @@ class PairwiseTests(aux._ID):
             effect_sizes = self._pairwise_effect_size(subset, comparisons, **kwargs)
             
             # assemble results and store
-            r = PairwiseComparison.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.assaywise_results[name] = r
         
-        self.assaywise_results = PairwiseComparison.MultipleComparisons( self.assaywise_results )           
+        self.assaywise_results = Comparisons.ComparisonsCollection( self.assaywise_results )           
         self._results = self.assaywise_results
         return self.assaywise_results
 

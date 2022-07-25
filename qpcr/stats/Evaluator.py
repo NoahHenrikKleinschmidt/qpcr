@@ -2,16 +2,9 @@
 This is the ``qpcr.Evaluator`` responsible for statistical evaluation of the Results from an analysis.
 """
 
-import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr.main as main
-import qpcr.stats.PairwiseComparison as PairwiseComparison
 import qpcr.stats.PairwiseTests as PairwiseTests
-
-from itertools import permutations
-import numpy as np
-import pandas as pd
-from scipy.stats import ttest_ind
 
 logger = aux.default_logger()
 
