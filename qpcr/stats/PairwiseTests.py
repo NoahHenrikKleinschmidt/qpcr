@@ -134,14 +134,14 @@ class PairwiseTests(aux._ID):
             subset = self._squash_groups(subset, ref_col)
             
             # compute pairwise t-tests and effect size
-            pvalues = self._pairwise_ttest( subset, groups, **kwargs )
+            pvalues, tstats = self._pairwise_ttest( subset, groups, **kwargs )
             effect_sizes = self._pairwise_effect_size( subset, groups, **kwargs )
             
             logger.debug( f"{pvalues=}" )
             logger.debug( f"{effect_sizes=}" )
              
             # assemble results and store
-            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, tstats = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.groupwise_results[name] = r
 
@@ -228,11 +228,11 @@ class PairwiseTests(aux._ID):
             subset = subset.drop( defaults.setup_cols, axis = 1 )
         
             # compute pairwise t-tests and effect size
-            pvalues = self._pairwise_ttest(subset, comparisons, **kwargs)
+            pvalues, tstats = self._pairwise_ttest(subset, comparisons, **kwargs)
             effect_sizes = self._pairwise_effect_size(subset, comparisons, **kwargs)
             
             # assemble results and store
-            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, labels = subset.columns, subset = labels )
+            r = Comparisons.PairwiseComparison( id = name, pvalues = pvalues, effect_size = effect_sizes, tstats = tstats, labels = subset.columns, subset = labels )
             r.adjust_pvalues()
             self.assaywise_results[name] = r
         
@@ -358,6 +358,7 @@ class PairwiseTests(aux._ID):
         # first prepare the pvalues and index function 
         # which will be different for groups or assays.
         index, pvalues = self._prepare_pairwise_vars( df )
+        tstats = pvalues.copy()
 
         # now we can loop through the permutations
         for comb in combinations:
@@ -369,10 +370,12 @@ class PairwiseTests(aux._ID):
                 continue
 
             a, b = comb
-            pvalues[i,j] = ttest_ind( df[a].dropna(), df[b].dropna(), **kwargs ).pvalue
-            
+            r = ttest_ind( df[a].dropna(), df[b].dropna(), **kwargs )
+            pvalues[i,j] = r.pvalue
+            tstats[i,j] = r.statistic
+
         logger.debug( pvalues )
-        return pvalues 
+        return pvalues, tstats 
 
     def _pairwise_effect_size(self, df, combinations, **kwargs):
         """
