@@ -1,3 +1,4 @@
+from itertools import permutations, product
 import numpy as np 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -103,6 +104,7 @@ class AxesCoords:
         self._get_plot_type()
         self._init_row_and_col()
         self._coords = None
+        self._autoincrement = False
 
         # self._transpose = False
         
@@ -117,55 +119,61 @@ class AxesCoords:
 
         self._2D_setup_ranges()
 
+    def autoincrement(self):
+        """Auto increment after subplot or coords was called"""
+        self._autoincrement = True 
+
     def get(self):
         """
         Returns the current subplot coordinates
         """
-        if self._is2D:
-            coords = self._coords[self._idx]
-        else:
-            coords =  self._coords[self._idx][0]
+        coords = self._get()
+        if self._autoincrement:
+            self.increment()
         return coords
 
     def increment(self):
         """
         Switches to next subplot coordinates
         """
-        self._idx += 1
-
-    # def transpose(self, t:bool):
-    #     """
-    #     Switch col and row dimensions and reference attributes
-    #     """    
-    #     if t != self._transpose:
-    #         self._transpose = t
-    #         self._first = self.col if self._first == self.row else self.row
-    #         self._second = self.col if self._second == self.row else self.row
-
-    #         self._limit_first = self._ncols if self._limit_first == self._nrows else self._nrows
-    #         self._limit_second = self._nrows if self._limit_second == self._ncols else self._ncols
-    #         self._2D_setup_ranges()
+        if self._idx < len(self._coords):
+            self._idx += 1
 
     def subplot(self):
         """
         Returns the current subplot to be plotted (only for matplotlib figures)
         """
-        coord = self.get()
+        coord = self._get()
         current_subplot = self._axs[coord]
+        if self._autoincrement:
+            self.increment()
         return current_subplot
 
     def _2D_setup_ranges(self):
         """
         Setup the possible coordinates for 2D grid
         """
-        coords = []
-        first_range = range(self._base, self._limit_first+self._base)
-        second_range = range(self._base, self._limit_second+self._base)
+        first_range = list( range(self._base, self._limit_first+self._base) )
+        second_range = list( range(self._base, self._limit_second+self._base) )
+        coords = first_range + [ i for  i in second_range if i not in first_range ] 
+        coords = list( product( first_range, second_range ) )
 
-        for first in first_range:
-            for second in second_range:
-                coords.append((first, second))
+        # for first in first_range:
+        #     for second in second_range:
+        #         coords.append((first, second))
         self._coords = coords
+
+    def _get(self):
+        """
+        The core of get Returns the current subplot coordinates
+        """
+        if self._idx > len(self._coords):
+            raise IndexError("No more subplots available")
+        if self._is2D:
+            coords = self._coords[self._idx]
+        else:
+            coords =  self._coords[self._idx][0]
+        return coords
 
     def _check_2D(self):
         """
@@ -196,8 +204,8 @@ class AxesCoords:
         """
         Setup ranges of possible values
         """
-        self._first_range = range(self._base, self._limit_first + self._base)
-        self._second_range = range(self._base, self._limit_second + self._base)
+        self._first_range = list( range(self._base, self._limit_first + self._base) )
+        self._second_range = list( range(self._base, self._limit_second + self._base) )
 
     def _init_row_and_col(self):
         """
