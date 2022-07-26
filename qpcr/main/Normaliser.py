@@ -490,7 +490,8 @@ Prep.Function: \t{self._norm_func.__name__}
                         
                 try: 
                     ddCts[idx : idx + length] = r 
-                except: 
+                except Exception as e:
+                    logger.info( e ) 
                     break 
 
                 idx += length
