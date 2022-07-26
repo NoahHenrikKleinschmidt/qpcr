@@ -486,7 +486,8 @@ class _CORE_Reader(aux._ID):
                                 header = self._header, 
                                 # names = raw_col_names
                             )
-        except: 
+        except Exception as e:
+            logger.exception( e ) 
             e = aw.ReaderError( "cannot_read_csv", file = self._src )
             logger.critical( e )
             SystemExit( e )
@@ -523,7 +524,8 @@ class _CORE_Reader(aux._ID):
                                 header = self._header, 
                                 # names = raw_col_names
                             )
-        except: 
+        except Exception as e:
+            logger.exception( e ) 
             e = aw.ReaderError( "cannot_read_csv", file = self._src )
             logger.critical( e )
             SystemExit( e )
@@ -595,8 +597,9 @@ class _CORE_Reader(aux._ID):
         try: 
             suffix = self._src.split(".")[-1]
             return suffix
-        except: 
-            pass
+        except Exception as e: 
+            logger.debug( e )
+            logger.info( "Could not determine file suffix..." )
 
     def _make_new_Assay(self, name, df):
         """
@@ -853,7 +856,7 @@ class MultiReader(SingleReader, aux._ID):
         else: 
             try:
                 data = self._get_from_which(self._assays, which)
-            except: 
+            except KeyError: 
                 data = self._get_from_which(self._normalisers, which)
         return data
 
@@ -963,7 +966,8 @@ class MultiReader(SingleReader, aux._ID):
         # read new data
         try: 
             self.read(filename, **kwargs)
-        except: 
+        except Exception as e: 
+            logger.debug( e )            
             self.read(filename)
             e = aw.ParserError( "incompatible_read_kwargs", func = f"{type(self._Parser).__name__}'s read method" )
             logger.error( e )
@@ -1484,12 +1488,9 @@ class BigTableReader(MultiReader):
         # iterate over all entries in the first row
         idx = 0 
         for entry in array:
-        # try: 
             match = decorator.search(entry)
             if match is not None: 
                 indices[idx] = 1
-        # except: 
-        #     continue
             idx += 1
 
         # get matching indices and reduce dimensionality
@@ -1565,12 +1566,17 @@ class BigTableReader(MultiReader):
             # to that end we use the same approach as the Parsers .make_dataframes()
             try: 
                 ct_col = ct_col.astype(float)
-            except: 
+            except Exception as e: 
+                logger.debug( e )
+                logger.debug( "Could not convert to float directly. Trying to convert to string and then to float." )
 
                 ct_col = np.array( ct_col, dtype=str )
                 try: 
                     ct_col = np.genfromtxt(  ct_col  )
-                except: 
+                except Exception as e:
+                    logger.debug( e )
+                    logger.debug( "Could not convert to float after string conversion. Resorting to regex matching..." )
+
                     faulties = np.argwhere(    [  Parsers.float_pattern.match(i) is None for i in ct_col ]  ) 
                     ct_col[ faulties ] = "nan"
                     ct_col = np.genfromtxt(  ct_col  )
