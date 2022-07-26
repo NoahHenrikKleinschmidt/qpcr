@@ -570,7 +570,7 @@ class _CORE_Parser:
             # unless we use multi-assay multi-sheet files)
             ignore_empty = aux.from_kwargs("ignore_empty", False, kwargs)
             if not ignore_empty:
-                e =  aw.ParserError("no_assays_found")
+                e = aw.ParserError("no_assays_found")
                 SystemExit( e )
 
         names = names[indices]
@@ -1331,7 +1331,7 @@ class ExcelParser(_CORE_Parser):
             self.read(filename, **kwargs)
         except Exception as e:
             logger.debug( e )
-             
+
             self.read(filename)
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel")
             logger.info( e )

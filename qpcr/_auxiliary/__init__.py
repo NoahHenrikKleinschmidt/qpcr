@@ -50,7 +50,9 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
             try:
                 import __main__
                 filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
-            except:
+            except Exception as e:
+                logger.info( e )
+                logger.info( "Could not generate a filename for the log file. Using stdout instead." )
                 return log( filename = "stdout", level = level, format = format, name = name )
         
         elif not filename.endswith(".log"): 
@@ -93,8 +95,9 @@ def from_kwargs(key, default, kwargs, rm = False):
             r = kwargs[key]
         else: 
             r = kwargs.pop(key)
-    except: 
-        r = default
+    except Exception as e:
+        logger.debug( e ) 
+        r = default 
     return r 
 
 
@@ -257,6 +260,7 @@ def fileID(filename):
     return basename
 
 
+logger = default_logger()
 
 if __name__ == "__main__":
 

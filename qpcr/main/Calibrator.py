@@ -176,7 +176,8 @@ Loaded File:\t{self._loaded_file}
             self.adopt( current )
             self._loaded_file = filename
             return current
-        except: 
+        except Exception as e:
+            logger.error( e ) 
             e = aw.CalibratorError( "unknown_filetype", filename=filename )
             logger.critical( e )
             raise e
@@ -334,7 +335,8 @@ Loaded File:\t{self._loaded_file}
             else: 
                 try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                except: 
+                except Exception as e:
+                    logger.info( e ) 
                     e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
                     if not ignore_uncalibrated:
                         logger.critical( e )
@@ -344,7 +346,8 @@ Loaded File:\t{self._loaded_file}
         else:
             try: 
                 assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-            except:
+            except Exception as e:
+                logger.info( e )
                 e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
                 if not ignore_uncalibrated:
                     logger.critical( e )
@@ -630,8 +633,11 @@ Loaded File:\t{self._loaded_file}
             dilutions = np.log(dilutions)
             self._reset_dilution()
             return dilutions 
-        except: 
-            aw.HardWarning("Calibrator:could_not_infer_dilution")
+        except Exception as e:
+            logger.error( e ) 
+            e = aw.CalibratorError( "could_not_infer_dilution" )
+            logger.critical( e )
+            raise e
 
     def _generate_dilution_steps(self, df):
         """

@@ -1,7 +1,10 @@
+import qpcr._auxiliary as aux
 from itertools import permutations, product
 import numpy as np 
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+logger = aux.default_logger()
 
 def generate_palette(kwargs, return_check = False ):
     """
@@ -16,10 +19,18 @@ def generate_palette(kwargs, return_check = False ):
     if color is not None: 
         try: 
             palette = sns.color_palette( color )
-        except:
+        except Exception as e:
+            logger.debug( e )
+            logger.info( "Could not assign provided color to palette... Using it as single color(s)")
             palette = color
             is_palette = False
-
+    elif palette is not None:
+        try:
+            palette = sns.color_palette( palette )
+        except Exception as e:
+            logger.debug( e )
+            logger.critical( "Could not assign provided palette to palette...")
+            raise e 
     if return_check:
         return palette, is_palette
     return palette
@@ -155,7 +166,7 @@ class AxesCoords:
         """
         first_range = list( range(self._base, self._limit_first+self._base) )
         second_range = list( range(self._base, self._limit_second+self._base) )
-        coords = first_range + [ i for  i in second_range if i not in first_range ] 
+        coords = first_range + [ i for i in second_range if i not in first_range ] 
         coords = list( product( first_range, second_range ) )
 
         # for first in first_range:
@@ -172,7 +183,7 @@ class AxesCoords:
         if self._is2D:
             coords = self._coords[self._idx]
         else:
-            coords =  self._coords[self._idx][0]
+            coords = self._coords[self._idx][0]
         return coords
 
     def _check_2D(self):
