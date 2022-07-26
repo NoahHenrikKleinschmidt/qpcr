@@ -441,8 +441,9 @@ class _CORE_Parser:
             try: 
                 self.find_columns()
                 self.make_dataframes(**kwargs)
-            except: 
-                pass
+            except Exception as e:
+                logger.info( e ) 
+                
         else: 
             self.find_columns()
             self.make_dataframes(**kwargs)
@@ -514,13 +515,10 @@ class _CORE_Parser:
         names = np.array(["-"*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders ('-')
         idx = 0
         for entry in array:
-            # try:
             match = self.assay_pattern().search(entry)
             if match is not None: 
                 name = match.group(1)
                 names[idx] = name
-            # except: 
-            #     continue
             idx += 1
 
         self._assay_indices = assay_indices
@@ -559,14 +557,11 @@ class _CORE_Parser:
         names = np.array(["-"*self._max_assay_name_length for _ in range(len(array))]) # we need to pre-specify the max allowed length for the assay names by filling an array with some dummy placeholders ('-')
         idx = 0
         for entry in array:
-            # try: 
             match = pattern_to_use.search(entry)
             if match is not None: 
                 name = match.group(1)
                 names[idx] = name
                 indices[idx] = 1
-            # except: 
-            #     continue
             idx += 1
         indices = np.argwhere(indices == 1)
 
@@ -719,7 +714,9 @@ class _CORE_Parser:
                     # so we avoid it if possible...
                 array = np.genfromtxt(  array  )
                 
-            except: 
+            except Exception as e:
+                logger.debug( e )
+                logger.info( "Failed to convert to numeric data. Attempting to use regex to match faulty entries..." ) 
                     # first get the indices of all entries that are not floats
                     # and convert these manually to "nan"
                 faulties = np.argwhere(    [ float_pattern.match(i) is None for i in array ]   ) 
@@ -769,7 +766,8 @@ class _CORE_Parser:
         while True:
             try: 
                 entry = data[start+idx, col]
-            except: 
+            except Exception as e:
+                logger.debug( e ) 
                 break
             if entry == "nan":
                 break
@@ -1071,7 +1069,9 @@ class _CORE_Parser:
             value = 0
             while True:
                 try: value = data[row + idx, col]
-                except: break
+                except Exception as e: 
+                    logger.debug( e )
+                    break
                 if value != value: 
                     break
                 idx += 1
@@ -1159,7 +1159,9 @@ class CsvParser(_CORE_Parser):
         """
         try: 
             self.read(filename, **kwargs)
-        except: 
+        except Exception as e:
+            logger.info( e )
+
             self.read(filename)
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv")
             logger.info( e )
@@ -1194,7 +1196,8 @@ class CsvParser(_CORE_Parser):
         # now read the data and convert to numpy array
         try: 
             df = pd.read_csv(contents, header = None, sep = delimiter, **kwargs)
-        except: 
+        except Exception as e:
+            logger.debug( e )
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_csv()")
             logger.info( e )
             df = pd.read_csv(contents, header = None, sep = delimiter)
@@ -1288,7 +1291,8 @@ class ExcelParser(_CORE_Parser):
         # read data and convert to numpy array
         try: 
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None, **kwargs)
-        except: 
+        except Exception as e:
+            logger.debug( e ) 
             data = pd.read_excel(self._src, sheet_name = sheet_name, header = None)
             
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel()")
@@ -1325,7 +1329,9 @@ class ExcelParser(_CORE_Parser):
         """
         try: 
             self.read(filename, **kwargs)
-        except: 
+        except Exception as e:
+            logger.debug( e )
+             
             self.read(filename)
             e = aw.ParserError("incompatible_read_kwargs", func = "pandas.read_excel")
             logger.info( e )
