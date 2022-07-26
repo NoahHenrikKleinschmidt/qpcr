@@ -119,6 +119,8 @@ interactive_PreviewBars = dict(
 # --------------------------------
 static_ReplicateBoxPlot = dict(
                                     title = "Summary of Replicates",
+                                    ylabel = raw_col_names[1],
+                                    xlabel = raw_col_names[0],
                                     linewidth = 0.8,
                                     frame = False,
                                     style = "dark",
@@ -126,6 +128,7 @@ static_ReplicateBoxPlot = dict(
                                 )
 
 interactive_ReplicateBoxPlot = dict(
+                                        ylabel = raw_col_names[1],       
                                         template = "plotly_white",
                                         title = "Summary of Replicates"
                                     )
@@ -135,6 +138,7 @@ interactive_ReplicateBoxPlot = dict(
 static_FilterSummary = dict(
                                     title = "Filtering Summary",
                                     linewidth = 0.8,
+                                    ylabel = raw_col_names[1],
                                     frame = False,
                                     style = "dark", 
                                     rot = 30,
@@ -142,6 +146,7 @@ static_FilterSummary = dict(
                                 )
 
 interactive_FilterSummary = dict(
+                                        ylabel = raw_col_names[1],
                                         template = "plotly_white",
                                         title = "Filtering Summary"
                                     )
