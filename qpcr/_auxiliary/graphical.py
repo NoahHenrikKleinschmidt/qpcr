@@ -6,6 +6,139 @@ import seaborn as sns
 
 logger = aux.default_logger()
 
+
+# the finished encode_pvalues function
+def encode_pvalues( 
+                    pvalues : np.ndarray, 
+                    style : str = "p=", 
+                    threshold : float = 0.05, 
+                    step : float = 0.1, 
+                    max_levels : int = 5, 
+                    levels : tuple = None, 
+                    ns_default : str = "n.s.",
+                    asterisk : str  = "*",
+                    fmt : str = None,
+                    ) -> np.ndarray :
+    """
+    Encode an array of pvalues into string representation for visualisation.
+
+    Parameters
+    ----------
+    pvalues : np.ndarray
+        An 1D np.ndarray of p-values. 
+    
+    style : str
+        The style in which to encode the p-values. Available are 
+        - `"p<"`, style by pvalue levels (e.g. `p < 0.05`)
+        - `"p="`, style by actual pvalues if they are below a threshold (e.g. `p = 0.000124`)
+        - `"*"`, style using asterisks by 
+    
+    threshold : float 
+        The significance p-value threshold.
+
+    step : float
+        The step between each significance level. I.e. a step of `0.1` means that the threshold for
+        level 2 is 10 times smaller than for level 1 (e.g. from 0.05, to 0.005, to 0.0005 etc.).
+
+    max_levels : int
+        The maximal number of levels to include. This is only used for styles with levels (i.e. `"p<"` and "*"` ). 
+    
+    levels : tuple 
+        A custom iterable of p-value level threshold. Only used for style `"p<"`.
+
+    ns_default : str
+        The default string to use for non-significant p-values.
+    
+    asterisk : str
+        The character to use for encoding in the `"*"` style. 
+    
+    fmt : str
+        A string formatter for the numeric p-values. By default these will be: 
+        - `".2g"` for style `"p<"`, 
+        - `".3g"` for style `"p="`,
+        - not applicable for style `"*"`
+
+    Returns
+    -------
+    strings : np.ndarray
+        A string encoded version of the p-values.
+
+    Examples
+    -------
+    >>> encode_pvalues( (0.23, 0.12, 0.0001, 0.0023) )
+    array(['n.s.', 'n.s.', 'p = 0.0001', 'p = 0.0023'], dtype='<U10')
+    >>> encode_pvalues( (0.23, 0.12, 0.0001, 0.0023), style = "*" )
+    array(['n.s.', 'n.s.', '***', '**'], dtype='<U4')
+    >>> encode_pvalues( (0.03, 0.12, 0.011222, 2.3e-12), style = "p<", levels = (0.1, 1e-3, 1e-6), ns_default = "not signif." )
+    array(['p < 0.1', 'not signif.', 'p < 0.1', 'p < 1e-06'], dtype='<U11')
+
+    References
+    ----------
+    This code is based on the StackOverflow thread: https://stackoverflow.com/questions/11517986/indicating-the-statistically-significant-difference-in-bar-graph
+    """
+
+    # setup the string labels, with some additional buffer of 20 characters so that we can fit
+    # p-values that are small better...
+    strings = np.array( [ ns_default + " " * 20 ] * len(pvalues) ) 
+
+    # make sure the pvalues are a numpy array
+    if not isinstance( pvalues, np.ndarray ):
+        pvalues = np.array( pvalues )
+
+    # setup suitable formatters
+    encoders = {
+                        "p<" : lambda x, fmt: eval( " f'p < {" + str( x ) + ":" + fmt + "}'" ),
+                        "p=" : lambda x, fmt: eval( " f'p = {" + str( x ) + ":" + fmt + "}'" ),
+                        "*"  : lambda x, fmt: asterisk * x
+                }
+    
+    if style not in encoders.keys():
+        raise ValueError( f"Unknown style: {style}. Please, use either 'p<', 'p=', or '*'" )
+
+    # setup default fmt if none is submitted
+    if fmt is None: 
+        fmt = ".2g" if style == "p<" else ".3g"
+
+    # get the appropriate encoder
+    encoder = lambda x: encoders[style]( x = x, fmt = fmt )
+
+    # make sure the step is a valid float between 0,1
+    if step > 1: step = 1/step
+    
+    # now apply the encoding to generate a string array for the pvalues
+
+    if style == "p<":
+
+        # setup levels if none were provided
+        if levels is None:
+            levels = np.arange( max_levels )
+            levels = threshold * ( step ** levels )
+        for level in levels:
+            subset = pvalues <= level
+            strings[ subset ] = encoder( level )
+
+    elif style == "p=":
+        for i in np.arange( len(pvalues) ):
+            p = pvalues[i]
+            if p <= threshold:
+                strings[i] = encoder( p )
+
+    elif style == "*":
+        for i in np.arange( len(pvalues) ):
+            p = pvalues[i]
+            t = threshold
+            if p <= t:
+                level = 0
+                while p <= t and level <= max_levels:
+                    level += 1
+                    t *= step
+                strings[ i ] = encoder( level )
+
+    # strip any remaining buffer whitespaces...
+    strings = np.array( [ i.strip() for i in strings ] )     
+    return strings
+
+
 def generate_palette(kwargs, return_check = False ):
     """
     Generates a color pallete for seaborn 
