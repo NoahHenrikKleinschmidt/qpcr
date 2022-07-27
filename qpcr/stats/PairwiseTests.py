@@ -207,7 +207,7 @@ class PairwiseTests(aux._ID):
             else:
                 raise ValueError( f"Invalid group type. Groups must be either integers or strings. Got: {type(groups[0])}" )
         else:
-            ref_col = "group"
+            ref_col = "group_name"
 
         # check if we should restrict to only conventional ddCt cols or all non-setup cols
         columns, comparisons, labels = self._prepare_pairwise_assays( columns, results, **kwargs )
@@ -306,8 +306,10 @@ class PairwiseTests(aux._ID):
         Prepares the groups to be compared for pairwise comparison.
         """
         if groups is None:
-            labels = [ results.groups(), results.groups() ]
-            groups = list( permutations( results.groups(), r = 2 ) ) 
+            # labels = [ results.groups(), results.groups() ]
+            # groups = list( permutations( results.groups(), r = 2 ) ) 
+            labels = [ results.names(), results.names() ]
+            groups = list( permutations( results.names(), r = 2 ) ) 
         elif isinstance( groups, (list,tuple) ):
             labels = [ groups, groups ]
             groups = list( permutations( groups, r = 2 ) ) 
