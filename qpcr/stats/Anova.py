@@ -12,10 +12,11 @@ import scipy.stats as scistats
 import qpcr._auxiliary as aux
 import qpcr.main as main
 import qpcr.stats.Comparisons as Comparisons
+import qpcr.stats.StatsTest as StatsTest
 
 logger = aux.default_logger()
 
-class Anova(aux._ID):
+class Anova(StatsTest.StatsTest):
     """
     Performs statistical evaluations of Results using an ANOVA model.
     Two modes are supported: ``groupwise`` and ``assaywise``. 
@@ -25,27 +26,8 @@ class Anova(aux._ID):
     In `groupwise` mode, the ANOVA compares the data columns within each group of the dataframe overall.
     """
     def __init__(self, id : str = None):
-        super().__init__()
-        self.id(id)
-        self._obj = None
-        self.assaywise_results = None
-        self.groupwise_results = None
-        self._results = None
+        super().__init__( id )
     
-    def link(self, obj : main.Results ):
-        """
-        Links a new object to evaluate.
-        """
-        self._obj = obj
-    
-    def get( self ):
-        """
-        Returns
-        ------
-        results 
-            The results of the last performed test
-        """
-        return self._results
     
     def assaywise_anova( self, obj : (main.Results or main.Assay) = None, equal_var : bool = True, groups : list = None, columns : list = None, **kwargs ):
         """
@@ -237,3 +219,4 @@ class Anova(aux._ID):
 
 
 __default_Anova__ = Anova()
+"""The default Anova"""
