@@ -61,12 +61,14 @@ import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
 import qpcr.main as main
+import qpcr.stats.Comparisons as Comparisons
 
 import re
 import pandas as pd
 import numpy as np
 from scipy.stats import sem, t
 import os
+
 
 logger = aux.default_logger()
 class Results(aux._ID):
@@ -79,7 +81,7 @@ class Results(aux._ID):
     externally computed sources. Please, note that it will not perform extensive vetting on its data input, 
     so make sure to only provide proper data input when manually assembling your ``qpcr.Results``!
     """
-    __slots__ = [ "_df", "_stats_df", "_id", "_rel_cols" ]
+    __slots__ = [ "_df", "_stats_df", "_id", "_rel_cols", "_comparisons" ]
 
     def __init__(self, id:str = None):
         super().__init__()
@@ -89,28 +91,8 @@ class Results(aux._ID):
         self._df = pd.DataFrame()
         self._stats_df = pd.DataFrame()
         self._rel_cols = None
-    
-    def __str__(self):
-        _length = len( str(self._df).split("\n")[0] ) 
-        s = f"""
-{"-" * _length}
-{self._df}
-{"-" * _length}
-        """.strip()
-        if self.id_was_set():
-            s = f"{'-' * _length}\n{self.__class__.__name__}: {self._id}\n{s}"
-        return s 
 
-    def __repr__( self ):
-        id = self._id
-        data = self.ddCt_cols
-        return f"{self.__class__.__name__}({id=}, {data=})"
-
-    def __len__(self):
-        return len(self._df)
-    
-    def __iter__(self):
-        return ( self._df[ defaults.setup_cols + [i] ] for i in self.data_cols )
+        self._comparisons = None
 
     def get(self):
         """
@@ -229,20 +211,6 @@ class Results(aux._ID):
 
         return self 
 
-    def __setitem__( self, key, value ):
-        self._df[ key ] = value 
-
-    def __getitem__( self, key ):
-        if isinstance(key, (list, tuple)) or key in self._df.columns:
-            return self._df[ key ]
-        if key in self._stats_df.columns:
-            return self._stats_df[ key ]
-        
-    def __delitem__( self, key ):
-        if key in self._df.columns:
-            del self._df[ key ]
-        if key in self._stats_df.columns:
-            del self._stats_df[ key ]
 
     def merge( self, *Results, all_cols : bool = False ):
         """
@@ -292,9 +260,6 @@ class Results(aux._ID):
         self._df = new_df
         return self
 
-    def __add__(self, other):
-        self.merge( other )
-        return self
     
     def rename( self, cols : dict ):
         """
@@ -574,9 +539,24 @@ class Results(aux._ID):
         fig = preview_results.plot()
         return fig 
 
-    def __qplot__( self, **kwargs ):
-        return self.preview
+    def add_comparisons(self, comp ):
+        """
+        Add a results from a statistical evaluation of the stored `Results` in the form of a `Comparison` object.
 
+        Parameters
+        ----------
+        comp 
+            Either a `Comparison` or `ComparisonsCollection` object.
+        """
+        self._comparisons = comp
+
+    @property
+    def comparisons(self):
+        """
+        Returns a `Comparison` object storing the results of statistical analysis that were performed (if any).
+        """
+        return self._comparisons
+    
     @property
     def columns(self):
         return self._df.columns
@@ -624,4 +604,61 @@ class Results(aux._ID):
         """
         filename = path if not os.path.isdir(path) else os.path.join(path, f"rel_{self.id()}{suffix}.csv")
         src.to_csv(filename, index = False)
+    
+    def _has_pairwise_comparisons(self):
+        """
+        Checks if the `Results` object has any pairwise comparisons (returns True if so).
+        """
+        if self._comparisons is not None:
+            if isinstance( self._comparisons, Comparisons.ComparisonsCollection ):
+                if isinstance( self._comparisons[0], Comparisons.PairwiseComparison ):
+                    return True
+            elif isinstance( self._comparisons, Comparisons.PairwiseComparison ):
+                return True
+        return False
+
+
+    def __qplot__( self, **kwargs ):
+        return self.preview
+
+    def __setitem__( self, key, value ):
+        self._df[ key ] = value 
+
+    def __getitem__( self, key ):
+        if isinstance(key, (list, tuple)) or key in self._df.columns:
+            return self._df[ key ]
+        if key in self._stats_df.columns:
+            return self._stats_df[ key ]
         
+    def __delitem__( self, key ):
+        if key in self._df.columns:
+            del self._df[ key ]
+        if key in self._stats_df.columns:
+            del self._stats_df[ key ]
+
+
+    def __add__(self, other):
+        self.merge( other )
+        return self
+
+    def __str__(self):
+        _length = len( str(self._df).split("\n")[0] ) 
+        s = f"""
+{"-" * _length}
+{self._df}
+{"-" * _length}
+        """.strip()
+        if self.id_was_set():
+            s = f"{'-' * _length}\n{self.__class__.__name__}: {self._id}\n{s}"
+        return s 
+
+    def __repr__( self ):
+        id = self._id
+        data = self.ddCt_cols
+        return f"{self.__class__.__name__}({id=}, {data=})"
+
+    def __len__(self):
+        return len(self._df)
+    
+    def __iter__(self):
+        return ( self._df[ defaults.setup_cols + [i] ] for i in self.data_cols )

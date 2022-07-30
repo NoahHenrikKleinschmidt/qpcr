@@ -287,6 +287,8 @@ class MultiTestComparison(Comparison):
 
         self._asymmetric_pvalues = self._pvalues.copy()
         self._pvalues = self._make_symmetric( self._pvalues )
+        self._orig_pvalues = self._make_symmetric( self._orig_pvalues )
+        
         return self 
 
     def stack(self):
