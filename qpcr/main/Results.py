@@ -60,8 +60,8 @@ For this we might only wish to store the Ct values and then save them to a new f
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
 import qpcr._auxiliary.warnings as aw
-import qpcr.main as main
-import qpcr.stats.Comparisons as Comparisons
+import qpcr.main.Assay as Assay
+# import qpcr.stats.Comparisons as Comparisons
 
 import re
 import pandas as pd
@@ -104,7 +104,7 @@ class Results(aux._ID):
         return self._df
 
 
-    def add_Ct(self, assay : main.Assay ):
+    def add_Ct(self, assay : Assay.Assay ):
         """
         Adds a `"Ct"` column with Delta-Ct values from an ``qpcr.Assay``.
         It will store these as a new column using the Assay's ``id`` as header.
@@ -123,7 +123,7 @@ class Results(aux._ID):
 
         self.add( assay.Ct )
 
-    def add_dCt(self, assay : main.Assay ):
+    def add_dCt(self, assay : Assay.Assay ):
         """
         Adds a `"dCt"` column with Delta-Ct values from an ``qpcr.Assay``.
         It will store these as a new column using the Assay's ``id`` as header.
@@ -142,7 +142,7 @@ class Results(aux._ID):
 
         self.add( assay.dCt )
 
-    def add_ddCt(self, assay : main.Assay ):
+    def add_ddCt(self, assay : Assay.Assay ):
         """
         Adds all `"rel_{}"` columns with Delta-Delta-Ct values from an ``qpcr.Assay``.
         It will store these as new columns using the Assay's ``id`` + the ``_rel_{}`` composite id.
@@ -314,7 +314,7 @@ class Results(aux._ID):
         for c in cols: 
             del self[ c ] 
 
-    def setup_cols( self, obj : (main.Assay or pd.DataFrame)):
+    def setup_cols( self, obj : (Assay.Assay or pd.DataFrame)):
         """
         Adopts the setup columns: ``id, group, group_name`` from another object.
        
@@ -605,17 +605,17 @@ class Results(aux._ID):
         filename = path if not os.path.isdir(path) else os.path.join(path, f"rel_{self.id()}{suffix}.csv")
         src.to_csv(filename, index = False)
     
-    def _has_pairwise_comparisons(self):
-        """
-        Checks if the `Results` object has any pairwise comparisons (returns True if so).
-        """
-        if self._comparisons is not None:
-            if isinstance( self._comparisons, Comparisons.ComparisonsCollection ):
-                if isinstance( self._comparisons[0], Comparisons.PairwiseComparison ):
-                    return True
-            elif isinstance( self._comparisons, Comparisons.PairwiseComparison ):
-                return True
-        return False
+    # def _has_pairwise_comparisons(self):
+    #     """
+    #     Checks if the `Results` object has any pairwise comparisons (returns True if so).
+    #     """
+    #     if self._comparisons is not None:
+    #         if isinstance( self._comparisons, Comparisons.ComparisonsCollection ):
+    #             if isinstance( self._comparisons[0], Comparisons.PairwiseComparison ):
+    #                 return True
+    #         elif isinstance( self._comparisons, Comparisons.PairwiseComparison ):
+    #             return True
+    #     return False
 
 
     def __qplot__( self, **kwargs ):
