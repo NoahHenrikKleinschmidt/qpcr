@@ -625,7 +625,7 @@ class ComparisonsCollection:
 
     def __add__( self, other ):
         if not isinstance( other, self.__class__ ):
-            raise TypeError( f"other must be a MultipleComparisons object. Got '{type(other).__name__}' instead" )
+            raise TypeError( f"other must be a {self.__class__.__name__} object. Got '{type(other).__name__}' instead" )
         return ComparisonsCollection( self._dict + other._dict )
 
     def __iter__( self ):
