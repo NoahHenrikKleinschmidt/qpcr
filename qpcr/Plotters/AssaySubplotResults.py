@@ -189,8 +189,7 @@ class AssayBars(AssaySubplotsResults):
                     )
 
             if rot is not None: 
-                align = "center" if rot == 0 else "left"
-                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+                self._set_xtick_rotation( subplot, rot )
 
             if not show_spines:
                 subplot.spines["right"].set_visible(False)
@@ -437,9 +436,8 @@ class AssayDots(AssaySubplotsResults):
 
             # adjust xtick rotation   
             if rot is not None: 
-                align = "center" if rot == 0 else "left"
-                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
-
+                self._set_xtick_rotation( subplot, rot )
+                
             if not show_spines:
                 subplot.spines["right"].set_visible(False)
                 subplot.spines["top"].set_visible(False)

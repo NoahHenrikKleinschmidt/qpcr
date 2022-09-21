@@ -196,19 +196,14 @@ class GroupBars(GroupSubplotsResults):
                 )
 
             if rot is not None: 
-                align = "center" if rot == 0 else "left"
-                plt.setp( ax.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
-
+                self._set_xtick_rotation( ax, rot )
 
             if not show_spines:
-                ax.spines["right"].set_visible(False)
-                ax.spines["top"].set_visible(False)
-                ax.spines["left"].set_linewidth(1.05)
-                ax.spines["bottom"].set_linewidth(1.05)
+                sns.despine()
 
-                # add ABCD... label to subplot
-                if label_subplots:
-                    self._add_subplot_label(idx, ax, start_character)         
+            # add ABCD... label to subplot
+            if label_subplots:
+                self._add_subplot_label(idx, ax, start_character)         
 
             idx += 1
 
@@ -444,14 +439,10 @@ class GroupDots(GroupSubplotsResults):
 
             # adjust xtick rotation   
             if rot is not None: 
-                align = "center" if rot == 0 else "left"
-                plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+                self._set_xtick_rotation( subplot, rot )
 
             if not show_spines:
-                subplot.spines["right"].set_visible(False)
-                subplot.spines["top"].set_visible(False)
-                subplot.spines["left"].set_linewidth(1.05)
-                subplot.spines["bottom"].set_linewidth(1.05)
+                sns.despine()
 
             # add ABCD... label to subplot
             if label_subplots:

@@ -240,9 +240,8 @@ class EfficiencyLines(base.Plotter):
                 )
 
             if rot is not None: 
-                align = "center" if rot == 0 else "left"
-                plt.setp( ax.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
-
+                self._set_xtick_rotation( ax, rot )
+                
             # add ABCD... label to subplot
             if label_subplots:
                 self._add_subplot_label(idx, ax, start_character)         

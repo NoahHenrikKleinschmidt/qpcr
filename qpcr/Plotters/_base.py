@@ -291,6 +291,33 @@ class Plotter(_Base):
         return height, width
 
     @staticmethod
+    def _set_xtick_rotation( subplot, rot ):
+        """
+        Sets the rotation of x-axis ticks.
+        """
+
+        # adjust anchor location
+        if rot > 0:
+            align = "left"
+        elif rot < 0:
+            align = "right"
+        else:
+            align = "center"
+
+        # set rotation
+        plt.setp( subplot.xaxis.get_majorticklabels(), rotation = -rot, ha=align, rotation_mode="anchor") 
+
+    @staticmethod
+    def _despine( ax ):
+        """
+        Performs despining but makes remaining x and y axes a bit thicker...
+        """
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["left"].set_linewidth(1.05)
+        ax.spines["bottom"].set_linewidth(1.05)
+
+    @staticmethod
     def _get_groups_and_names(data):
         """
         Gets unique groups and names from the data's correspondingly named columns.
