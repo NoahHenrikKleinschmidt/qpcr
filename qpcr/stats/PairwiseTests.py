@@ -32,19 +32,6 @@ class PairwiseTests(StatsTest.StatsTest):
     def __init__(self, id : str = None):
         super().__init__( id )
         self._effect_size_func = self._default_effect_size_func
-    #     self._pairs = None
-    
-    # @property
-    # def pairs( self ) -> list:
-    #     """
-    #     The pairs of groups or assays that were used to compute the pairwise t-tests.
-
-    #     Returns
-    #     -------
-    #     list
-    #         A list of tuples of the form (group1, group2) or (assay1, assay2).
-    #     """
-    #     return self._pairs
 
     def set_effect_size( self, f ):
         """
@@ -114,7 +101,6 @@ class PairwiseTests(StatsTest.StatsTest):
         # the labels are for rows / columns annotations later
         # for the dataframes in PairwiseComparison
         groups, labels = self._prepare_pairwise_groups(groups, results)
-        # self._pairs = groups
 
         logger.debug( f"{labels=}" )
         # check the ref column to use
@@ -206,8 +192,6 @@ class PairwiseTests(StatsTest.StatsTest):
 
         # check if we should restrict to only conventional ddCt cols or all non-setup cols
         columns, comparisons, labels = self._prepare_pairwise_assays( columns, results, **kwargs )
-        # self._pairs = columns
-        
         if len(columns) == 1:
             raise IndexError( "You must pass at least two columns to compare." )
 
