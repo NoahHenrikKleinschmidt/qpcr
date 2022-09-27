@@ -282,7 +282,7 @@ class MultiTestComparison(Comparison):
 
     def make_symmetric(self):
         """
-        Fills up an assymettric 2D array of p-values to a symmetric 2D array around the diagonal.
+        Fills up an assymetric 2D array of p-values to a symmetric 2D array around the diagonal.
         """
 
         self._asymmetric_pvalues = self._pvalues.copy()
@@ -290,6 +290,16 @@ class MultiTestComparison(Comparison):
         self._orig_pvalues = self._make_symmetric( self._orig_pvalues )
         
         return self 
+
+    def make_asymmetric(self):
+        """
+        Make an symmetric 2D array of p-values asymmetric again araoung the diagonal.
+        """
+        mask = self._asymmetric_pvalues == self._asymmetric_pvalues
+        self._pvalues[ ~mask ] = np.nan
+        self._orig_pvalues[ ~mask ] = np.nan
+
+        return self
 
     def stack(self):
         """
@@ -421,6 +431,17 @@ class PairwiseComparison(MultiTestComparison):
             self._statistic = self._make_symmetric( self._statistic )
         return self 
 
+    def make_asymmetric(self):
+        """
+        Make an symmetric 2D array of p-values, and t-statistics (if provided), and effect sizess (if provided) asymmetric again araoung the diagonal.
+        """
+        super().make_asymmetric()
+        mask = self._asymmetric_pvalues == self._asymmetric_pvalues
+        if self._effect_size is not None:
+            self._effect_size[ ~mask ] = np.nan
+        if self._statistic is not None:
+            self._statistic[ ~mask ] = np.nan
+        return self
 
     def stack(self):
         """
