@@ -246,9 +246,10 @@ class MultiTestComparison(Comparison):
         self._p_are_adjusted = False
         self._corrected_pvalues = None
         self._asymmetric_pvalues = None
+        self._is_symmetric = False
         self._get_dict = { **self._get_dict, "raw" : self._orig_pvalues }
 
-    def adjust_pvalues(self, make_symmetric : bool = False, **kwargs):
+    def adjust_pvalues(self, make_symmetric : bool = False, **kwargs) -> np.ndarray:
         """
         Adjusts the p-values for the comparison by benjamini-hochberg.
 
@@ -289,6 +290,7 @@ class MultiTestComparison(Comparison):
         self._pvalues = self._make_symmetric( self._pvalues )
         self._orig_pvalues = self._make_symmetric( self._orig_pvalues )
         
+        self._is_symmetric = True
         return self 
 
     def make_asymmetric(self):
@@ -299,9 +301,10 @@ class MultiTestComparison(Comparison):
         self._pvalues[ ~mask ] = np.nan
         self._orig_pvalues[ ~mask ] = np.nan
 
+        self._is_symmetric = False 
         return self
 
-    def stack(self):
+    def stack(self) -> pd.DataFrame:
         """
         Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
         into multi-column column dataframe format. 
@@ -329,7 +332,7 @@ class MultiTestComparison(Comparison):
         return final 
 
     @property
-    def pvalues_adjusted(self):
+    def pvalues_adjusted(self) -> np.ndarray:
         """
         Returns
         -------
@@ -341,7 +344,7 @@ class MultiTestComparison(Comparison):
         return self._pvalues
     
     @property
-    def pvalues_raw(self):
+    def pvalues_raw(self) -> np.ndarray:
         """
         Returns
         -------
@@ -443,7 +446,7 @@ class PairwiseComparison(MultiTestComparison):
             self._statistic[ ~mask ] = np.nan
         return self
 
-    def stack(self):
+    def stack(self) -> pd.DataFrame:
         """
         Stacks the 2D data arrays of pvalues, adjusted pvalues and effect sizes 
         into multi-column column dataframe format. 
@@ -472,10 +475,8 @@ class PairwiseComparison(MultiTestComparison):
             final[ "effect_size" ] = effects[ "effect_size" ]
         return final 
 
-    
 
-
-    def to_df(self, which : str = None):
+    def to_df(self, which : str = None) -> pd.DataFrame:
         """
         Converts a data array into a pandas DataFrame with labeled index and columns.
         This will retain the 2D grid arrangement of the data. 
@@ -503,6 +504,49 @@ class PairwiseComparison(MultiTestComparison):
         data = data[ which ]
         return self._to_df( data )
 
+
+    def get_pairs( self, unique : bool = True, include_pvals : bool = False, which_pvals : str = None ) -> list:
+        """
+        Get the pairs of groups or assays that were compared.
+
+        Parameters
+        ----------
+        unique : bool
+            If True, only unique pairs are returned. If False, all pairs are returned. 
+            If True, pairs are considered equivalent as (p1, p2) == (p2, p1), if False, they are not.
+        include_pvals : bool
+            If True, the p-values for the comparisons are included in the returned as list. In this case this function returns two 
+            lists, one for the pairs and one for their pvalues.
+        which_pvals : str
+            Either `"pval"` for raw pvalues or `"pval_adj"` for adjusted pvalues. By default, 
+            if correction for multiple testing was performed, `"pval_adj"` is returned, else `"pval"`.
+        
+        Returns
+        -------
+        list
+            A list of pairs of groups or assays that were compared (tuples of labels).
+            If include_pvals is True, then a tuple of two lists is returned, the first 
+            containing the pairs, the second containing the pvalues. 
+        """
+        make_symmetric = False
+        if unique and self._is_symmetric:
+            make_symmetric = True
+            self.make_asymmetric()
+
+        df = self.stack().query( "pval == pval" )
+        pairs = list( zip( df["a"], df["b"]  ) ) 
+
+        if include_pvals:
+            if not which_pvals:
+                which_pvals = "pval_adj" if self._p_are_adjusted else "pval"
+            pvals = list( df[ which_pvals ] )
+            pairs = ( pairs, pvals )
+
+        if make_symmetric:
+            self.make_symmetric()
+
+        return pairs
+
     def save( self, filename : str ):
         """
         Saves the comparison to a file.
@@ -515,9 +559,18 @@ class PairwiseComparison(MultiTestComparison):
         df = self.stack()
         df.to_csv( filename, index = False )
 
+    @property
+    def pairs( self ) -> list:
+        """
+        Returns
+        -------
+        list
+            A list of tuples of all unique pairs that were compared.
+        """
+        return self.get_pairs()
     
     @property
-    def effect_size(self):
+    def effect_size(self) -> np.ndarray:
         """
         Returns
         -------
@@ -527,7 +580,7 @@ class PairwiseComparison(MultiTestComparison):
         return self._effect_size
     
     @property
-    def effects_subset( self ):
+    def effects_subset( self ) -> pd.DataFrame:
         """
         Returns
         -------
@@ -540,7 +593,7 @@ class PairwiseComparison(MultiTestComparison):
         p = self._to_df( self._effect_size )
         p = p.loc[ self.subset_groups[0], self.subset_groups[1] ]
         return p
-    
+
     def __str__(self):
         length = max( [ len( str(  self.to_df( i )  ).split("\n")[0] ) for i in ("effects", None) ] )
         adjusted = " (adjusted)" if self._p_are_adjusted else ""
