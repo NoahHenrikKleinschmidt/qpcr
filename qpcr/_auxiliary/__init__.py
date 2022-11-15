@@ -8,6 +8,23 @@ import re
 import qpcr.defaults as defaults
 import logging
 
+def pseudo_isinstance( obj, ref_name : str ):
+    """
+    Performs a pseudo isinstance only based on the reference string 
+
+    Parameters
+    ----------
+    obj : object
+        The object to check
+    ref_name : str
+        The reference name to check against
+
+    Returns
+    -------
+    bool
+        True if the object is of the same type as the reference name
+    """
+    return type(obj).__name__ == ref_name
 
 def log( filename = None, level = None, format = None, name = "qpcr" ):
     """

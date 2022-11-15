@@ -10,9 +10,13 @@ import qpcr._auxiliary.graphical as gx
 import qpcr.main as main
 
 import matplotlib.pyplot as plt
+from matplotlib.legend import Legend
+from matplotlib.lines import Line2D
+
 import plotly 
 from plotly.subplots import make_subplots
 
+from statannotations.Annotator import Annotator as StatAnnotator
 
 logger = aux.default_logger()
 
@@ -581,6 +585,71 @@ class ResultsPlotter(Plotter):
             e = aw.PlotterError( "unknown_data", obj = obj )
             logger.critical( e )
             raise e 
+
+    def _annotate_pvalues(self, x : str, y : str, sterr : str, pval_kws : dict, comparison, tmp_df, subplot):
+        """
+        Annotates p-values from a MultipleComparison object on a corresponding subplot.
+
+        Parameters
+        ----------
+        x : str
+            The name of the column containing the x-values.
+        y : str
+            The name of the column containing the y-values.
+        sterr : str
+            The name of the column containing the standard error of the y-values.
+        pval_kws : dict
+            A dictionary of keyword arguments for the p-value encoding using `encode_pvalues`.
+        comparison : PairwiseComparison
+            A PairwiseComparison object storing the p-values. 
+        tmp_df : pd.DataFrame
+            A temporary DataFrame containing the data to be plotted.
+        subplot : matplotlib.axes._subplots.AxesSubplot
+            The subplot to annotate the p-values on.
+        """
+        # pop some additional kwargs for the legend in case of the "*" style
+        if pval_kws.get("style") == "*":
+            legend_loc = pval_kws.pop("legend_loc", "lower left")
+            legend_title = pval_kws.pop("legend_title", None )
+            legend_bbox = pval_kws.pop("legend_bbox_to_anchor", (1.05, 0.25) )
+            legend_frameon = pval_kws.pop("legend_frameon", False )
+
+        # get the pvalues and labels of compared pairs
+        pairs, pvals = comparison.get_pairs( include_pvals = True )
+        pvals = gx.encode_pvalues( pvals, **pval_kws )
+
+        # check if we used the "*" annotation which also 
+        # returns the dictionary of the used levels
+        if isinstance( pvals, tuple ):
+            # unpack pvals and the annotation levels 
+            pvals, levels = pvals
+            
+            # reformat the levels
+            levels = list( levels.items() )
+            levels = sorted( levels, key = lambda x: x[1], reverse = True )
+            levels = [ f"{l[0]} <= {l[1]:.02e}" for l in levels ]
+            
+            # and add the custom legend for the pvalues in * notation
+            # pval_legend = Legend(   subplot, [Line2D( [0], [0], 0 )]*len(levels), 
+            #                         levels, loc = legend_loc, 
+            #                         bbox_to_anchor = legend_bbox, 
+            #                         frameon = legend_frameon, 
+            #                         title = legend_title )
+            # subplot.add_artist( pval_legend )
+            subplot.legend( [Line2D( [0], [0], 0 )]*len(levels), 
+                            levels, loc = legend_loc, 
+                            bbox_to_anchor = legend_bbox, 
+                            frameon = legend_frameon, 
+                            title = legend_title )
+
+        # set up the Annotator and add annotations
+        kwargs = {}
+        if sterr:
+            kwargs["yerr"] = sterr
+        annotator = StatAnnotator( subplot, pairs, data = tmp_df, x = x, y = y, verbose = False, **kwargs )
+        annotator.set_custom_annotations( pvals )
+        annotator.annotate()
+
 
     def _setup_default_plot_cols(self):
         """

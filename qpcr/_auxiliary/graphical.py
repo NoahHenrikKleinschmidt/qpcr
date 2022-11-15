@@ -18,6 +18,7 @@ def encode_pvalues(
                     ns_default : str = "n.s.",
                     asterisk : str  = "*",
                     fmt : str = None,
+                    export_levels : bool = False,
                     ) -> np.ndarray :
     """
     Encode an array of pvalues into string representation for visualisation.
@@ -60,15 +61,17 @@ def encode_pvalues(
 
     Returns
     -------
-    strings : np.ndarray
-        A string encoded version of the p-values.
+    strings : np.ndarray or tuple
+        For formats `"p<"` and `"p=` an array of string encoded p-values.
+        For format `"*"` a tuple of the encoded p-values (ndarray) and the levels used (dict) is returned.
 
     Examples
     -------
     >>> encode_pvalues( (0.23, 0.12, 0.0001, 0.0023) )
     array(['n.s.', 'n.s.', 'p = 0.0001', 'p = 0.0023'], dtype='<U10')
     >>> encode_pvalues( (0.23, 0.12, 0.0001, 0.0023), style = "*" )
-    array(['n.s.', 'n.s.', '***', '**'], dtype='<U4')
+    (array(['n.s.', 'n.s.', '***', '**'], dtype='<U4'),
+ {'***': 5.0000000000000016e-05, '**': 0.0005000000000000001})
     >>> encode_pvalues( (0.03, 0.12, 0.011222, 2.3e-12), style = "p<", levels = (0.1, 1e-3, 1e-6), ns_default = "not signif." )
     array(['p < 0.1', 'not signif.', 'p < 0.1', 'p < 1e-06'], dtype='<U11')
 
@@ -124,6 +127,7 @@ def encode_pvalues(
                 strings[i] = encoder( p )
 
     elif style == "*":
+        levels = {}
         for i in np.arange( len(pvalues) ):
             p = pvalues[i]
             t = threshold
@@ -133,9 +137,13 @@ def encode_pvalues(
                     level += 1
                     t *= step
                 strings[ i ] = encoder( level )
+                if encoder( level ) not in levels:
+                    levels[ encoder( level ) ] = t 
 
     # strip any remaining buffer whitespaces...
     strings = np.array( [ i.strip() for i in strings ] )     
+    if style == "*":
+        return strings, levels
     return strings
 
 

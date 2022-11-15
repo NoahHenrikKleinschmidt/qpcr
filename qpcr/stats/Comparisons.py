@@ -688,6 +688,9 @@ class ComparisonsCollection:
         """
         return list(self._dict.keys())
 
+    def __contains__( self, id ):
+        return id in self.ids
+            
     def __getitem__( self, id ):
         if id in self.ids:
             idx = self.ids.index(id)

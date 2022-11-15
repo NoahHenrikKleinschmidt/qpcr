@@ -11,12 +11,11 @@ import qpcr.Plotters._base as base
 import matplotlib.pyplot as plt
 import seaborn as sns 
 
-import plotly
-from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 
 import numpy as np 
 
+logger = aux.default_logger()
 
 class GroupSubplotsResults(base.ResultsPlotter):
     """
@@ -56,41 +55,45 @@ class GroupBars(GroupSubplotsResults):
 
 	    Static GroupBars figures accept the following kwargs:
     
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | Argument                  | Description                                                                                     | Example                                       |
-        +===========================+=================================================================================================+===============================================+
-        | show : `bool`             | Whether or not to show the figure                                                               | `show = True` (default)                       |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | figsize : `tuple`         | The figure size                                                                                 | `figsize = (10, 4)`                           |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | title : `str`             | The overall figure title                                                                        | `title = "Today's results"                    |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | xlabel : `str`            | The x-axis label of each subplot                                                                | `xlabel = "Conditions"`                       |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | ylabel : `str`            | The y-axis label of each subplot                                                                | `ylabel = "Mean Mean Fold Change"`            |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | rot : `float`             | The rotation of x-axis labels                                                                   | `rot = 0.3`                                   |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | headers : `list`          | A list of titles for each subplot in the preview figure                                         | `headers = ["transcript A", "transcript B"]`  |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                                            | `label_subplots = True` (default)             |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.                              | `labeltype = "a"`                             |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | frame   : `bool`          | Show left and top spines of subplots (if True)                                                  | `frame = False` (default)                     |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | color : `str or list`     | The fillcolor for the individual bars                                                           | `color = "yellow"`                            |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                                       | `style = "darkgrid"`                          |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | edgecolor : `str or list` | The edgecolor for the individual bars                                                           | `edgecolor = "black"`                         |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | edgewidth : `float`       | The width of the edge of individual bars                                                        | `edgewidth = 0.5`                             |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | ecolor : `str`            | The color of errorbars                                                                          | `ecolor = "orange"`                           |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | **kwargs                  | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.  |                                               |
-        +---------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        |         Argument          |                                              Description                                               |                   Example                    |
+        +===========================+========================================================================================================+==============================================+
+        | show : `bool`             | Whether or not to show the figure                                                                      | `show = True` (default)                      |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | figsize : `tuple`         | The figure size                                                                                        | `figsize = (10, 4)`                          |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | title : `str`             | The overall figure title                                                                               | `title = "Today's results"                   |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | xlabel : `str`            | The x-axis label of each subplot                                                                       | `xlabel = "Conditions"`                      |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | ylabel : `str`            | The y-axis label of each subplot                                                                       | `ylabel = "Mean Mean Fold Change"`           |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | rot : `float`             | The rotation of x-axis labels                                                                          | `rot = 0.3`                                  |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | headers : `list`          | A list of titles for each subplot in the preview figure                                                | `headers = ["transcript A", "transcript B"]` |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                                                   | `label_subplots = True` (default)            |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.                                     | `labeltype = "a"`                            |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | annotate_pvals: `bool`    | Add annotations of p-value significance to each subplot ( True by default if statistics are available) | `annotate_pvals = True` (default)            |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | pval_kws: `dict`          | Keywords for pvalue formatting using `encode_pvalues`                                                  | `pval_kws = dict(style = "*")`               |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | frame   : `bool`          | Show left and top spines of subplots (if True)                                                         | `frame = False` (default)                    |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | color : `str or list`     | The fillcolor for the individual bars                                                                  | `color = "yellow"`                           |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                                              | `style = "darkgrid"`                         |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | edgecolor : `str or list` | The edgecolor for the individual bars                                                                  | `edgecolor = "black"`                        |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | edgewidth : `float`       | The width of the edge of individual bars                                                               | `edgewidth = 0.5`                            |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | ecolor : `str`            | The color of errorbars                                                                                 | `ecolor = "orange"`                          |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | **kwargs                  | Any additional kwargs that can be passed to the `matplotlib`-backend pandas `.plot.bar()` API.         |                                              |
+        +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
 
 
     
@@ -160,7 +163,15 @@ class GroupBars(GroupSubplotsResults):
         edgewidth = kwargs.pop("linewidth", 1)
         edgewidth = kwargs.pop("edgewidth", edgewidth)
         ecolor = kwargs.get("ecolor", "black")
-                
+
+        # get kwargs for pvalue annotations
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        pval_kws = kwargs.pop("pval_kws", {})
+
+        if annotate_pvals:
+            if self._obj.comparisons is None:
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical groupwise comparison.")
+     
         fig, coords = self._setup_static_figure(ncols, nrows, title, kwargs)
 
         idx = 0 
@@ -204,6 +215,18 @@ class GroupBars(GroupSubplotsResults):
             # add ABCD... label to subplot
             if label_subplots:
                 self._add_subplot_label(idx, ax, start_character)         
+
+            # add stats annotations
+            if annotate_pvals:
+                logger.debug(f"{group=}")
+                logger.debug(f"{names[group]=}")
+                name = names[ group ]
+                if name not in self._obj.comparisons:
+                    logger.warning( f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?" )
+                else:
+                    comparison = self._obj.comparisons[ name ]
+                    self._annotate_pvalues(x, y, sterr, pval_kws, comparison, tmp_df, ax)
+
 
             idx += 1
 
@@ -294,37 +317,41 @@ class GroupDots(GroupSubplotsResults):
 
 	    Static GroupDots figures accept the following kwargs:
 
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | Argument                  | Description                                                                 | Example                                       |
-        +===========================+=============================================================================+===============================================+
-        | show : `bool`             | Whether or not to show the figure                                           | `show = True` (default)                       |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | figsize : `tuple`         | The figure size                                                             | `figsize = (10, 4)`                           |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | title : `str`             | The overall figure title                                                    | `title = "Today's results"                    |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | xlabel : `str`            | The x-axis label of each subplot                                            | `xlabel = "Conditions"`                       |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | ylabel : `str`            | The y-axis label of each subplot                                            | `ylabel = "Mean Fold Change"`                 |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | rot : `float`             | The rotation of x-axis labels                                               | `rot = 0.3`                                   |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | headers : `list`          | A list of titles for each subplot in the preview figure                     | `headers = ["transcript A", "transcript B"]`  |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                        | `label_subplots = True` (default)             |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.          | `labeltype = "a"`                             |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | frame   : `bool`          | Show left and top spines of subplots (if True)                              | `frame = False` (default)                     |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | violin   : `bool`         | Show symmetric kde of the dots of each group (if True).                     | `violin = False`                              |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | color : `str or list`     | The fillcolor for the individual dots from replicate groups                 | `color = "yellow"`                            |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                   | `style = "darkgrid"`                          |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
-        | \*\*kwargs                | Any additional kwargs that can be passed to the `seaborn`'s `stripplot()`.  |                                               |
-        +---------------------------+-----------------------------------------------------------------------------+-----------------------------------------------+
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        |         Argument         |                                              Description                                               |                   Example                    |
+        +==========================+========================================================================================================+==============================================+
+        | show : `bool`            | Whether or not to show the figure                                                                      | `show = True` (default)                      |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | figsize : `tuple`        | The figure size                                                                                        | `figsize = (10, 4)`                          |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | title : `str`            | The overall figure title                                                                               | `title = "Today's results"                   |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | xlabel : `str`           | The x-axis label of each subplot                                                                       | `xlabel = "Conditions"`                      |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | ylabel : `str`           | The y-axis label of each subplot                                                                       | `ylabel = "Mean Fold Change"`                |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | rot : `float`            | The rotation of x-axis labels                                                                          | `rot = 0.3`                                  |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | headers : `list`         | A list of titles for each subplot in the preview figure                                                | `headers = ["transcript A", "transcript B"]` |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | label_subplots  : `bool` | Add each subplot with A, B, C ... (if True, default)                                                   | `label_subplots = True` (default)            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | labeltype : `str`        | The starting character for subplot labelling. By default an `"A"`.                                     | `labeltype = "a"`                            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | annotate_pvals: `bool`   | Add annotations of p-value significance to each subplot ( True by default if statistics are available) | `annotate_pvals = True` (default)            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | pval_kws: `dict`         | Keywords for pvalue formatting using `encode_pvalues`                                                  | `pval_kws = dict(style = "*")`               |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | frame   : `bool`         | Show left and top spines of subplots (if True)                                                         | `frame = False` (default)                    |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | violin   : `bool`        | Show symmetric kde of the dots of each group (if True).                                                | `violin = False`                             |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | color : `str or list`    | The fillcolor for the individual dots from replicate groups                                            | `color = "yellow"`                           |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | style : `str`            | A `seaborn` style to set. Check out available styles [1].                                              | `style = "darkgrid"`                         |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | \*\*kwargs               | Any additional kwargs that can be passed to the `seaborn`'s `stripplot()`.                             |                                              |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
 
     
     `"interactive"` Kwargs
@@ -389,6 +416,13 @@ class GroupDots(GroupSubplotsResults):
         label_subplots, start_character, show_spines, rot = self._get_labels_and_spines_and_rot(kwargs)
         alpha = kwargs.pop("alpha", 1)
 
+        # get kwargs for pvalue annotations
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        pval_kws = kwargs.pop("pval_kws", {})
+
+        if annotate_pvals:
+            if self._obj.comparisons is None:
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical groupwise comparison.")
         
         # generate a custom color palette in case color kwarg is provided
         palette = gx.generate_palette(kwargs)
@@ -448,6 +482,15 @@ class GroupDots(GroupSubplotsResults):
             if label_subplots:
                 self._add_subplot_label(idx, subplot, start_character)         
 
+            # add stats annotations
+            if annotate_pvals:
+                name = names[ group ]
+                if name not in self._obj.comparisons:
+                    logger.warning( f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?" )
+                else:
+                    comparison = self._obj.comparisons[ name ]
+                    self._annotate_pvalues("assay", "value", None, pval_kws, comparison, tmp_df, subplot )
+
             idx += 1
             
         plt.tight_layout()
@@ -474,13 +517,13 @@ class GroupDots(GroupSubplotsResults):
         # setup the _assays concatenated dataframe   
         _assays = group_df[ [ "group", assays[0] ] ]
         _assays = _assays.rename( columns = { assays[0] : "value" } )
-        _assays["assay"] = [ assays[0] for i in _assays["group"] ]
+        _assays["assay"] = assays[0] # [ assays[0] for i in _assays["group"] ]
 
         # now iteratively add all remaining assays
         for assay in assays[1:]:
             tmp_df = group_df[ [ "group", assay ] ]
             tmp_df = tmp_df.rename( columns = { assay : "value" } )
-            tmp_df["assay"] = [ assay for i in tmp_df["group"] ]
+            tmp_df["assay"] = assay # [ assay for i in tmp_df["group"] ]
             _assays = pd.concat( [_assays, tmp_df], ignore_index = True)
                 
         # remove the group col, and sort

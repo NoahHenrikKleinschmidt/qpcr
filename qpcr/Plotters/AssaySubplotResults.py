@@ -10,12 +10,11 @@ import qpcr.Plotters._base as base
 import matplotlib.pyplot as plt
 import seaborn as sns 
 
-import plotly
-from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 
 import numpy as np 
 
+logger = aux.default_logger()
 
 class AssaySubplotsResults(base.ResultsPlotter):
     """
@@ -61,9 +60,13 @@ class AssayBars(AssaySubplotsResults):
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | headers: `list`           | A list of titles for each subplot in the preview figure                                                                | `headers = ["transcript A", "transcript B"]`  |
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
-        | label_subplots: `bool`    | Add each subplot with A, B, C ... (if True, default)                                                                   | `label_subplots = True` (default)             |
+        | label_subplots: `bool`    | Label each subplot with A, B, C ... (if True, default)                                                                 | `label_subplots = True` (default)             |
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | labeltype: `str`          | The starting character for subplot labelling. By default an `"A"`.                                                     | `labeltype = "a"`                             |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | annotate_pvals: `bool`    | Add annotations of p-value significance to each subplot ( True by default if statistics are available)                 | `annotate_pvals = True` (default)             |
+        +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
+        | pval_kws: `dict`          | Keywords for pvalue formatting using `encode_pvalues`                                                                  | `pval_kws = dict(style = "*")`                |
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | frame: `bool`             | Show left and top spines of subplots (if True)                                                                         | `frame = False` (default)                     |
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
@@ -81,7 +84,6 @@ class AssayBars(AssaySubplotsResults):
         +---------------------------+------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
 
-    
     `"interactive"` Kwargs
     
         Interactive AssayBars figures accept the following kwargs:
@@ -149,6 +151,14 @@ class AssayBars(AssaySubplotsResults):
         edgewidth = kwargs.pop("edgewidth", None)
         ecolor = kwargs.get("ecolor", "black")
 
+        # get kwargs for pvalue annotations
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        pval_kws = kwargs.pop("pval_kws", {})
+
+        if annotate_pvals:
+            if self._obj.comparisons is None:
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical assaywise comparison.")
+
         if edgewidth is None: 
             edgewidth = kwargs.pop("linewidth", 1) 
         else: 
@@ -157,10 +167,6 @@ class AssayBars(AssaySubplotsResults):
         fig, Coords = self._setup_static_figure(ncols, nrows, title, kwargs)
 
         idx = 0
-        # for assay in headings: 
-        #     q = query.format(ref_col = ref_col, q = assay)
-        #     tmp_df = data.query(q)
-        #     tmp_df = tmp_df.sort_values("group")
         for assay, tmp_df in data.groupby( ref_col ):
 
             # now plot a new bar chart 
@@ -192,14 +198,19 @@ class AssayBars(AssaySubplotsResults):
                 self._set_xtick_rotation( subplot, rot )
 
             if not show_spines:
-                subplot.spines["right"].set_visible(False)
-                subplot.spines["top"].set_visible(False)
-                subplot.spines["left"].set_linewidth(1.05)
-                subplot.spines["bottom"].set_linewidth(1.05)
+                sns.despine()
 
             # add ABCD... label to subplot
             if label_subplots:
                 self._add_subplot_label(idx, subplot, start_character)         
+
+            # add stats annotations
+            if annotate_pvals:
+                if assay not in self._obj.comparisons:
+                    logger.warning( f"Could not find a comparison for {assay}. Perhaps you did not use an assaywise-comparison but a groupwise-comparison?" )
+                else:
+                    comparison = self._obj.comparisons[ assay ]
+                    self._annotate_pvalues(x, y, sterr, pval_kws, comparison, tmp_df, subplot)
 
             idx += 1
         
@@ -210,9 +221,7 @@ class AssayBars(AssaySubplotsResults):
 
         # print("<<< Static Check >>>")
 
-        return fig 
-
-    
+        return fig     
 
     def _interactive_plot(self, **kwargs):
         """
@@ -288,38 +297,42 @@ class AssayDots(AssaySubplotsResults):
     `"static"` Kwargs
 
 	    Static AssayDots figures accept the following kwargs:
-    
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | Argument                  | Description                                                               | Example                                       |
-        +===========================+===========================================================================+===============================================+
-        | show : `bool`             | Whether or not to show the figure                                         | `show = True` (default)                       |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | figsize : `tuple`         | The figure size                                                           | `figsize = (10, 4)`                           |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | title : `str`             | The overall figure title                                                  | `title = "Today's results"                    |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | xlabel : `str`            | The x-axis label of each subplot                                          | `xlabel = "Conditions"`                       |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | ylabel : `str`            | The y-axis label of each subplot                                          | `ylabel = "Mean Fold Change"`                 |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | rot : `float`             | The rotation of x-axis labels                                             | `rot = 0.3`                                   |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | headers : `list`          | A list of titles for each subplot in the preview figure                   | `headers = ["transcript A", "transcript B"]`  |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | label_subplots  : `bool`  | Add each subplot with A, B, C ... (if True, default)                      | `label_subplots = True` (default)             |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | labeltype : `str`         | The starting character for subplot labelling. By default an `"A"`.        | `labeltype = "a"`                             |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | frame   : `bool`          | Show left and top spines of subplots (if True)                            | `frame = False` (default)                     |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | violin   : `bool`         | Show symmetric kde of the dots of each group (if True).                   | `violin = False`                              |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | color : `str or list`     | The fillcolor for the individual dots from replicate groups               | `color = "yellow"`                            |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | style : `str`             | A `seaborn` style to set. Check out available styles [1].                 | `style = "darkgrid"`                          |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
-        | \*\*kwargs                | Any additional kwargs that can be passed to the `seaborn`'s `stripplot`.  |                                               |
-        +---------------------------+---------------------------------------------------------------------------+-----------------------------------------------+
+
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        |         Argument         |                                              Description                                               |                   Example                    |
+        +==========================+========================================================================================================+==============================================+
+        | show : `bool`            | Whether or not to show the figure                                                                      | `show = True` (default)                      |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | figsize : `tuple`        | The figure size                                                                                        | `figsize = (10, 4)`                          |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | title : `str`            | The overall figure title                                                                               | `title = "Today's results"                   |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | xlabel : `str`           | The x-axis label of each subplot                                                                       | `xlabel = "Conditions"`                      |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | ylabel : `str`           | The y-axis label of each subplot                                                                       | `ylabel = "Mean Fold Change"`                |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | rot : `float`            | The rotation of x-axis labels                                                                          | `rot = 0.3`                                  |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | headers : `list`         | A list of titles for each subplot in the preview figure                                                | `headers = ["transcript A", "transcript B"]` |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | label_subplots  : `bool` | Add each subplot with A, B, C ... (if True, default)                                                   | `label_subplots = True` (default)            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | labeltype : `str`        | The starting character for subplot labelling. By default an `"A"`.                                     | `labeltype = "a"`                            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | annotate_pvals: `bool`   | Add annotations of p-value significance to each subplot ( True by default if statistics are available) | `annotate_pvals = True` (default)            |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | pval_kws: `dict`         | Keywords for pvalue formatting using `encode_pvalues`                                                  | `pval_kws = dict(style = "*")`               |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | frame   : `bool`         | Show left and top spines of subplots (if True)                                                         | `frame = False` (default)                    |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | violin   : `bool`        | Show symmetric kde of the dots of each group (if True).                                                | `violin = False`                             |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | color : `str or list`    | The fillcolor for the individual dots from replicate groups                                            | `color = "yellow"`                           |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | style : `str`            | A `seaborn` style to set. Check out available styles [1].                                              | `style = "darkgrid"`                         |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
+        | \*\*kwargs               | Any additional kwargs that can be passed to the `seaborn`'s `stripplot`.                               |                                              |
+        +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
 
 
     
@@ -394,6 +407,14 @@ class AssayDots(AssaySubplotsResults):
         style = kwargs.pop("style", "dark")
         sns.set_style( style )
 
+        # get kwargs for pvalue annotations
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        pval_kws = kwargs.pop("pval_kws", {})
+        
+        if annotate_pvals:
+            if self._obj.comparisons is None:
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, First perform a statistical assaywise comparison.")
+        
         # make figure
         fig, Coords = self._setup_static_figure( ncols, nrows, title, kwargs )
 
@@ -437,16 +458,22 @@ class AssayDots(AssaySubplotsResults):
             # adjust xtick rotation   
             if rot is not None: 
                 self._set_xtick_rotation( subplot, rot )
-                
+
             if not show_spines:
-                subplot.spines["right"].set_visible(False)
-                subplot.spines["top"].set_visible(False)
-                subplot.spines["left"].set_linewidth(1.05)
-                subplot.spines["bottom"].set_linewidth(1.05)
+                sns.despine()
+                
 
             # add ABCD... label to subplot
             if label_subplots:
                 self._add_subplot_label(idx, subplot, start_character)         
+
+            # add stats annotations
+            if annotate_pvals:
+                if assay not in self._obj.comparisons:
+                    logger.warning( f"Could not find a comparison for {assay}. Perhaps you did not use an assaywise-comparison but a groupwise-comparison?" )
+                else:
+                    comparison = self._obj.comparisons[ assay ]
+                    self._annotate_pvalues( "group_name", assay, None, pval_kws, comparison, tmp_df, subplot)
 
             idx += 1
         

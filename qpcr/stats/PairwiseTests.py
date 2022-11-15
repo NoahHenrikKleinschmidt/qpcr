@@ -48,7 +48,7 @@ class PairwiseTests(StatsTest.StatsTest):
         self._effect_size_func = f
 
                   
-    def assaywise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list or dict) = None, columns : list = None, **kwargs ):
+    def assaywise_ttests( self, obj : (main.Results or main.Assay) = None, groups : list = None, columns : list = None, **kwargs ):
         """
         Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `KO-HNRNPL` but not `ctrl-SRSF11`. 
@@ -64,12 +64,10 @@ class PairwiseTests(StatsTest.StatsTest):
             A Results or Assay object to use for the comparison (if none is already linked). 
             Also a list can be passed.
 
-        groups : list or dict
-            The groups to pair-wise compare. If this is a ``list``
-            then all listed groups will be compared pair-wise. If this is a ``dict``
-            then all key-value pairs will be compared. The group declaration can be either
-            through their `group_names` or their numeric `group identifiers`. 
-            By default all groups that are present will be compared pair-wise.
+        groups : list
+            The groups to pair-wise compare. If this is a simple ``list``
+            then all listed groups will be compared pair-wise. If this is a ``list of lists (or tuples)``
+            then all provided pairs will be compared. By default all possible group pairingings are compared.
 
         columns : list
             The columns of the dataframe to use as input data. By default this will all non-setup columns.
@@ -130,7 +128,9 @@ class PairwiseTests(StatsTest.StatsTest):
             r.adjust_pvalues()
             self.assaywise_results[name] = r
 
-        self.assaywise_results = Comparisons.ComparisonsCollection( self.assaywise_results )           
+        self.assaywise_results = Comparisons.ComparisonsCollection( self.assaywise_results )   
+        self._obj.add_comparisons( self.assaywise_results )  
+
         self._results = self.assaywise_results
         return self.assaywise_results
 
@@ -156,12 +156,11 @@ class PairwiseTests(StatsTest.StatsTest):
             This can be a list of any valid subset of the `group_names` 
             or numeric `group identifiers` of the `Results` object.
             
-        columns : list or dict
-            The columns (assays) to pair-wise compare. By default this will all non-setup columns.
-            You can pass a list of any subset of non-setup-cols here. As a shortcut you can restrict to only 
-            valid Delta-Delta-Ct columns (i.e. `{}_rel_{}` columns using the `kwarg` ``restrict_ddCt = True``). 
-            If a ``list`` is passed then all listed columns will be compared pair-wise. In case of a ``dict``
-            then all key-value pairs will be compared. 
+        columns : list
+            The columns (assays) to pair-wise compare. Any subset of non-setup-cols can be passed here. As a shortcut one can restrict to only 
+            valid Delta-Delta-Ct columns (i.e. `{}_rel_{}` columns using the `kwarg` ``restrict_ddCt = True``), naturally this will not work if `drop_rel` has been called before. 
+            If a simple ``list`` is passed then all listed columns will be compared pair-wise. In case of a ``list of lists (or tuples)``
+            then all provided pairs will be compared. By default all possible column pairingings are compared.
 
         Returns
         -------
@@ -220,7 +219,9 @@ class PairwiseTests(StatsTest.StatsTest):
             r.adjust_pvalues()
             self.groupwise_results[name] = r
         
-        self.groupwise_results = Comparisons.ComparisonsCollection( self.groupwise_results )           
+        self.groupwise_results = Comparisons.ComparisonsCollection( self.groupwise_results )  
+        self._obj.add_comparisons( self.groupwise_results )   
+                
         self._results = self.groupwise_results
         return self.groupwise_results
 
@@ -289,18 +290,32 @@ class PairwiseTests(StatsTest.StatsTest):
             # labels = [ results.groups(), results.groups() ]
             # groups = list( permutations( results.groups(), r = 2 ) ) 
             labels = [ results.names(), results.names() ]
-            groups = list( permutations( results.names(), r = 2 ) ) 
-        elif isinstance( groups, (list,tuple) ):
-            labels = [ groups, groups ]
-            groups = list( permutations( groups, r = 2 ) ) 
-        elif isinstance( groups, dict ):
-            labels = [ i for i in groups.items() ]
-            _labels = []
-            for i in labels: _labels += [ j for j in i if j not in _labels ]
-            labels = _labels
-            labels = list( sorted( labels ) )
-            labels = [ labels, labels ]
-            groups = list( groups.items() )
+            groups = list( permutations( results.names(), r = 2 ) )
+        
+        else:
+
+            if isinstance( groups[0], (int, str) ):
+                # make sure the groups are named and not just their numeric ids
+                if isinstance( groups[0], int ):
+                    names = results.names()
+                    groups = [ names[i] for i in groups ]
+                labels = [ groups, groups ]
+                groups = list( permutations( groups, r = 2 ) ) 
+
+            elif isinstance( groups[0], (list,tuple) ):
+                # make sure the groups are named and not just their numeric ids
+                if isinstance( groups[0][0], int ):
+                    names = results.names()
+                    groups = [ ( names[i[0]], names[i[1]] ) for i in groups ]
+                
+                labels = [ 
+                    [ i[0] for i in groups ],
+                    [ i[1] for i in groups ]
+                ]
+                
+            else:
+                raise ValueError( "Invalid group type. Groups must be either integers, strings or tuples." )
+       
         return groups,labels
     
     @staticmethod
@@ -312,23 +327,42 @@ class PairwiseTests(StatsTest.StatsTest):
             columns = results.data_cols
             labels = [ columns, columns ]
             combinations = list( permutations( columns, r = 2 ) ) 
-        elif isinstance( assays, (list,tuple) ):
-            columns = list(assays)
-            labels = [ assays, assays ]
-            combinations = list( permutations( assays, r = 2 ) ) 
-        elif isinstance( assays, dict ):
-            labels = [ i for i in assays.items() ]
-            _labels = []
-            for i in labels: _labels += [ j for j in i if j not in _labels ]
-            labels = _labels
-            labels = list( sorted( labels ) )
-            columns = list(labels)
-            labels = [ labels, labels ]
-            combinations = list( assays.items() )
+
         elif kwargs.pop( "restrict_ddCt", False ):
             columns = results.ddCt_cols
             labels = [ columns, columns ]
             combinations = list( permutations( columns, r = 2 ) )
+
+        else:
+
+            if isinstance( assays[0], str ):
+                labels = [ assays, assays ]
+                combinations = list( permutations( assays, r = 2 ) ) 
+                columns = assays 
+
+            elif isinstance( assays[0], (list,tuple) ):
+                labels = [ 
+                    [ i[0] for i in assays ],
+                    [ i[1] for i in assays ]
+                ]
+                combinations = assays
+                columns = []
+                for i in combinations:
+                    labels.extend( i )
+
+        # elif isinstance( assays, (list,tuple) ):
+        #     columns = list(assays)
+        #     labels = [ assays, assays ]
+        #     combinations = list( permutations( assays, r = 2 ) ) 
+        # elif isinstance( assays, dict ):
+        #     labels = [ i for i in assays.items() ]
+        #     _labels = []
+        #     for i in labels: _labels += [ j for j in i if j not in _labels ]
+        #     labels = _labels
+        #     labels = list( sorted( labels ) )
+        #     columns = list(labels)
+        #     labels = [ labels, labels ]
+        #     combinations = list( assays.items() )
         return columns, combinations, labels
         
 
