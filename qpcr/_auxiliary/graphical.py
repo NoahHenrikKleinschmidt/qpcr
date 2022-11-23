@@ -127,6 +127,7 @@ def encode_pvalues(
                 strings[i] = encoder( p )
 
     elif style == "*":
+        
         levels = {}
         for i in np.arange( len(pvalues) ):
             p = pvalues[i]
@@ -157,7 +158,14 @@ def generate_palette(kwargs, return_check = False ):
     palette = kwargs.pop("palette", None )
     color = kwargs.pop("color", None )
     is_palette = True
-    if color is not None: 
+    if palette is not None:
+        try:
+            palette = sns.color_palette( palette )
+        except Exception as e:
+            logger.debug( e )
+            logger.critical( "Could not assign provided palette to palette...")
+            raise e 
+    elif color is not None: 
         try: 
             palette = sns.color_palette( color )
         except Exception as e:
@@ -165,13 +173,6 @@ def generate_palette(kwargs, return_check = False ):
             logger.info( "Could not assign provided color to palette... Using it as single color(s)")
             palette = color
             is_palette = False
-    elif palette is not None:
-        try:
-            palette = sns.color_palette( palette )
-        except Exception as e:
-            logger.debug( e )
-            logger.critical( "Could not assign provided palette to palette...")
-            raise e 
     if return_check:
         return palette, is_palette
     return palette
