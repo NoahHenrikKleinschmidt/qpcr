@@ -20,6 +20,9 @@ from statannotations.Annotator import Annotator as StatAnnotator
 
 logger = aux.default_logger()
 
+# a blank legend entry for the pvalue * legend 
+__blank_legend_line__ = Line2D( [0], [0], 0 )
+
 class _Base(aux._ID):
     """
     The Base class for Plotters and Wrappers
@@ -610,8 +613,8 @@ class ResultsPlotter(Plotter):
         # pop some additional kwargs for the legend in case of the "*" style
         if pval_kws.get("style") == "*":
             legend_loc = pval_kws.pop("legend_loc", "lower left")
-            legend_title = pval_kws.pop("legend_title", None )
-            legend_bbox = pval_kws.pop("legend_bbox_to_anchor", (1.05, 0.25) )
+            legend_title = pval_kws.pop("legend_title", "p-value" )
+            legend_bbox = pval_kws.pop("legend_bbox_to_anchor", (0.85, 0.25) )
             legend_frameon = pval_kws.pop("legend_frameon", False )
 
         # get the pvalues and labels of compared pairs
@@ -629,14 +632,8 @@ class ResultsPlotter(Plotter):
             levels = sorted( levels, key = lambda x: x[1], reverse = True )
             levels = [ f"{l[0]} <= {l[1]:.02e}" for l in levels ]
             
-            # and add the custom legend for the pvalues in * notation
-            # pval_legend = Legend(   subplot, [Line2D( [0], [0], 0 )]*len(levels), 
-            #                         levels, loc = legend_loc, 
-            #                         bbox_to_anchor = legend_bbox, 
-            #                         frameon = legend_frameon, 
-            #                         title = legend_title )
-            # subplot.add_artist( pval_legend )
-            subplot.legend( [Line2D( [0], [0], 0 )]*len(levels), 
+            # and add the legend of * levels
+            subplot.legend( [__blank_legend_line__]*len(levels), 
                             levels, loc = legend_loc, 
                             bbox_to_anchor = legend_bbox, 
                             frameon = legend_frameon, 
