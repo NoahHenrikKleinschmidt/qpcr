@@ -50,7 +50,7 @@ class PairwiseTests(StatsTest.StatsTest):
                   
     def assaywise_ttests( self, obj : (main.Results or main.Assay) = None, groups : list = None, columns : list = None, **kwargs ):
         """
-        Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe separately`.
+        Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe `separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `KO-HNRNPL` but not `ctrl-SRSF11`. 
         
         Note
@@ -67,7 +67,7 @@ class PairwiseTests(StatsTest.StatsTest):
         groups : list
             The groups to pair-wise compare. If this is a simple ``list``
             then all listed groups will be compared pair-wise. If this is a ``list of lists (or tuples)``
-            then all provided pairs will be compared. By default all possible group pairingings are compared.
+            then all provided pairs will be compared. By default all possible group pairings are compared.
 
         columns : list
             The columns of the dataframe to use as input data. By default this will all non-setup columns.
@@ -135,7 +135,7 @@ class PairwiseTests(StatsTest.StatsTest):
         return self.assaywise_results
 
     
-    def groupwise_ttests( self, obj : (main.Results or main.Assay) = None, groups : (list) = None, columns : (list or dict) = None, **kwargs ):
+    def groupwise_ttests( self, obj : (main.Results or main.Assay) = None, groups : list = None, columns : list = None, **kwargs ):
         """
         Perform multiple pairwise t-tests comparing the different `assays` within each `group separately`.
         Hence, this method will compare for instance `ctrl-HNRNPL` against `ctrl-SRSF11` but not `KO-HNRNPL`. 
@@ -160,7 +160,7 @@ class PairwiseTests(StatsTest.StatsTest):
             The columns (assays) to pair-wise compare. Any subset of non-setup-cols can be passed here. As a shortcut one can restrict to only 
             valid Delta-Delta-Ct columns (i.e. `{}_rel_{}` columns using the `kwarg` ``restrict_ddCt = True``), naturally this will not work if `drop_rel` has been called before. 
             If a simple ``list`` is passed then all listed columns will be compared pair-wise. In case of a ``list of lists (or tuples)``
-            then all provided pairs will be compared. By default all possible column pairingings are compared.
+            then all provided pairs will be compared. By default all possible column pairings are compared.
 
         Returns
         -------
