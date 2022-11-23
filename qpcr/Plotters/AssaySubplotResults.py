@@ -157,7 +157,7 @@ class AssayBars(AssaySubplotsResults):
 
         if annotate_pvals:
             if self._obj.comparisons is None:
-                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical assaywise comparison.")
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made! Please first perform a statistical assaywise comparison.")
 
         if edgewidth is None: 
             edgewidth = kwargs.pop("linewidth", 1) 

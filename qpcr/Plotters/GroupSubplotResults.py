@@ -422,7 +422,7 @@ class GroupDots(GroupSubplotsResults):
 
         if annotate_pvals:
             if self._obj.comparisons is None:
-                raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical groupwise comparison.")
+                raise AttributeError("Cannot annotate pvalues if no comparisons have been made! Please first perform a statistical groupwise comparison.")
         
         # generate a custom color palette in case color kwarg is provided
         palette = gx.generate_palette(kwargs)
