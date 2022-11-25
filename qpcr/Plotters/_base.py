@@ -10,7 +10,6 @@ import qpcr._auxiliary.graphical as gx
 import qpcr.main as main
 
 import matplotlib.pyplot as plt
-from matplotlib.legend import Legend
 from matplotlib.lines import Line2D
 
 import plotly 
