@@ -283,8 +283,10 @@ class MultiTestComparison(Comparison):
 
     def make_symmetric(self):
         """
-        Fills up an assymetric 2D array of p-values to a symmetric 2D array around the diagonal.
+        Fills up an assymetric 2D array of p-values to a symmetric 2D array along the diagonal.
         """
+        if self._is_symmetric:
+            return self 
 
         self._asymmetric_pvalues = self._pvalues.copy()
         self._pvalues = self._make_symmetric( self._pvalues )
@@ -295,8 +297,11 @@ class MultiTestComparison(Comparison):
 
     def make_asymmetric(self):
         """
-        Make an symmetric 2D array of p-values asymmetric again araoung the diagonal.
+        Make a symmetric 2D array of p-values asymmetric again along the diagonal.
         """
+        if not self._is_symmetric:
+            return self
+
         mask = self._asymmetric_pvalues == self._asymmetric_pvalues
         self._pvalues[ ~mask ] = np.nan
         self._orig_pvalues[ ~mask ] = np.nan
