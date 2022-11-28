@@ -148,7 +148,7 @@ def encode_pvalues(
     return strings
 
 
-def generate_palette(kwargs, return_check = False ):
+def generate_palette(kwargs, return_check = False):
     """
     Generates a color pallete for seaborn 
     plots to support a custom color argument.
@@ -160,18 +160,18 @@ def generate_palette(kwargs, return_check = False ):
     is_palette = True
     if palette is not None:
         try:
-            palette = sns.color_palette( palette )
+            sns.color_palette( palette )
         except Exception as e:
             logger.debug( e )
             logger.critical( "Could not assign provided palette to palette...")
             raise e 
     elif color is not None: 
+        palette = color
         try: 
-            palette = sns.color_palette( color )
+            sns.color_palette( color )
         except Exception as e:
             logger.debug( e )
             logger.info( "Could not assign provided color to palette... Using it as single color(s)")
-            palette = color
             is_palette = False
     if return_check:
         return palette, is_palette
