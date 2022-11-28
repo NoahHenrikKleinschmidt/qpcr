@@ -161,9 +161,16 @@ class EfficiencyLines(base.Plotter):
         
         
         palette, is_palette = gx.generate_palette(kwargs, True )
+        if palette:
+            if is_palette:
+                palette = dict(palette = palette)
+            else:
+                palette = dict(color = palette)
+        else:
+            palette = dict(palette = defaults.default_palette)
 
         # set a seaborn style
-        style = kwargs.pop("style", "ticks")
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
 
         edgecolor = kwargs.pop("edgecolor", "white")
@@ -200,16 +207,11 @@ class EfficiencyLines(base.Plotter):
             sns.scatterplot(
                                 x = dilutions,
                                 y = cts,
-
-                                # this is somewhat hacky but it allows us to use 
-                                # either a colormap or a single color
                                 hue = dilutions if is_palette else None,
-                                color = None if is_palette else palette,
-                                palette = palette if is_palette else None,
-
                                 edgecolor = edgecolor,
                                 linewidth = edgewidth,
                                 ax = ax,
+                                **palette,
                                 **kwargs
                             )
 

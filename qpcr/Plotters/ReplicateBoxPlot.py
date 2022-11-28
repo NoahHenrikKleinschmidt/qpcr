@@ -179,10 +179,14 @@ class ReplicateBoxPlot(base.AssayPlotter):
         title, show = self._get_title_and_show(kwargs)
         xlabel, ylabel = self._axeslabels(kwargs)
        
-       # set a seaborn style
-        style = kwargs.pop("style", "ticks")
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
-        palette = gx.generate_palette(kwargs)
+        
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        if is_palette:
+            kwargs["palette"] = palette
+        else:
+            kwargs["color"] = palette
 
         hue = kwargs.pop("hue", "group_name")
         show_spines = kwargs.pop("frame", True)
@@ -200,7 +204,7 @@ class ReplicateBoxPlot(base.AssayPlotter):
                         data=tmp, 
                         x = defaults.dataset_header, 
                         y = ylabel, hue=hue, 
-                        palette = palette, 
+                        # palette = palette, 
                         ax = ax, 
                         **kwargs
                     )

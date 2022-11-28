@@ -141,11 +141,18 @@ class AssayBars(AssaySubplotsResults):
         title, show = self._get_title_and_show(kwargs)
 
         headers = kwargs.pop("headers", None)
-        
-        # set a seaborn style (this is safer done live than sourced out...)
-        palette = gx.generate_palette(kwargs)
-        style = kwargs.pop("style", "ticks")
+        legend = kwargs.pop("legend", True)
+
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        if palette:
+            if is_palette:
+                kwargs["palette"] = palette
+            else:
+                kwargs["color"] = palette
+        else:
+            kwargs["palette"] = defaults.default_palette
 
         edgecolor = kwargs.pop("edgecolor", "white")
         edgewidth = kwargs.pop("edgewidth", None)
@@ -172,14 +179,12 @@ class AssayBars(AssaySubplotsResults):
             # now plot a new bar chart 
             subplot = Coords.subplot()
 
-            tmp_df.plot.bar(
-                            x = x, y = y, 
-                            ax = subplot,
-                            edgecolor = edgecolor,
-                            linewidth = edgewidth,
-                            color = palette,
-                            **kwargs
-                        )
+            sns.barplot( data = tmp_df, x = x, y = y, 
+                         ax = subplot, edgecolor = edgecolor,
+                         linewidth = edgewidth, **kwargs )
+
+            if legend:
+                subplot.legend( title = kwargs.get("legend_title", None) )
 
             subplot.errorbar(
                             x = tmp_df[x], y = tmp_df[y], 
@@ -207,7 +212,7 @@ class AssayBars(AssaySubplotsResults):
             # add stats annotations
             if annotate_pvals:
                 if assay not in self._obj.comparisons:
-                    logger.warning( f"Could not find a comparison for {assay}. Perhaps you did not use an assaywise-comparison but a groupwise-comparison?" )
+                    logger.info( f"Could not find a comparison for {assay}. Perhaps you did not use an assaywise-comparison but a groupwise-comparison?" )
                 else:
                     comparison = self._obj.comparisons[ assay ]
                     self._annotate_pvalues(x, y, sterr, pval_kws, comparison, tmp_df, subplot)
@@ -401,10 +406,17 @@ class AssayDots(AssaySubplotsResults):
         alpha = kwargs.pop("alpha", 1)
 
         # generate a custom color palette in case color kwarg is provided
-        palette = gx.generate_palette(kwargs)
-
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        if palette:
+            if is_palette:
+                palette = dict( palette = palette )
+            else:
+                palette = dict( color = palette )
+        else:
+            palette = dict( palette = defaults.default_palette )
+            
         # set a seaborn style
-        style = kwargs.pop("style", "dark")
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
 
         # get kwargs for pvalue annotations
@@ -433,9 +445,8 @@ class AssayDots(AssaySubplotsResults):
                                 y = tmp_df[ assay ],
                                 color = None,
                                 inner = None, 
-                                palette = palette,
                                 ax = subplot,
-
+                                **palette,
                             )
                 for i in subplot.collections:
                     i.set_alpha( alpha * 0.3 )
@@ -443,9 +454,9 @@ class AssayDots(AssaySubplotsResults):
             sns.stripplot(
                             x = tmp_df["group_name"],
                             y = tmp_df[ assay ],
-                            palette = palette,
                             alpha = alpha,
                             ax = subplot,
+                            **palette,
                             **kwargs
                         )
         

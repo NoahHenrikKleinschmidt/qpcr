@@ -233,13 +233,20 @@ class FilterSummary(base.AssayPlotter):
         after = self._after.get()
         title, show, assays, headers, ncols, nrows, xlabel, ylabel = self._prep_shared_kwargs(kwargs)
         
-        rot = kwargs.pop("rot",None)
+        rot = kwargs.pop("rot", None)
         show_spines = kwargs.pop("frame", True)
 
-        palette = gx.generate_palette(kwargs)
-        # set a seaborn style
-        style = kwargs.pop("style", "ticks")
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        print( palette )
+        if palette:
+            if is_palette:
+                kwargs["palette"] = palette
+            else:
+                kwargs["color"] = palette
+        else:
+            kwargs["palette"] = defaults.default_palette
 
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
 
         fig, Coords = self._setup_static_figure(ncols, nrows, title, kwargs)
@@ -267,7 +274,6 @@ class FilterSummary(base.AssayPlotter):
                         x = "group_name",
                         y = assay,
                         hue = "kind",
-                        palette = palette, 
                         ax = ax,
                         **kwargs
                     )
@@ -321,17 +327,17 @@ if __name__ == "__main__":
 
     
     # works :-)
-    p = FilterSummary( mode = "interactive" )
-    p.add_before(a)
-    p.add_after(a)
-    fig = p.plot()
-    fig.show()
+    # p = FilterSummary( mode = "interactive" )
+    # p.add_before(a)
+    # p.add_after(a)
+    # fig = p.plot()
+    # fig.show()
 
     # works :-)
     p = FilterSummary()
     p.add_before(a)
     p.add_after(a)
-    fig = p.plot()
+    fig = p.plot(palette = "viridis")
     plt.show()
 
     

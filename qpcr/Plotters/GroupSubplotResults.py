@@ -153,7 +153,16 @@ class GroupBars(GroupSubplotsResults):
         groups, names, nrows, ncols, xlabel, ylabel, x, y, sterr, headers, title, show = self._prep_shared_kwargs(kwargs, data)
         label_subplots, start_character, show_spines, rot = self._get_labels_and_spines_and_rot(kwargs)
 
-        palette = gx.generate_palette(kwargs)
+        legend = kwargs.pop("legend", False)
+
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        if palette:
+            if is_palette:
+                kwargs["palette"] = palette
+            else:
+                kwargs["color"] = palette
+        else:
+            kwargs["palette"] = defaults.default_palette
 
         # set a seaborn style
         style = kwargs.pop("style", "ticks")
@@ -182,16 +191,20 @@ class GroupBars(GroupSubplotsResults):
             tmp_df = data.query( f"group == {group}" )
             tmp_df = tmp_df.sort_values( x )
 
-            tmp_df.plot.bar(
-                        x = x, 
-                        y = y,
-                        # yerr = "stdev",
-                        color = palette,
-                        edgecolor = edgecolor,
-                        linewidth = edgewidth,
-                        ax = ax,
-                        **kwargs
-                    )
+            sns.barplot( data = tmp_df, x = x, y = y, 
+                         edgecolor = edgecolor,
+                         linewidth = edgewidth, ax = ax, **kwargs )
+
+            # tmp_df.plot.bar(
+            #             x = x, 
+            #             y = y,
+            #             # yerr = "stdev",
+            #             color = palette,
+            #             edgecolor = edgecolor,
+            #             linewidth = edgewidth,
+            #             ax = ax,
+            #             **kwargs
+            #         )
 
             ax.errorbar(
                             x = tmp_df[x], y = tmp_df[y], 
@@ -425,10 +438,18 @@ class GroupDots(GroupSubplotsResults):
                 raise AttributeError("Cannot annotate pvalues if no comparisons have been made! Please first perform a statistical groupwise comparison.")
         
         # generate a custom color palette in case color kwarg is provided
-        palette = gx.generate_palette(kwargs)
+        palette, is_palette = gx.generate_palette(kwargs, True)
+        if palette:
+            if is_palette:
+                palette = dict( palette = palette )
+            else:
+                palette = dict( color = palette )
+        else:
+            palette = dict( palette = defaults.default_palette )
+
 
         # set a seaborn style
-        style = kwargs.pop("style", "dark")
+        style = kwargs.pop("style", defaults.default_style)
         sns.set_style( style )
 
         # make figure
@@ -447,10 +468,10 @@ class GroupDots(GroupSubplotsResults):
                 sns.violinplot(
                                 x = tmp_df[ "assay" ],
                                 y = tmp_df[ "value" ],
-                                color = None,
+                                # color = None,
                                 inner = None, 
-                                palette = palette,
                                 ax = subplot,
+                                **palette
 
                             )
                 for i in subplot.collections:
@@ -459,9 +480,9 @@ class GroupDots(GroupSubplotsResults):
             sns.stripplot(
                             x = tmp_df[ "assay" ],
                             y = tmp_df[ "value" ],
-                            palette = palette,
                             alpha = alpha,
                             ax = subplot,
+                            **palette,
                             **kwargs
                         )
         
@@ -643,15 +664,15 @@ if __name__ == "__main__":
     r.drop_rel()
 
     # works :-)
-    p = GroupBars( mode = "interactive" )
+    p = GroupBars( mode = "static" )
     p.link(r)
-    fig = p.plot()
+    fig = p.plot( color = "red")
     fig.show()
 
     # works :-)
     p = GroupDots( mode = "static" )
     p.link(r)
-    fig = p.plot()
+    fig = p.plot( color = "viridis")
     plt.show()
 
     

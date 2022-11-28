@@ -77,6 +77,12 @@ plotmode = "static"
 default_preview = "AssayBars"
 """The default setting for Results visualisation. This may be any of the four Results plotters."""
 
+default_palette = "mako_r"
+"""The default palette for (static) plotting"""
+
+default_style = "white"
+"""The default style for (static) plotting"""
+
 # AssayDots / GroupDots
 # -------------------------------
 
@@ -86,7 +92,7 @@ static_PreviewDots = dict(
                                     linewidth = 0.8,
                                     rot = 30,
                                     frame = False,
-                                    palette = "Blues"
+                                    # palette = "Blues"
                     )
                 
 interactive_PreviewDots = dict(
@@ -102,11 +108,11 @@ static_PreviewBars = dict(
                                     title = "Preview of Results",
                                     ylabel = "norm. Fold Change",
                                     linewidth = 0.8,
-                                    style = "dark",
+                                    # style = "dark",
                                     frame = False,
                                     legend = False,
                                     rot = 30,
-                                    color = "Blues"
+                                    # color = "Blues"
                     )
                 
 interactive_PreviewBars = dict(
@@ -123,8 +129,6 @@ static_ReplicateBoxPlot = dict(
                                     xlabel = raw_col_names[0],
                                     linewidth = 0.8,
                                     frame = False,
-                                    style = "dark",
-                                    palette = "Blues"
                                 )
 
 interactive_ReplicateBoxPlot = dict(
@@ -140,9 +144,9 @@ static_FilterSummary = dict(
                                     linewidth = 0.8,
                                     ylabel = raw_col_names[1],
                                     frame = False,
-                                    style = "dark", 
+                                    # style = "dark", 
                                     rot = 30,
-                                    palette = "coolwarm"
+                                    # palette = "coolwarm"
                                 )
 
 interactive_FilterSummary = dict(
@@ -158,7 +162,7 @@ static_EfficiencyLines = dict(
                                     xlabel = "Log Dilution",
                                     ylabel = "Ct",
                                     color = "cornflowerblue",
-                                    style = "dark",   
+                                    # style = "dark",   
                             )
 
 interactive_EfficiencyLines = dict(
@@ -166,3 +170,18 @@ interactive_EfficiencyLines = dict(
                                     xlabel = "Log Dilution",
                                     ylabel = "Ct",
                             )
+
+
+# Pairwise Plots/Heatmaps
+# -------------------------------
+
+static_Pairwise = dict(
+                                xlabel = "",
+                                ylabel = "",
+                        )
+
+interactive_Pairwise = dict(
+                                xlabel = "",
+                                ylabel = "",
+                                template = "plotly_white",
+                        )
