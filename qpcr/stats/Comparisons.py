@@ -6,6 +6,8 @@ Multiple ``Comparison`` objects are stored together in ``MultipleComparisons`` o
 from itertools import permutations
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
+import qpcr.Plotters as plotters
+
 import numpy as np
 import pandas as pd
 from statsmodels.stats import multitest
@@ -340,6 +342,27 @@ class MultiTestComparison(Comparison):
             final["pval_adj"] = pvals_adj["pval_adj"]
         return final
 
+    def heatmap(self, **kwargs):
+        """
+        Plots a heatmap of the p-values.
+
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments to be passed to ``seaborn.heatmap``.
+
+        Returns
+        -------
+        ax : matplotlib.Axes
+            The axes object.
+        """
+        if self._pvalues is None:
+            return None
+
+        plotter = plotters.PairwiseHeatmap(mode=kwargs.pop("mode"))
+        plotter.link(self)
+        return plotter.plot(**kwargs)
+
     @property
     def pvalues_adjusted(self) -> np.ndarray:
         """
@@ -398,6 +421,9 @@ class MultiTestComparison(Comparison):
 
     def __collection_export__(self):
         return self.stack()
+
+    def __qplot__(self, **kwargs):
+        return self.heatmap
 
 
 class PairwiseComparison(MultiTestComparison):
@@ -680,6 +706,32 @@ class ComparisonsCollection:
         fname = "{directory}/{id}.csv"
         for i in self:
             i.save(filename=fname.format(directory=directory, id=i.id()))
+
+    def make_symmetric(self):
+        """
+        Makes all comparisons symmetric.
+
+        Note
+        ----
+        This only works if MultiTestComparisons are stored.
+        """
+        if not isinstance(self[0], MultiTestComparison):
+            raise ValueError("Can only make comparisons symmetric if MultiTestComparison objects are stored.")
+        for i in self:
+            i.make_symmetric()
+
+    def make_asymmetric(self):
+        """
+        Makes all comparisons asymmetric.
+
+        Note
+        ----
+        This only works if MultiTestComparisons are stored.
+        """
+        if not isinstance(self[0], MultiTestComparison):
+            raise ValueError("Can only make comparisons asymmetric if MultiTestComparison objects are stored.")
+        for i in self:
+            i.make_asymmetric()
 
     @property
     def comparisons(self):

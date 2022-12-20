@@ -190,29 +190,29 @@ As you will have noticed, the dictionary we edited was not a "qpcr default plott
 You can therefore selectively adjust your favourite default settings without having to worry to skew with other figure types. However, `rcParams` will of course, also work just fine globally. 
 """
 
-# Concept: 
-# Plotter: 
-#       We define a superclass Plotter that will handle linking to data, 
+# Concept:
+# Plotter:
+#       We define a superclass Plotter that will handle linking to data,
 #       linking to default parameters, and setting up default parameters.
 #       It also provides a generic plot() method that will call on a FigureClass specific _plot() method...
 #       Wether or not to use static or interactive plots is also handled by this class...
 #
-# Wrapper: 
-#       The Wrapper is an equivalent to the Plotter superclass, but allows a facilitated user interface to 
-#       several different plotters. It re-defines the public methods of the Plotter superclass and creates 
-#       an instance of a specific Plotter and forwards data to that instance. 
+# Wrapper:
+#       The Wrapper is an equivalent to the Plotter superclass, but allows a facilitated user interface to
+#       several different plotters. It re-defines the public methods of the Plotter superclass and creates
+#       an instance of a specific Plotter and forwards data to that instance.
 #
 # FigureClasses:
-#       A parent class for each type of figure. It contains two potential _plot() 
+#       A parent class for each type of figure. It contains two potential _plot()
 #       methods, one for interactive one for static plotting... Which one to use is decided based on the plotting mode...
-#       Each FigureClass has therefore to link default parameters, then init Plotter (superclass), 
+#       Each FigureClass has therefore to link default parameters, then init Plotter (superclass),
 #       and define their own _static_plot() and _interactive_plot() methods! Any additionally required methods can be written as well...
 #
 # plot function API
 #       Different classes can define their own __qplot__ method which makes them plottable via the qpcr.plot function.
 #       __qplot__ must return the method to call for plotting (but not call the method itself)!
 #       Since the Plotters themselves are at the basis of plotting they do NOT have a __qplot__ method...
-#       This is primarily because the Plotters must be set up to be either static or interactive, while 
+#       This is primarily because the Plotters must be set up to be either static or interactive, while
 #       the other classes can decide which plotmode to call on.
 
 
@@ -223,3 +223,5 @@ from .FilterSummary import FilterSummary
 from .EfficiencyLines import EfficiencyLines
 from .AssaySubplotResults import AssayBars, AssayDots
 from .GroupSubplotResults import GroupBars, GroupDots
+from .PairwiseHeatmap import PairwiseHeatmap
+from .PairwisePlot import PairwisePlot
