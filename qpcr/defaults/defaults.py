@@ -13,7 +13,6 @@ import logging
 supported_filetypes = ["csv", "xlsx"]
 
 
-
 #  =================================================================
 #                       Default Inference settings
 #  =================================================================
@@ -87,101 +86,90 @@ default_style = "white"
 # -------------------------------
 
 static_PreviewDots = dict(
-                                    title = "Preview of Results",
-                                    ylabel = "norm. Fold Change",
-                                    linewidth = 0.8,
-                                    rot = 30,
-                                    frame = False,
-                                    # palette = "Blues"
-                    )
-                
+    title="Preview of Results",
+    ylabel="norm. Fold Change",
+    linewidth=0.8,
+    rot=30,
+    frame=False,
+    # palette = "Blues"
+)
+
 interactive_PreviewDots = dict(
-                                    title = "Preview of Results",
-                                    ylabel = "norm. Fold Change",
-                                    template = "plotly_white",
-                            )
+    title="Preview of Results",
+    ylabel="norm. Fold Change",
+    template="plotly_white",
+)
 
 # Assay / GroupBars
 # -------------------------------
 
 static_PreviewBars = dict(
-                                    title = "Preview of Results",
-                                    ylabel = "norm. Fold Change",
-                                    linewidth = 0.8,
-                                    # style = "dark",
-                                    frame = False,
-                                    legend = False,
-                                    rot = 30,
-                                    # color = "Blues"
-                    )
-                
+    title="Preview of Results",
+    ylabel="norm. Fold Change",
+    linewidth=0.8,
+    # style = "dark",
+    frame=False,
+    legend=False,
+    rot=30,
+    # color = "Blues"
+)
+
 interactive_PreviewBars = dict(
-                                    title = "Preview of Results",
-                                    ylabel = "norm. Fold Change",
-                                    template = "plotly_white",
-                            )
+    title="Preview of Results",
+    ylabel="norm. Fold Change",
+    template="plotly_white",
+)
 
 # ReplicateBoxPlot
 # --------------------------------
 static_ReplicateBoxPlot = dict(
-                                    title = "Summary of Replicates",
-                                    ylabel = raw_col_names[1],
-                                    xlabel = raw_col_names[0],
-                                    linewidth = 0.8,
-                                    frame = False,
-                                )
+    title="Summary of Replicates",
+    ylabel=raw_col_names[1],
+    xlabel=raw_col_names[0],
+    linewidth=0.8,
+    frame=False,
+)
 
-interactive_ReplicateBoxPlot = dict(
-                                        ylabel = raw_col_names[1],       
-                                        template = "plotly_white",
-                                        title = "Summary of Replicates"
-                                    )
+interactive_ReplicateBoxPlot = dict(ylabel=raw_col_names[1], template="plotly_white", title="Summary of Replicates")
 
 # FilterSummary
 # --------------------------------
 static_FilterSummary = dict(
-                                    title = "Filtering Summary",
-                                    linewidth = 0.8,
-                                    ylabel = raw_col_names[1],
-                                    frame = False,
-                                    # style = "dark", 
-                                    rot = 30,
-                                    # palette = "coolwarm"
-                                )
+    title="Filtering Summary",
+    linewidth=0.8,
+    ylabel=raw_col_names[1],
+    frame=False,
+    # style = "dark",
+    rot=30,
+    # palette = "coolwarm"
+)
 
-interactive_FilterSummary = dict(
-                                        ylabel = raw_col_names[1],
-                                        template = "plotly_white",
-                                        title = "Filtering Summary"
-                                    )
+interactive_FilterSummary = dict(ylabel=raw_col_names[1], template="plotly_white", title="Filtering Summary")
 
 # EfficiencyLines
 # --------------------------------
 static_EfficiencyLines = dict(
-                                    title = "Efficiency Computations",
-                                    xlabel = "Log Dilution",
-                                    ylabel = "Ct",
-                                    color = "cornflowerblue",
-                                    # style = "dark",   
-                            )
+    title="Efficiency Computations",
+    xlabel="Log Dilution",
+    ylabel="Ct",
+    color="cornflowerblue",
+    # style = "dark",
+)
 
 interactive_EfficiencyLines = dict(
-                                    title = "Efficiency Computations",
-                                    xlabel = "Log Dilution",
-                                    ylabel = "Ct",
-                            )
+    title="Efficiency Computations",
+    xlabel="Log Dilution",
+    ylabel="Ct",
+)
 
 
 # Pairwise Plots/Heatmaps
 # -------------------------------
 
-static_Pairwise = dict(
-                                xlabel = "",
-                                ylabel = "",
-                        )
+static_Pairwise = dict(xlabel="", ylabel="", cbar_kws={"label": "p-value"})
 
 interactive_Pairwise = dict(
-                                xlabel = "",
-                                ylabel = "",
-                                template = "plotly_white",
-                        )
+    xlabel="",
+    ylabel="",
+    template="plotly_white",
+)

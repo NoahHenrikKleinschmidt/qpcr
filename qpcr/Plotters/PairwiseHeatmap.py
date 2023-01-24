@@ -48,13 +48,15 @@ class PairwiseHeatmap(base.Plotter):
         """
         The static Pairwise Plot
         """
+        kwargs = self.update_params(kwargs)
+
         style = kwargs.get("style", None)
         sns.set_style(style)
+
         if "cmap" not in kwargs:
             palette, is_palette = gx.generate_palette(kwargs, True)
-            if palette:
-                if is_palette:
-                    kwargs["cmap"] = palette
+            if palette and is_palette:
+                kwargs["cmap"] = palette
             else:
                 kwargs["cmap"] = defaults.default_palette
 
@@ -89,8 +91,9 @@ class PairwiseHeatmap(base.Plotter):
             sns.heatmap(data, ax=ax, **kwargs)
 
             return ax.figure
+
         else:
-            raise TypeError("The object must be a PairwiseComparison or a ComparisonsCollection.")
+            raise TypeError("The object must be a PairwiseComparison or a ComparisonsCollection storing PairwiseComparisons.")
 
     def _interactive_plot(self, **kwargs):
         """
@@ -121,11 +124,13 @@ if __name__ == "__main__":
     results.drop_rel()
 
     comparisons = qpcr.stats.assaywise_ttests(results)
-    comparisons.make_symmetric()
+    # comparisons.make_symmetric()
 
-    # plotter = PairwiseHeatmap()
-    fig = qpcr.plot(comparisons[0])
+    plotter = PairwiseHeatmap()
+    plotter.link(comparisons)
+    fig = plotter.plot(palette="magma")
+    # fig = qpcr.plot(comparisons[0])
     # fig = plotter.plot(figsize=(12, 12), cmap="mako_r")
-    # plt.tight_layout(w_pad=80)
+    plt.tight_layout()
     plt.savefig("test.png", bbox_inches="tight")
     # plt.show()
