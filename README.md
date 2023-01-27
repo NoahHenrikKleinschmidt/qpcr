@@ -1,7 +1,7 @@
 <!-- # <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="32"> qpcr -->
 # <img src="./docs/source/qpcr_tiny.svg" width="25"> qpcr
 
-### A python module to analyse qPCR data on single-datasets or high-throughput
+### A python package to analyse qPCR data on single-datasets or high-throughput
 
 [![DOI](https://zenodo.org/badge/398244987.svg)](https://zenodo.org/badge/latestdoi/398244987)
 [![Generic badge](https://img.shields.io/badge/made_for-qPCR-yellow.svg)](https://shields.io/)
@@ -67,10 +67,10 @@ fig = results.preview( color = colors, edgecolor = "black" )
 
 
 ### Getting started
-A set of basic introductory tutorials is available as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository. For more information about the API, checkout the documentation on [Read the Docs](https://qpcr.readthedocs.io/en/latest/).
+For more information about the API, checkout the documentation on [Read the Docs](https://qpcr.readthedocs.io/en/latest/). There you will also find a number of basic tutorials. You can also access the tutorials direcctly as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository.
 
 ### Qupid Web App
-In case you prefer a graphical-user-interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid offers the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). 
+In case you prefer a graphical user interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid provides access to the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). Or can be run locally by cloning its [Github repository](https://github.com/NoahHenrikKleinschmidt/Qupid). 
 
 #### Citation
 Kleinschmidt, N. (2022). qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.0.0) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
