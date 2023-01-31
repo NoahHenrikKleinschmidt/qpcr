@@ -1,5 +1,11 @@
 <!-- # <img src="https://user-images.githubusercontent.com/89252165/153070064-4d3fb42e-a5f9-40fd-b856-755d58a52687.svg" width="32"> qpcr -->
-# <img src="./docs/source/qpcr_tiny.svg" width="25"> qpcr
+<!-- # <img src="./docs/source/qpcr_small.svg" width="25"> qpcr -->
+
+<p align="center">
+<img src="./docs/source/qpcr_light.svg" width=80%>
+</p>
+
+---
 
 ### A python package to analyse qPCR data on single-datasets or high-throughput
 
@@ -29,11 +35,6 @@ pip install qpcr
 The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. It offers automated processes to read datafiles, filter out outlier Ct values, compute Delta-Ct, normalise assays against one another, and visualise the results. Hence, `qpcr` offers a full suite for automated Delta-Delta-Ct analyses.
 However, even if your analysis is not going to be Delta-Delta-Ct, you may wish to check out how the `qpcr.Readers` might help you faciliate your workflow, as they are streamlined to read diversely structured datafiles contianing both a single and multiple qPCR datasets. 
 
-#### Customisability
-A technical note at this point. At it's core `qpcr` offers very versatile data manipulation through two processing classes called the `qpcr.Analyser` and the `qpcr.Normaliser`. The `qpcr.Analyser` performs actions on a single qPCR datasets / assay stored in a `qpcr.Assay` object (the central data storage unit of the `qpcr` module). 
-It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single Assay is costumisable, so there is no restriction as such to what the Analyser will do to an Assay. 
-On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisable.  
-
 ### Example usage
 A very simple analysis may start from a single `excel` file containing data of several qPCR assays, some of which are "assays-of-interest" and some of which are "normalisers" such as 28S rRNA. If we have performed a tiny bit of pre-processing on our datafile, our analysis may look like this:
 
@@ -51,23 +52,29 @@ assays, normalisers = qpcr.read(  myfile,
 
 # we can use a pre-defined default Delta-Delta-Ct pipeline
 pipe = ddCt()
-pipe.link( assays = assays, normalisers = normalisers )
+pipe.link(assays=assays, normalisers=normalisers)
 pipe.run()
 
 # at this point we can save our results to a file
 results = pipe.results()
-results.save( "./MyResults/" )
+results.save("./MyResults/")
 
 # and generate a preview using some custom settings
 colors = ["xkcd:pastel blue", "xkcd:sapphire", "xkcd:rose pink", "xkcd:raspberry"]
 
-fig = results.preview( color = colors, edgecolor = "black" )
+fig = results.preview(color=colors, edgecolor="black")
 ```
 ![colorful](https://user-images.githubusercontent.com/89252165/158015384-d26fcfec-0ad6-44bc-a771-35a5dd43a380.png)
 
 
 ### Getting started
 For more information about the API, checkout the documentation on [Read the Docs](https://qpcr.readthedocs.io/en/latest/). There you will also find a number of basic tutorials. You can also access the tutorials direcctly as `jupyter notebooks` in the [Examples](https://github.com/NoahHenrikKleinschmidt/qpcr/tree/main/Examples) directory in this repository.
+
+#### Customisability
+A technical note at this point. At it's core `qpcr` offers very versatile data manipulation through two processing classes called the `qpcr.Analyser` and the `qpcr.Normaliser`. The `qpcr.Analyser` performs actions on a single qPCR datasets / assay stored in a `qpcr.Assay` object (the central data storage unit of the `qpcr` module). 
+It is used to perform `Delta-Ct` computation. However, the precise function that it _applies_ to the single Assay is costumisable, so there is no restriction as such to what the Analyser will do to an Assay. 
+On the other hand the `qpcr.Normaliser` will perform actions on a single Assay using data from a second Assay. It is used to perform normalisation of assays-of-interst against normaliser-assays. However, here too the precise function that is applied to the Assay is costumisable.  
+
 
 ### Qupid Web App
 In case you prefer a graphical user interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid provides access to the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). Or can be run locally by cloning its [Github repository](https://github.com/NoahHenrikKleinschmidt/Qupid). 
