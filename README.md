@@ -2,7 +2,7 @@
 <!-- # <img src="./docs/source/qpcr_small.svg" width="25"> qpcr -->
 
 <p align="center">
-<img src="./docs/source/qpcr_light.svg" width=80%>
+<img src="./docs/source/qpcr_light.svg" width=60%>
 </p>
 
 ---
