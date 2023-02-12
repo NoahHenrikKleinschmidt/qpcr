@@ -63,13 +63,11 @@ import qpcr._auxiliary.warnings as aw
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
+import scipy.stats as scistats
 
 
 from qpcr.Curves import EfficiencyCurve
 from qpcr.main import Assay 
-
-import logging
 
 logger = aux.default_logger()
 class Calibrator(aux._ID):
@@ -110,7 +108,7 @@ class Calibrator(aux._ID):
         _length = len( effs.split("\n")[0] )
         s = f"""
 {"-" * _length}
-Calibrator:\t{self._id}
+{self.__class__.__name__}:\t{self._id}
 Loaded File:\t{self._loaded_file}
         """.strip()
         if self._manual_dilution_set:
@@ -121,7 +119,7 @@ Loaded File:\t{self._loaded_file}
     def __repr__( self ):
         file = self._loaded_file
         effs = self._eff_dict
-        return f"Calibrator({file=}, {effs=})"
+        return f"{self.__class__.__name__}({file=}, {effs=})"
 
     def save( self, filename : str = None , mode : str = "write" ):
         """
@@ -178,7 +176,8 @@ Loaded File:\t{self._loaded_file}
             self.adopt( current )
             self._loaded_file = filename
             return current
-        except: 
+        except Exception as e:
+            logger.error( e ) 
             e = aw.CalibratorError( "unknown_filetype", filename=filename )
             logger.critical( e )
             raise e
@@ -238,6 +237,7 @@ Loaded File:\t{self._loaded_file}
         clear all stored efficiency values and computed data!
         """
         self.__init__()
+        return self
 
     def clear( self ):
         """
@@ -245,6 +245,8 @@ Loaded File:\t{self._loaded_file}
         """
         self._eff_dict = {}
         self._computed_values = {}
+        return self
+
 
     def adopt( self, effs : dict ):
         """
@@ -261,7 +263,8 @@ Loaded File:\t{self._loaded_file}
             self._eff_dict = effs
         else: 
             aw.SoftWarning("Calibrator:cannot_adopt", effs = effs, eff_type = type(effs).__name__ )
-    
+        return self
+
     def dilution( self, step : float or np.ndarray or tuple = None ):
         """
         Gets or sets the dilution steps used. This must be a `float` fraction
@@ -324,29 +327,34 @@ Loaded File:\t{self._loaded_file}
         """
         if isinstance( assay, list ):
             return [ self.pipe( A, remove_calibrators = remove_calibrators, ignore_uncalibrated = ignore_uncalibrated ) for A in assay ]
-        else:
-            if self._eff_dict != {}:
-                # first try to assign (will leave the assay unchanged if nothing is found)
-                eff = self._get_efficiency( assay )
-                if eff is not None: 
-                    assay = self.assign( assay, remove_calibrators = remove_calibrators )
-                else: 
-                    try:
-                        assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                    except: 
-                        if not ignore_uncalibrated:
-                            aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
-                        else: 
-                            aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-            else:
-                try: 
+        if self._eff_dict != {}:
+            # first try to assign (will leave the assay unchanged if nothing is found)
+            eff = self._get_efficiency( assay )
+            if eff is not None: 
+                assay = self.assign( assay, remove_calibrators = remove_calibrators )
+            else: 
+                try:
                     assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
-                except:
+                except Exception as e:
+                    logger.info( e ) 
+                    e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
                     if not ignore_uncalibrated:
-                        aw.HardWarning("Calibrator:cannot_process_assay", id = assay.id() )
+                        logger.critical( e )
+                        raise e
                     else: 
-                        aw.SoftWarning("Calibrator:cannot_process_assay", id = assay.id() )
-            return assay
+                        logger.info( e )
+        else:
+            try: 
+                assay = self.calibrate( assay, remove_calibrators = remove_calibrators )
+            except Exception as e:
+                logger.info( e )
+                e = aw.CalibratorError( "cannot_process_assay", id = assay.id() )
+                if not ignore_uncalibrated:
+                    logger.critical( e )
+                    raise e 
+                else: 
+                    logger.info( e )
+        return assay
 
     def calibrate( self, assay : Assay, remove_calibrators : bool = True ):
         """
@@ -417,7 +425,7 @@ Loaded File:\t{self._loaded_file}
         # now interpolate a line through the log dilutions and the ct values
         cts = df[ ct_name ].to_numpy()
 
-        regression_line = stats.linregress( x = dilutions, y = cts )
+        regression_line = scistats.linregress( x = dilutions, y = cts )
         # and now compute the efficiency from the regression line
         efficiency = self._compute_efficiency(regression_line)
 
@@ -625,8 +633,11 @@ Loaded File:\t{self._loaded_file}
             dilutions = np.log(dilutions)
             self._reset_dilution()
             return dilutions 
-        except: 
-            aw.HardWarning("Calibrator:could_not_infer_dilution")
+        except Exception as e:
+            logger.error( e ) 
+            e = aw.CalibratorError( "could_not_infer_dilution" )
+            logger.critical( e )
+            raise e
 
     def _generate_dilution_steps(self, df):
         """
@@ -733,43 +744,6 @@ Loaded File:\t{self._loaded_file}
         df = df.transpose().reset_index()
         df.to_csv( filename, index = False )
 
+__default_Calibrator__ = Calibrator()
+"""The default Calibrator"""
 
-def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple) = None, remove_calibrators : bool = True ):
-    """
-    Computes an efficiency from an `qpcr.Assay` object.
-    
-    This method will try to compute a new efficiency. To do this, it will check autonomously if
-    `calibrator : {}` replicates are present and use these for computation. If none are 
-    found it will assume the entire assay is to be used as calibrator.
-
-    Note
-    ----
-    This will set up a blank default Calibrator. If you have efficiencies already computed
-    and wish to assign them, set up a `Calibrator` manually and load the data. 
-
-    Parameters
-    ----------
-    assay : qpcr.Assay or list
-        A `qpcr.Assay` object or a list thereof.
-
-    dilution : float or np.ndarray
-        The dilution step to be used. This must be a `float` fraction
-        e.g. `0.5` for a `1 : 2` dilution series or `0.1` for a `1 : 10` series etc.
-        If there are multiple steps because there is a gap in the dilution series. It is 
-        necessary to supply a step for each group individually e.g. `[1,0.5,0.25,0.0625,0.03125]`.
-        if there are 5 dilution steps (originally six but 0.125 was discarded). Note, both of the above also work with the inverse dilutions e.g. `2` or `[1,2,4,16,32]`.
-        If the calibrators specify a dilution step already in their `group names` then the dilutions can be inferred automatically.
-        More information about this can be found in the documentation of the `qpcr.Calibrator.dilution` method.
-
-    remove_calibrators : bool
-        If calibrators are present in the assay alongside other groups, 
-        remove the calibrator replicates after efficiency calculation. 
-
-    Returns
-    -------
-    assay
-        The same as input but with updated efficiency. 
-    """
-    c = Calibrator()
-    c.dilution( dilution )
-    return c.calibrate( assay, remove_calibrators )

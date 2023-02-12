@@ -6,10 +6,10 @@ authors:
     family-names: Kleinschmidt
     given-names: Noah
 cff-version: "1.1.0"
-date-released: 2022-07-23
+date-released: 2023-02-12
 license: "GPL-3.0"
 message: "When using this package to analyse your data, please, cite accordingly. Good luck with your research!"
 repository-code: "https://github.com/NoahHenrikKleinschmidt/qpcr.git"
-title: "qpcr - a python module for easy and versatile qPCR data analysis for small-scale datasets and high-throughput"
-version: "4.0.0"
+title: "qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput"
+version: "4.1.0"
 ...

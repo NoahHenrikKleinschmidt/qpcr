@@ -1,14 +1,22 @@
 .. _main:
 
-The main qpcr classes
-=================
+The main qpcr functions and classes
+===================================
 
-These are the main ``qpcr`` classes that carry the main user API.
-Some of these classes are also supported by direct functions to 
-carry out setting up default instances of the below classes.
+These are the principal ``qpcr`` functions and their underlying classes that carry the main user API.
+
 
 
 .. automodule:: qpcr.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Function API
+--------------------------------
+
+.. automodule:: qpcr.main.func_api
    :members:
    :undoc-members:
    :show-inheritance:

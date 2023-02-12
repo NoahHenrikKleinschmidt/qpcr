@@ -60,7 +60,6 @@ which allows you to avoid repeating the same number of replicates many times lik
 
 import pandas as pd
 import numpy as np
-import logging
 import os 
 import qpcr.defaults as defaults
 import qpcr._auxiliary as aux
@@ -135,25 +134,6 @@ class Assay(aux._ID):
         # and try to change names, provided that we could group yet...
         if self._names is not None and self.groups() is not None: 
             self.rename(self._names)
-
-    def __str__(self):
-
-        _length = len( str(self._df).split("\n")[0] ) 
-        s = f"""
-{"-" * _length}
-Assay: {self._id}
-Amplif. Eff.: {self._efficiency}
-{"-" * _length}
-{self._df}
-{"-" * _length}
-        """.strip()
-        return s 
-
-    def __repr__( self ):
-        id = self._id
-        eff = self._efficiency
-        n = len(self)
-        return f"Assay({id=}, {eff=}, {n=})"
 
     def efficiency( self, eff : float = None ):
         """
@@ -252,7 +232,7 @@ Amplif. Eff.: {self._efficiency}
         groups = self.groups()
 
         new = None
-
+        
         for group in groups: 
             subset = df.query(f"group == {group}")
             length = len(subset) * n
@@ -263,6 +243,7 @@ Amplif. Eff.: {self._efficiency}
                 new = pd.concat( [new, subset], ignore_index = True )
 
         self.adopt( new )
+        return self 
 
     def stack(self, n : int = 2):
         """
@@ -291,6 +272,7 @@ Amplif. Eff.: {self._efficiency}
                     new = pd.concat( [new, subset], ignore_index = True )
 
             self.adopt( new )
+        return self 
 
     @property
     def Ct(self):
@@ -302,7 +284,7 @@ Amplif. Eff.: {self._efficiency}
             from "Ct" to the assay's `id`.
         """
         Ct = self._df[ raw_col_names[1] ]
-        Ct.name = self.id()
+        Ct.name = f"{self.id()}_Ct"
         return Ct
 
     @property         
@@ -339,7 +321,7 @@ Amplif. Eff.: {self._efficiency}
         if not isinstance(ddCt, pd.DataFrame):
             ddCt = pd.DataFrame(ddCt)
         ddCt = ddCt.rename(columns = new_names)
-        
+        ddCt.name = f"{self.id()}_ddCt"
         return ddCt
 
     @property
@@ -351,13 +333,21 @@ Amplif. Eff.: {self._efficiency}
             A list of all rel_{} columns within the Assays's dataframe.
         """
         return [i for i in self._df.columns if "rel_" in i]
-        # for i in self._df.columns: 
-        #     if "rel_" in i:
-        #         yield i
-
+        
     # FUTURE FEATURE HERE
     # def fc(self):
         # some method to also return the fold change columns... 
+
+    @property
+    def data_cols(self):
+        """
+        Returns
+        -------
+        cols
+            A list of all non-setup columns in the dataframe.
+        """
+        return [i for i in self._df.columns if not i in defaults.setup_cols]
+        
 
     @property
     def columns(self):
@@ -384,18 +374,6 @@ Amplif. Eff.: {self._efficiency}
         """
         return len( self._df )  # self._length
 
-    def __len__(self):
-        return len( self._df )
-
-    def __setitem__( self, key, value ):
-        self._df[ key ] = value
-        
-
-    def __getitem__( self, key ):
-        return self._df[ key ]
-    
-    def __delitem__( self, key ):
-        del self._df[ key ]
 
     def add_dCt(self, dCt : pd.Series): 
         """
@@ -558,6 +536,7 @@ Amplif. Eff.: {self._efficiency}
         if infer_names: #and self._names is None:
             # infer group names
             self._infer_names()
+        return self 
             
 
     def rename(self, names:(list or dict)):
@@ -583,6 +562,7 @@ Amplif. Eff.: {self._efficiency}
         # update "group_name"
         self._df["group_name"] = new_names
         self._renamed = True
+        return self 
 
     def ignore(self, entries:tuple, drop = False):
         """
@@ -603,6 +583,7 @@ Amplif. Eff.: {self._efficiency}
             Cts = np.array( self.Ct )
             Cts[ entries ] = np.nan
             self._df["Ct"] = Cts
+        return self
     
     def _reps_from_formula(self, replicates):
         """
@@ -763,3 +744,40 @@ Amplif. Eff.: {self._efficiency}
             raise e 
 
         return verdict
+
+    def __str__(self):
+
+        _length = len( str(self._df).split("\n")[0] ) 
+        s = f"""
+{"-" * _length}
+{self.__class__.__name__}: {self._id}
+Amplif. Eff.: {self._efficiency}
+{"-" * _length}
+{self._df}
+{"-" * _length}
+        """.strip()
+        return s 
+
+    def __repr__( self ):
+        id = self._id
+        eff = self._efficiency
+        n = len(self)
+        return f"{self.__class__.__name__}({id=}, {eff=}, {n=})"
+
+    def __iter__( self ):
+        d = list( self._df.groupby( "group" ) )
+        d = ( i for _,i in d )
+        return d 
+        
+    def __len__(self):
+        return len( self._df )
+
+    def __setitem__( self, key, value ):
+        self._df[ key ] = value
+        
+
+    def __getitem__( self, key ):
+        return self._df[ key ]
+    
+    def __delitem__( self, key ):
+        del self._df[ key ]

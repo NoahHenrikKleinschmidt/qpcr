@@ -23,3 +23,4 @@ Here are a number of useful tutorials to help you get started. They are easy to 
 	tutorials/big_table_files
 	tutorials/decorating_datafiles
 	tutorials/custom_efficiencies
+	tutorials/statistical_tests

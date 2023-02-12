@@ -8,6 +8,23 @@ import re
 import qpcr.defaults as defaults
 import logging
 
+def pseudo_isinstance( obj, ref_name : str ):
+    """
+    Performs a pseudo isinstance only based on the reference string 
+
+    Parameters
+    ----------
+    obj : object
+        The object to check
+    ref_name : str
+        The reference name to check against
+
+    Returns
+    -------
+    bool
+        True if the object is of the same type as the reference name
+    """
+    return type(obj).__name__ == ref_name
 
 def log( filename = None, level = None, format = None, name = "qpcr" ):
     """
@@ -30,10 +47,15 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
 
     logger = logging.getLogger( name = name )
 
+    if logger.hasHandlers():
+        if any( [ i.level == level for i in logger.handlers ] ):
+            return logger
+
     # setup the dedicated qpcr logger
     if level is None:
         level = defaults.log_level
-    logger.setLevel( level )
+    if not logger.hasHandlers():
+        logger.setLevel( level )
 
     if filename == "stdout":
         handler = logging.StreamHandler()
@@ -45,7 +67,9 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
             try:
                 import __main__
                 filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
-            except:
+            except Exception as e:
+                logger.info( e )
+                logger.info( "Could not generate a filename for the log file. Using stdout instead." )
                 return log( filename = "stdout", level = level, format = format, name = name )
         
         elif not filename.endswith(".log"): 
@@ -88,8 +112,9 @@ def from_kwargs(key, default, kwargs, rm = False):
             r = kwargs[key]
         else: 
             r = kwargs.pop(key)
-    except: 
-        r = default
+    except Exception as e:
+        logger.debug( e ) 
+        r = default 
     return r 
 
 
@@ -99,9 +124,10 @@ def sorted_set(some_list):
     Importantly, sorted means it keeps the order of entries.
     """
     list_set = []
-    for i in some_list:
-        if i not in list_set: 
-            list_set.append(i)
+    list_set = [ i for i in some_list if i not in list_set ]
+    # for i in some_list:
+    #     if i not in list_set: 
+    #         list_set.append(i)
     return list_set
 
 def same_type(obj1, obj2):
@@ -251,6 +277,7 @@ def fileID(filename):
     return basename
 
 
+logger = default_logger()
 
 if __name__ == "__main__":
 

@@ -529,8 +529,8 @@ class Blueprint(BasicPlus):
                                     normalisers = normalisers, 
                                     results = results
                                 )
-        except: 
-            pass
+        except Exception as e:
+            logger.debug( e ) 
         
         if cores: 
             self._Reader = None

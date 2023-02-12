@@ -205,3 +205,5 @@ class ParserError(ClassError):
 class PipeError(ClassError):
     pass
 
+class ComparisonError(ClassError):
+    pass

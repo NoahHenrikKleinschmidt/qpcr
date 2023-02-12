@@ -6,16 +6,17 @@
 
 
 import os
+
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 if on_rtd:
-# import mock
-# import sys 
-# for mod_name in MOCK_MODULES:
-#     sys.modules[mod_name] = mock.Mock()
+    # import mock
+    # import sys
+    # for mod_name in MOCK_MODULES:
+    #     sys.modules[mod_name] = mock.Mock()
 
-    MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas' ]
-    autodoc_mock_imports = MOCK_MODULES #[ "plotly", "plotly.graph_objs", "plotly.subplots" ]
+    MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas']
+    autodoc_mock_imports = MOCK_MODULES
 
 
 # -- Path setup --------------------------------------------------------------
@@ -29,20 +30,21 @@ else:
 
     import logging
     import sys
+
     src = os.path.abspath("..")
     src = os.path.dirname(src)
-    logging.critical( f"{src=}" )
+    logging.critical(f"{src=}")
     sys.path.insert(0, src)
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'qpcr'
-copyright = '2022, Noah Henrik Kleinschmidt'
+copyright = '2023, Noah Henrik Kleinschmidt'
 author = 'Noah Henrik Kleinschmidt'
 
 # The full version, including alpha/beta/rc tags
-release = '4.0.0'
+release = '4.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -51,12 +53,12 @@ release = '4.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-                'nbsphinx',
-                'sphinx.ext.mathjax',
-                'sphinx.ext.napoleon',
-                'sphinx.ext.viewcode',
-                'sphinx.ext.autodoc',
-            ]
+    'nbsphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc',
+]
 
 napoleon_numpy_docstring = True
 napoleon_use_param = True
@@ -78,9 +80,9 @@ exclude_patterns = []
 #
 html_theme = 'sphinx_rtd_theme'
 
-html_logo = "./qpcr_dark.svg"
+html_logo = "./qpcr_small.svg"
 
-html_theme_options = dict( style_nav_header_background = "#00aaffff" ) 
+html_theme_options = dict(style_nav_header_background="#00aaffff")
 
 # colorful
 pygments_style = "one-dark"

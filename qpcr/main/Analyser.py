@@ -38,12 +38,9 @@ import qpcr._auxiliary.warnings as aw
 import pandas as pd
 from qpcr.main.Assay import Assay
 
-import logging
-
 logger = aux.default_logger()
 
 raw_col_names = defaults.raw_col_names
-
 class Analyser(aux._ID):
     """
     Performs Single Delta-Ct (first normalisation 
@@ -68,21 +65,6 @@ class Analyser(aux._ID):
         # self._efficiency = 1                # the formal effiency in percent
         # self._eff = 2 * self._efficiency    # the actual doubplciation factor used for calculation
 
-    def __str__(self):
-        s = f"""
-Analyser: {self._id}\n
-
-Anchor: {self._anchor}\n
-Ref.Group: {self._ref_group}\n
-
-DeltaCt: {self._deltaCt_function}
-        """.strip()
-        return s
-    
-    def __repr__(self):
-        anchor = self._anchor
-        ref = self._ref_group
-        return f"Analyser({anchor=}, {ref=})"
 
     def get(self):
         """
@@ -412,50 +394,21 @@ DeltaCt: {self._deltaCt_function}
         #     dCt = self._simple_DCt
         # return dCt
 
+    def __str__(self):
+        s = f"""
+{self.__class__.__name__}: {self._id}\n
 
-def delta_ct( assay : (Assay or list) ):
-    """
-    Computes DeltaCt values for a single or multiple `qpcr.Assay` objects.
-    This is a synonym to the `analyse` function. 
+Anchor: {self._anchor}\n
+Ref.Group: {self._ref_group}\n
 
-    Note
-    ----
-    This is essentially a Wrapper for a default `Analyser` and it's `pipe` method.
-    If you require non-default behaviour, please, set up your own `Analyser`. Also,
-    since this function will setup a new Analyser each time it is called, it is
-    less efficient than the conventional way of directly using the `pipe` method.
+DeltaCt: {self._deltaCt_function}
+        """.strip()
+        return s
     
-    Parameters
-    -------
-    assay : qpcr.Assay or list
-        A single `qpcr.Assay` object or a list thereof.
+    def __repr__(self):
+        anchor = self._anchor
+        ref = self._ref_group
+        return f"{self.__class__.__name__}({anchor=}, {ref=})"
 
-    Returns
-    -------
-    qpcr.Assay or list
-        The same as input but with computed DeltaCt values.
-    """
-    return Analyser().pipe( assay )
-
-def analyse( assay : (Assay or list) ):
-    """
-    Computes DeltaCt values for a single or multiple `qpcr.Assay` objects.
-    This is a synonym to the `delta_ct` function. 
-    Note
-    ----
-    This is essentially a Wrapper for a default `Analyser` and it's `pipe` method.
-    If you require non-default behaviour, please, set up your own `Analyser`. Also,
-    since this function will setup a new Analyser each time it is called, it is
-    less efficient than the conventional way of directly using the `pipe` method.
-
-    Parameters
-    -------
-    assay : qpcr.Assay or list
-        A single `qpcr.Assay` object or a list thereof.
-
-    Returns
-    -------
-    qpcr.Assay or list
-        The same as input but with computed DeltaCt values.
-    """
-    return delta_ct( assay )
+__default_Analyser__ = Analyser()
+"""The default Analyser"""

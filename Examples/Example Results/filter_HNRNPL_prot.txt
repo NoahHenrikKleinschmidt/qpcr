@@ -10,3 +10,25 @@ Found Indices:
 []
 Details: 
 {'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+IQRFilter
+Assay: 
+HNRNPL_prot
+Found faulty Replicates: 
+2
+Found Indices: 
+[13, 17]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+HNRNPL_prot
+Found faulty Replicates: 
+2
+Found Indices: 
+[13, 17]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}

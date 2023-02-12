@@ -68,11 +68,9 @@ from qpcr.main.Results import Results
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
-
+import scipy.stats as scistats
 
 from copy import deepcopy
-import logging 
 
 logger = aux.default_logger()
 
@@ -110,7 +108,7 @@ class Normaliser(aux._ID):
 
     def __str__(self):
         s = f"""
-Normaliser: \t{self.id()}
+{self.__class__.__name__}: \t{self.id()}
 Prep.Function: \t{self._prep_func.__name__}
 Prep.Function: \t{self._norm_func.__name__}
         """.strip()
@@ -122,7 +120,7 @@ Prep.Function: \t{self._norm_func.__name__}
     def __repr__(self):
         prep = self.prep_func.__name__
         norm = self.norm_func.__name__
-        return f"Normaliser({prep=}, {norm=})"
+        return f"{self.__class__.__name__}({prep=}, {norm=})"
 
     def clear(self):
         """
@@ -147,6 +145,7 @@ Prep.Function: \t{self._norm_func.__name__}
             self._Assays = []
         if normalisers: 
             self._Normalisers = []
+            self._normaliser = None
         if results: 
             self.clear()
 
@@ -480,8 +479,8 @@ Prep.Function: \t{self._norm_func.__name__}
                     # being chosen. Since the probabilities do not themselves correspond to 1
                     # we normalise against the limited available subset to generate a probabilities
                     # array that sums up to 1.
-                    mu, sd = stats.norm.fit(n_dCt)
-                    probs = stats.norm.pdf(n_dCt, loc = mu, scale = sd)
+                    mu, sd = scistats.norm.fit(n_dCt)
+                    probs = scistats.norm.pdf(n_dCt, loc = mu, scale = sd)
                     probs = probs / np.sum(probs)
                     n_dCt = np.random.choice( n_dCt, size = n_dCt.size, replace = replace, p = probs )
                 else:
@@ -491,7 +490,8 @@ Prep.Function: \t{self._norm_func.__name__}
                         
                 try: 
                     ddCts[idx : idx + length] = r 
-                except: 
+                except Exception as e:
+                    logger.info( e ) 
                     break 
 
                 idx += length
@@ -524,7 +524,9 @@ Prep.Function: \t{self._norm_func.__name__}
                 # UPDATE: that's probably due to the way we import it without
                 # the whole module stuff in front. Anyway, this one works and
                 # it should be fine for our purposes although it's a bit hacky...
-                if type(assay).__name__ == "Assay" :
+                if type(assay).__name__ == "Assay":
+                    if assay.id() in [ i.id() for i in self._Assays ]:
+                        return
                     self._Assays.append(assay)
                 else: 
                     e = aw.NormaliserError( "unknown_data", s = assay )
@@ -538,8 +540,9 @@ Prep.Function: \t{self._norm_func.__name__}
             for normaliser in normalisers:
                 # if aux.same_type(normaliser, Assay()):
                 if type(normaliser).__name__ == "Assay" :
+                    if normaliser.id() in [ i.id() for i in self._Normalisers ]:
+                        return
                     self._Normalisers.append(normaliser)
-
                 else: 
                     e = aw.NormaliserError( "norm_unknown_data", s = normaliser )
                     logger.error( e )
@@ -609,40 +612,6 @@ Prep.Function: \t{self._norm_func.__name__}
 
         return tmp_df
 
-def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
-    """
-    Computes DeltaDeltaCt values (Normalised fold changes) for a number of assays-of-interest and normalisers.
 
-    Note
-    ----
-    This is essentially a Wrapper for a default `Normaliser` and it's `pipe` method.
-    If you require non-default behaviour, please, set up your own `Normaliser`. Also,
-    since this function will setup a new Normaliser each time it is called, it is
-    less efficient than the conventional way of directly using the `pipe` method.
-
-    Parameters
-    ----------
-    assays : list
-        A list `qpcr.Assay` objects that are "assays of interest".
-
-    normalisers : list
-        A list of `qpcr.Assay` objects that are "normalisers".
-
-    mode : str
-            The normalisation mode to use. This can be either `pair-wise` (default), 
-            or `combinatoric`, or `permutative`.
-            `pair-wise` will normalise replicates only by their partner (i.e. first against first, 
-            second by second, etc.). `combinatoric` will normalise all possible combinations of a replicate 
-            with all partner replicates of the same group from a normaliser (i.e. first against first, then second, then third, etc.).
-            This will generate `n^2` normalised Delta-Delta-Ct values, where `n` is the number of replicates in a group.
-            `permutative` will scramble the normaliser replicates randomly and then normalise pair-wise. This mode supports 
-            a parameter `k` which specifies the times this process should be repeated, thus generating `n * k` normalised Delta-Delta-Ct values.
-            Also, through setting `replace = True` replacement may be allowed during normaliser scrambling.
-            Note, this setting will be ignored if a custom `norm_func` is provided.
-
-    Returns
-    -------
-    results : Results
-        A `qpcr.Results` object containing the computed results.
-    """
-    return Normaliser().pipe( assays, normalisers )
+__default_Normaliser__ = Normaliser()
+"""The default Normaliser"""
