@@ -9,7 +9,7 @@ import qpcr.main.Analyser as Analyser
 import qpcr.main.Normaliser as Normaliser
 import qpcr.main.DataReader as DataReader
 import qpcr.main.Calibrator as Calibrator
-
+import qpcr.Filters as Filters
 
 def read( filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = None, reset = False, **kwargs):
         """
@@ -258,3 +258,7 @@ def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple
     """
     Calibrator.__default_Calibrator__.dilution( dilution )
     return Calibrator.__default_Calibrator__.calibrate( assay, remove_calibrators )
+
+
+# also link the filter function to the main API
+filter = Filters.filter
