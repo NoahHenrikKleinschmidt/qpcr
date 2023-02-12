@@ -127,6 +127,7 @@ static_ReplicateBoxPlot = dict(
     ylabel=raw_col_names[1],
     xlabel=raw_col_names[0],
     linewidth=0.8,
+    color=default_palette,
     frame=False,
 )
 
