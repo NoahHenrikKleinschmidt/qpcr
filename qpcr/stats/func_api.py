@@ -5,7 +5,7 @@ This module defines stand-alone functions for performing statistical analysis of
 import qpcr.stats as stats
 
 
-def assaywise_ttests(results, groups: list = None, columns: list = None, **kwargs):
+def assaywise_ttests(results, groups: list = None, columns: list = None, pairs: list = None, **kwargs):
     """
     Perform multiple pairwise t-tests comparing the different `groups` within each `assay` within the Results dataframe `separately`.
     Hence, this function will compare for instance `ctrl-HNRNPL` against `KO-HNRNPL` but not `ctrl-SRSF11`.
@@ -26,16 +26,21 @@ def assaywise_ttests(results, groups: list = None, columns: list = None, **kwarg
         You can pass a list of any subset of non-setup-cols here. As a shortcut you can restrict to only
         valid Delta-Delta-Ct columns (i.e. `{}_rel_{}` columns using the `kwarg` ``restrict_ddCt = True``).
 
+    pairs : list
+        A synonym for the "groups" argument.
+
     Returns
     -------
     results : ComparisonsCollection
         A collection of ``PairwiseComparison`` objects for each assay in the `Results` object's dataframe.
     """
+    if pairs and not groups:
+        groups = pairs
     results = stats.__default_Evaluator__.assaywise_ttests(obj=results, groups=groups, columns=columns, **kwargs)
     return results
 
 
-def groupwise_ttests(results, groups: list = None, columns: list = None, **kwargs):
+def groupwise_ttests(results, groups: list = None, columns: list = None, pairs: list = None, **kwargs):
     """
     Perform multiple pairwise t-tests comparing the different `assays` within each `group separately`.
     Hence, this method will compare for instance `ctrl-HNRNPL` against `ctrl-SRSF11` but not `KO-HNRNPL`.
@@ -57,11 +62,16 @@ def groupwise_ttests(results, groups: list = None, columns: list = None, **kwarg
         If a simple ``list`` is passed then all listed columns will be compared pair-wise. In case of a ``list of lists (or tuples)``
         then all provided pairs will be compared. By default all possible column pairings are compared.
 
+    pairs : list
+        A synonym for the "columns" argument.
+
     Returns
     -------
     results : ComparisonsCollection
         A collection of ``PairwiseComparison`` objects for each group in the `Results` object's dataframe.
     """
+    if pairs and not columns:
+        columns = pairs
     results = stats.__default_Evaluator__.groupwise_ttests(obj=results, groups=groups, columns=columns, **kwargs)
     return results
 
