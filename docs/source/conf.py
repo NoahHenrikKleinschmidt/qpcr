@@ -15,7 +15,7 @@ if on_rtd:
     # for mod_name in MOCK_MODULES:
     #     sys.modules[mod_name] = mock.Mock()
 
-    MOCK_MODULES = ['qpcr.defaults', 'numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas']
+    MOCK_MODULES = ['qpcr', 'numpy', 'scipy', 'matplotlib', 'plotly', 'plotly.subplots', 'plotly.graph_objs', 'seaborn', 'matplotlib.pyplot', 'matplotlib.lines', 'scipy.interpolate', 'scipy.stats', 'streamlit', 'pandas']
     autodoc_mock_imports = MOCK_MODULES
 
 
