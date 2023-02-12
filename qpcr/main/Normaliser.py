@@ -132,6 +132,9 @@ Prep.Function: \t{self._norm_func.__name__}
     def prune(self, assays = True, normalisers = True, results = True):
         """
         Will clear assays, normalisers, and/or results
+
+        Parameters
+        ----------
         assays : bool
             Will clear any sample assays if True (default).
         

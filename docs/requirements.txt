@@ -4,3 +4,4 @@ readthedocs-sphinx-search==0.1.1
 nbsphinx==0.8.9
 ipython==7.29.0
 ipython-genutils==0.2.0
+git+https://github.com/NoahHenrikKleinschmidt/qpcr.git@main#egg=qpcr
