@@ -76,7 +76,7 @@ We can set it up like this:
     myboxplot = ReplicateBoxPlot()
 
     # now we link the assay
-    myboxplot.link( myassay )
+    myboxplot.link(myassay)
 
     # and add some graphing paramters
     my_params = { 
@@ -84,12 +84,12 @@ We can set it up like this:
                     "title" : "my customized figure",
                     "style" : "darkgrid", # and use the seaborn darkgrid style 
                 }
-    myboxplot.params( my_params )
+    myboxplot.params(my_params)
 
     # and now visualise the figure
     fig = myboxplot.plot()
 
-    # alternatively: fig = myboxplot.plot( **my_params ) 
+    # alternatively: fig = myboxplot.plot(**my_params) 
 
 
 This is a rather tedious way of setting up for just a quick look at our Assay, but it may be worth it if we have to repeat this many times...
@@ -100,7 +100,7 @@ For more convenience, however, the ``qpcr.Assay`` lets us directly visualize its
 
 .. code-block:: python
 
-    fig = myassay.boxplot( **my_params )
+    fig = myassay.boxplot(**my_params)
 
 
 This will perform the setup and linking to a new instance of ``ReplicateBoxPlot``. 
@@ -117,7 +117,7 @@ Thus, a final way of obtaining the exact same figure as before, is using:
 
 .. code-block:: python
 
-    fig = qpcr.plot( myassay, **my_params )
+    fig = qpcr.plot(myassay, **my_params)
 
 
 What does the output look like? Here is a possible figure output for a `ReplicateBoxPlot` in static mode:
@@ -136,7 +136,7 @@ For instance, we might want to visualize our data by having each assay in a sepa
 
 .. code-block:: python
 
-    fig = myresults.preview( kind = "AssayDots" )
+    fig = myresults.preview(kind = "AssayDots")
 
 
 Which will return the following figure 
@@ -157,7 +157,7 @@ With a few lines of code we can adjust the figure to something like this:
     result.drop_rel()
 
     # specify some fancy colors
-    mycolors = ["crimson", "black" ]
+    mycolors = ["crimson", "black"]
 
     fig = result.preview( kind = "AssayDots", 
                           title = "Normalized to 28S+Actin", 
@@ -182,12 +182,64 @@ To achieve the same figure as before, we might also do:
     qpcr.defaults.static_PreviewDots["style"] = "ticks"
     qpcr.defaults.static_PreviewDots["color"] = ["crimson", "black" ]
 
-    fig = results.preview( title = "Normalized to 28S+Actin" )
-
+    fig = results.preview(title = "Normalized to 28S+Actin")
 
 However, this will now cause **all** of your Results to generate a black and red `AssayDots` figure in `ticks` style when calling their ``preview`` method (unless you specify new parameters manually).
 As you will have noticed, the dictionary we edited was not a "qpcr default plotting parameters" dictionary but rather specific for the `static AssayDots` Plotters. All Plotters have two dedicated dictionaries to store their default parameters in, one for static mode, one for interactive.
 You can therefore selectively adjust your favourite default settings without having to worry to skew with other figure types. However, `rcParams` will of course, also work just fine globally. 
+
+Statistical Evaluations
+-----------------------
+
+The ``qpcr`` package offers a few statistical evaluations for the ``qpcr.Results`` class. For plotting, multiple _T-Tests_ are of interest because they can be integrated into the preview figures.
+In fact, if t-tests are performed on a Results object, the significance bars are automatically integrated into the preview. 
+
+.. code-block:: python
+
+    # perform a t-test
+    qpcr.stats.assaywise_ttests(results, pairs=[("WT-", "WT+"), ("KO-", "KO+")])
+
+    # plot the results
+    fig = results.preview()
+
+.. image:: ../../docs/source/resources/preview_with_stats.png
+    :align: center
+
+We can further style the representation using the `pval_kws` kwarg which accepts a dictionary containing any of:
+
+.. code-block:: 
+
+    style : str
+        The style in which to encode the p-values. Available are 
+        - `"p<"`, style by pvalue levels (e.g. `p < 0.05`)
+        - `"p="`, style by actual pvalues if they are below a threshold (e.g. `p = 0.000124`)
+        - `"*"`, style using asterisks by 
+
+    threshold : float 
+        The significance p-value threshold.
+
+    step : float
+        The step between each significance level. I.e. a step of `0.1` means that the threshold for
+        level 2 is 10 times smaller than for level 1 (e.g. from 0.05, to 0.005, to 0.0005 etc.).
+
+    max_levels : int
+        The maximal number of levels to include. This is only used for styles with levels (i.e. `"p<"` and "*"` ). 
+
+    levels : tuple 
+        A custom iterable of p-value level threshold. Only used for style `"p<"`.
+
+    ns_default : str
+        The default string to use for non-significant p-values.
+
+    asterisk : str
+        The character to use for encoding in the `"*"` style. 
+
+    fmt : str
+        A string formatter for the numeric p-values. By default these will be: 
+        - `".2g"` for style `"p<"`, 
+        - `".3g"` for style `"p="`,
+        - not applicable for style `"*"`
+
 """
 
 # Concept:
@@ -223,5 +275,3 @@ from .FilterSummary import FilterSummary
 from .EfficiencyLines import EfficiencyLines
 from .AssaySubplotResults import AssayBars, AssayDots
 from .GroupSubplotResults import GroupBars, GroupDots
-from .PairwiseHeatmap import PairwiseHeatmap
-from .PairwisePlot import PairwisePlot
