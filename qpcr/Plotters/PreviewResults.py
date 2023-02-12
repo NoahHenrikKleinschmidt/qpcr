@@ -1,5 +1,12 @@
 """
 Defines the `PreviewResults` class, which is used to preview the results of a qpcr.Results object.
+
+This is a wrapper for the Plotters:
+
+- `AssayBars` (which was previously called `PreviewResults`, and is now the default setting)
+- `GroupBars`
+- `AssayDots`
+- `GroupDots
 """
 
 import qpcr.defaults as defaults
