@@ -17,5 +17,6 @@ python:
        path: .
        extra_requirements: 
         - docs/requirements.txt
-   commands:
+build:   
+  commands:
      - pip list
