@@ -9,3 +9,5 @@ termcolor==1.1.0
 attrs==21.2.0
 attr==0.3.1
 openpyxl==3.0.10
+statannotations==0.4.4
+statsmodels==0.12.2 

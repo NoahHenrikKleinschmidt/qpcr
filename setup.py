@@ -21,15 +21,7 @@ setuptools.setup(
         "qpcr.Parsers",
         "qpcr.Filters",
     ],
-    install_requires=[
-        "numpy",
-        "pandas",
-        "scipy",
-        "matplotlib",
-        "seaborn",
-        "statsmodels",
-        "plotly",
-    ],
+    install_requires=["numpy", "pandas", "scipy", "matplotlib", "seaborn", "statsmodels", "plotly", "statannotations"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
