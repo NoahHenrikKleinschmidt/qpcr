@@ -10,3 +10,25 @@ Found Indices:
 []
 Details: 
 {'anchor': 'group median', 'upper_bound': '1', 'lower_bound': '1'}
+
+Filter: 
+IQRFilter
+Assay: 
+SRSF11_nmd
+Found faulty Replicates: 
+3
+Found Indices: 
+[4, 11, 13]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
+
+Filter: 
+IQRFilter
+Assay: 
+SRSF11_nmd
+Found faulty Replicates: 
+3
+Found Indices: 
+[4, 11, 13]
+Details: 
+{'upper_max': '1.5', 'lower_max': '1.5'}
