@@ -26,15 +26,14 @@ if on_rtd:
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-else:
 
-    import logging
-    import sys
+import logging
+import sys
 
-    src = os.path.abspath("..")
-    src = os.path.dirname(src)
-    logging.critical(f"{src=}")
-    sys.path.insert(0, src)
+src = os.path.abspath("..")
+src = os.path.dirname(src)
+logging.info(f"{src=}")
+sys.path.insert(0, src)
 
 
 # -- Project information -----------------------------------------------------
