@@ -1,4 +1,4 @@
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 from itertools import permutations, product
 import numpy as np
 import matplotlib.pyplot as plt

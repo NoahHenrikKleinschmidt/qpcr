@@ -11,7 +11,7 @@ It supports two primary modes of analysis: ``groupwise`` and ``assaywise``.
 
 """
 
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 import qpcr.main as main
 import qpcr.stats.PairwiseTests as PairwiseTests
 import qpcr.stats.Anova as Anova

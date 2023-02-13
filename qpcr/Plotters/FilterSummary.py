@@ -9,7 +9,7 @@ import plotly.graph_objs as go
 
 
 import qpcr.defaults as defaults
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base
 import qpcr.main.Results as Results

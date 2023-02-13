@@ -2,7 +2,7 @@
 This is the superclass `StatsTest` that stores the basic attributes and methods that are common to the other Test classes.
 """
 
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 import qpcr.main as main
 
 

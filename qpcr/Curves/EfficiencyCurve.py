@@ -1,4 +1,4 @@
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 
 
 class EfficiencyCurve(aux._ID):

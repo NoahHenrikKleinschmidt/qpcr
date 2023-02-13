@@ -52,8 +52,8 @@ Hence, it may be that your file will not be readable by the DataReader but will 
 """
 
 import qpcr.defaults as defaults
-from qpcr import _auxiliary as aux
-from qpcr._auxiliary import warnings as aw
+import qpcr._auxiliary as aux
+import qpcr._auxiliary.warnings as aw
 from qpcr import Readers
 
 

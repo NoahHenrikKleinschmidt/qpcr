@@ -6,7 +6,7 @@ P-values are corrected for multiple testing using the `Benjamini-Hochberg` proce
 """
 
 import qpcr.defaults as defaults
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 import qpcr.main as main
 import qpcr.stats.Comparisons as Comparisons
 import qpcr.stats.StatsTest as StatsTest

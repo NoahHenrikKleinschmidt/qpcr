@@ -10,7 +10,7 @@ This is a wrapper for the Plotters:
 """
 
 import qpcr.defaults as defaults
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary as aux
 import qpcr.Plotters._base as base
 
 import qpcr.Plotters.AssaySubplotResults as AssaySubplotResults

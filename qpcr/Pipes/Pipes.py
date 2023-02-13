@@ -50,8 +50,8 @@ affect visualising the `qpcr.Plotters.ReplicateBoxplots` generated as Filter-Sum
 
 import logging
 import qpcr
-from qpcr._auxiliary import warnings as aw
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary.warnings as aw
+import qpcr._auxiliary as aux
 import qpcr.Plotters as Plotters
 import qpcr.Filters as Filters
 import qpcr.Readers as Readers

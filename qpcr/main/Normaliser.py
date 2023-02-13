@@ -60,8 +60,8 @@ However, using the method ``norm_func`` also a custom normalisation function can
 """
 
 import qpcr.defaults as defaults
-from qpcr._auxiliary import warnings as aw
-from qpcr import _auxiliary as aux
+import qpcr._auxiliary.warnings as aw
+import qpcr._auxiliary as aux
 
 from qpcr.main.Assay import Assay
 from qpcr.main.Results import Results
