@@ -12,13 +12,13 @@ To begin with, we should first introduce some terminology. There are a number of
 Read on to learn what these terms mean and why they are important. 
 
 ``qpcr`` vs qPCR
----------------
+----------------
 
 Throughout this documentation, we will refer to the python package as ``qpcr`` in all lowercase, while we will talk about the qPCR experiment itself 
 by using ``qPCR`` with uppercase. 
 
 File (or "datafile")
------------
+--------------------
 
 Let's start simple. A `file` is simply one of your input datafiles. For ``qpcr`` this means either a `csv` or an `excel` file. 
 Files are the at the very basis of our data pipeline. 
@@ -41,7 +41,7 @@ Irregular files may contain multiple datasets (see below). Check out the documen
 details on how to work with irregular and multi-assay datafiles.
 
 A ``qpcr.Assay`` and a "dataset" / "assay"
------------
+------------------------------------------
 
 Well, a "dataset" is simply a collection or replicate identifiers and corresponding Ct values belonging together. 
 By default this usually corresponds to a single qPCR assay, hence you will often encounter the term "assay" used instead of "dataset" to be more 
@@ -49,7 +49,7 @@ intuitive. However, the two terms are really interchangeable. The ``qpcr.Assay``
 from a single dataset extracted from a datafile. Again, if your setup does not quite correspond to what you would call a "qPCR assay", don't worry about it.
 
 Replicates
------------
+----------
 
 As far as ``qpcr`` is concerned, each *row* within your datasets corresponds to one replicate measurement. 
 Hence, a *replicate* is just a single pair of some identifier and a corresponding Ct value. 
@@ -57,7 +57,7 @@ That means that ``qpcr`` does not terminologically distinguish between multiplet
 If you feel more comfortable with a term like "measurement" then you can also think of the replicates like that. 
 
 Groups (of Replicates)
------------
+----------------------
 
 This is one of the most important terms. In the previous paragraphs we already started to talk about replicates.  
 Groups of replicates are, as their name already implies, well, a number of replicates that somehow do belong together.
@@ -70,7 +70,7 @@ Many classes such as the ``qpcr.DataReader`` will actually just use the term ``n
 Whenever you see anything "names"-related it is (super-duper most likely) a reference to the ``group_names``.
 
 Delta-Ct vs Delta-Delta-Ct vs normalisation
------------
+-------------------------------------------
 
 The default analysis workflow in *Delta Delta Ct* analysis is to first calculate *Delta Ct* values using an intra-assay reference and then calculate the *normalised Delta Delta Ct* values from these using another "normaliser assay". 
 The first step is performed by a class called ``qpcr.Analyser`` using its native method ``DeltaCt``. 
@@ -79,7 +79,7 @@ but the two steps in the computations are termed 1st: analyse, 2nd: normalise.
 
 
 The "anchor" and the "reference group"
------------
+--------------------------------------
 
 Next to the "groups of replicates", this is probably one of the most important terms. The **anchor** is simply the intra-dataset reference used by the ``qpcr.Analyser`` to compute *Delta Ct* values on a ``qpcr.Assay``. 
 If your datafiles contain one assay each, and your groups of replicates are your qPCR samples, then you will likely have some "wildtype", "untreated", or "control" sample. 
@@ -89,7 +89,7 @@ By default it is assumed that your reference group is the *very first* group of 
 So, again, the ``anchor`` is the dataset-internal reference value used to compute *Delta Ct* values.
 
 "assays" vs "normalisers"
------------
+-------------------------
 
 You will likely encounter methods and/or arguments that speak of "assays" and "normalisers", especially with the ``qpcr.Normaliser``. 
 For all intents and purposes, an "assay" is simply one of your datasets (we know this already).
@@ -102,7 +102,7 @@ In this setting "assay" refers to the assay-of-interst whose data was analysed a
 In fact, this is a new "hybrid" assay identifier that includes the names of all the normaliser-assays used during computation (check out what the final results look like and it'll be immediately clear).
 
 "samples"
------------
+---------
 
 You may find that there is also a term "sample" within ``qpcr``'s vocabulary. 
 As far as the ``qpcr`` module is concerned, the term "sample" is not very important in itself and usually appears in the context of "sample assays".
@@ -110,11 +110,11 @@ In this setting it is used interchangeably with "assays-of-interest".
 Actually, we try to phase out the term "sample" and it currently mainly appears in hidden auxiliary functions which have retained the term from earlier development versions.
 
 Some more Basics
-===============
+================
 
 
 Pipelines 
------------
+---------
 
 A ``pipeline`` is essentially any workflow that starts from one or multiple input datafiles and ultimately pops out some results table you are happy with.
 Pipelines can be manually created by assembling the main ``qpcr`` classes, usually starting with a Reader, passing to an Analyser, to an Normaliser, and you're good to go.
@@ -123,14 +123,14 @@ there are pre-defined pipelines that will handle writing the workflow and only r
 
 
 ``get``-ting your data
------------
+----------------------
 
 Too many classes and objects? Well, no worries, the underlying data is stored as *pandas DataFrames*. To get your data from the clutches of the ``qpcr`` classes you can always use the ``get()`` method. 
 ``get`` is almost universal in the ``qpcr`` package, so whenever you want to extract your data, there is (most probably) a ``get()`` method to help you. However, many objects also support direct item getting and setting
 so you may not have to extract your data in order to manipulate the underlying dataframes.
 
 ``link`` vs ``add`` vs ``pipe``
------------
+-------------------------------
 
 Different classes have slightly different methods of adding data to them. Classes that only accept one single data input (such as a single ``qpcr.Assay`` object or a single filepath)
 usually have a ``link()`` method that, well, links the data to them. After that the classes are ready to perform whatever actions they can perform.
@@ -152,7 +152,7 @@ Qupid
 
 In case you are not the type who likes to code, ``qpcr`` offers a grphical user interface in form of a Web App called **Qupid**. Qupid offers the main functionalities of ``qpcr`` but naturally lacks the full customizability that coding would offer.
 However, it is easy to use and can save you a lot of time. The simplest analysis just requires some 4 Button clicks and about 40 seconds to finish (it's worth checking out!).
-You can `access Qupid via Streamlit <https://noahhenrikkleinschmidt-qupid-srcmain-27ow9a.streamlit.app>`_. 
+You can `access Qupid via Streamlit <https://noahhenrikkleinschmidt-qupid-srcmain-48pd7p.streamlit.app>`_. 
 There is also a tutorial on how to use it `available here <https://github.com/NoahHenrikKleinschmidt/Qupid/blob/main/Tutorial.ipynb>`_.
 
 .. image:: resources/Qupid_upload_files.png

@@ -36,17 +36,17 @@ Assuming you are happy with default settings, the entire analysis could look lik
    myfile = "my_datafile.xlsx"
 
    # read the datafile to get "assays-of-interest" and "normalisers"
-   assays, normalisers = qpcr.read_multi_assay(  myfile, decorator = True )
+   assays, normalisers = qpcr.read_multi_assay(myfile, decorator=True)
 
    # now we can compute first Delta-Ct values on all our loaded assays
-   assays = qpcr.delta_ct( assays )
-   normalisers = qpcr.delta_ct( normalisers )
+   assays = qpcr.delta_ct(assays)
+   normalisers = qpcr.delta_ct(normalisers)
 
    # and now we can normalise our assays-of-interest using our normalisers
-   results = qpcr.normalise( assays, normalisers )
+   results = qpcr.normalise(assays, normalisers)
 
    # and we can save our results and have a look at them
-   results.save( "my_results.csv" )
+   results.save("my_results.csv")
    results.preview()
 
 
@@ -96,7 +96,7 @@ A more advanced example of such an analysis using the pre-defined ``BasicPlus`` 
    results = pipeline.results()
 
    results.drop_rel()
-   fig = results.preview( mode = "interactive", title = "Normalized to 28S+Actin" )
+   fig = results.preview(mode="interactive", title="Normalized to 28S+Actin")
 
 
 .. raw:: html
