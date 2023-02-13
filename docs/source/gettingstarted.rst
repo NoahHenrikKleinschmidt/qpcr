@@ -150,9 +150,9 @@ Also data-storing classes often have multiple ``add`` methods, each dedicated to
 Qupid
 =====
 
-In case you are not the type who likes to code, ``qpcr`` offers a grphical user interface in form of a Web App called **Qupid**. Qupid offers the main functionalities of ``qpcr`` but naturally lacks the full customizability that coding would offer.
-However, it is easy to use and can save you a lot of time. The simplest analysis just requires some 4 Button clicks and about 40 seconds to finish (it's worth checking out!).
-You can `access Qupid via Streamlit <https://noahhenrikkleinschmidt-qupid-srcmain-48pd7p.streamlit.app>`_. 
+In case you are not the type who likes to code, ``qpcr`` offers a graphical user interface in form of a Web App called **Qupid**. Qupid offers the main functionalities of ``qpcr`` but naturally lacks the full customizability that coding would offer.
+However, it is easy to use and can save you a lot of time. The simplest analysis just requires some 4 button clicks and about 40 seconds to finish (it's worth checking out!).
+You will find a direct access link on `Qupid's GitHub repository<https://github.com/NoahHenrikKleinschmidt/Qupid>`_. 
 There is also a tutorial on how to use it `available here <https://github.com/NoahHenrikKleinschmidt/Qupid/blob/main/Tutorial.ipynb>`_.
 
 .. image:: resources/Qupid_upload_files.png
