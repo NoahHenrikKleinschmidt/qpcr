@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
 
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base
 import qpcr.main as main
@@ -17,23 +17,23 @@ import qpcr.main as main
 
 class EfficiencyLines(base.Plotter):
     """
-    Generates a Figure for the linear regressions used for Assay efficiency 
-    calculations. This FigureClass specifically works with the `qpcr.Calibrator` 
-    class. 
+    Generates a Figure for the linear regressions used for Assay efficiency
+    calculations. This FigureClass specifically works with the `qpcr.Calibrator`
+    class.
 
     Parameters
     ----------
     mode : str
         The plotting mode. May be either "static" (matplotlib) or "interactive" (plotly).
-    
-    
+
+
 
     Plotting Kwargs
     ================
 
     `"static"` Kwargs
 
-	    Static EfficiencyLines figures accept the following kwargs:
+            Static EfficiencyLines figures accept the following kwargs:
 
         +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | Argument                  | Description                                                                                    | Example                                       |
@@ -74,10 +74,10 @@ class EfficiencyLines(base.Plotter):
         +---------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
 
-    
+
     `"interactive"` Kwargs
 
-	    Interactive EfficiencyLines figures accept the following kwargs:
+            Interactive EfficiencyLines figures accept the following kwargs:
 
         +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | Argument                    | Description                                                                                                                                                      | Example                                       |
@@ -106,28 +106,26 @@ class EfficiencyLines(base.Plotter):
         +-----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
 
-    
+
     [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
     [2] `Plotly templates <https://plotly.com/python/templates/>`_
     [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
-    def __init__(self, mode : str = None ):
-        self._setup_default_params(
-                                    static = defaults.static_EfficiencyLines, 
-                                    interactive = defaults.interactive_EfficiencyLines
-                                )
-        super().__init__( mode = mode )
+
+    def __init__(self, mode: str = None):
+        self._setup_default_params(static=defaults.static_EfficiencyLines, interactive=defaults.interactive_EfficiencyLines)
+        super().__init__(mode=mode)
         self._Calibrator = None
 
-    def link( self, calibrator : main.Calibrator ):
+    def link(self, calibrator: main.Calibrator):
         """
         Links a `qpcr.Calibrator` object to source data from.
 
         Note
         -----
         Only a `qpcr.Calibrator` that has actually *de novo*
-        computed efficiencies will have data to plot, and only for 
-        the newly computed effiencies! 
+        computed efficiencies will have data to plot, and only for
+        the newly computed effiencies!
 
         Parameters
         ----------
@@ -135,18 +133,18 @@ class EfficiencyLines(base.Plotter):
             A `qpcr.Calibrator` object that has computed new efficiencies.
         """
         self._Calibrator = calibrator
-    
+
     def _prep_shared_kwargs(self, kwargs):
         data = self._Calibrator._computed_values
-        headers = list(  data.keys()  )
+        headers = list(data.keys())
         headers = kwargs.pop("headers", headers)
-        data = { h : i for h,i in zip(headers, list( data.values() ) ) }
+        data = {h: i for h, i in zip(headers, list(data.values()))}
 
         title, show = self._get_title_and_show(kwargs)
         xlabel, ylabel = self._axeslabels(kwargs)
-        
+
         # NOTE: interactive used to have this line transposed (i.e. nrows, ncols = ...)
-        ncols, nrows = gx.make_layout_from_list( headers )
+        ncols, nrows = gx.make_layout_from_list(headers)
 
         return data, headers, title, show, xlabel, ylabel, ncols, nrows
 
@@ -158,106 +156,82 @@ class EfficiencyLines(base.Plotter):
 
         data, headers, title, show, xlabel, ylabel, ncols, nrows = self._prep_shared_kwargs(kwargs)
         label_subplots, start_character, show_spines, rot = self._get_labels_and_spines_and_rot(kwargs)
-        
-        
-        palette, is_palette = gx.generate_palette(kwargs, True )
+
+        palette, is_palette = gx.generate_palette(kwargs, True)
         if palette:
             if is_palette:
-                palette = dict(palette = palette)
+                palette = dict(palette=palette)
             else:
-                palette = dict(color = palette)
+                palette = dict(color=palette)
         else:
-            palette = dict(palette = defaults.default_palette)
+            palette = dict(palette=defaults.default_palette)
 
         # set a seaborn style
         style = kwargs.pop("style", defaults.default_style)
-        sns.set_style( style )
+        sns.set_style(style)
 
         edgecolor = kwargs.pop("edgecolor", "white")
         edgewidth = kwargs.pop("edgewidth", None)
 
         linecolor = kwargs.pop("linecolor", "black")
-        linewidth = kwargs.pop("linewidth", 1)        
+        linewidth = kwargs.pop("linewidth", 1)
 
         fig, Coords = self._setup_static_figure(ncols, nrows, title, kwargs)
 
-        idx = 0 
-        for id, obj in data.items(): 
-            
+        idx = 0
+        for id, obj in data.items():
+
             ax = Coords.subplot()
 
-            # get data to plot              
+            # get data to plot
             dilutions, cts = obj.values()
             eff = obj.efficiency()
             model = obj.model()
-            Rsquare = model.rvalue ** 2
+            Rsquare = model.rvalue**2
 
             # plot the regression line
             yvals = model.slope * dilutions + model.intercept
-            sns.lineplot(
-                                x = dilutions,
-                                y = yvals,
-                                color = linecolor,
-                                linewidth = linewidth,
-                                ax = ax,
-                                **kwargs
-                    )
+            sns.lineplot(x=dilutions, y=yvals, color=linecolor, linewidth=linewidth, ax=ax, **kwargs)
 
             # plot the original data
-            sns.scatterplot(
-                                x = dilutions,
-                                y = cts,
-                                hue = dilutions if is_palette else None,
-                                edgecolor = edgecolor,
-                                linewidth = edgewidth,
-                                ax = ax,
-                                **palette,
-                                **kwargs
-                            )
+            sns.scatterplot(x=dilutions, y=cts, hue=dilutions if is_palette else None, edgecolor=edgecolor, linewidth=edgewidth, ax=ax, **palette, **kwargs)
 
             # add additional info to a legend
-            ax.legend( handles = [
-                                    # R^2 Value
-                                    Line2D(  [0], [0], 
-                                            color = "black", 
-                                            visible = False, 
-                                            label = f"$R^2$ \t = {Rsquare:.4f}"
-                                        ),
-                                    # Efficiency Value
-                                    Line2D(  [0], [0], 
-                                            color = "black", 
-                                            visible = False, 
-                                            label = f"$eff.$\t= {eff:.4f}"
-                                        )
-                                ], 
-                                loc = "upper right",
-                                frameon = False 
-                    )
+            ax.legend(
+                handles=[
+                    # R^2 Value
+                    Line2D([0], [0], color="black", visible=False, label=f"$R^2$ \t = {Rsquare:.4f}"),
+                    # Efficiency Value
+                    Line2D([0], [0], color="black", visible=False, label=f"$eff.$\t= {eff:.4f}"),
+                ],
+                loc="upper right",
+                frameon=False,
+            )
 
             # some formatting...
             ax.set(
-                    title = id, 
-                    xlabel = xlabel,
-                    ylabel = ylabel,
-                )
+                title=id,
+                xlabel=xlabel,
+                ylabel=ylabel,
+            )
 
-            if rot is not None: 
-                self._set_xtick_rotation( ax, rot )
-                
+            if rot is not None:
+                self._set_xtick_rotation(ax, rot)
+
             # add ABCD... label to subplot
             if label_subplots:
-                self._add_subplot_label(idx, ax, start_character)         
+                self._add_subplot_label(idx, ax, start_character)
 
             if not show_spines:
                 sns.despine()
-            
+
             idx += 1
 
         plt.tight_layout()
-        if show: 
+        if show:
             plt.show()
 
-        return fig 
+        return fig
 
     def _interactive_plot(self, **kwargs):
         """
@@ -273,70 +247,40 @@ class EfficiencyLines(base.Plotter):
         fig, Coords = self._setup_interactive_figure(ncols, nrows, xlabel, ylabel, title, headers, hpad, vpad, height, width, template)
 
         # iterate over the data...
-        idx = 0 
+        idx = 0
         for id, obj in data.items():
 
             row, col = Coords.get()
 
-            # get data to plot              
+            # get data to plot
             dilutions, cts = obj.values()
             eff = obj.efficiency()
             model = obj.model()
-            Rsquare = model.rvalue ** 2
+            Rsquare = model.rvalue**2
 
             # plot the original data
-            fig.add_trace(
-                            go.Scatter(
-                                name = id,
-                                x = dilutions,
-                                y = cts,  
-                                mode = "markers",
-                                showlegend = False,
-                                hoverinfo = hoverinfo, 
-                                **kwargs
-                            ), 
-                            row, col
-                        )
-            
+            fig.add_trace(go.Scatter(name=id, x=dilutions, y=cts, mode="markers", showlegend=False, hoverinfo=hoverinfo, **kwargs), row, col)
+
             # plot the regression line
             yvals = model.slope * dilutions + model.intercept
 
-            fig.add_trace(
-                            go.Scatter(
-                                name = id,
-                                x = dilutions,
-                                y = yvals,  
-                                mode = "lines",
-                                showlegend = False,
-                                **kwargs
-                            ), 
-                            row, col
-                        )
-
+            fig.add_trace(go.Scatter(name=id, x=dilutions, y=yvals, mode="lines", showlegend=False, **kwargs), row, col)
 
             # add infos as annotations (because custom legends don't work here)
-            # NOTE: The xref x{idx} is a pretty nice lifehack to essentially 
-            #       emulate the ax behaviour from matplotib.subplots... 
+            # NOTE: The xref x{idx} is a pretty nice lifehack to essentially
+            #       emulate the ax behaviour from matplotib.subplots...
             xref = "x" if idx == 0 else f"x{idx+1}"
             yref = "y" if idx == 0 else f"y{idx+1}"
             info_text = f"R^2 = {Rsquare:.4f}<br>eff. = {eff:.4f}"
 
-            fig.add_annotation(
-                            dict(
-                                    x = 0, 
-                                    y = np.max( cts ), 
-                                    xref = xref, 
-                                    yref = yref, 
-                                    text = info_text, 
-                                    showarrow = False
-                                )
-                            )
+            fig.add_annotation(dict(x=0, y=np.max(cts), xref=xref, yref=yref, text=info_text, showarrow=False))
             idx += 1
 
-        if show: 
+        if show:
             fig.show()
 
-        return fig 
+        return fig
+
 
 if __name__ == '__main__':
 
@@ -347,20 +291,20 @@ if __name__ == '__main__':
     a = qpcr.read(file)
 
     c = qpcr.Calibrator()
-    c.dilution( 2 )
-    a = c.calibrate( a, remove_calibrators = False )
+    c.dilution(2)
+    a = c.calibrate(a, remove_calibrators=False)
     for i in range(5):
-        a.id( f"{i}" )
-        a = c.calibrate( a )
+        a.id(f"{i}")
+        a = c.calibrate(a)
 
     # works :-)
-    p = EfficiencyLines( mode = "static" )
-    p.link( c )
+    p = EfficiencyLines(mode="static")
+    p.link(c)
     fig = p.plot()
     plt.show()
 
     # works :-)
-    p = EfficiencyLines( mode = "interactive" )
-    p.link( c )
+    p = EfficiencyLines(mode="interactive")
+    p.link(c)
     fig = p.plot()
     fig.show()

@@ -61,9 +61,9 @@ which allows you to avoid repeating the same number of replicates many times lik
 import pandas as pd
 import numpy as np
 import os
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
-import qpcr._auxiliary.warnings as aw
+from qpcr import defaults
+from qpcr import _auxiliary as aux
+from qpcr._auxiliary import warnings as aw
 
 from copy import deepcopy
 
@@ -90,7 +90,7 @@ class Assay(aux._ID):
         A DataFrame produces by one of the `qpcr.Readers`
         containing an `id` column for the replicate identifiers
         and a `Ct` value column.
-        
+
     id : str
         The identifer of the assays (the Assay name, essentially).
 

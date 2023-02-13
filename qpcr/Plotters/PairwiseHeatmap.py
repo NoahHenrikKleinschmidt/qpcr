@@ -2,8 +2,8 @@
 Defines the `PairwiseHeatmap` class, which is used to preview the results of a pairwise-comparison.
 """
 
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base
 import seaborn as sns

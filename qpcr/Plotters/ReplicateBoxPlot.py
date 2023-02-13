@@ -7,17 +7,18 @@ import seaborn as sns
 
 import plotly.graph_objs as go
 
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 
 import qpcr.Plotters._base as base
 import qpcr.main as main
 
+
 class ReplicateBoxPlot(base.AssayPlotter):
     """
     Generate a boxplot figure summary for the input sample replicates.
-    
+
 
     Note
     ------
@@ -37,11 +38,11 @@ class ReplicateBoxPlot(base.AssayPlotter):
 
     Plotting Kwargs
     ===============
-    
+
     `"static"` Kwargs
-        
+
         Static ReplicateBoxPlot figures accept the following kwargs:
-    
+
         +------------------------+----------------------------------------------------------------------------------+--------------------------+
         | Argument               | Description                                                                      | Example                  |
         +========================+==================================================================================+==========================+
@@ -62,9 +63,9 @@ class ReplicateBoxPlot(base.AssayPlotter):
         | \*\*kwargs             | Any additional kwargs that can be passed to the `seaborn`'s `boxplot()`.         |                          |
         +------------------------+----------------------------------------------------------------------------------+--------------------------+
 
-    
+
     `"interactive"` Kwargs
-        
+
         Interactive ReplicateBoxPlot figures accept the following kwargs:
 
         +-------------------+-----------------------------------------------------------------------------+----------------------------+
@@ -89,16 +90,14 @@ class ReplicateBoxPlot(base.AssayPlotter):
     [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
     [2] `Plotly templates <https://plotly.com/python/templates/>`_
     """
-    def __init__(self, mode : str = None):
-        self._setup_default_params(
-                                    static = defaults.static_ReplicateBoxPlot, 
-                                    interactive = defaults.interactive_ReplicateBoxPlot
-                                )
+
+    def __init__(self, mode: str = None):
+        self._setup_default_params(static=defaults.static_ReplicateBoxPlot, interactive=defaults.interactive_ReplicateBoxPlot)
         # __init__ is going to require default_params to be already set!
         super().__init__(mode=mode)
         self._data = None
 
-    def link(self, obj:main.Assay):
+    def link(self, obj: main.Assay):
         """
         Links an Assay object to the BoxPlotter.
         This will simply add the Ct column to the current overall data!
@@ -111,18 +110,16 @@ class ReplicateBoxPlot(base.AssayPlotter):
         """
         if self._data is None:
             super().link(obj)
-            self._data[ defaults.dataset_header ] = self._obj.id()
+            self._data[defaults.dataset_header] = self._obj.id()
             return
         data = self._data.copy()
         super().link(obj)
 
         # add itentifier column
-        self._data[ defaults.dataset_header ] = self._obj.id()
+        self._data[defaults.dataset_header] = self._obj.id()
 
         # and concat together
         self._data = pd.concat([data, self._data], ignore_index=True)
-    
-
 
     def _interactive_plot(self, **kwargs):
         """
@@ -138,36 +135,34 @@ class ReplicateBoxPlot(base.AssayPlotter):
 
         fig = go.Figure()
         fig.update_layout(
-                            title = title,
-                            boxmode="group", 
-                            height = height, 
-                            width = width,
-                            template = template, 
-                        )
+            title=title,
+            boxmode="group",
+            height=height,
+            width=width,
+            template=template,
+        )
 
         # add default ylabel
-        fig.update_yaxes(title_text = ylabel)
-        fig.update_xaxes(showgrid=True, title_text = xlabel)
+        fig.update_yaxes(title_text=ylabel)
+        fig.update_xaxes(showgrid=True, title_text=xlabel)
 
         for group, name in zip(groups, group_names):
             tmp_df = data.query(f"group == {group}")
-            
 
             fig.add_trace(
-                            go.Box(
-                                x = tmp_df["assay"],
-                                y = tmp_df["Ct"],
-                                name = name,
-                                hoverinfo = "y+name",
-                                **kwargs,
-                            ),
-                        )
+                go.Box(
+                    x=tmp_df["assay"],
+                    y=tmp_df["Ct"],
+                    name=name,
+                    hoverinfo="y+name",
+                    **kwargs,
+                ),
+            )
 
         if show:
             fig.show()
 
-        return fig 
-
+        return fig
 
     def _static_plot(self, **kwargs):
         """
@@ -175,13 +170,13 @@ class ReplicateBoxPlot(base.AssayPlotter):
         """
         kwargs = self.update_params(kwargs)
         data = self._data
-        
+
         title, show = self._get_title_and_show(kwargs)
         xlabel, ylabel = self._axeslabels(kwargs)
-       
+
         style = kwargs.pop("style", defaults.default_style)
-        sns.set_style( style )
-        
+        sns.set_style(style)
+
         palette, is_palette = gx.generate_palette(kwargs, True)
         if is_palette:
             kwargs["palette"] = palette
@@ -190,61 +185,64 @@ class ReplicateBoxPlot(base.AssayPlotter):
 
         hue = kwargs.pop("hue", "group_name")
         show_spines = kwargs.pop("frame", True)
-        ncols, nrows = kwargs.pop("subplots", gx.make_layout(data, "assay") )
+        ncols, nrows = kwargs.pop("subplots", gx.make_layout(data, "assay"))
 
         fig, Coords = self._setup_static_figure(ncols, nrows, title, kwargs)
 
         # for assay in aux.sorted_set(data["assay"]):
-        for assay, tmp in data.groupby( defaults.dataset_header ):
+        for assay, tmp in data.groupby(defaults.dataset_header):
             ax = Coords.subplot()
-           
+
             # tmp = data.query(f"assay == '{assay}'")
 
             sns.boxplot(
-                        data=tmp, 
-                        x = defaults.dataset_header, 
-                        y = ylabel, hue=hue, 
-                        # palette = palette, 
-                        ax = ax, 
-                        **kwargs
-                    )
+                data=tmp,
+                x=defaults.dataset_header,
+                y=ylabel,
+                hue=hue,
+                # palette = palette,
+                ax=ax,
+                **kwargs,
+            )
 
-            ax.legend(bbox_to_anchor=(1,1), loc = None).remove()
-            ax.set( title=assay, xlabel = xlabel, xticklabels = [],)
-            
+            ax.legend(bbox_to_anchor=(1, 1), loc=None).remove()
+            ax.set(
+                title=assay,
+                xlabel=xlabel,
+                xticklabels=[],
+            )
+
             if not show_spines:
                 sns.despine()
 
         # add one single legend to the last plot
-        ax.legend(bbox_to_anchor=(1,1), loc = None)
+        ax.legend(bbox_to_anchor=(1, 1), loc=None)
 
         plt.tight_layout()
 
         if show:
             fig.show()
 
-        return fig 
+        return fig
 
 
 if __name__ == "__main__":
 
     import qpcr
+
     # we set up the paths to 28S+actin as our normalisers
     f = "../Examples/Example Data/28S.csv"
-    
-    a = qpcr.read( f )
 
+    a = qpcr.read(f)
 
     # works :-)
-    p = ReplicateBoxPlot( mode = "interactive" )
+    p = ReplicateBoxPlot(mode="interactive")
     p.link(a)
     fig = p.plot()
     fig.show()
 
     # works :-)
-    p = ReplicateBoxPlot( mode = "static" )
+    p = ReplicateBoxPlot(mode="static")
     p.link(a)
     fig = p.plot()
     plt.show()
-
-    

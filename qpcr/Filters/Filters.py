@@ -90,9 +90,9 @@ import pandas as pd
 import numpy as np
 import qpcr.main.Results as Results
 import qpcr.main.Assay as Assay
-import qpcr._auxiliary.warnings as aw
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr._auxiliary import warnings as aw
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import os
 import qpcr.Plotters as Plotters
 

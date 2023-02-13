@@ -9,8 +9,8 @@ This is a wrapper for the Plotters:
 - `GroupDots
 """
 
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr.Plotters._base as base
 
 import qpcr.Plotters.AssaySubplotResults as AssaySubplotResults

@@ -4,8 +4,8 @@ Multiple ``Comparison`` objects are stored together in ``MultipleComparisons`` o
 """
 
 from itertools import permutations
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr.Plotters as plotters
 
 import numpy as np

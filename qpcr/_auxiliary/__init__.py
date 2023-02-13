@@ -3,14 +3,15 @@ This module contains auxiliary functions to the qpcr module,
 that are not directly linked to qpcr Analysis per se. 
 """
 import uuid
-import os 
-import re 
-import qpcr.defaults as defaults
+import os
+import re
+from qpcr import defaults
 import logging
 
-def pseudo_isinstance( obj, ref_name : str ):
+
+def pseudo_isinstance(obj, ref_name: str):
     """
-    Performs a pseudo isinstance only based on the reference string 
+    Performs a pseudo isinstance only based on the reference string
 
     Parameters
     ----------
@@ -26,7 +27,8 @@ def pseudo_isinstance( obj, ref_name : str ):
     """
     return type(obj).__name__ == ref_name
 
-def log( filename = None, level = None, format = None, name = "qpcr" ):
+
+def log(filename=None, level=None, format=None, name="qpcr"):
     """
     Store a log file
 
@@ -36,26 +38,26 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
         The file in which to save the log. By default this will be a file `qpcr.log`
         (logger name + .log) in the same directory as the current main script.
         The log can be directed to stdout using `filename = "stdout"`.
-    level 
+    level
         The logging level. By default WARNING is used.
-    format  
+    format
         The logging format.
     name
         The logger name to use. By default `qpcr` is used.
-    
+
     """
 
-    logger = logging.getLogger( name = name )
+    logger = logging.getLogger(name=name)
 
     if logger.hasHandlers():
-        if any( [ i.level == level for i in logger.handlers ] ):
+        if any([i.level == level for i in logger.handlers]):
             return logger
 
     # setup the dedicated qpcr logger
     if level is None:
         level = defaults.log_level
     if not logger.hasHandlers():
-        logger.setLevel( level )
+        logger.setLevel(level)
 
     if filename == "stdout":
         handler = logging.StreamHandler()
@@ -66,56 +68,60 @@ def log( filename = None, level = None, format = None, name = "qpcr" ):
             # just use StreamHandler instead...
             try:
                 import __main__
+
                 filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
             except Exception as e:
-                logger.info( e )
-                logger.info( "Could not generate a filename for the log file. Using stdout instead." )
-                return log( filename = "stdout", level = level, format = format, name = name )
-        
-        elif not filename.endswith(".log"): 
+                logger.info(e)
+                logger.info("Could not generate a filename for the log file. Using stdout instead.")
+                return log(filename="stdout", level=level, format=format, name=name)
+
+        elif not filename.endswith(".log"):
             filename += ".log"
-        handler = logging.FileHandler( filename = filename )
-   
-    if format is None: 
+        handler = logging.FileHandler(filename=filename)
+
+    if format is None:
         format = defaults.log_format
-    
-    f = logging.Formatter( fmt = format )
-    handler.setFormatter( f )
-    handler.setLevel( level )
-    logger.addHandler( handler )
+
+    f = logging.Formatter(fmt=format)
+    handler.setFormatter(f)
+    handler.setLevel(level)
+    logger.addHandler(handler)
     return logger
+
 
 def default_logger():
     """The default logger of qpcr"""
-    logger = logging.getLogger( name = "qpcr" )
+    logger = logging.getLogger(name="qpcr")
     if not logger.hasHandlers():
-        return log( filename = defaults.init_log_loc )
+        return log(filename=defaults.init_log_loc)
     return logger
+
 
 def extensive_logger():
     """
     The extensive logger of qpcr.
     """
-    logger = logging.getLogger( name = "qpcr" )
+    logger = logging.getLogger(name="qpcr")
     if not logger.hasHandlers():
-        return log( level = logging.DEBUG )
-    logger.setLevel( logging.DEBUG )
+        return log(level=logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
     return logger
 
-def from_kwargs(key, default, kwargs, rm = False):
+
+def from_kwargs(key, default, kwargs, rm=False):
     """
-    This function will try to extract key from the kwargs, 
+    This function will try to extract key from the kwargs,
     and if it fails it will return default
     """
-    try: 
-        if rm == False: 
+    try:
+        if rm == False:
             r = kwargs[key]
-        else: 
+        else:
             r = kwargs.pop(key)
     except Exception as e:
-        logger.debug( e ) 
-        r = default 
-    return r 
+        logger.debug(e)
+        r = default
+    return r
 
 
 def sorted_set(some_list):
@@ -124,11 +130,12 @@ def sorted_set(some_list):
     Importantly, sorted means it keeps the order of entries.
     """
     list_set = []
-    list_set = [ i for i in some_list if i not in list_set ]
+    list_set = [i for i in some_list if i not in list_set]
     # for i in some_list:
-    #     if i not in list_set: 
+    #     if i not in list_set:
     #         list_set.append(i)
     return list_set
+
 
 def same_type(obj1, obj2):
     """
@@ -140,42 +147,44 @@ def same_type(obj1, obj2):
     same = type1 == type2
     return same
 
+
 class _ID:
     """
     A meta_superclass that simply adds an ID getter-setter to itself
     """
-    __slots__ = ["_id", "_id_was_set", "_id_label", "_id_label_was_set", "_id_func",  "__dict__"]
+
+    __slots__ = ["_id", "_id_was_set", "_id_label", "_id_label_was_set", "_id_func", "__dict__"]
 
     def __init__(self):
-        self._id = uuid.uuid1() 
+        self._id = uuid.uuid1()
         self._id_was_set = False
         self._id_label_was_set = False
         self._id_label = None
 
         self._id_func = self._strict_id if defaults.strict_id else self._relaxed_id
-    
-    def id( self, id : str = None ):
+
+    def id(self, id: str = None):
         """
         Adds a string identifier or returns the given id
         """
-        return self._id_func( id )
+        return self._id_func(id)
 
     def id_was_set(self):
         """
         Returns True if an Id was set
         """
         return self._id_was_set
-    
-    def _strict_id(self, id:str = None):
+
+    def _strict_id(self, id: str = None):
         """
         Adds a string identifier or returns the given id
         """
         if id is not None and not self.id_was_set():
             self._id = id
             self._id_was_set = True
-        return self._id 
+        return self._id
 
-    def _relaxed_id( self, id:str = None ):
+    def _relaxed_id(self, id: str = None):
         """
         Adds a string identifier or returns the given id
         """
@@ -184,11 +193,11 @@ class _ID:
             self._id_was_set = True
         return self._id
 
-    def id_label(self, label:str = None):
+    def id_label(self, label: str = None):
         """
         Adds a label and gets the current label.
         The label serves as a secondary id that helps distinguish
-        separate objects from each other that still belong together, 
+        separate objects from each other that still belong together,
         like like qpcr.Assays that store data from transcript isoforms for instance.
         """
         if label is not None and not self.id_label_was_set():
@@ -196,7 +205,7 @@ class _ID:
             self._id_label_was_set = True
         return self._id_label
 
-    def split_id(self, by : str, regex = False):
+    def split_id(self, by: str, regex=False):
         """
         Splits an id into id + label based on `by`.
         `by` may either be a string by which to apply `split` to the id
@@ -206,32 +215,32 @@ class _ID:
         if regex:
             by = re.compile(by)
             split = by.search(self._id).groups()
-        else: 
+        else:
             split = self._id.split(by)
-        
+
         if len(split) > 1:
             id, label = split
-        else: 
+        else:
             id, label = split[0], None
-        
+
         # set new id and label
         self._id = id
         self._id_label = label
 
-    def merge_id(self, by : str = "_"):
+    def merge_id(self, by: str = "_"):
         """
-        Merges the id and id_label together into just id, and places `by` 
+        Merges the id and id_label together into just id, and places `by`
         between them (default just an underscore). It resets the id_label.
         If no label is present, nothing will happen.
         """
-        new_id = self.get_merged_id(by = by)
+        new_id = self.get_merged_id(by=by)
         self._id = new_id
 
         # reset the label settings
         self._id_label = None
         self._id_label_was_set = False
 
-    def get_merged_id(self, by : str = "_"):
+    def get_merged_id(self, by: str = "_"):
         """
         Returns a merged id but does not adopt it!
         """
@@ -257,7 +266,7 @@ class _ID:
         """
         self._id = obj.id()
         self._id_was_set = False
-    
+
     def id_reset(self):
         """
         Resets the memory if the id and id_label were already changed

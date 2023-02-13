@@ -246,8 +246,8 @@ types of "big tables" and how to read them).
 import logging
 import pandas as pd
 import qpcr
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 import qpcr.Parsers as Parsers
 import os

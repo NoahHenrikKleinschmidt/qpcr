@@ -9,7 +9,7 @@ If equal variance cannot be assumed for the data to be compared, instead of an A
 import numpy as np
 import scipy.stats as scistats
 
-import qpcr._auxiliary as aux
+from qpcr import _auxiliary as aux
 import qpcr.main as main
 import qpcr.stats.Comparisons as Comparisons
 import qpcr.stats.StatsTest as StatsTest

@@ -3,28 +3,29 @@ Defines the `GroupBars` and `GroupDots` class, which is used to preview the resu
 """
 
 import pandas as pd
-import qpcr.defaults as defaults
-import qpcr._auxiliary as aux
+from qpcr import defaults
+from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base
 
 import matplotlib.pyplot as plt
-import seaborn as sns 
+import seaborn as sns
 
 import plotly.graph_objs as go
 
-import numpy as np 
+import numpy as np
 
 logger = aux.default_logger()
+
 
 class GroupSubplotsResults(base.ResultsPlotter):
     """
     A superclass for FigureClasses that work with Results objects and operate group-wise
     (different groups in different subplots).
     """
-    def __init__(self, mode : str ):
-        super().__init__(mode)
 
+    def __init__(self, mode: str):
+        super().__init__(mode)
 
     def _setup_groups_names_and_layout(self, data):
         """
@@ -36,10 +37,9 @@ class GroupSubplotsResults(base.ResultsPlotter):
         return groups, names, nrows, ncols
 
 
-
 class GroupBars(GroupSubplotsResults):
     """
-    Generates a Bar plot figure with a separate subplot for each group. 
+    Generates a Bar plot figure with a separate subplot for each group.
 
     Parameters
     ----------
@@ -50,11 +50,11 @@ class GroupBars(GroupSubplotsResults):
 
     Plotting Kwargs
     ================
-    
+
     `"static"` Kwargs
 
-	    Static GroupBars figures accept the following kwargs:
-    
+            Static GroupBars figures accept the following kwargs:
+
         +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
         |         Argument          |                                              Description                                               |                   Example                    |
         +===========================+========================================================================================================+==============================================+
@@ -96,10 +96,10 @@ class GroupBars(GroupSubplotsResults):
         +---------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
 
 
-    
+
     `"interactive"` Kwargs
 
-	    Interactive GroupBars figures accept the following kwargs:
+            Interactive GroupBars figures accept the following kwargs:
 
         +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | Argument                    | Description                                                                                                                                                    | Example                                       |
@@ -134,14 +134,11 @@ class GroupBars(GroupSubplotsResults):
     [2] `Plotly templates <https://plotly.com/python/templates/>`_
     [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
-    def __init__(self, mode : str = None ):
-        self._setup_default_params(
-                                    static = defaults.static_PreviewBars, 
-                                    interactive = defaults.interactive_PreviewBars
-                                )
-        super().__init__( mode = mode )
-    
-    
+
+    def __init__(self, mode: str = None):
+        self._setup_default_params(static=defaults.static_PreviewBars, interactive=defaults.interactive_PreviewBars)
+        super().__init__(mode=mode)
+
     def _static_plot(self, **kwargs):
         """
         Generate a static figure
@@ -166,7 +163,7 @@ class GroupBars(GroupSubplotsResults):
 
         # set a seaborn style
         style = kwargs.pop("style", "ticks")
-        sns.set_style( style )
+        sns.set_style(style)
 
         edgecolor = kwargs.pop("edgecolor", "white")
         edgewidth = kwargs.pop("linewidth", 1)
@@ -174,29 +171,27 @@ class GroupBars(GroupSubplotsResults):
         ecolor = kwargs.get("ecolor", "black")
 
         # get kwargs for pvalue annotations
-        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None)
         pval_kws = kwargs.pop("pval_kws", {})
 
         if annotate_pvals:
             if self._obj.comparisons is None:
                 raise AttributeError("Cannot annotate pvalues if no comparisons have been made!, please first perform a statistical groupwise comparison.")
-     
+
         fig, coords = self._setup_static_figure(ncols, nrows, title, kwargs)
 
-        idx = 0 
-        for group, name in zip(groups, headers): 
+        idx = 0
+        for group, name in zip(groups, headers):
 
             ax = coords.subplot()
-            
-            tmp_df = data.query( f"group == {group}" )
-            tmp_df = tmp_df.sort_values( x )
 
-            sns.barplot( data = tmp_df, x = x, y = y, 
-                         edgecolor = edgecolor,
-                         linewidth = edgewidth, ax = ax, **kwargs )
+            tmp_df = data.query(f"group == {group}")
+            tmp_df = tmp_df.sort_values(x)
+
+            sns.barplot(data=tmp_df, x=x, y=y, edgecolor=edgecolor, linewidth=edgewidth, ax=ax, **kwargs)
 
             # tmp_df.plot.bar(
-            #             x = x, 
+            #             x = x,
             #             y = y,
             #             # yerr = "stdev",
             #             color = palette,
@@ -207,39 +202,41 @@ class GroupBars(GroupSubplotsResults):
             #         )
 
             ax.errorbar(
-                            x = tmp_df[x], y = tmp_df[y], 
-                            yerr = tmp_df[sterr], 
-                            fmt = ".", markersize = 0, capsize = 3, 
-                            ecolor = ecolor,
-                    )
-            
-            ax.set(
-                            title = name,
-                            xlabel = xlabel,
-                            ylabel = ylabel,        
-                )
+                x=tmp_df[x],
+                y=tmp_df[y],
+                yerr=tmp_df[sterr],
+                fmt=".",
+                markersize=0,
+                capsize=3,
+                ecolor=ecolor,
+            )
 
-            if rot is not None: 
-                self._set_xtick_rotation( ax, rot )
+            ax.set(
+                title=name,
+                xlabel=xlabel,
+                ylabel=ylabel,
+            )
+
+            if rot is not None:
+                self._set_xtick_rotation(ax, rot)
 
             if not show_spines:
                 sns.despine()
 
             # add ABCD... label to subplot
             if label_subplots:
-                self._add_subplot_label(idx, ax, start_character)         
+                self._add_subplot_label(idx, ax, start_character)
 
             # add stats annotations
             if annotate_pvals:
                 logger.debug(f"{group=}")
                 logger.debug(f"{names[group]=}")
-                name = names[ group ]
+                name = names[group]
                 if name not in self._obj.comparisons:
-                    logger.warning( f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?" )
+                    logger.warning(f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?")
                 else:
-                    comparison = self._obj.comparisons[ name ]
+                    comparison = self._obj.comparisons[name]
                     self._annotate_pvalues(x, y, sterr, pval_kws, comparison, tmp_df, ax)
-
 
             idx += 1
 
@@ -247,9 +244,8 @@ class GroupBars(GroupSubplotsResults):
 
         if show:
             plt.show()
-        
-        return fig 
 
+        return fig
 
     def _interactive_plot(self, **kwargs):
         """
@@ -265,31 +261,20 @@ class GroupBars(GroupSubplotsResults):
 
         fig, Coords = self._setup_interactive_figure(ncols, nrows, xlabel, ylabel, title, headers, hpad, vpad, height, width, template)
 
-
         fig.update_layout(
-                            legend = {"title" : kwargs.pop("legend_title", "group name"),
-                            },
-                        )
+            legend={
+                "title": kwargs.pop("legend_title", "group name"),
+            },
+        )
 
         idx = 0
-        for group, name in zip( groups, names ):
+        for group, name in zip(groups, names):
             row, col = Coords.get()
             tmp_df = data.query(f"group == {group}")
-            tmp_df = tmp_df.sort_values( x )
+            tmp_df = tmp_df.sort_values(x)
 
-            # now plot a new bar chart 
-            fig.add_trace(
-
-                go.Bar(
-                    name = name,
-                    y = tmp_df[y], x = tmp_df[x], 
-                    error_y=dict(type='data', array = tmp_df[sterr]),
-                    hoverinfo = kwargs.pop("hoverinfo", "y"), 
-                    **kwargs
-                ), 
-
-                row, col
-            )
+            # now plot a new bar chart
+            fig.add_trace(go.Bar(name=name, y=tmp_df[y], x=tmp_df[x], error_y=dict(type='data', array=tmp_df[sterr]), hoverinfo=kwargs.pop("hoverinfo", "y"), **kwargs), row, col)
 
             idx += 1
 
@@ -297,7 +282,7 @@ class GroupBars(GroupSubplotsResults):
             fig.show()
 
         # print("<<< Interactive Check >>>")
-        return fig 
+        return fig
 
     def _prep_shared_kwargs(self, kwargs, data):
         """
@@ -309,7 +294,7 @@ class GroupBars(GroupSubplotsResults):
         x = "assay"
         headers = kwargs.pop("headers", names)
         title, show = self._get_title_and_show(kwargs)
-        return groups,names,nrows,ncols,xlabel,ylabel,x,y,sterr,headers,title,show
+        return groups, names, nrows, ncols, xlabel, ylabel, x, y, sterr, headers, title, show
 
 
 class GroupDots(GroupSubplotsResults):
@@ -325,10 +310,10 @@ class GroupDots(GroupSubplotsResults):
 
     Plotting Kwargs
     ================
-    
+
     `"static"` Kwargs
 
-	    Static GroupDots figures accept the following kwargs:
+            Static GroupDots figures accept the following kwargs:
 
         +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
         |         Argument         |                                              Description                                               |                   Example                    |
@@ -366,10 +351,10 @@ class GroupDots(GroupSubplotsResults):
         | \*\*kwargs               | Any additional kwargs that can be passed to the `seaborn`'s `stripplot()`.                             |                                              |
         +--------------------------+--------------------------------------------------------------------------------------------------------+----------------------------------------------+
 
-    
+
     `"interactive"` Kwargs
 
-	    Interactive GroupDots figures accept the following kwargs:
+            Interactive GroupDots figures accept the following kwargs:
 
         +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
         | Argument                    | Description                                                                                                                                                    | Example                                       |
@@ -399,16 +384,14 @@ class GroupDots(GroupSubplotsResults):
         | \*\kwargs                   | Any additional kwargs that can be passed to `plotly`'s`graphs_objs.Violin()`.                                                                                  |                                               |
         +-----------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+
 
-    
+
     [1] `seaborn styles <https://www.python-graph-gallery.com/104-seaborn-themes>`_
     [2] `Plotly templates <https://plotly.com/python/templates/>`_
     [3] `Plotly hoverinfo <https://plotly.com/python/hover-text-and-formatting/>`_
     """
-    def __init__(self, mode:str = None):
-        self._setup_default_params(
-                                    static = defaults.static_PreviewDots, 
-                                    interactive = defaults.interactive_PreviewDots
-                                )
+
+    def __init__(self, mode: str = None):
+        self._setup_default_params(static=defaults.static_PreviewDots, interactive=defaults.interactive_PreviewDots)
         # __init__ is going to require default_params to be already set!
         super().__init__(mode)
 
@@ -421,99 +404,90 @@ class GroupDots(GroupSubplotsResults):
         data = self._rep_data
 
         # get assays to plot
-        assays = self._obj.data_cols #[ i for i in data.columns if i not in [ "group", "group_name", defaults.raw_col_names[0] ] ]
-        assays = sorted( assays )
+        assays = self._obj.data_cols  # [ i for i in data.columns if i not in [ "group", "group_name", defaults.raw_col_names[0] ] ]
+        assays = sorted(assays)
 
         # get kwargs incompatible with the main plotting method
-        groups, names, nrows, ncols, xlabel, ylabel, headers, title, show, show_violins = self._prep_shared_kwargs(kwargs, data)       
+        groups, names, nrows, ncols, xlabel, ylabel, headers, title, show, show_violins = self._prep_shared_kwargs(kwargs, data)
         label_subplots, start_character, show_spines, rot = self._get_labels_and_spines_and_rot(kwargs)
         alpha = kwargs.pop("alpha", 1)
 
         # get kwargs for pvalue annotations
-        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None )
+        annotate_pvals = kwargs.pop("annotate_pvals", self._obj.comparisons is not None)
         pval_kws = kwargs.pop("pval_kws", {})
 
         if annotate_pvals:
             if self._obj.comparisons is None:
                 raise AttributeError("Cannot annotate pvalues if no comparisons have been made! Please first perform a statistical groupwise comparison.")
-        
+
         # generate a custom color palette in case color kwarg is provided
         palette, is_palette = gx.generate_palette(kwargs, True)
         if palette:
             if is_palette:
-                palette = dict( palette = palette )
+                palette = dict(palette=palette)
             else:
-                palette = dict( color = palette )
+                palette = dict(color=palette)
         else:
-            palette = dict( palette = defaults.default_palette )
-
+            palette = dict(palette=defaults.default_palette)
 
         # set a seaborn style
         style = kwargs.pop("style", defaults.default_style)
-        sns.set_style( style )
+        sns.set_style(style)
 
         # make figure
         fig, Coords = self._setup_static_figure(nrows, ncols, title, kwargs)
 
         idx = 0
-        for group, name in zip( groups, headers ): 
-                
-            # prepare a vertical bigtable format dataframe 
+        for group, name in zip(groups, headers):
+
+            # prepare a vertical bigtable format dataframe
             tmp_df = self._prepare_df(data, assays, group)
-            
-            # now plot a new violin chart 
+
+            # now plot a new violin chart
             subplot = Coords.subplot()
 
             if show_violins:
                 sns.violinplot(
-                                x = tmp_df[ "assay" ],
-                                y = tmp_df[ "value" ],
-                                # color = None,
-                                inner = None, 
-                                ax = subplot,
-                                **palette
-
-                            )
+                    x=tmp_df["assay"],
+                    y=tmp_df["value"],
+                    # color = None,
+                    inner=None,
+                    ax=subplot,
+                    **palette,
+                )
                 for i in subplot.collections:
-                    i.set_alpha( alpha * 0.3 )
+                    i.set_alpha(alpha * 0.3)
 
-            sns.stripplot(
-                            x = tmp_df[ "assay" ],
-                            y = tmp_df[ "value" ],
-                            alpha = alpha,
-                            ax = subplot,
-                            **palette,
-                            **kwargs
-                        )
-        
+            sns.stripplot(x=tmp_df["assay"], y=tmp_df["value"], alpha=alpha, ax=subplot, **palette, **kwargs)
+
             subplot.set(
-                        title = name,
-                        xlabel = xlabel,
-                        ylabel = ylabel,        
-                    )
+                title=name,
+                xlabel=xlabel,
+                ylabel=ylabel,
+            )
 
-            # adjust xtick rotation   
-            if rot is not None: 
-                self._set_xtick_rotation( subplot, rot )
+            # adjust xtick rotation
+            if rot is not None:
+                self._set_xtick_rotation(subplot, rot)
 
             if not show_spines:
                 sns.despine()
 
             # add ABCD... label to subplot
             if label_subplots:
-                self._add_subplot_label(idx, subplot, start_character)         
+                self._add_subplot_label(idx, subplot, start_character)
 
             # add stats annotations
             if annotate_pvals:
-                name = names[ group ]
+                name = names[group]
                 if name not in self._obj.comparisons:
-                    logger.warning( f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?" )
+                    logger.warning(f"Could not find a comparison for {name}. Perhaps you did not use a groupwise-comparison but an assaywise-comparison?")
                 else:
-                    comparison = self._obj.comparisons[ name ]
-                    self._annotate_pvalues("assay", "value", None, pval_kws, comparison, tmp_df, subplot )
+                    comparison = self._obj.comparisons[name]
+                    self._annotate_pvalues("assay", "value", None, pval_kws, comparison, tmp_df, subplot)
 
             idx += 1
-            
+
         plt.tight_layout()
 
         if show:
@@ -521,35 +495,35 @@ class GroupDots(GroupSubplotsResults):
 
         # print("<<< Static Check >>>")
 
-        return fig 
+        return fig
 
     def _prepare_df(self, data, assays, group):
         """
-        Concatenates the different assay colums into a single 
-        set of two columns, one for all "value"s and one for 
-        the "assay" identifiers. 
+        Concatenates the different assay colums into a single
+        set of two columns, one for all "value"s and one for
+        the "assay" identifiers.
         """
-        # get a group subset 
-        group_df = data.query( f"group == {group}" )
+        # get a group subset
+        group_df = data.query(f"group == {group}")
 
-        # concatenate all separate assay columns into a set of 
+        # concatenate all separate assay columns into a set of
         # 'value' and 'assay' columns.
 
-        # setup the _assays concatenated dataframe   
-        _assays = group_df[ [ "group", assays[0] ] ]
-        _assays = _assays.rename( columns = { assays[0] : "value" } )
-        _assays["assay"] = assays[0] # [ assays[0] for i in _assays["group"] ]
+        # setup the _assays concatenated dataframe
+        _assays = group_df[["group", assays[0]]]
+        _assays = _assays.rename(columns={assays[0]: "value"})
+        _assays["assay"] = assays[0]  # [ assays[0] for i in _assays["group"] ]
 
         # now iteratively add all remaining assays
         for assay in assays[1:]:
-            tmp_df = group_df[ [ "group", assay ] ]
-            tmp_df = tmp_df.rename( columns = { assay : "value" } )
-            tmp_df["assay"] = assay # [ assay for i in tmp_df["group"] ]
-            _assays = pd.concat( [_assays, tmp_df], ignore_index = True)
-                
+            tmp_df = group_df[["group", assay]]
+            tmp_df = tmp_df.rename(columns={assay: "value"})
+            tmp_df["assay"] = assay  # [ assay for i in tmp_df["group"] ]
+            _assays = pd.concat([_assays, tmp_df], ignore_index=True)
+
         # remove the group col, and sort
-        tmp_df = _assays.drop( columns = ["group"] )
-        tmp_df = tmp_df.sort_values( "assay" )
+        tmp_df = _assays.drop(columns=["group"])
+        tmp_df = tmp_df.sort_values("assay")
 
         return tmp_df
 
@@ -562,61 +536,48 @@ class GroupDots(GroupSubplotsResults):
         data = self._rep_data
 
         # get assays to plot
-        assays = self._obj.data_cols # [ i for i in data.columns if i not in [ "group", "group_name", defaults.raw_col_names[0] ] ]
-        assays = sorted( assays )
-        ticks = np.arange( len(assays) )
+        assays = self._obj.data_cols  # [ i for i in data.columns if i not in [ "group", "group_name", defaults.raw_col_names[0] ] ]
+        assays = sorted(assays)
+        ticks = np.arange(len(assays))
 
         # get the groups
         # and incompatible kwargs
         groups, names, nrows, ncols, xlabel, ylabel, headers, title, show, show_violins = self._prep_shared_kwargs(kwargs, data)
         hpad, vpad, height, width, template, hoverinfo = self._get_interactive_setup_kwargs(kwargs)
-        
+
         fig, Coords = self._setup_interactive_figure(ncols, nrows, xlabel, ylabel, title, headers, hpad, vpad, height, width, template)
         # setup figure
-        fig.update_layout( showlegend = False )
+        fig.update_layout(showlegend=False)
 
         idx = 0
-        for group, name in zip( groups, headers ):
-            
-            # prepare a vertical bigtable format dataframe 
+        for group, name in zip(groups, headers):
+
+            # prepare a vertical bigtable format dataframe
             tmp_df = self._prepare_df(data, assays, group)
 
             row, col = Coords.get()
 
-            # now plot a new violin chart 
-            fig.add_trace(
-
-                go.Violin(
-                                name = name,
-                                x = tmp_df[ "assay" ], 
-                                y = tmp_df[ "value" ], 
-                                points = "all",
-                                pointpos = 0,
-                                hoverinfo = hoverinfo, 
-                                **kwargs
-                        ), 
-                                row, col
-                    )
+            # now plot a new violin chart
+            fig.add_trace(go.Violin(name=name, x=tmp_df["assay"], y=tmp_df["value"], points="all", pointpos=0, hoverinfo=hoverinfo, **kwargs), row, col)
 
             # remove violins if not desired (leaving only dot plot)
-            if not show_violins: 
+            if not show_violins:
                 fig.update_traces(
-                                    fillcolor="rgba(0,0,0,0)", 
-                                    line_width = 0, 
-                                    selector=dict(type='violin'),
-                                )
-
+                    fillcolor="rgba(0,0,0,0)",
+                    line_width=0,
+                    selector=dict(type='violin'),
+                )
 
             # update x axis to categorical group names
             fig.update_layout(
-                                { 
-                                    f"xaxis{idx+1}" : dict(
-                                                            tickmode = 'array',
-                                                            tickvals = ticks,
-                                                            ticktext = assays,
-                                                    )         
-                                }
-                            )
+                {
+                    f"xaxis{idx+1}": dict(
+                        tickmode='array',
+                        tickvals=ticks,
+                        ticktext=assays,
+                    )
+                }
+            )
 
             idx += 1
 
@@ -624,8 +585,7 @@ class GroupDots(GroupSubplotsResults):
             fig.show()
 
         # print("<<< Interactive Check >>>")
-        return fig 
-
+        return fig
 
     def _prep_shared_kwargs(self, kwargs, data):
         """
@@ -642,37 +602,33 @@ class GroupDots(GroupSubplotsResults):
 if __name__ == "__main__":
 
     import qpcr
+
     # we set up the paths to 28S+actin as our normalisers
-    normaliser_files = [
-                            "../Examples/Example Data/28S.csv",
-                            "../Examples/Example Data/actin.csv"
-                    ]
+    normaliser_files = ["../Examples/Example Data/28S.csv", "../Examples/Example Data/actin.csv"]
 
     # we also set up the paths to the HNRNPL and SRSF11 transcripts
     assay_files = [
-                        "../Examples/Example Data/HNRNPL_nmd.csv",
-                        "../Examples/Example Data/HNRNPL_prot.csv",
-                        "../Examples/Example Data/SRSF11_nmd.csv",
-                        "../Examples/Example Data/SRSF11_prot.csv",
-                ]
+        "../Examples/Example Data/HNRNPL_nmd.csv",
+        "../Examples/Example Data/HNRNPL_prot.csv",
+        "../Examples/Example Data/SRSF11_nmd.csv",
+        "../Examples/Example Data/SRSF11_prot.csv",
+    ]
 
-    a = qpcr.read( assay_files, replicates = (6,5,7,6) )
-    n = qpcr.read( normaliser_files, replicates = (6,5,7,6) )
+    a = qpcr.read(assay_files, replicates=(6, 5, 7, 6))
+    n = qpcr.read(normaliser_files, replicates=(6, 5, 7, 6))
 
-    a,n = qpcr.delta_ct( [a,n] )
-    r = qpcr.normalise(a,n)
+    a, n = qpcr.delta_ct([a, n])
+    r = qpcr.normalise(a, n)
     r.drop_rel()
 
     # works :-)
-    p = GroupBars( mode = "static" )
+    p = GroupBars(mode="static")
     p.link(r)
-    fig = p.plot( color = "red")
+    fig = p.plot(color="red")
     fig.show()
 
     # works :-)
-    p = GroupDots( mode = "static" )
+    p = GroupDots(mode="static")
     p.link(r)
-    fig = p.plot( color = "viridis")
+    fig = p.plot(color="viridis")
     plt.show()
-
-    
