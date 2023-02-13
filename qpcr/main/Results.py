@@ -107,7 +107,7 @@ class Results(aux._ID):
         """
         return self._df
 
-    def add_Ct(self, assay: Assay.Assay):
+    def add_Ct(self, assay: Assay):
         """
         Adds a `"Ct"` column with Delta-Ct values from an ``qpcr.Assay``.
         It will store these as a new column using the Assay's ``id`` as header.
@@ -126,7 +126,7 @@ class Results(aux._ID):
 
         self.add(assay.Ct)
 
-    def add_dCt(self, assay: Assay.Assay):
+    def add_dCt(self, assay: Assay):
         """
         Adds a `"dCt"` column with Delta-Ct values from an ``qpcr.Assay``.
         It will store these as a new column using the Assay's ``id`` as header.
@@ -145,7 +145,7 @@ class Results(aux._ID):
 
         self.add(assay.dCt)
 
-    def add_ddCt(self, assay: Assay.Assay):
+    def add_ddCt(self, assay: Assay):
         """
         Adds all `"rel_{}"` columns with Delta-Delta-Ct values from an ``qpcr.Assay``.
         It will store these as new columns using the Assay's ``id`` + the ``_rel_{}`` composite id.
@@ -315,7 +315,7 @@ class Results(aux._ID):
         for c in cols:
             del self[c]
 
-    def setup_cols(self, obj: (Assay.Assay or pd.DataFrame)):
+    def setup_cols(self, obj: (Assay or pd.DataFrame)):
         """
         Adopts the setup columns: ``id, group, group_name`` from another object.
 

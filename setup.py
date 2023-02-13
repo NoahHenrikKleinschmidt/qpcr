@@ -20,8 +20,11 @@ setuptools.setup(
         "qpcr.Readers",
         "qpcr.Parsers",
         "qpcr.Filters",
+        "qpcr.Curves",
+        "qpcr.Pipes",
         "qpcr.defaults",
         "qpcr._auxiliary",
+        "qpcr._auxiliary.warnings",
     ],
     install_requires=[
         "numpy",

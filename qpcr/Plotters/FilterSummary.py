@@ -100,17 +100,17 @@ class FilterSummary(base.AssayPlotter):
     def __init__(self, mode=None):
         self._setup_default_params(static=defaults.static_FilterSummary, interactive=defaults.interactive_FilterSummary)
         super().__init__(mode=mode)
-        self._before = Results.Results()
-        self._after = Results.Results()
+        self._before = Results()
+        self._after = Results()
 
     def clear(self):
         """
         Clears the pre- and post-filtering Ct value records.
         """
-        self._before = Results.Results()
-        self._after = Results.Results()
+        self._before = Results()
+        self._after = Results()
 
-    def add_before(self, assay: Assay.Assay):
+    def add_before(self, assay: Assay):
         """
         Add a pre-filtered set of Ct values
         from an `qpcr.Assay` object.
@@ -129,7 +129,7 @@ class FilterSummary(base.AssayPlotter):
 
         self._before.add_Ct(assay)
 
-    def add_after(self, assay: Assay.Assay):
+    def add_after(self, assay: Assay):
         """
         Add a post-filtered set of Ct values
         from an `qpcr.Assay` object.
