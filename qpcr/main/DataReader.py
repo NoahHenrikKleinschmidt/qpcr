@@ -51,7 +51,7 @@ Not all datafiles will be (easily) readable by the ``qpcr.DataReader``. This is 
 Hence, it may be that your file will not be readable by the DataReader but will be readable by a dedicated Reader such as a ``BigTableReader`` for instance. Check out the :ref:`qpcr.Readers <Readers>` for more details.
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 from qpcr import Readers

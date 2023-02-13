@@ -3,7 +3,7 @@ Defines the `GroupBars` and `GroupDots` class, which is used to preview the resu
 """
 
 import pandas as pd
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base

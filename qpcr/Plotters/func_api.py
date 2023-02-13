@@ -2,7 +2,7 @@
 These are the stand-alone methods for interacting with the qpcr plotting environment.
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 
 
 def plot(obj, mode: str = None, **kwargs):

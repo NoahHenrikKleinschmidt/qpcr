@@ -91,7 +91,7 @@ import numpy as np
 import qpcr.main.Results as Results
 import qpcr.main.Assay as Assay
 from qpcr._auxiliary import warnings as aw
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import os
 import qpcr.Plotters as Plotters

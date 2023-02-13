@@ -5,7 +5,7 @@ that are not directly linked to qpcr Analysis per se.
 import uuid
 import os
 import re
-from qpcr import defaults
+import qpcr.defaults as defaults
 import logging
 
 

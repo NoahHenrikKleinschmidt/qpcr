@@ -3,7 +3,7 @@ The base classes for the Plotters (FigureClasses) and Wrappers.
 """
 
 import pandas as pd
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 import qpcr._auxiliary.graphical as gx

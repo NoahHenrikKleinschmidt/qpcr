@@ -57,7 +57,7 @@ For this we might only wish to store the Ct values and then save them to a new f
 
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 import qpcr.main.Assay as Assay

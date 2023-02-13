@@ -5,7 +5,7 @@ In `groupwise` mode, the t-tests are performed to compare the data columns withi
 P-values are corrected for multiple testing using the `Benjamini-Hochberg` procedure.
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr.main as main
 import qpcr.stats.Comparisons as Comparisons

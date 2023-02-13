@@ -4,7 +4,7 @@ Multiple ``Comparison`` objects are stored together in ``MultipleComparisons`` o
 """
 
 from itertools import permutations
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr.Plotters as plotters
 

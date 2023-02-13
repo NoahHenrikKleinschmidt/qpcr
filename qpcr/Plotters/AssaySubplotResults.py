@@ -2,7 +2,7 @@
 Defines the `AssayBars` and `AssayDots` class, which is used to preview the results of a qpcr.Results object, visualising the different assays in different subplots.
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base

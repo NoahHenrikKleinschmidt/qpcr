@@ -7,7 +7,7 @@ import seaborn as sns
 
 import plotly.graph_objs as go
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 

@@ -61,7 +61,7 @@ which allows you to avoid repeating the same number of replicates many times lik
 import pandas as pd
 import numpy as np
 import os
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 

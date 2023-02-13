@@ -2,7 +2,7 @@
 Defines the `PairwisePlot` class, which is used to preview the results of a pairwise-comparison.
 """
 
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 import qpcr._auxiliary.graphical as gx
 import qpcr.Plotters._base as base

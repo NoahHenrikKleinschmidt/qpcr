@@ -146,7 +146,7 @@ Note
 
 import logging
 import qpcr
-from qpcr import defaults
+import qpcr.defaults as defaults
 from qpcr import _auxiliary as aux
 from qpcr._auxiliary import warnings as aw
 import pandas as pd
