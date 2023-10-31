@@ -31,7 +31,7 @@ This module can directly be installed via `pip`.
 pip install qpcr
 ```
 ### Qupid Web App
-In case you prefer a graphical user interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid provides access to the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://share.streamlit.io/noahhenrikkleinschmidt/qupid/main/src/main.py). Or can be run locally by cloning its [Github repository](https://github.com/NoahHenrikKleinschmidt/Qupid). 
+In case you prefer a graphical user interface, `qpcr` offers the *Qupid* web app built with `streamlit`. Qupid provides access to the bulk of qpcr's main features with costumizability to some degree. Qupid is openly available [via streamlit](https://noahhenrikkleinschmidt-qupid-srcmain-48pd7p.streamlit.app). Or can be run locally by cloning its [Github repository](https://github.com/NoahHenrikKleinschmidt/Qupid). 
 
 ### What does `qpcr` do?
 The "core business" that `qpcr` was designed for is `Delta-Delta-Ct` analysis starting from raw Ct values. It offers automated processes to read datafiles, filter out outlier Ct values, compute Delta-Ct, normalise assays against one another, and visualise the results. Hence, `qpcr` offers a full suite for automated Delta-Delta-Ct analyses.

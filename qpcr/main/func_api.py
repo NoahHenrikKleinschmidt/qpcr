@@ -4,11 +4,11 @@ These functions make use of default instances of the qpcr classes and offer quic
 """
 
 import numpy as np
-import qpcr.main.Assay as Assay
-import qpcr.main.Analyser as Analyser
-import qpcr.main.Normaliser as Normaliser
-import qpcr.main.DataReader as DataReader
-import qpcr.main.Calibrator as Calibrator
+from .Assay import Assay
+from .Analyser import __default_Analyser__
+from .Normaliser import __default_Normaliser__
+from .Calibrator import __default_Calibrator__
+from .DataReader import __default_DataReader__
 import qpcr.Filters as Filters
 
 def read( filename : str, multi_assay : bool = False, big_table : bool = False, decorator : (bool or str) = None, reset = False, **kwargs):
@@ -50,8 +50,8 @@ def read( filename : str, multi_assay : bool = False, big_table : bool = False, 
             Either a single `qpcr.Assay` object or a list thereof. 
             In case of a decorated file, two lists will be returned, one for assays and one for normalisers.
         """
-        DataReader.__default_DataReader__.reset()
-        return DataReader.__default_DataReader__.read( filename = filename, multi_assay = multi_assay, big_table = big_table, decorator = decorator, reset = reset, **kwargs )
+        __default_DataReader__.reset()
+        return __default_DataReader__.read( filename = filename, multi_assay = multi_assay, big_table = big_table, decorator = decorator, reset = reset, **kwargs )
 
 
 def read_multi_assay( filename : str, decorator : (bool or str) = True, reset = False, **kwargs):
@@ -84,8 +84,8 @@ def read_multi_assay( filename : str, decorator : (bool or str) = True, reset = 
             Two lists will be returned, one for assays and one for normalisers.
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
-        DataReader.__default_DataReader__.reset()
-        return DataReader.__default_DataReader__.read_multi_assay( filename = filename, decorator = decorator, reset = reset, **kwargs )
+        __default_DataReader__.reset()
+        return __default_DataReader__.read_multi_assay( filename = filename, decorator = decorator, reset = reset, **kwargs )
 
 def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True, assay_col : str = None, id_col : str = None, ct_col : str = None, reset : bool = False, **kwargs ):
         """
@@ -131,8 +131,8 @@ def read_bigtable( filename : str, kind : str, decorator : (bool or str) = True,
             Two lists will be returned, one for assays and one for normalisers.
             In case of a non-decorated file, the second (normaliser) list is empty.
         """
-        DataReader.__default_DataReader__.reset()
-        return DataReader.__default_DataReader__.read_bigtable( filename = filename, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, reset = reset, **kwargs )
+        __default_DataReader__.reset()
+        return __default_DataReader__.read_bigtable( filename = filename, kind = kind, id_col = id_col, assay_col = assay_col, ct_col = ct_col, decorator = decorator, reset = reset, **kwargs )
 
 
 
@@ -156,7 +156,7 @@ def delta_ct( assay : (Assay or list) ):
     qpcr.Assay or list
         The same as input but with computed DeltaCt values.
     """
-    return Analyser.__default_Analyser__.pipe( assay )
+    return __default_Analyser__.pipe( assay )
 
 
 def analyse( assay : (Assay or list) ):
@@ -216,8 +216,8 @@ def normalise( assays : list, normalisers : list, mode : str = "pair-wise" ):
     results : Results
         A `qpcr.Results` object containing the computed results.
     """
-    Normaliser.__default_Normaliser__.prune()
-    return Normaliser.__default_Normaliser__.pipe( assays, normalisers )
+    __default_Normaliser__.prune()
+    return __default_Normaliser__.pipe( assays, normalisers )
 
 
 def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple) = None, remove_calibrators : bool = True ):
@@ -256,8 +256,8 @@ def calibrate( assay : (Assay or list), dilution : (float or np.ndarray or tuple
     assay
         The same as input but with updated efficiency. 
     """
-    Calibrator.__default_Calibrator__.dilution( dilution )
-    return Calibrator.__default_Calibrator__.calibrate( assay, remove_calibrators )
+    __default_Calibrator__.dilution( dilution )
+    return __default_Calibrator__.calibrate( assay, remove_calibrators )
 
 
 # also link the filter function to the main API
