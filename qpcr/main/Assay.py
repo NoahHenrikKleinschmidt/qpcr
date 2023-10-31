@@ -106,15 +106,31 @@ class Assay(aux._ID):
         group will be inferred automatically. Otherwise, default group names will be set if no `group_names` are provided.
     """
 
-    __slots__ = ["_df", "_id", "_efficiency", "_efficiency", "_replicates", "_group_names", "_groups"]
+    __slots__ = [
+        "_df",
+        "_id",
+        "_efficiency",
+        "_efficiency",
+        "_replicates",
+        "_group_names",
+        "_groups",
+    ]
 
-    def __init__(self, df: pd.DataFrame, id: str = None, replicates: (int or tuple or str) = None, group_names: list = None):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        id: str = None,
+        replicates: (int or tuple or str) = None,
+        group_names: list = None,
+    ):
         super().__init__()
 
         if isinstance(df, pd.DataFrame):
             self._df = df
         else:
-            raise TypeError(f"df argument must be a pandas DataFrame (got {type(df).__name__})")
+            raise TypeError(
+                f"df argument must be a pandas DataFrame (got {type(df).__name__})"
+            )
 
         if id is not None:
             self._id = id
@@ -158,11 +174,15 @@ class Assay(aux._ID):
         if isinstance(eff, float):
             self._efficiency = eff
             self._eff = 2 * self._efficiency
-            logger.info(f"New efficiency set to {self._efficiency} (computes as binary factor {self._efficiency} * 2 = {self._eff})")
+            logger.info(
+                f"New efficiency set to {self._efficiency} (computes as binary factor {self._efficiency} * 2 = {self._eff})"
+            )
         elif eff is None:
             return self._efficiency
         else:
-            raise TypeError(f"Expected a float efficiency but got type {type(eff).__name__}")
+            raise TypeError(
+                f"Expected a float efficiency but got type {type(eff).__name__}"
+            )
 
     def save(self, filename: str):
         """
@@ -294,6 +314,13 @@ class Assay(aux._ID):
         Ct.name = f"{self.id()}_Ct"
         return Ct
 
+    @Ct.setter
+    def Ct(self, Ct):
+        """
+        Sets the Ct values of the Assay.
+        """
+        self._df[raw_col_names[1]] = Ct
+
     @property
     def dCt(self):
         """
@@ -306,6 +333,13 @@ class Assay(aux._ID):
         dCt = self._df["dCt"]
         dCt.name = f"{self.id()}_dCt"
         return dCt
+
+    @dCt.setter
+    def dCt(self, dCt):
+        """
+        Sets the Delta-Ct values of the Assay.
+        """
+        self._df["dCt"] = dCt
 
     @property
     def ddCt(self):
@@ -496,8 +530,14 @@ class Assay(aux._ID):
             if self._vet_replicates(replicates):
                 self._replicates = replicates
             else:
-                logger.critical(aw.AssayError("reps_dont_cover", n_samples=self.n(), reps=replicates))
-                raise aw.AssayError("reps_dont_cover", n_samples=self.n(), reps=replicates)
+                logger.critical(
+                    aw.AssayError(
+                        "reps_dont_cover", n_samples=self.n(), reps=replicates
+                    )
+                )
+                raise aw.AssayError(
+                    "reps_dont_cover", n_samples=self.n(), reps=replicates
+                )
         return self._replicates
 
     def group(self, replicates: (int or tuple or str) = None, infer_names=True):
@@ -644,7 +684,9 @@ class Assay(aux._ID):
             names_set = names.unique()
             # names_set = aux.sorted_set(names)
             first_name = names_set[0]
-            group0 = self._df.query(f"{raw_col_names[0]} == '{first_name}'")[raw_col_names[0]]
+            group0 = self._df.query(f"{raw_col_names[0]} == '{first_name}'")[
+                raw_col_names[0]
+            ]
             entries = len(group0)
             all_identical = entries > 1
         else:
@@ -669,7 +711,11 @@ class Assay(aux._ID):
             new_names = new_names.split("$")
             return new_names
         else:
-            e = aw.AssayError("groupnames_dont_colver", current_groups=current_names, new_received=names)
+            e = aw.AssayError(
+                "groupnames_dont_colver",
+                current_groups=current_names,
+                new_received=names,
+            )
             logger.critical(e)
             raise e
 
@@ -691,7 +737,11 @@ class Assay(aux._ID):
             new_names = new_names.split("$")
             return new_names
         else:
-            e = aw.AssayError("groupnames_dont_colver", current_groups=current_names, new_received=names)
+            e = aw.AssayError(
+                "groupnames_dont_colver",
+                current_groups=current_names,
+                new_received=names,
+            )
             logger.critical(e)
             raise e
 
@@ -750,7 +800,6 @@ class Assay(aux._ID):
         return verdict
 
     def __str__(self):
-
         _length = len(str(self._df).split("\n")[0])
         s = f"""
 {"-" * _length}

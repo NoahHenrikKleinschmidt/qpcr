@@ -79,5 +79,5 @@ On the other hand the `qpcr.Normaliser` will perform actions on a single Assay u
 
 
 #### Citation
-Kleinschmidt, N. (2023). qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.1.1) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
+Kleinschmidt, N. (2023). qpcr - a python package for easy and versatile qPCR data analysis for small-scale datasets and high-throughput (Version 4.1.3) [Computer software]. https://github.com/NoahHenrikKleinschmidt/qpcr.git
 

@@ -7,6 +7,7 @@ import os
 import re
 import qpcr.defaults as defaults
 import logging
+from copy import deepcopy
 
 
 def pseudo_isinstance(obj, ref_name: str):
@@ -63,7 +64,6 @@ def log(filename=None, level=None, format=None, name="qpcr"):
         handler = logging.StreamHandler()
     else:
         if filename is None:
-
             # try to use a fileHandler but if we have a jupyter notebook or terminal
             # just use StreamHandler instead...
             try:
@@ -72,7 +72,9 @@ def log(filename=None, level=None, format=None, name="qpcr"):
                 filename = f"{os.path.dirname( __main__.__file__ )}/{name}.log"
             except Exception as e:
                 logger.info(e)
-                logger.info("Could not generate a filename for the log file. Using stdout instead.")
+                logger.info(
+                    "Could not generate a filename for the log file. Using stdout instead."
+                )
                 return log(filename="stdout", level=level, format=format, name=name)
 
         elif not filename.endswith(".log"):
@@ -153,7 +155,14 @@ class _ID:
     A meta_superclass that simply adds an ID getter-setter to itself
     """
 
-    __slots__ = ["_id", "_id_was_set", "_id_label", "_id_label_was_set", "_id_func", "__dict__"]
+    __slots__ = [
+        "_id",
+        "_id_was_set",
+        "_id_label",
+        "_id_label_was_set",
+        "_id_func",
+        "__dict__",
+    ]
 
     def __init__(self):
         self._id = uuid.uuid1()
@@ -274,6 +283,15 @@ class _ID:
         self._id_label_was_set = False
         self._id_was_set = False
 
+    def copy(self):
+        """
+        Returns a deepcopy of itself
+        """
+        new = deepcopy(self)
+        new.id_reset()
+        new._id = str(uuid.uuid1())
+        return new
+
 
 def fileID(filename):
     """
@@ -289,7 +307,6 @@ def fileID(filename):
 logger = default_logger()
 
 if __name__ == "__main__":
-
     obj1 = _ID()
     obj1.id("Hnrnp l_nmd")
     obj1.split_id("_")
